@@ -1,34 +1,38 @@
-// src/components/layouts/Sidebar.jsx
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { colors } from '../../constants/theme';
 
-import DashboardIcon      from '../../assets/icons/dashboard.svg';
-import DataEntryIcon      from '../../assets/icons/data-entry (2) 2.svg';
-import ListIcon           from '../../assets/icons/list.svg';
-import StockIcon          from '../../assets/icons/stock-hub.svg';
-import ExchangeIcon       from '../../assets/icons/exchange.svg';
-import SalesIcon          from '../../assets/icons/sales.svg';
-import ProcurementIcon    from '../../assets/icons/procurement.svg';
-import FinancialsIcon     from '../../assets/icons/financials.svg';
-import ManufacturingIcon  from '../../assets/icons/manufacturing.svg';
-import DealsIcon          from '../../assets/icons/deals.svg';
-import LogisticsIcon      from '../../assets/icons/logistics.svg';
-import POSIcon            from '../../assets/icons/pos.svg';
-import ReportsIcon        from '../../assets/icons/reports.svg';
-import ToolsIcon          from '../../assets/icons/tools.svg';
-import ManagementIcon     from '../../assets/icons/management.svg';
-import ConfigIcon         from '../../assets/icons/config.svg';
-import ChevronDown        from '../../assets/chevron-down.svg';
+import DashboardIcon from '../../assets/icons/dashboard.svg';
+import DataEntryIcon from '../../assets/icons/data-entry (2) 2.svg';
+import ListIcon from '../../assets/icons/list.svg';
+import StockIcon from '../../assets/icons/stock-hub.svg';
+import ExchangeIcon from '../../assets/icons/exchange.svg';
+import SalesIcon from '../../assets/icons/sales.svg';
+import ProcurementIcon from '../../assets/icons/procurement.svg';
+import FinancialsIcon from '../../assets/icons/financials.svg';
+import ManufacturingIcon from '../../assets/icons/manufacturing.svg';
+import DealsIcon from '../../assets/icons/deals.svg';
+import LogisticsIcon from '../../assets/icons/logistics.svg';
+import POSIcon from '../../assets/icons/pos.svg';
+import ReportsIcon from '../../assets/icons/reports.svg';
+import ToolsIcon from '../../assets/icons/tools.svg';
+import ManagementIcon from '../../assets/icons/management.svg';
+import ConfigIcon from '../../assets/icons/config.svg';
+import ChevronDown from '../../assets/chevron-down.svg';
+
+const HEADER_HEIGHT = 48;
+const SIDEBAR_WIDTH = 220;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
-  { 
-    label: 'Data Entry', icon: DataEntryIcon, subItems: [
+  {
+    label: 'Data Entry',
+    icon: DataEntryIcon,
+    subItems: [
       { label: 'Sub 1', to: '/', icon: ListIcon },
       { label: 'Sub 2', to: '/', icon: StockIcon },
       { label: 'Sub 3', to: '/', icon: ExchangeIcon },
-    ] 
+    ],
   },
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
   { label: 'Stock Hub', to: '/stock-hub', icon: StockIcon },
@@ -48,22 +52,23 @@ const menuItems = [
 
 export default function Sidebar() {
   const [openMenus, setOpenMenus] = useState({});
-  const toggleMenu = (label) => setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
+
+  const toggleMenu = (label) =>
+    setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
 
   return (
     <aside
       style={{
-         position: "fixed",       // <-- fixed
-    left: 0,
-    width: 200,
-    bottom: 0,
-        // width: 200,
-        height: '100vh',
-        // background: 'linear-gradient(180deg, #C44972 0%, #923A53 23%, #85203E 52%, #790728 95%)',
+        position: 'fixed',
+        top: HEADER_HEIGHT,
+        left: 0,
+        width: SIDEBAR_WIDTH,
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
         background: colors.primary.gradient,
         color: 'white',
         fontFamily: "'Open Sans', sans-serif",
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         paddingTop: 16,
@@ -73,6 +78,7 @@ export default function Sidebar() {
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label] || false;
           const hasSub = !!item.subItems;
+
           return (
             <div key={item.label}>
               {hasSub ? (
@@ -91,7 +97,15 @@ export default function Sidebar() {
                   className="hover-glass"
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src={item.icon} alt="" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)' }} />
+                    <img
+                      src={item.icon}
+                      alt=""
+                      style={{
+                        width: 18,
+                        height: 18,
+                        filter: 'brightness(0) invert(1)',
+                      }}
+                    />
                     <span>{item.label}</span>
                   </div>
                   <img
@@ -123,16 +137,24 @@ export default function Sidebar() {
                   })}
                   className="hover-glass"
                 >
-                  <img src={item.icon} alt="" style={{ width: 18, height: 18, filter: 'brightness(0) invert(1)' }} />
+                  <img
+                    src={item.icon}
+                    alt=""
+                    style={{
+                      width: 18,
+                      height: 18,
+                      filter: 'brightness(0) invert(1)',
+                    }}
+                  />
                   <span>{item.label}</span>
                 </NavLink>
               )}
 
               {hasSub && isOpen && (
                 <div style={{ background: 'rgba(0,0,0,0.15)' }}>
-                  {item.subItems.map(sub => (
+                  {item.subItems.map((sub) => (
                     <NavLink
-                      key={sub.to}
+                      key={`${item.label}-${sub.label}`}
                       to={sub.to}
                       style={({ isActive }) => ({
                         display: 'flex',
@@ -146,7 +168,15 @@ export default function Sidebar() {
                       })}
                       className="hover-glass"
                     >
-                      <img src={sub.icon} alt="" style={{ width: 16, height: 16, filter: 'brightness(0) invert(1)' }} />
+                      <img
+                        src={sub.icon}
+                        alt=""
+                        style={{
+                          width: 16,
+                          height: 16,
+                          filter: 'brightness(0) invert(1)',
+                        }}
+                      />
                       <span>{sub.label}</span>
                     </NavLink>
                   ))}
@@ -157,7 +187,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <style jsx global>{`
+      <style>{`
         .hover-glass {
           backdrop-filter: blur(8px);
           transition: backdrop-filter 0.3s, background 0.2s;
