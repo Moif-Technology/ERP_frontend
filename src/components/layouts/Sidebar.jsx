@@ -19,9 +19,10 @@ import ToolsIcon from '../../assets/icons/tools.svg';
 import ManagementIcon from '../../assets/icons/management.svg';
 import ConfigIcon from '../../assets/icons/config.svg';
 import ChevronDown from '../../assets/chevron-down.svg';
+import SearchIcon from '../../assets/iconsax-search.svg';
 
-const HEADER_HEIGHT = 48;
-const SIDEBAR_WIDTH = 220;
+const HEADER_HEIGHT = 30;
+const SIDEBAR_WIDTH = 200;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
@@ -29,9 +30,9 @@ const menuItems = [
     label: 'Data Entry',
     icon: DataEntryIcon,
     subItems: [
-      { label: 'Sub 1', to: '/', icon: ListIcon },
-      { label: 'Sub 2', to: '/', icon: StockIcon },
-      { label: 'Sub 3', to: '/', icon: ExchangeIcon },
+      { label: 'Sub 1', to: '/sub 1', icon: ListIcon },
+      { label: 'Sub 2', to: '/sub 2', icon: StockIcon },
+      { label: 'Sub 3', to: '/sub 3', icon: ExchangeIcon },
     ],
   },
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
@@ -50,6 +51,7 @@ const menuItems = [
   { label: 'Configuration', to: '/configuration', icon: ConfigIcon },
 ];
 
+
 export default function Sidebar() {
   const [openMenus, setOpenMenus] = useState({});
 
@@ -58,124 +60,98 @@ export default function Sidebar() {
 
   return (
     <aside
+      className="fixed flex flex-col overflow-y-auto overflow-x-hidden pt-4 font-sans"
       style={{
-        position: 'fixed',
         top: HEADER_HEIGHT,
         left: 0,
         width: SIDEBAR_WIDTH,
         height: `calc(100vh - ${HEADER_HEIGHT}px)`,
         background: colors.primary.gradient,
         color: 'white',
-        fontFamily: "'Open Sans', sans-serif",
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        paddingTop: 16,
       }}
     >
-      <nav style={{ flex: 1 }}>
+     <div className="px-4 pb-4">
+  <div className="flex items-center w-40 h-8 border border-white bg-transparent rounded-[10px] px-2">
+    <img
+      src={SearchIcon}
+      alt="Search"
+      className="w-4 h-4 mr-2 filter brightness-0 invert"
+    />
+    <input
+      type="text"
+      placeholder="Search..."
+      className="bg-transparent outline-none text-white text-xs w-full"
+    />
+  </div>
+</div>
+      <nav className="flex-1">
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label] || false;
           const hasSub = !!item.subItems;
 
           return (
+            
             <div key={item.label}>
               {hasSub ? (
                 <div
                   onClick={() => toggleMenu(item.label)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    background: isOpen ? 'rgba(255,255,255,0.12)' : 'transparent',
-                    fontSize: '0.875rem',
-                    fontWeight: isOpen ? 400 : 200,
-                  }}
-                  className="hover-glass"
+                  className="mx-1 flex items-center justify-between p-2 rounded-[10px] cursor-pointer text-sm font-light transition backdrop-blur-md hover:backdrop-blur-lg hover:bg-white/8"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="flex items-center gap-3">
                     <img
                       src={item.icon}
                       alt=""
-                      style={{
-                        width: 18,
-                        height: 18,
-                        filter: 'brightness(0) invert(1)',
-                      }}
+                      className="w-4 h-4 "
                     />
                     <span>{item.label}</span>
                   </div>
                   <img
                     src={ChevronDown}
                     alt="toggle"
-                    style={{
-                      width: 14,
-                      height: 14,
-                      transition: 'transform 0.25s ease',
-                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      filter: 'brightness(0) invert(1)',
-                    }}
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180' : ''
+                    } `}
                   />
                 </div>
               ) : (
                 <NavLink
                   to={item.to}
                   end={item.exact}
-                  style={({ isActive }) => ({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 16px',
-                    color: 'white',
-                    textDecoration: 'none',
-                    background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                    fontWeight: isActive ? 400 : 200,
-                    fontSize: '0.875rem',
-                  })}
-                  className="hover-glass"
+                  className={({ isActive }) =>
+                    `mx-1 flex items-center gap-3 p-2 rounded-[10px] text-white text-sm no-underline transition backdrop-blur-md hover:backdrop-blur-lg ${
+                      isActive
+                        ? 'bg-white/15 font-medium border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)]'
+                        : 'font-light hover:bg-white/8'
+                    }`
+                  }
                 >
                   <img
                     src={item.icon}
                     alt=""
-                    style={{
-                      width: 18,
-                      height: 18,
-                      filter: 'brightness(0) invert(1)',
-                    }}
+                    className="w-4 h-4 "
                   />
                   <span>{item.label}</span>
                 </NavLink>
               )}
 
               {hasSub && isOpen && (
-                <div style={{ background: 'rgba(0,0,0,0.15)' }}>
+                <div className="bg-black/15">
                   {item.subItems.map((sub) => (
                     <NavLink
                       key={`${item.label}-${sub.label}`}
                       to={sub.to}
-                      style={({ isActive }) => ({
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        padding: '10px 16px 10px 40px',
-                        color: 'white',
-                        textDecoration: 'none',
-                        background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-                        fontSize: '0.825rem',
-                      })}
-                      className="hover-glass"
+                      className={({ isActive }) =>
+                        `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
+                          isActive
+                            ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
+                            : 'hover:bg-white/8 font-light'
+                        }`
+                      }
                     >
                       <img
                         src={sub.icon}
                         alt=""
-                        style={{
-                          width: 16,
-                          height: 16,
-                          filter: 'brightness(0) invert(1)',
-                        }}
+                        className="w-4 h-4 "
                       />
                       <span>{sub.label}</span>
                     </NavLink>
@@ -186,17 +162,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      <style>{`
-        .hover-glass {
-          backdrop-filter: blur(8px);
-          transition: backdrop-filter 0.3s, background 0.2s;
-        }
-        .hover-glass:hover {
-          backdrop-filter: blur(12px);
-          background: rgba(255, 255, 255, 0.08) !important;
-        }
-      `}</style>
     </aside>
   );
 }
