@@ -7,19 +7,19 @@ export const colors = {
 
   // Primary (Maroon)
   primary: {
-    DEFAULT: "#800000",
+    DEFAULT: "#790728",
     gradient: 'linear-gradient(180deg, #C44972 0%, #923A53 23%, #85203E 52%, #790728 95%)',
-    50: "#fdf2f2",
-    100: "#fde8e8",
-    200: "#fbd5d5",
-    300: "#f8b4b4",
-    400: "#f98080",
-    500: "#f05252",
-    600: "#e02424",
-    700: "#c81e1e",
-    800: "#9b1c1c",
-    900: "#800000",
-    950: "#400000",
+    50: "#F2E6EA",
+    100: "#E4CDD3",
+    200: "#D5B4BF",
+    300: "#C89DA7",
+    400: "#BB8295",
+    500: "#AD6A7C",
+    600: "#A0526A",
+    700: "#85203E",
+    800: "#85203E",
+    900: "#790728",
+    // 950: "#400000",
 
   },
 
@@ -92,7 +92,7 @@ export const borderRadius = {
 
 export const typography = {
   fontFamily: {
-    sans: 'ui-sans-serif, system-ui, "Segoe UI", "Microsoft Sans Serif", sans-serif',
+    sans: '"Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     serif: '"Times New Roman", Georgia, serif',
   },
 
@@ -104,6 +104,12 @@ export const typography = {
     xl: "1.25rem",
     "2xl": "1.5rem",
     "3xl": "1.875rem",
+  },
+  fontWeight: {
+    normal: 400,
+    medium: 500,
+    semiBold: 600,
+    bold: 700,
   },
 };
 
