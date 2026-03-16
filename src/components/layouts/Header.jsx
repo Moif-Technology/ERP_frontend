@@ -1,120 +1,64 @@
-import React from 'react';
-import { colors, borderRadius, typography } from '../../constants/theme';
-import SearchIcon from '../../assets/iconsax-search.svg';
-import AdminIcon from '../../assets/Group 1.svg';
-
-const HEADER_HEIGHT = 48;
-const SIDEBAR_WIDTH = 220;
+import React, { useState } from "react";
+import SearchIcon from "../../assets/iconsax-search.svg";
+import AdminIcon from "../../assets/Group 1.svg";
 
 export default function Header() {
-  return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: HEADER_HEIGHT,
-        width: '100%',
-        background: colors.surface,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 16px 0 20px',
-        boxShadow: '0 3px 10px rgba(0, 0, 0, 0.12)',
-        fontFamily: typography.fontFamily.sans,
-        fontSize: '0.82rem',
-        color: colors.neutral[700],
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          fontWeight: '600',
-          fontSize: '0.95rem',
-          letterSpacing: '-0.3px',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        logo
-      </div>
+  const [menuOpen, setMenuOpen] = useState(false);
 
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          justifyContent: 'center',
-          paddingLeft: SIDEBAR_WIDTH - 120,
-        }}
-      >
-        <div
-          style={{
-            width: 420,
-            maxWidth: '100%',
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            background: colors.input.background,
-            border: `1px solid ${colors.neutral[300]}`,
-            borderRadius: borderRadius.full,
-            padding: '0 12px',
-          }}
-        >
+  return (
+    <header className="fixed top-0 left-0 z-50 flex w-full items-center justify-between bg-white px-4 py-1.5 font-sans text-xs text-gray-700 shadow-md h-[30px]">
+      {/* Logo */}
+      <div className="font-semibold text-sm">logo</div>
+
+      {/* Search */}
+      <div className="flex flex-1 justify-center">
+        <div className="flex w-[300px] max-w-full items-center rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 h-5">
           <img
             src={SearchIcon}
             alt="Search"
-            style={{ width: 14, height: 14, marginRight: 8 }}
+            className="mr-1.5 h-3.5 w-3.5"
           />
-
           <input
             type="text"
             placeholder="Search here"
-            style={{
-              border: 'none',
-              outline: 'none',
-              background: 'transparent',
-              width: '100%',
-              fontSize: '0.85rem',
-              color: colors.neutral[600],
-              padding: 0,
-            }}
+            className="h-full flex-1 bg-transparent outline-none text-xs text-gray-600 placeholder-gray-500"
           />
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-          fontSize: '0.82rem',
-          color: colors.neutral[600],
-        }}
-      >
-        <span>Station : 10</span>
+      {/* Right Section */}
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs">Station: 10</span>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
-            padding: '3px 9px',
-            border: `1px solid ${colors.neutral[300]}`,
-            borderRadius: borderRadius.full,
-            background: colors.neutral[50],
-            fontWeight: '400',
-            fontSize: '0.68rem',
-          }}
-        >
-          <img
-            src={AdminIcon}
-            alt="Admin"
-            style={{ width: 16, height: 16 }}
-          />
+        {/* Admin Button */}
+        <button className="flex items-center gap-1 rounded-full border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-100">
+          <img src={AdminIcon} alt="Admin" className="h-3.5 w-3.5" />
           <span>ADMIN</span>
-        </div>
+        </button>
 
-        <span style={{ cursor: 'pointer', fontSize: 14 }}>...</span>
+        {/* 3-dot menu */}
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="cursor-pointer select-none text-lg leading-none"
+          >
+            ⋮
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-6 z-50 min-w-[100px] rounded border border-gray-300 bg-white py-1 shadow-md">
+              <div
+                className="cursor-pointer px-3 py-1.5 text-sm hover:bg-gray-100"
+                onClick={() => {
+                  // Add logout logic here
+                  setMenuOpen(false);
+                }}
+              >
+                Logout
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
