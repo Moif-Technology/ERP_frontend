@@ -25,7 +25,7 @@ const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
 
 const menuItems = [
-  { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
+  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
   {
     label: 'Data Entry',
     icon: DataEntryIcon,
