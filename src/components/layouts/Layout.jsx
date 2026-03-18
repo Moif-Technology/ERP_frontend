@@ -1,10 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import ModuleTabs from '../../pages/ModuleTabs';
+import ModuleTabs from './ModuleTabs';
+import MiniToolbar from './MiniToolbar'; 
 
 const HEADER_HEIGHT = 30;
-const SIDEBAR_WIDTH = 220;
+// Keep this in sync with SIDEBAR_WIDTH in Sidebar.jsx
+const SIDEBAR_WIDTH = 200;
 
 export default function Layout({ children }) {
   return (
@@ -16,7 +18,7 @@ export default function Layout({ children }) {
       }}
     >
       <Header />
-      {/* Sticky module bar aligned with main content (beside sidebar) */}
+      {/* Sticky module area (tabs + action buttons) aligned with main content */}
       <div
         style={{
           position: 'sticky',
@@ -26,6 +28,9 @@ export default function Layout({ children }) {
         }}
       >
         <ModuleTabs />
+        <div className="mt-1">
+          <MiniToolbar />
+        </div>
       </div>
       <div
         style={{
