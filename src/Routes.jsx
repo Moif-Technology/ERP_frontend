@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layouts/Layout';
 import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
+import Sale from './pages/Sale';
 import Login from './pages/Login';
 
 export default function AppRoutes() {
@@ -14,6 +15,7 @@ export default function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<ProductList />} />
+        <Route path="/sales" element={<Sale />} />
         {/* Any unknown protected route still shows layout */}
         <Route
           path="*"

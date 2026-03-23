@@ -90,6 +90,51 @@ export const borderRadius = {
   full: "9999px",
 };
 
+/** Input field with short description label above. Use for labeled form inputs. */
+export const inputField = {
+  /** Label/description above the input box */
+  label: {
+    fontSize: "11px",
+    color: "#000000",
+    lineHeight: "15px",
+  },
+  /** The input box itself */
+  box: {
+    width: "200.13px",
+    height: "28px",
+    borderRadius: "4px",
+  },
+  /** Dropdown - same as box but with arrow on the right. Use with dropdown.svg icon. */
+  dropdown: {
+    width: "165.13px",
+    height: "28px",
+    borderRadius: "4px",
+  },
+  /** Sub input field - smaller size */
+  subBox: {
+    width: "82.57px",
+    height: "28px",
+    borderRadius: "4px",
+  },
+};
+
+/** Common table UI style tokens */
+export const tableUi = {
+  border: '1px solid #e2e8f0',
+  header: {
+    backgroundColor: '#F2E6EA',
+    fontSize: '7.98px',
+    fontWeight: 700,
+    color: '#000000',
+    borderRadius: '6.98px',
+  },
+  body: {
+    fontSize: '7.98px',
+    fontWeight: 400,
+    color: '#000000',
+  },
+};
+
 export const typography = {
   fontFamily: {
     sans: '"Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -118,6 +163,8 @@ const theme = {
   borderRadius,
   shadows,
   typography,
+  inputField,
+  tableUi,
 };
 
 export default theme;
