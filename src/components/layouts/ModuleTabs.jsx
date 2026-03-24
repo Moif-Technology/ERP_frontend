@@ -56,6 +56,9 @@ export default function ModuleTabs() {
     if (module === 'Sale' && action === 'Sales') {
       navigate('/sales');
     }
+    if (module === 'Quotation' && (action === 'Quotation' || action === 'List')) {
+      navigate('/quotation');
+    }
   };
 
   return (

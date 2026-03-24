@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
 import Sale from './pages/Sale';
-import Login from './pages/Login';
+import Quotation from './pages/Quotation';
 
 export default function AppRoutes() {
   return (
@@ -11,7 +11,7 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/products" element={<ProductList />} />
       <Route path="/sales" element={<Sale />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/quotation" element={<Quotation />} />
       <Route
         path="*"
         element={
