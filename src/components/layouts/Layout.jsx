@@ -41,8 +41,12 @@ export default function Layout({ children }) {
           style={{
             flex: 1,
             minWidth: 0,
+            minHeight: 0,
             marginLeft: SIDEBAR_WIDTH,
             padding: '24px 28px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
         >
           {children ?? <Outlet />}
