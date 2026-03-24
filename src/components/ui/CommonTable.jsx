@@ -12,8 +12,9 @@ export default function CommonTable({
   headerTextColor,
 }) {
   return (
-    <div className={`w-full overflow-x-auto ${className}`.trim()}>
+    <div className={`w-full min-w-0 overflow-auto ${className}`.trim()}>
       <div
+        className="min-w-max"
         style={{
           border: tableUi.border,
           borderRadius: tableUi.header.borderRadius,
