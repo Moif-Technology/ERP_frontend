@@ -22,10 +22,34 @@ import ChevronDown from '../../assets/chevron-down.svg';
 import SearchIcon from '../../assets/iconsax-search.svg';
 
 const HEADER_HEIGHT = 30;
+<<<<<<< HEAD
 const SIDEBAR_WIDTH = 200;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
+=======
+const DEFAULT_WIDTH = 232;
+const COLLAPSED_WIDTH = 76;
+
+// Minimum touch target (ui-ux-pro-max: 44×44pt)
+const TOUCH_MIN = 'min-h-[44px] min-w-[44px]';
+const ICON_SIZE = 'h-5 w-5'; // 20px icon token (clearer in expanded mode)
+
+// Some SVGs have extra whitespace inside their viewBox, so they look smaller.
+// Scale ONLY those specific icons to match the others visually.
+const ICON_TWEAK = {
+  [DataEntryIcon]: 'scale-[1.22]',
+  [ListIcon]: 'scale-[1.38]',
+  [StockIcon]: 'scale-[1.38]',
+};
+
+function iconClass(src, base) {
+  return `${base} ${ICON_TWEAK[src] ?? ''}`.trim();
+}
+
+const menuItems = [
+  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
+>>>>>>> main
   {
     label: 'Data Entry',
     icon: DataEntryIcon,
@@ -51,13 +75,18 @@ const menuItems = [
   { label: 'Configuration', to: '/configuration', icon: ConfigIcon },
 ];
 
+<<<<<<< HEAD
 
 export default function Sidebar() {
+=======
+export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onToggleCollapsed }) {
+>>>>>>> main
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (label) =>
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
 
+<<<<<<< HEAD
   return (
     <aside
       className="fixed flex flex-col overflow-y-auto overflow-x-hidden pt-4 font-sans"
@@ -85,11 +114,90 @@ export default function Sidebar() {
   </div>
 </div>
       <nav className="flex-1">
+=======
+  const effectiveWidth = width ?? (collapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
+
+  return (
+    <aside
+      className="sidebar-scroll fixed flex flex-col overflow-y-auto overflow-x-hidden font-sans"
+      style={{
+        top: HEADER_HEIGHT,
+        left: 0,
+        width: effectiveWidth,
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        background: `linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), ${colors.primary.gradient}`,
+        color: 'white',
+        transition: 'width 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+      }}
+      aria-label="Main navigation"
+    >
+      {/* Top: toggle + search — 8px spacing rhythm */}
+      <div className={collapsed ? 'px-2 pt-4 pb-3' : 'px-3 pt-4 pb-3'}>
+        {/* Expanded: toggle + search on same row. Collapsed: stacked + centered. */}
+        <div className={collapsed ? 'flex flex-col items-center gap-2' : 'flex items-center gap-2'}>
+          <button
+            type="button"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={onToggleCollapsed}
+            className={`flex items-center justify-center rounded-2xl border border-white/14 bg-white/10 text-white/95 hover:bg-white/16 active:bg-white/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent transition duration-200 ${TOUCH_MIN} h-11 w-11 shadow-[0_10px_18px_rgba(0,0,0,0.12)]`}
+          >
+            <Chevron direction={collapsed ? 'right' : 'left'} />
+          </button>
+
+          {collapsed ? (
+            <button
+              type="button"
+              aria-label="Search menu"
+              title="Search menu"
+              className={`flex items-center justify-center rounded-2xl border border-white/14 bg-white/10 hover:bg-white/16 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/45 focus-visible:ring-offset-2 transition duration-200 ${TOUCH_MIN} h-11 w-11 shadow-[0_10px_18px_rgba(0,0,0,0.10)]`}
+            >
+              <img
+                src={SearchIcon}
+                alt=""
+                aria-hidden="true"
+                className={`${ICON_SIZE} filter brightness-0 invert opacity-90`}
+              />
+            </button>
+          ) : (
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 rounded-2xl border border-white/12 bg-white/10 px-3 h-11 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+                <img
+                  src={SearchIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${ICON_SIZE} shrink-0 filter brightness-0 invert opacity-90`}
+                />
+                <input
+                  type="search"
+                  placeholder="Search…"
+                  aria-label="Search menu"
+                  className="bg-transparent outline-none text-white/95 placeholder:text-white/55 text-[15px] w-full min-h-[44px] py-2"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!collapsed && (
+          <div className="mt-4 px-2">
+            <div className="text-[11px] tracking-[0.14em] uppercase text-white/65">
+              Navigation
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 mx-2 border-t border-white/10" aria-hidden="true" />
+      </div>
+
+      <nav className="flex-1 px-2 py-2" role="navigation" aria-label="App sections">
+>>>>>>> main
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label] || false;
           const hasSub = !!item.subItems;
 
           return (
+<<<<<<< HEAD
             
             <div key={item.label}>
               {hasSub ? (
@@ -113,10 +221,47 @@ export default function Sidebar() {
                     } `}
                   />
                 </div>
+=======
+            <div key={item.label}>
+              {hasSub ? (
+                <button
+                  type="button"
+                  aria-label={collapsed ? item.label : undefined}
+                  aria-expanded={!collapsed ? isOpen : undefined}
+                  title={collapsed ? item.label : undefined}
+                  onClick={() => toggleMenu(item.label)}
+                  className={`group relative flex w-full items-center rounded-2xl text-left text-white/92 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/16 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset ${TOUCH_MIN} ${
+                    collapsed ? 'justify-center px-0 py-3' : 'justify-between gap-3 px-3 py-2.5'
+                  }`}
+                >
+                  <div className={`flex items-center min-w-0 ${collapsed ? 'gap-0' : 'gap-3'}`}>
+                    <img
+                      src={item.icon}
+                      alt=""
+                      aria-hidden="true"
+                      className={iconClass(item.icon, `${ICON_SIZE} shrink-0 opacity-90 group-hover:opacity-100 transition-opacity`)}
+                    />
+                    {!collapsed && (
+                      <span className="text-[14px] font-medium truncate">{item.label}</span>
+                    )}
+                  </div>
+                  {!collapsed && (
+                    <img
+                      src={ChevronDown}
+                      alt=""
+                      aria-hidden="true"
+                      className={`w-4 h-4 shrink-0 opacity-90 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  )}
+                </button>
+>>>>>>> main
               ) : (
                 <NavLink
                   to={item.to}
                   end={item.exact}
+<<<<<<< HEAD
                   className={({ isActive }) =>
                     `mx-1 flex items-center gap-3 p-2 rounded-[10px] text-white text-sm no-underline transition backdrop-blur-md hover:backdrop-blur-lg ${
                       isActive
@@ -136,24 +281,75 @@ export default function Sidebar() {
 
               {hasSub && isOpen && (
                 <div className="bg-black/15">
+=======
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    `group relative flex w-full items-center rounded-2xl text-left no-underline transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset ${TOUCH_MIN} ${
+                      collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    } ${
+                      isActive
+                        ? 'bg-white/20 text-white font-semibold border border-white/12 shadow-[inset_4px_0_12px_-2px_rgba(255,255,255,0.2),inset_0_1px_0_rgba(255,255,255,0.08),0_8px_20px_rgba(0,0,0,0.18)]'
+                        : 'text-white/92 hover:bg-white/10 active:bg-white/16'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {/* No bar: selected state = pill with soft left-edge glow */}
+                      <img
+                        src={item.icon}
+                        alt=""
+                        aria-hidden="true"
+                        className={iconClass(item.icon, `${ICON_SIZE} shrink-0 opacity-95 group-hover:opacity-100 transition-opacity`)}
+                      />
+                      {!collapsed && (
+                        <span className="text-[14px] truncate tracking-[0.01em]">
+                          {item.label}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              )}
+
+              {hasSub && isOpen && !collapsed && (
+                <div
+                  className="mt-2 ml-2 pl-4 border-l border-white/10 space-y-1"
+                  role="group"
+                  aria-label={`${item.label} submenu`}
+                >
+>>>>>>> main
                   {item.subItems.map((sub) => (
                     <NavLink
                       key={`${item.label}-${sub.label}`}
                       to={sub.to}
                       className={({ isActive }) =>
+<<<<<<< HEAD
                         `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
                           isActive
                             ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                             : 'hover:bg-white/8 font-light'
+=======
+                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] text-white/90 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset min-h-[44px] ${
+                          isActive ? 'bg-white/18 border border-white/14 font-semibold text-white' : 'font-normal'
+>>>>>>> main
                         }`
                       }
                     >
                       <img
                         src={sub.icon}
                         alt=""
+<<<<<<< HEAD
                         className="w-4 h-4 "
                       />
                       <span>{sub.label}</span>
+=======
+                        aria-hidden="true"
+                        className={iconClass(sub.icon, `${ICON_SIZE} shrink-0 opacity-90`)}
+                      />
+                      <span className="truncate">{sub.label}</span>
+>>>>>>> main
                     </NavLink>
                   ))}
                 </div>
@@ -165,3 +361,38 @@ export default function Sidebar() {
     </aside>
   );
 }
+<<<<<<< HEAD
+=======
+
+function Chevron({ direction }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0 opacity-90"
+      aria-hidden="true"
+    >
+      {direction === 'left' ? (
+        <path
+          d="M14.5 6L8.5 12L14.5 18"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : (
+        <path
+          d="M9.5 6L15.5 12L9.5 18"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </svg>
+  );
+}
+>>>>>>> main
