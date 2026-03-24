@@ -26,11 +26,11 @@ export default function CommonTable({
             {headers.map((header, idx) => (
               <th
                 key={`${header}-${idx}`}
-                className="px-2 py-1 text-left"
+                className="px-1 py-0.5 text-left sm:px-2 sm:py-1"
                 style={{
                   border: tableUi.border,
                   backgroundColor: headerBackgroundColor ?? tableUi.header.backgroundColor,
-                  fontSize: tableUi.header.fontSize,
+                  fontSize: 'clamp(6px, 1.2vw, 8px)',
                   fontWeight: tableUi.header.fontWeight,
                   color: headerTextColor ?? tableUi.header.color,
                   borderTopLeftRadius: idx === 0 ? tableUi.header.borderRadius : undefined,
@@ -48,13 +48,13 @@ export default function CommonTable({
               {row.map((cell, cellIdx) => (
                 <td
                   key={`cell-${rowIdx}-${cellIdx}`}
-                  className="px-2 py-1"
-                  style={{
-                    border: tableUi.border,
-                    fontSize: tableUi.body.fontSize,
-                    fontWeight: tableUi.body.fontWeight,
-                    color: tableUi.body.color,
-                  }}
+                  className="px-1 py-0.5 sm:px-2 sm:py-1"
+                style={{
+                  border: tableUi.border,
+                  fontSize: 'clamp(6px, 1.2vw, 8px)',
+                  fontWeight: tableUi.body.fontWeight,
+                  color: tableUi.body.color,
+                }}
                 >
                   {cell}
                 </td>

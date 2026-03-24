@@ -7,29 +7,29 @@ import { inputField, colors } from '../../constants/theme';
  */
 export default function SubInputField({ label, suffix, type = 'text', className, ...props }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {label && (
-        <label style={inputField.label}>{label}</label>
+        <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
       )}
-      <div className="relative">
+      <div className="relative min-w-0">
         <input
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
-          className={`border outline-none px-2 text-[9px] w-full ${className ?? ''}`.trim()}
-
+          className={`w-full min-w-0 border border-gray-200 bg-white px-1.5 py-1 text-[8px] outline-none sm:px-2 sm:py-1.5 sm:text-[9px] ${className ?? ''}`.trim()}
           style={{
-            ...inputField.subBox,
             width: `min(100%, ${inputField.subBox.width})`,
-          height: inputField.subBox.height,
-          boxSizing: 'border-box',
-            background: colors.input.background,
+            minHeight: '24px',
+            height: 'auto',
+            boxSizing: 'border-box',
+            borderRadius: inputField.subBox.borderRadius,
+            background: colors.input?.background ?? '#fff',
             borderColor: '#e2e8f0',
             paddingRight: suffix ? '16px' : undefined,
           }}
           {...props}
         />
         {suffix ? (
-          <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-gray-600 pointer-events-none">
+          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-600 sm:text-[9px]">
             {suffix}
           </span>
         ) : null}

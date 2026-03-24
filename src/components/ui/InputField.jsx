@@ -7,21 +7,20 @@ import { inputField, colors } from '../../constants/theme';
 export default function InputField({ label, widthPx, type, className, ...props }) {
   const boxWidth = widthPx ? `${widthPx}px` : inputField.box.width;
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       {label && (
-        <label style={inputField.label}>{label}</label>
+        <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
       )}
       <input
         type={type ?? 'text'}
-        className={`border outline-none px-2 text-[9px] w-full ${className ?? ''}`.trim()}
-
+        className={`w-full min-w-0 border border-gray-200 bg-white outline-none px-1.5 py-1 text-[8px] sm:px-2 sm:py-1.5 sm:text-[9px] ${className ?? ''}`.trim()}
         style={{
-          // Keep the input height fixed while still allowing responsive width.
-          background: colors.input.background,
+          background: colors.input?.background ?? '#fff',
           borderColor: '#e2e8f0',
           boxSizing: 'border-box',
-          height: inputField.box.height,
           borderRadius: inputField.box.borderRadius,
+          minHeight: '24px',
+          height: 'auto',
           width: `min(100%, ${boxWidth})`,
         }}
         {...props}
