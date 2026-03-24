@@ -1,14 +1,14 @@
-<<<<<<< HEAD
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import ModuleTabs from '../../pages/ModuleTabs';
+import ModuleTabs from './ModuleTabs';
+import MiniToolbar from './MiniToolbar'; 
 
 const HEADER_HEIGHT = 30;
-const SIDEBAR_WIDTH = 220;
+// Keep this in sync with SIDEBAR_WIDTH in Sidebar.jsx
+const SIDEBAR_WIDTH = 200;
 
 export default function Layout({ children }) {
-=======
 import { useEffect, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
@@ -46,7 +46,6 @@ export default function Layout({ children }) {
     [sidebarCollapsed]
   );
 
->>>>>>> main
   return (
     <div
       style={{
@@ -56,22 +55,20 @@ export default function Layout({ children }) {
       }}
     >
       <Header />
-<<<<<<< HEAD
       {/* Sticky module bar aligned with main content (beside sidebar) */}
-=======
       {/* Sticky module area (tabs + action buttons) aligned with main content */}
->>>>>>> main
+
+      {/* Sticky module area (tabs + action buttons) aligned with main content */}
+
       <div
         style={{
           position: 'sticky',
           top: HEADER_HEIGHT,
           zIndex: 40,
-<<<<<<< HEAD
           marginLeft: SIDEBAR_WIDTH,
         }}
       >
         <ModuleTabs />
-=======
           marginLeft: sidebarWidth,
           transition: 'margin-left 180ms ease',
         }}
@@ -80,7 +77,11 @@ export default function Layout({ children }) {
         <div className="mt-1">
           <MiniToolbar />
         </div>
->>>>>>> main
+
+        <div className="mt-1">
+          <MiniToolbar />
+        </div>
+
       </div>
       <div
         style={{
@@ -88,25 +89,19 @@ export default function Layout({ children }) {
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         }}
       >
-<<<<<<< HEAD
         <Sidebar />
-=======
         <Sidebar
           collapsed={sidebarCollapsed}
           width={sidebarWidth}
           onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
         />
->>>>>>> main
         <main
           style={{
             flex: 1,
             minWidth: 0,
-<<<<<<< HEAD
             marginLeft: SIDEBAR_WIDTH,
-=======
             marginLeft: sidebarWidth,
             transition: 'margin-left 180ms ease',
->>>>>>> main
             padding: '24px 28px 32px',
           }}
         >

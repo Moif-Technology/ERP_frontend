@@ -37,6 +37,16 @@ function Login() {
     } finally {
       setIsLoading(false);
     }
+   
+    setTimeout(() => {
+      if (username === '123' && password === '123') {
+        // Dummy success login; navigate to dashboard
+        navigate('/dashboard', { replace: true });
+      } else {
+        setErrors({ username: 'Invalid username or password' });
+      }
+      setIsLoading(false);
+    }, 800);
   };
 
   return (

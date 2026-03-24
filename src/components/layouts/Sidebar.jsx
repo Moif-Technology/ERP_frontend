@@ -22,12 +22,10 @@ import ChevronDown from '../../assets/chevron-down.svg';
 import SearchIcon from '../../assets/iconsax-search.svg';
 
 const HEADER_HEIGHT = 30;
-<<<<<<< HEAD
 const SIDEBAR_WIDTH = 200;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
-=======
 const DEFAULT_WIDTH = 232;
 const COLLAPSED_WIDTH = 76;
 
@@ -49,7 +47,9 @@ function iconClass(src, base) {
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
->>>>>>> main
+
+  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
+
   {
     label: 'Data Entry',
     icon: DataEntryIcon,
@@ -75,18 +75,14 @@ const menuItems = [
   { label: 'Configuration', to: '/configuration', icon: ConfigIcon },
 ];
 
-<<<<<<< HEAD
 
 export default function Sidebar() {
-=======
 export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onToggleCollapsed }) {
->>>>>>> main
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (label) =>
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
 
-<<<<<<< HEAD
   return (
     <aside
       className="fixed flex flex-col overflow-y-auto overflow-x-hidden pt-4 font-sans"
@@ -114,7 +110,6 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
   </div>
 </div>
       <nav className="flex-1">
-=======
   const effectiveWidth = width ?? (collapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
 
   return (
@@ -191,13 +186,11 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
       </div>
 
       <nav className="flex-1 px-2 py-2" role="navigation" aria-label="App sections">
->>>>>>> main
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label] || false;
           const hasSub = !!item.subItems;
 
           return (
-<<<<<<< HEAD
             
             <div key={item.label}>
               {hasSub ? (
@@ -221,7 +214,6 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                     } `}
                   />
                 </div>
-=======
             <div key={item.label}>
               {hasSub ? (
                 <button
@@ -256,12 +248,10 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                     />
                   )}
                 </button>
->>>>>>> main
               ) : (
                 <NavLink
                   to={item.to}
                   end={item.exact}
-<<<<<<< HEAD
                   className={({ isActive }) =>
                     `mx-1 flex items-center gap-3 p-2 rounded-[10px] text-white text-sm no-underline transition backdrop-blur-md hover:backdrop-blur-lg ${
                       isActive
@@ -281,7 +271,6 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
 
               {hasSub && isOpen && (
                 <div className="bg-black/15">
-=======
                   aria-label={collapsed ? item.label : undefined}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
@@ -319,37 +308,30 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                   role="group"
                   aria-label={`${item.label} submenu`}
                 >
->>>>>>> main
                   {item.subItems.map((sub) => (
                     <NavLink
                       key={`${item.label}-${sub.label}`}
                       to={sub.to}
                       className={({ isActive }) =>
-<<<<<<< HEAD
                         `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
                           isActive
                             ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                             : 'hover:bg-white/8 font-light'
-=======
                         `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] text-white/90 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset min-h-[44px] ${
                           isActive ? 'bg-white/18 border border-white/14 font-semibold text-white' : 'font-normal'
->>>>>>> main
                         }`
                       }
                     >
                       <img
                         src={sub.icon}
                         alt=""
-<<<<<<< HEAD
                         className="w-4 h-4 "
                       />
                       <span>{sub.label}</span>
-=======
                         aria-hidden="true"
                         className={iconClass(sub.icon, `${ICON_SIZE} shrink-0 opacity-90`)}
                       />
                       <span className="truncate">{sub.label}</span>
->>>>>>> main
                     </NavLink>
                   ))}
                 </div>
@@ -361,8 +343,6 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
     </aside>
   );
 }
-<<<<<<< HEAD
-=======
 
 function Chevron({ direction }) {
   return (
@@ -395,4 +375,3 @@ function Chevron({ direction }) {
     </svg>
   );
 }
->>>>>>> main
