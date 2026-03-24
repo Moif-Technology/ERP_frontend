@@ -48,18 +48,18 @@ export default function Sale() {
         }
       `}</style>
 
-      <div className="my-[15px] mx-[-10px]">
-        <div className="rounded-lg bg-white shadow-sm p-4 flex flex-col gap-4">
+      <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
+        <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 className="text-lg sm:text-xl font-bold" style={{ color: primary }}>
+          <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
               Sales
             </h1>
 
             <div className="flex gap-2 flex-wrap items-center">
-              <button className="sale-btn-outline w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-white">
-                <img src={PrinterIcon} alt="" className="w-4 h-4" />
+              <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
+                <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
               {[{ icon: CancelIcon, label: 'Cancel' },
@@ -68,57 +68,60 @@ export default function Sale() {
               ].map((btn) => (
                 <button
                   key={btn.label}
-                  className="sale-btn-outline flex items-center gap-1 px-2 py-1 text-[11px] rounded border border-gray-300 bg-white"
+                  className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
                 >
-                  <img src={btn.icon} alt="" className="w-4 h-4" />
+                  <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                   {btn.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Content */}
-          <div className="flex flex-col xl:flex-row gap-3">
+          {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
 
             {/* LEFT */}
-            <div className="w-full xl:w-3/4 bg-white p-3 border border-gray-200 rounded overflow-hidden">
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-3/4">
+              {/* Form section - bordered */}
+              <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
+                <div className="flex flex-col gap-2">
+                  {/* Row 1: Short Description + numeric fields */}
+                  <div className="flex flex-wrap items-end gap-1 overflow-hidden sm:gap-[6px] xl:flex-nowrap [&>*]:min-w-0">
+                    <InputField label="Short Description" />
+                    <SubInputField label="Hs Code/Wt" type="number" />
+                    <SubInputField label="Qty" type="number" />
+                    <SubInputField label="Unit Price" type="number" />
+                    <SubInputField label="Disc.%" type="number" />
+                    <SubInputField label="Disc Price" type="number" />
+                    <SubInputField label="Disc.Amt" type="number" />
+                  </div>
 
-              <div className="flex flex-col gap-2">
+                  {/* Row 2 */}
+                  <div className="grid grid-cols-2 items-end gap-1 sm:grid-cols-3 sm:gap-[6px] md:grid-cols-4 lg:grid-cols-7">
+                    <SubInputField label="Sub total" />
+                    <SubInputField label="Tax%" />
+                    <SubInputField label="T.Amt" />
+                    <SubInputField label="Total" />
 
-                {/* Row 1: Short Description + numeric fields */}
-                <div className="flex gap-[2px] flex-wrap xl:flex-nowrap items-end [&>*]:shrink-0 overflow-hidden">
-                  <InputField label="Short Description" />
-                  <SubInputField label="Hs Code/Wt" type="number" />
-                  <SubInputField label="Qty" type="number" />
-                  <SubInputField label="Unit Price" type="number" />
-                  <SubInputField label="Disc.%" type="number" />
-                  <SubInputField label="Disc Price" type="number" />
-                  <SubInputField label="Disc.Amt" type="number" />
-                </div>
+                    <DropdownInput label="Qutn. no" options={['QTN-001']} />
+                    <DropdownInput label="DO. no" options={['DO-001']} />
 
-                {/* Row 2 */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-[6px] items-end">
-                  <SubInputField label="Sub total" />
-                  <SubInputField label="Tax%" />
-                  <SubInputField label="T.Amt" />
-                  <SubInputField label="Total" />
-
-                  <DropdownInput label="Qutn. no" options={['QTN-001']} />
-                  <DropdownInput label="DO. no" options={['DO-001']} />
-
-                  <div className="flex items-center gap-2">
-                    <Switch checked={accept} onChange={setAccept} description="Accept" />
-                    <button
-                      className="px-2 py-1 text-[10px] text-white rounded"
-                      style={{ backgroundColor: primary }}
-                    >
-                      Save
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Switch checked={accept} onChange={setAccept} description="Accept" />
+                      <button
+                        className="rounded px-1.5 py-0.5 text-[9px] text-white sm:px-2 sm:py-1 sm:text-[10px]"
+                        style={{ backgroundColor: primary }}
+                      >
+                        Save
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </div>
 
+              {/* Table section - separate bordered; only this area scrolls on xl */}
+              <div className="min-h-[120px] flex-1 overflow-auto rounded border border-gray-200 bg-white p-2 sm:p-3 xl:min-h-0">
                 <CommonTable
-                  className="mt-[8px]"
                   headers={[
                     '',
                     'Short Description',
@@ -135,7 +138,7 @@ export default function Sale() {
                   ]}
                   rows={[
                     [
-                      <div className="flex justify-center"><input type="checkbox" /></div>,
+                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
                       'Product A',
                       'HS-1001',
                       '2',
@@ -146,14 +149,14 @@ export default function Sale() {
                       '18',
                       '41.04',
                       '269.04',
-                      <div className="flex items-center justify-center gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="w-3.5 h-3.5" /></button>
+                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
+                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
                       </div>,
                     ],
                     [
-                      <div className="flex justify-center"><input type="checkbox" /></div>,
+                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
                       'Product B',
                       'HS-2034',
                       '1',
@@ -164,14 +167,14 @@ export default function Sale() {
                       '18',
                       '72.90',
                       '477.90',
-                      <div className="flex items-center justify-center gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="w-3.5 h-3.5" /></button>
+                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
+                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
                       </div>,
                     ],
                     [
-                      <div className="flex justify-center"><input type="checkbox" /></div>,
+                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
                       'Service C',
                       'HS-9090',
                       '3',
@@ -182,10 +185,10 @@ export default function Sale() {
                       '5',
                       '12.00',
                       '252.00',
-                      <div className="flex items-center justify-center gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="w-3.5 h-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="w-3.5 h-3.5" /></button>
+                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
+                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
+                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
                       </div>,
                     ],
                   ]}
@@ -223,26 +226,27 @@ export default function Sale() {
               </div>
             </div> */}
 
-           <div className="w-full xl:w-1/4">
-  <div className="bg-white p-3 border border-gray-200 rounded">
-    <div className="flex flex-col gap-[8px]">
+           <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
+  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
+  <div className="shrink-0 rounded border border-gray-200 bg-white p-2 sm:p-3">
+    <div className="flex flex-col gap-1 sm:gap-[8px]">
 
       {/* Row 1 */}
-      <div className="flex gap-[6px] items-end">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
         <SubInputField label="Sub Total" type="number" />
         <SubInputField label="Discount Amount" type="number" />
         <SubInputField label="Discount %" type="number" suffix="%" />
       </div>
 
       {/* Row 2 */}
-      <div className="flex gap-[6px] items-end">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
         <InputField label="Total Amount" type="number" />
         <SubInputField label="Tax" type="number" />
         <SubInputField label="Tax %" type="number" suffix="%" />
       </div>
 
       {/* Row 3 */}
-      <div className="flex gap-[6px] items-end">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
         <InputField label="Round off" type="number" />
         <InputField label="Net Amount" type="number" />
       </div>
@@ -253,17 +257,17 @@ export default function Sale() {
   {/* Button */}
   <button
     type="button"
-    className="sale-btn-primary w-full mt-[6px] px-3 py-2 text-[11px] font-medium rounded border transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
+    className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
     style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
   >
     Sales terms
   </button>
 
   {/* New bordered section below the button */}
-  <div className="mt-[8px] bg-white p-3 border border-gray-200 rounded overflow-hidden">
-    <div className="flex flex-col gap-[8px]">
+  <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
+    <div className="flex flex-col gap-1 sm:gap-[8px]">
       {/* Row 1: Bill no + 2 sub fields */}
-      <div className="flex gap-[6px] items-end flex-wrap xl:flex-nowrap">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
         <div className="flex-none">
           <InputField label="Bill no" />
         </div>
@@ -272,25 +276,25 @@ export default function Sale() {
       </div>
 
       {/* Row 2: Customer name + Payment mode */}
-      <div className="flex gap-[6px] items-end flex-wrap xl:flex-nowrap">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
         <InputField label="Customer name" />
         <DropdownInput
           label=""
           options={['000001']}
           placeholder="000001"
-          className="w-28 min-w-[100px]"
+          className="min-w-[80px] sm:min-w-[100px]"
         />
       </div>
 
       {/* Row 4: Account head + creditcard no + credit card type */}
-      <div className="flex gap-[6px] items-end flex-wrap xl:flex-nowrap">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
         <InputField label="Account head" />
         <SubInputField label="Creditcard no" />
         <SubInputField label="Credit card type" />
       </div>
 
       {/* Row 5: Cashier name (dropdown) + Invoice amt */}
-      <div className="flex gap-[6px] items-end flex-wrap xl:flex-nowrap">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
         <DropdownInput
           label="Cashier name"
           options={['Cashier 1', 'Cashier 2']}
@@ -300,28 +304,28 @@ export default function Sale() {
       </div>
 
       {/* Row 7: Station + Counter */}
-      <div className="flex gap-[6px] items-end flex-wrap xl:flex-nowrap">
+      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
         <InputField label="Station" />
         <InputField label="Counter" />
       </div>
 
       {/* Row 8: Edit + New invoice buttons */}
-      <div className="flex gap-[6px] mt-[8px]">
+      <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
         <button
           type="button"
-          className="sale-btn-red-outline flex-1 px-2 py-2 text-[11px] font-medium rounded border transition-all duration-150 hover:shadow-sm active:scale-[0.98] flex items-center justify-center gap-2"
+          className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
           style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
         >
-          <img src={EditIcon} alt="" className="w-4 h-4" />
+          <img src={EditIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
           Edit
         </button>
 
         <button
           type="button"
-          className="sale-btn-red-outline flex-1 px-2 py-2 text-[11px] font-medium rounded border transition-all duration-150 hover:shadow-sm active:scale-[0.98] flex items-center justify-center gap-2"
+          className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
           style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
         >
-          <img src={SaleIcon} alt="" className="w-4 h-4" />
+          <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
           New invoice
         </button>
       </div>
@@ -333,66 +337,57 @@ export default function Sale() {
 
 
 
-  <div className="mt-[8px] bg-white p-3 border border-gray-200 rounded overflow-hidden">
-  <div className="bg-white p-3 border border-gray-200 rounded">
-    
-    <div className="flex flex-col gap-[8px]">
+  <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
+    <div className="flex flex-col gap-1 sm:gap-[8px]">
 
       {/* Paid Amount */}
-      <div className="flex items-center justify-between gap-[10px]">
-        <label className="text-[10px] text-gray-700 w-[120px]">
+      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+        <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
           Paid Amount
         </label>
         <input
           type="number"
-         
-          className="w-[200px] h-[28px] border border-gray-300 rounded px-2 text-[10px] bg-gray-100 outline-none"
+          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
         />
       </div>
 
       {/* Balance Amount */}
-      <div className="flex items-center justify-between gap-[10px]">
-        <label className="text-[10px] text-gray-700 w-[120px]">
+      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+        <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
           Balance Amount
         </label>
         <input
           type="number"
-         
-          className="w-[200px] h-[28px] border border-gray-300 rounded px-2 text-[10px] bg-gray-100 outline-none"
+          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
         />
       </div>
 
       {/* Paid by card */}
-      <div className="flex items-center justify-between gap-[10px]">
-        <label className="text-[10px] text-gray-700 w-[120px]">
+      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+        <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
           Paid by card
         </label>
         <input
           type="number"
-          
-          className="w-[200px] h-[28px] border border-gray-300 rounded px-2 text-[10px] bg-gray-100 outline-none"
+          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
         />
       </div>
 
       {/* Paid by cash */}
-      <div className="flex items-center justify-between gap-[10px]">
-        <label className="text-[10px] text-gray-700 w-[120px]">
+      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+        <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
           Paid by cash
         </label>
         <input
           type="number"
-          
-          className="w-[200px] h-[28px] border border-gray-300 rounded px-2 text-[10px] bg-gray-100 outline-none"
+          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
         />
       </div>
 
     </div>
   </div>
-</div>
-
-
-
-</div>
+  </div>
+            </div>
           </div>
         </div>
       </div>
