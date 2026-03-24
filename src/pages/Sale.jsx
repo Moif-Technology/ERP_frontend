@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
@@ -48,6 +48,55 @@ const initialFormState = {
   doNo: 'DO-001',
 };
 
+const fieldVisibilityDefaults = {
+  shortDescription: true,
+  hsCode: true,
+  qty: true,
+  unitPrice: true,
+  discPercent: true,
+  discPrice: true,
+  discAmt: true,
+  subTotal: true,
+  taxPercent: true,
+  taxAmt: true,
+  total: true,
+  qutnNo: true,
+  doNo: true,
+};
+
+const fieldVisibilityLabels = {
+  shortDescription: 'Short Description',
+  hsCode: 'Hs Code/Wt',
+  qty: 'Qty',
+  unitPrice: 'Unit Price',
+  discPercent: 'Disc.%',
+  discPrice: 'Disc Price',
+  discAmt: 'Disc.Amt',
+  subTotal: 'Sub total',
+  taxPercent: 'Tax%',
+  taxAmt: 'T.Amt',
+  total: 'Total',
+  qutnNo: 'Qutn. no',
+  doNo: 'DO. no',
+};
+
+const tableColumnKeys = ['checkbox', 'shortDescription', 'hsCode', 'qty', 'sellingPrice', 'discPercent', 'discAmt', 'subTotal', 'taxPercent', 'taxAmt', 'lineTotal', 'action'];
+const tableColumnLabels = {
+  checkbox: 'Select',
+  shortDescription: 'Short Description',
+  hsCode: 'HS Code/Wt',
+  qty: 'Qty',
+  sellingPrice: 'Selling price',
+  discPercent: 'Disc %',
+  discAmt: 'Disc Amt',
+  subTotal: 'Sub total',
+  taxPercent: 'Tax %',
+  taxAmt: 'Tax amt',
+  lineTotal: 'Line total',
+  action: 'Action',
+};
+const tableColumnVisibilityDefaults = Object.fromEntries(tableColumnKeys.map((k) => [k, true]));
+
 export default function Sale() {
   const [salesTermsOpen, setSalesTermsOpen] = useState(false);
   const [saveTerms, setSaveTerms] = useState(false);
@@ -57,13 +106,54 @@ export default function Sale() {
     ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
     ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
     ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
   ]);
   const [form, setForm] = useState(initialFormState);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [visibleFields, setVisibleFields] = useState(fieldVisibilityDefaults);
+  const [fieldMenu, setFieldMenu] = useState({ open: false, x: 0, y: 0 });
+  const [visibleColumns, setVisibleColumns] = useState(tableColumnVisibilityDefaults);
+  const [tableMenu, setTableMenu] = useState({ open: false, x: 0, y: 0 });
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
   const primaryActive = colors.primary?.[100] || '#E4CDD3';
+
+  useEffect(() => {
+    const closeMenus = () => {
+      setFieldMenu((prev) => ({ ...prev, open: false }));
+      setTableMenu((prev) => ({ ...prev, open: false }));
+    };
+    const closeOnEsc = (e) => {
+      if (e.key === 'Escape') closeMenus();
+    };
+    window.addEventListener('click', closeMenus);
+    window.addEventListener('keydown', closeOnEsc);
+    return () => {
+      window.removeEventListener('click', closeMenus);
+      window.removeEventListener('keydown', closeOnEsc);
+    };
+  }, []);
 
   const fillFormFromRow = (row) => {
     setForm({
@@ -147,6 +237,14 @@ export default function Sale() {
     setForm(initialFormState);
   };
 
+  const toggleFieldVisibility = (fieldKey) => {
+    setVisibleFields((prev) => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
+  };
+
+  const toggleColumnVisibility = (colKey) => {
+    setVisibleColumns((prev) => ({ ...prev, [colKey]: !prev[colKey] }));
+  };
+
   // Calculate totals
   const totalDiscAmt = saleRows.reduce((sum, r) => sum + r[5], 0);
   const totalSubTotal = saleRows.reduce((sum, r) => sum + r[6], 0);
@@ -170,14 +268,14 @@ const rowsWithTotal = [
     r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], 
 
     <div key={`action-${idx}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-      <button type="button" className="p-0.5" onClick={() => setSelectedProduct(getProductDetails(r, idx))}>
-        <img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+      <button type="button" className="p-1" onClick={() => setSelectedProduct(getProductDetails(r, idx))}>
+        <img src={ViewActionIcon} alt="View" className="h-4 w-4 sm:h-5 sm:w-5" />
       </button>
-      <button type="button" className="p-0.5" onClick={() => handleEdit(r, idx)}>
-        <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+      <button type="button" className="p-1" onClick={() => handleEdit(r, idx)}>
+        <img src={EditActionIcon} alt="Edit" className="h-4 w-4 sm:h-5 sm:w-5" />
       </button>
-      <button type="button" className="p-0.5" onClick={() => handleDelete(idx)}>
-        <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+      <button type="button" className="p-1" onClick={() => handleDelete(idx)}>
+        <img src={DeleteActionIcon} alt="Delete" className="h-4 w-4 sm:h-5 sm:w-5" />
       </button>
     </div>
   ]),
@@ -197,6 +295,11 @@ const rowsWithTotal = [
 
 
 ];
+
+  const tableHeadersFull = ['', 'Short Description', 'HS Code/Wt', ' Qty', 'Selling price', 'Disc %', 'Disc Amt', 'Sub total', 'Tax %', 'Tax amt', 'Line total', 'Action'];
+  const visibleIndices = tableColumnKeys.map((k, i) => (visibleColumns[k] ? i : -1)).filter((i) => i >= 0);
+  const filteredHeaders = visibleIndices.map((i) => tableHeadersFull[i]);
+  const filteredRows = rowsWithTotal.map((row) => visibleIndices.map((i) => row[i]));
 
   return (
     <div className="sale-page">
@@ -226,6 +329,74 @@ const rowsWithTotal = [
         }
         .sale-btn-red-outline:active {
           background: ${primaryActive} !important;
+        }
+
+        .sale-form-section input,
+        .sale-form-section select {
+          min-height: 32px !important;
+          height: 32px !important;
+          border: 1px solid #d1d5db !important;
+          border-radius: 6px !important;
+          padding: 6px 10px !important;
+          font-size: 11px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .sale-form-section select {
+          padding-right: 28px !important;
+        }
+        .sale-form-section .sale-form-field div:has(> select) {
+          width: 100% !important;
+          min-height: 32px !important;
+        }
+        .sale-form-section .sale-form-field {
+          min-width: 0;
+        }
+        .sale-form-section label {
+          font-size: 11px !important;
+          color: #374151 !important;
+        }
+        .sale-field-menu,
+        .sale-column-menu {
+          width: 190px;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: #fff;
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .sale-table th,
+        .sale-table td {
+          font-size: 12px !important;
+          padding: 8px 10px !important;
+        }
+        .sale-table input[type="checkbox"] {
+          height: 14px !important;
+          width: 14px !important;
+        }
+        .sale-table tbody tr:last-child {
+          position: sticky;
+          bottom: 0;
+          background: #fff !important;
+          z-index: 1;
+          box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .sale-table tbody tr:last-child td {
+          border-top: 2px solid #e2e8f0 !important;
+          font-weight: 600;
+        }
+        .sale-table thead th {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: #F2E6EA !important;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .sale-table-scroll {
+          max-height: min(450px, 55vh);
+          overflow: auto;
+        }
+        .sale-table-scroll .sale-table {
+          overflow: visible !important;
         }
       `}</style>
 
@@ -273,98 +444,154 @@ const rowsWithTotal = [
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
 
             {/* LEFT */}
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-3/4">
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden xl:w-3/4">
               {/* Form section - bordered */}
-              <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="flex flex-col gap-2">
+              <div
+                className="sale-form-section shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 sm:p-4"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setFieldMenu({ open: true, x: e.clientX, y: e.clientY });
+                }}
+              >
+                <div className="flex flex-col gap-3">
                   {/* Row 1: Short Description + numeric fields */}
-                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
-                    <InputField
-                      label="Short Description"
-                      value={form.shortDescription}
-                      onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Hs Code/Wt"
-                      type="number"
-                      value={form.hsCode}
-                      onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Qty"
-                      type="number"
-                      value={form.qty}
-                      onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Unit Price"
-                      type="number"
-                      value={form.unitPrice}
-                      onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc.%"
-                      type="number"
-                      value={form.discPercent}
-                      onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc Price"
-                      type="number"
-                      value={form.discPrice}
-                      onChange={(e) => setForm((f) => ({ ...f, discPrice: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc.Amt"
-                      type="number"
-                      value={form.discAmt}
-                      onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 items-end gap-2 lg:gap-3">
+                    {visibleFields.shortDescription && (
+                    <div className="sale-form-field col-span-2">
+                      <InputField
+                        label="Short Description"
+                        value={form.shortDescription}
+                        onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.hsCode && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Hs Code/Wt"
+                        type="number"
+                        value={form.hsCode}
+                        onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.qty && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Qty"
+                        type="number"
+                        value={form.qty}
+                        onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.unitPrice && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Unit Price"
+                        type="number"
+                        value={form.unitPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discPercent && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc.%"
+                        type="number"
+                        value={form.discPercent}
+                        onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discPrice && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc Price"
+                        type="number"
+                        value={form.discPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, discPrice: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discAmt && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc.Amt"
+                        type="number"
+                        value={form.discAmt}
+                        onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
+                      />
+                    </div>
+                    )}
                   </div>
 
                   {/* Row 2 */}
-                  <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-                    <SubInputField
-                      label="Sub total"
-                      value={form.subTotal}
-                      onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Tax%"
-                      type="number"
-                      value={form.taxPercent}
-                      onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="T.Amt"
-                      type="number"
-                      value={form.taxAmt}
-                      onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Total"
-                      type="number"
-                      value={form.total}
-                      onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
-                    />
-
-                    <DropdownInput
-                      label="Qutn. no"
-                      options={['QTN-001']}
-                      value={form.qutnNo}
-                      onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
-                    />
-                    <DropdownInput
-                      label="DO. no"
-                      options={['DO-001']}
-                      value={form.doNo}
-                      onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
-                    />
-
-                    <div className="flex items-end">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 items-end gap-2 lg:gap-3">
+                    {visibleFields.subTotal && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Sub total"
+                        value={form.subTotal}
+                        onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.taxPercent && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Tax%"
+                        type="number"
+                        value={form.taxPercent}
+                        onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.taxAmt && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="T.Amt"
+                        type="number"
+                        value={form.taxAmt}
+                        onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.total && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Total"
+                        type="number"
+                        value={form.total}
+                        onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.qutnNo && (
+                    <div className="sale-form-field col-span-2">
+                      <DropdownInput
+                        label="Qutn. no"
+                        options={['QTN-001']}
+                        value={form.qutnNo}
+                        onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.doNo && (
+                    <div className="sale-form-field col-span-2">
+                      <DropdownInput
+                        label="DO. no"
+                        options={['DO-001']}
+                        value={form.doNo}
+                        onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
+                      />
+                    </div>
+                    )}
+                    <div className="sale-form-field col-span-2 sm:col-span-1 flex items-end pb-0.5">
                       <button
                         type="button"
-                        className="flex min-h-[24px] items-center justify-center rounded px-3 py-1.5 text-[9px] font-medium text-white sm:min-h-[28px] sm:px-4 sm:py-2 sm:text-[10px]"
+                        className="flex h-8 w-full min-w-[60px] items-center justify-center rounded-md border px-3 py-1.5 text-[10px] font-medium text-white sm:text-[11px]"
                         style={{ backgroundColor: primary }}
                         onClick={handleSaveOrUpdate}
                       >
@@ -374,37 +601,81 @@ const rowsWithTotal = [
                   </div>
                 </div>
               </div>
+              {fieldMenu.open && (
+                <div
+                  className="sale-field-menu fixed z-50 p-2"
+                  style={{
+                    left: `${Math.max(8, Math.min(fieldMenu.x, window.innerWidth - 210))}px`,
+                    top: `${Math.max(8, Math.min(fieldMenu.y, window.innerHeight - 340))}px`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
+                    Show / hide inputs
+                  </div>
+                  <div className="max-h-[280px] overflow-auto pr-1">
+                    {Object.keys(fieldVisibilityDefaults).map((key) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={visibleFields[key]}
+                          onChange={() => toggleFieldVisibility(key)}
+                          className="h-3.5 w-3.5"
+                          style={{ accentColor: primary }}
+                        />
+                        <span>{fieldVisibilityLabels[key]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Table section - bordered container; scroll inside when content overflows */}
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="min-h-0 min-w-0 flex-1 overflow-auto">
-                  <CommonTable
-                    headers={[
-        '',
-        'Short Description',
-        'HS Code/Wt',
-        ' Qty',
-        'Selling price',
-        'Disc %',
-        'Disc Amt',
-        'Sub total',
-        'Tax %',
-        'Tax amt',
-        'Line total',
-        'Action',
-      ]}
-                    rows={rowsWithTotal}
-                  />
+              <div
+                className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setTableMenu({ open: true, x: e.clientX, y: e.clientY });
+                }}
+              >
+                <div className="sale-table-scroll min-h-0 min-w-0 flex-1">
+                  <CommonTable className="sale-table" headers={filteredHeaders} rows={filteredRows} />
                 </div>
               </div>
+              {tableMenu.open && (
+                <div
+                  className="sale-column-menu fixed z-50 p-2"
+                  style={{
+                    left: `${Math.max(8, Math.min(tableMenu.x, window.innerWidth - 210))}px`,
+                    top: `${Math.max(8, Math.min(tableMenu.y, window.innerHeight - 340))}px`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
+                    Show / hide columns
+                  </div>
+                  <div className="max-h-[280px] overflow-auto pr-1">
+                    {tableColumnKeys.map((key) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[key]}
+                          onChange={() => toggleColumnVisibility(key)}
+                          className="h-3.5 w-3.5"
+                          style={{ accentColor: primary }}
+                        />
+                        <span>{tableColumnLabels[key] || key}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* RIGHT */}
             <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
-               
-                
-
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="flex flex-col gap-2 sm:gap-3 pb-2">
                 {/* Bill / Customer section */}
                 <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
                   <div className="flex flex-col gap-1 sm:gap-[8px]">
@@ -485,14 +756,11 @@ const rowsWithTotal = [
                 >
                   Sales terms
                 </button>
+                </div>
+              </div>
 
-
-
-
-
-
-                {/* Paid Amount section */}
-                <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
+              {/* Paid Amount section - fixed at bottom */}
+              <div className="mt-auto shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-2 sm:p-3">
                   <div className="flex flex-col gap-1 sm:gap-[8px]">
                     {/* Paid Amount */}
                     <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
@@ -543,7 +811,6 @@ const rowsWithTotal = [
             </div>
           </div>
         </div>
-      </div>
 
       {/* Sales Terms Modal */}
       {salesTermsOpen && (
