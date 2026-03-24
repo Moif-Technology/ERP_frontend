@@ -71,6 +71,19 @@ const SIDEBAR_WIDTH_COLLAPSED = 76;
 const SIDEBAR_STORAGE_KEY = 'ui_sidebar_collapsed';
 
 export default function Layout({ children }) {
+import { useEffect, useMemo, useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import Header from './Header';
+import Sidebar from './Sidebar';
+import ModuleTabs from './ModuleTabs';
+import MiniToolbar from './MiniToolbar'; 
+
+const HEADER_HEIGHT = 30;
+const SIDEBAR_WIDTH_EXPANDED = 232;
+const SIDEBAR_WIDTH_COLLAPSED = 76;
+const SIDEBAR_STORAGE_KEY = 'ui_sidebar_collapsed';
+
+export default function Layout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -106,7 +119,11 @@ export default function Layout({ children }) {
       }}
     >
       <Header />
+      {/* Sticky module bar aligned with main content (beside sidebar) */}
       {/* Sticky module area (tabs + action buttons) aligned with main content */}
+
+      {/* Sticky module area (tabs + action buttons) aligned with main content */}
+
       <div
         style={{
           position: 'sticky',
@@ -117,9 +134,19 @@ export default function Layout({ children }) {
         }}
       >
         <ModuleTabs />
+          marginLeft: sidebarWidth,
+          transition: 'margin-left 180ms ease',
+        }}
+      >
+        <ModuleTabs />
         <div className="mt-1">
           <MiniToolbar />
         </div>
+
+        <div className="mt-1">
+          <MiniToolbar />
+        </div>
+
       </div>
       <div
         style={{
@@ -127,6 +154,7 @@ export default function Layout({ children }) {
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         }}
       >
+        <Sidebar />
         <Sidebar
           collapsed={sidebarCollapsed}
           width={sidebarWidth}
@@ -137,6 +165,7 @@ export default function Layout({ children }) {
             flex: 1,
             minWidth: 0,
             overflow: 'hidden',
+            marginLeft: SIDEBAR_WIDTH,
             marginLeft: sidebarWidth,
             transition: 'margin-left 180ms ease',
             padding: '24px 28px 32px',

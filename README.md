@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# ERP Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Minimal React + Vite frontend for the ERP desktop project.
+
+## Stack
+
+- React 19
+- Vite 7
+- React Router 7
+- MUI
+- Tailwind CSS 4
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+Default local URL:
+
+```text
+http://localhost:5173
+```
 
 ## Available Scripts
 
-In the project directory, you can run:
+```bash
+npm run dev
+```
 
-### `npm start`
+Starts the development server.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm run build
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Builds the app for production.
 
-### `npm test`
+```bash
+npm run preview
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Previews the production build locally.
 
-### `npm run build`
+## Main Routes
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- `/` - Dashboard
+- `/products` - Product / Item Management
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Project Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```text
+src/
+  assets/                  Static icons and images
+  components/layouts/      Header, sidebar, app shell
+  constants/               Theme and shared constants
+  pages/                   Route-level screens
+  App.jsx                  App composition
+  Routes.jsx               Route definitions
+  main.jsx                 Vite entry point
+```
 
-### `npm run eject`
+## Notes
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- This project now runs on Vite, not Create React App.
+- Tailwind is available through the Vite setup.
+- The main app shell lives in `src/components/layouts`.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Development Goal
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Keep the UI clean, simple, and easy to extend for ERP modules like:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Dashboard
+- Products
+- Inventory
+- Sales
+- Procurement
+- Reports
