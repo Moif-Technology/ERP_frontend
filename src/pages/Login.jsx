@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../constants/theme';
+import { login } from '../api/auth/auth.service.js';
 
 function Login() {
   const navigate = useNavigate();
@@ -26,6 +27,16 @@ function Login() {
     setIsLoading(true);
     setErrors({});
 
+    try {
+      await login(username, password);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Something went wrong. Please try again.';
+      setErrors({ username: message });
+    } finally {
+      setIsLoading(false);
+    }
    
     setTimeout(() => {
       if (username === '123' && password === '123') {

@@ -212,7 +212,31 @@ function iconClass(src, base) {
 }
 
 const menuItems = [
+  { label: 'Dashboard', icon: DashboardIcon, to: '/', exact: true },
+const DEFAULT_WIDTH = 232;
+const COLLAPSED_WIDTH = 76;
+
+// Minimum touch target (ui-ux-pro-max: 44×44pt)
+const TOUCH_MIN = 'min-h-[44px] min-w-[44px]';
+const ICON_SIZE = 'h-5 w-5'; // 20px icon token (clearer in expanded mode)
+
+// Some SVGs have extra whitespace inside their viewBox, so they look smaller.
+// Scale ONLY those specific icons to match the others visually.
+const ICON_TWEAK = {
+  [DataEntryIcon]: 'scale-[1.22]',
+  [ListIcon]: 'scale-[1.38]',
+  [StockIcon]: 'scale-[1.38]',
+};
+
+function iconClass(src, base) {
+  return `${base} ${ICON_TWEAK[src] ?? ''}`.trim();
+}
+
+const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
+
+  { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
+
   {
     label: 'Data Entry',
     icon: DataEntryIcon,
@@ -238,12 +262,45 @@ const menuItems = [
   { label: 'Configuration', to: '/configuration', icon: ConfigIcon },
 ];
 
+
+export default function Sidebar() {
 export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onToggleCollapsed }) {
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (label) =>
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
 
+  const effectiveWidth = width ?? (collapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
+
+  return (
+    <aside
+      className="sidebar-scroll fixed flex flex-col overflow-y-auto overflow-x-hidden font-sans"
+      style={{
+        top: HEADER_HEIGHT,
+        left: 0,
+        width: effectiveWidth,
+        height: `calc(100vh - ${HEADER_HEIGHT}px)`,
+        background: `linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), ${colors.primary.gradient}`,
+        color: 'white',
+        transition: 'width 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+      }}
+      aria-label="Main navigation"
+    >
+     <div className="px-4 pb-4">
+  <div className="flex items-center w-40 h-8 border border-white bg-transparent rounded-[10px] px-2">
+    <img
+      src={SearchIcon}
+      alt="Search"
+      className="w-4 h-4 mr-2 filter brightness-0 invert"
+    />
+    <input
+      type="text"
+      placeholder="Search..."
+      className="bg-transparent outline-none text-white text-xs w-full"
+    />
+  </div>
+</div>
+      <nav className="flex-1">
   const effectiveWidth = width ?? (collapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
 
   return (
@@ -309,6 +366,7 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
         </div>
 
         {/* {!collapsed && (
+        {!collapsed && (
           <div className="mt-4 px-2">
             <div className="text-[11px] tracking-[0.14em] uppercase text-white/65">
               Navigation
@@ -317,6 +375,9 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
         )} */}
 
         {/* <div className="mt-3 mx-2 border-t border-white/10" aria-hidden="true" /> */}
+        )}
+
+        <div className="mt-3 mx-2 border-t border-white/10" aria-hidden="true" />
       </div>
 
       <nav className="flex-1 px-2 py-2" role="navigation" aria-label="App sections">
@@ -325,6 +386,37 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
           const hasSub = !!item.subItems;
 
           return (
+            <div key={item.label}>
+              {hasSub ? (
+                <button
+                  type="button"
+                  aria-label={collapsed ? item.label : undefined}
+                  aria-expanded={!collapsed ? isOpen : undefined}
+                  title={collapsed ? item.label : undefined}
+                  onClick={() => toggleMenu(item.label)}
+                  className={`group relative flex w-full items-center rounded-2xl text-left text-white/92 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/16 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset ${TOUCH_MIN} ${
+                    collapsed ? 'justify-center px-0 py-3' : 'justify-between gap-3 px-3 py-2.5'
+                  }`}
+                >
+                  <div className={`flex items-center min-w-0 ${collapsed ? 'gap-0' : 'gap-3'}`}>
+                    <img
+                      src={item.icon}
+                      alt=""
+                      aria-hidden="true"
+                      className={iconClass(item.icon, `${ICON_SIZE} shrink-0 opacity-90 group-hover:opacity-100 transition-opacity`)}
+                    />
+                    {!collapsed && (
+                      <span className="text-[14px] font-medium truncate">{item.label}</span>
+                    )}
+                  </div>
+                  <img
+                    src={ChevronDown}
+                    alt="toggle"
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180' : ''
+                    } `}
+                  />
+                </div>
             <div key={item.label}>
               {hasSub ? (
                 <button
@@ -396,6 +488,39 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                 </NavLink>
               )}
 
+              {hasSub && isOpen && (
+                <div className="bg-black/15">
+                  aria-label={collapsed ? item.label : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    `group relative flex w-full items-center rounded-2xl text-left no-underline transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset ${TOUCH_MIN} ${
+                      collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5'
+                    } ${
+                      isActive
+                        ? 'bg-white/20 text-white font-semibold border border-white/12 shadow-[inset_4px_0_12px_-2px_rgba(255,255,255,0.2),inset_0_1px_0_rgba(255,255,255,0.08),0_8px_20px_rgba(0,0,0,0.18)]'
+                        : 'text-white/92 hover:bg-white/10 active:bg-white/16'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {/* No bar: selected state = pill with soft left-edge glow */}
+                      <img
+                        src={item.icon}
+                        alt=""
+                        aria-hidden="true"
+                        className={iconClass(item.icon, `${ICON_SIZE} shrink-0 opacity-95 group-hover:opacity-100 transition-opacity`)}
+                      />
+                      {!collapsed && (
+                        <span className="text-[14px] truncate tracking-[0.01em]">
+                          {item.label}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              )}
+
               {hasSub && isOpen && !collapsed && (
                 <div
                   className="mt-2 ml-2 pl-4 border-l border-white/10 space-y-1"
@@ -412,12 +537,22 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                           // 'bg-white/18 border border-white/14 font-semibold text-white' : 'font-normal'
                            'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                              : 'hover:bg-white/8 font-light'
+                        `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
+                          isActive
+                            ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
+                            : 'hover:bg-white/8 font-light'
+                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] text-white/90 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset min-h-[44px] ${
+                          isActive ? 'bg-white/18 border border-white/14 font-semibold text-white' : 'font-normal'
                         }`
                       }
                     >
                       <img
                         src={sub.icon}
                         alt=""
+                        aria-hidden="true"
+                        className={iconClass(sub.icon, `${ICON_SIZE} shrink-0 opacity-90`)}
+                      />
+                      <span>{sub.label}</span>
                         aria-hidden="true"
                         className={iconClass(sub.icon, `${ICON_SIZE} shrink-0 opacity-90`)}
                       />
@@ -464,4 +599,5 @@ function Chevron({ direction }) {
       )}
     </svg>
   );
+}
 }
