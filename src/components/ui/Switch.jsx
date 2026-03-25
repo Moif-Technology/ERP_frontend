@@ -7,14 +7,15 @@ import React from 'react';
 export default function Switch({ checked, onChange, description, disabled, id, size = 'md', ...props }) {
   const inputId = id ?? `switch-${Math.random().toString(36).slice(2)}`;
   const isSm = size === 'sm';
+  const isXs = size === 'xs';
 
   return (
     <label
-      className={`inline-flex cursor-pointer select-none items-center ${isSm ? 'gap-1.5' : 'gap-2'}`}
+      className={`inline-flex cursor-pointer select-none items-center ${isSm || isXs ? 'gap-1.5' : 'gap-2'}`}
       htmlFor={inputId}
       style={{ opacity: disabled ? 0.6 : 1 }}
     >
-      <span className={`switch${isSm ? ' switch-sm' : ''}`}>
+      <span className={`switch${isSm ? ' switch-sm' : ''}${isXs ? ' switch-xs' : ''}`}>
         <input
           type="checkbox"
           id={inputId}
@@ -28,7 +29,9 @@ export default function Switch({ checked, onChange, description, disabled, id, s
       {description && (
         <span
           className={
-            isSm
+            isXs
+              ? 'text-[7px] leading-tight text-gray-600 sm:text-[8px]'
+              : isSm
               ? 'text-[8px] leading-tight text-gray-600 sm:text-[9px]'
               : 'text-[11px] leading-[15px] text-black'
           }

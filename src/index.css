@@ -120,3 +120,19 @@ code {
 .switch input[type="checkbox"]:checked:active + .slider::after {
   transform: translateX(calc(var(--button-width) - var(--toggle-wider) - var(--button-toggle-offset)));
 }
+
+.switch.switch-sm {
+  --button-width: 26px;
+  --button-height: 14px;
+  --toggle-diameter: 10px;
+  --toggle-shadow-offset: 2px;
+  --toggle-wider: 13px;
+}
+
+.switch.switch-xs {
+  --button-width: 22px;
+  --button-height: 12px;
+  --toggle-diameter: 8px;
+  --toggle-shadow-offset: 2px;
+  --toggle-wider: 11px;
+}
