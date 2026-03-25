@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -8,6 +9,8 @@ const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
 
 export default function Layout({ children }) {
+  const [headerToolsExpanded, setHeaderToolsExpanded] = useState(true);
+
   return (
     <div
       style={{
@@ -25,10 +28,8 @@ export default function Layout({ children }) {
           marginLeft: SIDEBAR_WIDTH,
         }}
       >
-        <ModuleTabs />
-        <div className="mt-1">
-          <MiniToolbar />
-        </div>
+        <ModuleTabs expanded={headerToolsExpanded} onExpandedChange={setHeaderToolsExpanded} />
+        {headerToolsExpanded ? <MiniToolbar /> : null}
       </div>
       <div
         style={{
@@ -46,7 +47,7 @@ export default function Layout({ children }) {
             padding: '24px 28px 32px',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
+            overflowY: 'auto',
           }}
         >
           {children ?? <Outlet />}
