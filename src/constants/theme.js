@@ -98,22 +98,22 @@ export const inputField = {
     color: "#000000",
     lineHeight: "15px",
   },
-  /** The input box itself */
+  /** The input box itself — fixed 165.13 × 20.08; parent gap controls spacing */
   box: {
-    width: "200.13px",
-    height: "28px",
+    width: "165.13px",
+    height: "20.08px",
     borderRadius: "4px",
   },
-  /** Dropdown - same as box but with arrow on the right. Use with dropdown.svg icon. */
+  /** Dropdown — same footprint as box */
   dropdown: {
     width: "165.13px",
-    height: "28px",
+    height: "20.08px",
     borderRadius: "4px",
   },
-  /** Sub input field - smaller size */
+  /** Sub input field — half-width of box, same height */
   subBox: {
     width: "82.57px",
-    height: "28px",
+    height: "20.08px",
     borderRadius: "4px",
   },
 };

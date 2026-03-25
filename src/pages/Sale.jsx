@@ -421,11 +421,12 @@ const rowsWithTotal = [
                   Delete
                 </button>
               )}
-              <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
+              {/* <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
                 <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </button>
+              </button> */}
 
-              {[{ icon: CancelIcon, label: 'Cancel' },
+              {[{ icon: PrinterIcon, },
+                { icon: CancelIcon, label: 'Cancel' },
                 { icon: PostIcon, label: 'Post' },
                 { icon: UnpostIcon, label: 'Unpost' }
               ].map((btn) => (
@@ -595,7 +596,7 @@ const rowsWithTotal = [
                         style={{ backgroundColor: primary }}
                         onClick={handleSaveOrUpdate}
                       >
-                        {editingRowIndex !== null ? 'Update' : 'Save'}
+                        {editingRowIndex !== null ? 'Update' : 'Add'}
                       </button>
                     </div>
                   </div>

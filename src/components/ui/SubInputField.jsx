@@ -2,24 +2,25 @@ import React from 'react';
 import { inputField, colors } from '../../constants/theme';
 
 /**
- * Sub input field - smaller size (82.57 x 20.08).
- * Label above, input box below.
+ * Sub input field — fixed width/height; parent gap controls spacing.
  */
-export default function SubInputField({ label, suffix, type = 'text', className, ...props }) {
+export default function SubInputField({ label, suffix, type = 'text', widthPx, heightPx, className, ...props }) {
+  const boxWidth = widthPx != null ? `${widthPx}px` : inputField.subBox.width;
+  const boxHeight = heightPx != null ? `${heightPx}px` : inputField.subBox.height;
   return (
-    <div className="flex min-w-0 flex-col gap-0.5">
+    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: boxWidth }}>
       {label && (
         <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
       )}
-      <div className="relative min-w-0">
+      <div className="relative w-full">
         <input
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
-          className={`w-full min-w-0 border border-gray-200 bg-white px-1.5 py-1 text-[8px] outline-none sm:px-2 sm:py-1.5 sm:text-[9px] ${className ?? ''}`.trim()}
+          className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none sm:px-2 sm:text-[9px] ${className ?? ''}`.trim()}
           style={{
-            width: `min(100%, ${inputField.subBox.width})`,
-            minHeight: '24px',
-            height: 'auto',
+            width: '100%',
+            height: boxHeight,
+            minHeight: boxHeight,
             boxSizing: 'border-box',
             borderRadius: inputField.subBox.borderRadius,
             background: colors.input?.background ?? '#fff',
