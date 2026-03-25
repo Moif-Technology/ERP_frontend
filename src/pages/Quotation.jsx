@@ -4,9 +4,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors, inputField } from '../constants/theme';
-import { InputField, SubInputField, CommonTable } from '../components/ui';
+import { InputField, SubInputField, CommonTable, Switch } from '../components/ui';
 import PrinterIcon from '../assets/icons/printer.svg';
 import SearchIcon from '../assets/icons/search2.svg';
+import ViewActionIcon from '../assets/icons/view.svg';
+import DeleteActionIcon from '../assets/icons/delete2.svg';
+import EditIcon from '../assets/icons/edit.svg';
+import DuplicateIcon from '../assets/icons/list2.svg';
 
 const primary = colors.primary?.main || '#790728';
 const primaryHover = colors.primary?.[50] || '#F2E6EA';
@@ -118,6 +122,9 @@ export default function Quotation() {
 
   const [productInfo, setProductInfo] = useState({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
   const [attachments, setAttachments] = useState(false);
+  const [lineItemDetail, setLineItemDetail] = useState(null);
+
+  const orDash = (v) => (v != null && v !== '' ? String(v) : '—');
 
   const getFilteredProducts = (query) => {
     const q = query.trim().toLowerCase();
@@ -201,28 +208,31 @@ export default function Quotation() {
     setNetAmount(Math.round((tot + Number(roundOff || 0)) * 100) / 100);
   }, [items, discountAmount, roundOff]);
 
+  const totalPrice = items.reduce((sum, r) => sum + Number(r.unitPrice || 0), 0);
+  const tableTaxTotal = items.reduce((sum, r) => sum + Number(r.taxAmount || 0), 0);
+  const tableLineTotal = items.reduce((sum, r) => sum + Number(r.lineTotal || 0), 0);
+
   const inputBase = 'h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#790728] focus:outline-none focus:ring-2 focus:ring-[#790728]/20 transition-colors';
 
-  /** Sale.jsx Paid Amount row pattern — label + gray field (labels right-aligned in column) */
-  const detailRowLabel =
-    'min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]';
-  /** Quote Details — labels flush left */
+  /** Customer block — label + gray field */
   const quoteDetailRowLabel =
     'min-w-0 shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-[10px]';
   const detailRowInput =
     'min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="my-2 flex min-h-0 flex-1 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
       <style>{`
         .qtn-outline:hover { border-color: ${primary} !important; background: ${primaryHover} !important; color: ${primary} !important; }
         .qtn-primary:hover { filter: brightness(1.05); }
       `}</style>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
-        {/* Header */}
-        <header className="flex shrink-0 items-center justify-between bg-white px-5 py-3">
-          <h1 className="text-xl font-bold tracking-tight" style={{ color: primary }}>Quotation</h1>
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+        {/* Header — same outer rhythm as Sale / ModuleTabs content */}
+        <header className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
+            Quotation
+          </h1>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -242,50 +252,48 @@ export default function Quotation() {
         </header>
 
         {/* Main */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 lg:flex-row lg:gap-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:gap-4">
           {/* Left */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
-            {/* Quote & Customer — same row layout as Sale.jsx Paid Amount section */}
+            {/* Quote & Customer */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
               <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-3">
                 <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
                   Quote Details
                 </h2>
-                <div className="flex flex-col gap-1 sm:gap-[8px]">
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Quotation No</label>
-                    <input
-                      type="text"
+                <div className="flex w-full min-w-0 flex-col gap-2">
+                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
+                    <SubInputField
+                      fullWidth
+                      label="Quotation No"
+                      heightPx={28}
                       value={quotationNo}
                       onChange={(e) => setQuotationNo(e.target.value)}
-                      className={detailRowInput}
                     />
-                  </div>
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Quotation Date</label>
-                    <input
+                    <InputField
+                      fullWidth
+                      label="Quotation Date"
                       type="date"
+                      heightPx={28}
                       value={quotationDate}
                       onChange={(e) => setQuotationDate(e.target.value)}
-                      className={detailRowInput}
                     />
                   </div>
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Cust. Ref No</label>
-                    <input
-                      type="text"
+                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
+                    <SubInputField
+                      fullWidth
+                      label="Cust. Ref No"
+                      heightPx={28}
                       value={custRefNo}
                       onChange={(e) => setCustRefNo(e.target.value)}
-                      className={detailRowInput}
                     />
-                  </div>
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Cust. Ref Date</label>
-                    <input
+                    <InputField
+                      fullWidth
+                      label="Cust. Ref Date"
                       type="date"
+                      heightPx={28}
                       value={custRefDate}
                       onChange={(e) => setCustRefDate(e.target.value)}
-                      className={detailRowInput}
                     />
                   </div>
                 </div>
@@ -442,63 +450,287 @@ export default function Quotation() {
             {/* Table */}
             <div className="min-h-[140px] flex-1 overflow-auto p-2 sm:p-3">
               <CommonTable
-                headers={['Sl', 'Own Ref', 'Product Code', 'Description', 'Loc', 'Unit', 'Qty', 'Price', 'Disc%', 'Disc', 'Tax%', 'Tax', 'Total', 'Origin', 'Stock', '']}
-                rows={items.map((r, i) => [
-                  r.slNo, r.ownRefNo, r.productCode, r.shortDescription, r.location, r.unit, r.qty,
-                  r.unitPrice?.toFixed(2), r.discPct, r.discAmt?.toFixed(2), r.taxPct, r.taxAmount?.toFixed(2), r.lineTotal?.toFixed(2), r.origin, r.stockStatus,
-                  <button key={i} type="button" onClick={() => removeItem(i)} className="rounded p-1.5 text-red-600 hover:bg-red-50">✕</button>,
-                ])}
+                headers={[
+                  'Sl',
+                  'Own Ref',
+                  'Product Code',
+                  'Description',
+                  'Loc',
+                  'Unit',
+                  'Qty',
+                  'Price',
+                  'Disc%',
+                  'Disc',
+                  'Tax%',
+                  'Tax',
+                  'Total',
+                  'Origin',
+                  'Stock',
+                  'Action',
+                ]}
+                rows={[
+                  ...items.map((r, i) => [
+                    r.slNo,
+                    r.ownRefNo,
+                    r.productCode,
+                    r.shortDescription,
+                    r.location,
+                    r.unit,
+                    r.qty,
+                    r.unitPrice?.toFixed(2),
+                    r.discPct,
+                    r.discAmt?.toFixed(2),
+                    r.taxPct,
+                    r.taxAmount?.toFixed(2),
+                    r.lineTotal?.toFixed(2),
+                    r.origin,
+                    r.stockStatus,
+                    <div key={`act-${i}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+                      <button type="button" className="p-0.5" onClick={() => setLineItemDetail(r)} aria-label="View line">
+                        <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
+                      <button type="button" className="p-0.5" onClick={() => removeItem(i)} aria-label="Delete line">
+                        <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
+                    </div>,
+                  ]),
+                  [
+                    { content: 'Total', colSpan: 7, className: 'text-left font-bold' },
+                    totalPrice.toFixed(2),
+                    '',
+                    '',
+                    '',
+                    tableTaxTotal.toFixed(2),
+                    tableLineTotal.toFixed(2),
+                    '',
+                    '',
+                    '',
+                  ],
+                ]}
               />
             </div>
 
-            {/* Terms */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-700">Quotation Terms</h2>
-                <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={saveTerms} onChange={(e) => setSaveTerms(e.target.checked)} className="h-4 w-4 rounded" /><span className="text-sm">Save Terms</span></label>
-              </div>
-              <textarea value={quotationTerms} onChange={(e) => setQuotationTerms(e.target.value)} rows={2} placeholder="Enter terms and conditions..." className={`mb-3 w-full resize-none ${inputBase}`} />
-              <div className="flex flex-wrap items-center gap-3">
-                <button type="button" className="qtn-outline rounded-md border border-gray-300 px-3 py-1.5 text-sm text-red-600">EDIT</button>
-                <button type="button" className="qtn-outline rounded-md border border-gray-300 px-3 py-1.5 text-sm text-green-600">Duplicate</button>
-                <button type="button" className="qtn-outline rounded-md border border-gray-300 px-3 py-1.5 text-sm text-purple-600">Print Proforma</button>
-                <div className="flex gap-4 text-sm">
-                  <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={printLocn} onChange={(e) => setPrintLocn(e.target.checked)} className="h-4 w-4 rounded" /> Print Loctn.</label>
-                  <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={printOwnRefNo} onChange={(e) => setPrintOwnRefNo(e.target.checked)} className="h-4 w-4 rounded" /> Print Own Ref No.</label>
-                  <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={printOtherFormat} onChange={(e) => setPrintOtherFormat(e.target.checked)} className="h-4 w-4 rounded" /> Other Format</label>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right: Product Info + Totals */}
           <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-[260px]">
-            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-4 shadow-sm">
-              <h2 className="mb-3 text-sm font-semibold" style={{ color: primary }}>Product Info</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Last Purchase Cost</span><span className="font-medium">{productInfo.lastCost || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Origin</span><span>{productInfo.origin || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Product Code</span><span>{productCode || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Min. Unit Price</span><span>{productInfo.minPrice || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Stock On Hand</span><span>{productInfo.stock || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Location</span><span>{productInfo.loc || '—'}</span></div>
-                <label className="flex cursor-pointer items-center gap-2 pt-2"><input type="checkbox" checked={attachments} onChange={(e) => setAttachments(e.target.checked)} className="h-4 w-4 rounded" /><span>Attachments</span></label>
+            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-3 shadow-sm sm:p-4">
+              <h2 className="mb-2 text-[10px] font-semibold sm:text-[11px]" style={{ color: primary }}>
+                Product Info
+              </h2>
+              <div className="space-y-1.5 text-[9px] leading-tight text-gray-800 sm:text-[10px]">
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Last Purchase Cost</span>
+                  <span className="min-w-0 shrink text-right font-medium">{productInfo.lastCost || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Origin</span>
+                  <span className="min-w-0 shrink text-right">{productInfo.origin || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Product Code</span>
+                  <span className="min-w-0 shrink text-right">{productCode || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Min. Unit Price</span>
+                  <span className="min-w-0 shrink text-right">{productInfo.minPrice || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Stock On Hand</span>
+                  <span className="min-w-0 shrink text-right">{productInfo.stock || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Location</span>
+                  <span className="min-w-0 shrink text-right">{productInfo.loc || '—'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 pt-1">
+                  <Switch
+                    id="quotation-attachments"
+                    size="sm"
+                    checked={attachments}
+                    onChange={setAttachments}
+                  />
+                  <span className="text-[8px] leading-tight text-gray-600 sm:text-[9px]">
+                    Attachments
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-4 shadow-md">
-              <h2 className="mb-3 text-sm font-bold" style={{ color: primary }}>Totals</h2>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-600">Sub Total</span><span className="font-semibold">{subTotal.toFixed(2)}</span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">Discount Amount</span><input type="number" value={discountAmount} onChange={(e) => setDiscountAmount(Number(e.target.value))} className="w-20 rounded-md border border-gray-300 px-2 py-1.5 text-right text-sm" /></div>
-                <div className="flex justify-between"><span className="text-gray-600">Total Amount</span><span className="font-semibold">{totalAmount.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Tax 5%</span><span>{taxAmount.toFixed(2)}</span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">Round Off</span><input type="number" value={roundOff} onChange={(e) => setRoundOff(e.target.value)} className="w-20 rounded-md border border-gray-300 px-2 py-1.5 text-right text-sm" /></div>
-                <div className="flex justify-between border-t-2 border-gray-300 pt-3"><span className="text-base font-bold text-gray-800">Net Amount</span><span className="text-lg font-bold" style={{ color: primary }}>{netAmount.toFixed(2)}</span></div>
+            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-3 shadow-md sm:p-4">
+              <h2 className="mb-2 text-[10px] font-bold sm:text-[11px]" style={{ color: primary }}>
+                Totals
+              </h2>
+              <div className="space-y-1.5 text-[9px] leading-tight text-gray-800 sm:text-[10px]">
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Sub Total</span>
+                  <span className="shrink-0 font-semibold tabular-nums">{subTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-600">Discount Amount</span>
+                  <input
+                    type="number"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                    className="h-[22px] w-[4.5rem] shrink-0 rounded border border-gray-300 bg-white px-1.5 py-0 text-right text-[9px] tabular-nums outline-none sm:h-[24px] sm:text-[10px]"
+                  />
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Total Amount</span>
+                  <span className="shrink-0 font-semibold tabular-nums">{totalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Tax 5%</span>
+                  <span className="shrink-0 tabular-nums">{taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-600">Round Off</span>
+                  <input
+                    type="number"
+                    value={roundOff}
+                    onChange={(e) => setRoundOff(e.target.value)}
+                    className="h-[22px] w-[4.5rem] shrink-0 rounded border border-gray-300 bg-white px-1.5 py-0 text-right text-[9px] tabular-nums outline-none sm:h-[24px] sm:text-[10px]"
+                  />
+                </div>
+                <div className="flex justify-between gap-2 border-t border-gray-300 pt-2">
+                  <span className="text-[10px] font-bold text-gray-800 sm:text-[11px]">Net Amount</span>
+                  <span className="text-[11px] font-bold tabular-nums sm:text-[12px]" style={{ color: primary }}>
+                    {netAmount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms (right sidebar - below Totals) */}
+            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h2 className="text-right text-[10px] font-semibold text-gray-700 sm:text-[11px]">Quotation Terms</h2>
+                <label className="flex cursor-pointer items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    checked={saveTerms}
+                    onChange={(e) => setSaveTerms(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded"
+                  />
+                  <span className="text-[9px] text-gray-700 sm:text-[10px]">Save</span>
+                </label>
+              </div>
+
+              <textarea
+                value={quotationTerms}
+                onChange={(e) => setQuotationTerms(e.target.value)}
+                rows={3}
+                placeholder="Enter terms..."
+                className="mb-2 w-full resize-none rounded border border-gray-300 bg-white px-2 py-1 text-[9px] outline-none sm:text-[10px]"
+              />
+
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+                <button
+                  type="button"
+                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
+                  style={{ color: primary }}
+                >
+                  <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
+                  
+                </button>
+                <button
+                  type="button"
+                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
+                  style={{ color: primary }}
+                >
+                  <img src={DuplicateIcon} alt="" className="h-3.5 w-3.5" />
+                  Duplicate
+                </button>
+                <button
+                  type="button"
+                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
+                  style={{ color: primary }}
+                >
+                  <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
+                  Proforma
+                </button>
+              </div>
+
+              <div className="mt-2 flex flex-col gap-1.5 text-[8px] text-gray-600 sm:text-[9px]">
+                <div className="flex items-center gap-1.5">
+                  <Switch id="qtn-print-locn" size="sm" checked={printLocn} onChange={setPrintLocn} />
+                  <span className="leading-tight">Print Loctn.</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Switch id="qtn-print-own-ref" size="sm" checked={printOwnRefNo} onChange={setPrintOwnRefNo} />
+                  <span className="leading-tight">Print Own Ref No.</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Switch id="qtn-print-other-format" size="sm" checked={printOtherFormat} onChange={setPrintOtherFormat} />
+                  <span className="leading-tight">Other Format</span>
+                </div>
               </div>
             </div>
           </aside>
         </div>
+
       </div>
+
+      {/* Line item detail (view) */}
+      {lineItemDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setLineItemDetail(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="qtn-line-detail-title"
+        >
+          <div
+            className="relative mx-4 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setLineItemDetail(null)}
+              className="absolute right-2 top-2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2
+              id="qtn-line-detail-title"
+              className="mb-4 text-center text-base font-bold sm:text-lg"
+              style={{ color: primary }}
+            >
+              Line item details
+            </h2>
+            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
+              {[
+                ['Sl', lineItemDetail.slNo],
+                ['Own ref', lineItemDetail.ownRefNo],
+                ['Product code', lineItemDetail.productCode],
+                ['Description', lineItemDetail.shortDescription],
+                ['Location', lineItemDetail.location],
+                ['Unit', lineItemDetail.unit],
+                ['Qty', lineItemDetail.qty],
+                ['Unit price', lineItemDetail.unitPrice != null ? Number(lineItemDetail.unitPrice).toFixed(2) : ''],
+                ['Disc %', lineItemDetail.discPct],
+                ['Disc amt', lineItemDetail.discAmt != null ? Number(lineItemDetail.discAmt).toFixed(2) : ''],
+                ['Tax %', lineItemDetail.taxPct],
+                ['Tax amt', lineItemDetail.taxAmount != null ? Number(lineItemDetail.taxAmount).toFixed(2) : ''],
+                ['Line total', lineItemDetail.lineTotal != null ? Number(lineItemDetail.lineTotal).toFixed(2) : ''],
+                ['Origin', lineItemDetail.origin],
+                ['Stock', lineItemDetail.stockStatus],
+              ].map(([label, val]) => (
+                <div key={label} className="flex items-center gap-2 sm:gap-[10px]">
+                  <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                    {label}
+                  </label>
+                  <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                    {orDash(val)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

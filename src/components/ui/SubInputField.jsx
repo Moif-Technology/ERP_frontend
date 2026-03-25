@@ -4,11 +4,14 @@ import { inputField, colors } from '../../constants/theme';
 /**
  * Sub input field — fixed width/height; parent gap controls spacing.
  */
-export default function SubInputField({ label, suffix, type = 'text', widthPx, heightPx, className, ...props }) {
+export default function SubInputField({ label, suffix, type = 'text', widthPx, heightPx, className, fullWidth, ...props }) {
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.subBox.width;
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.subBox.height;
   return (
-    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: boxWidth }}>
+    <div
+      className={`flex flex-col gap-0.5 ${fullWidth ? 'min-w-0 w-full max-w-full' : 'shrink-0'}`}
+      style={fullWidth ? { width: '100%' } : { width: boxWidth }}
+    >
       {label && (
         <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
       )}
