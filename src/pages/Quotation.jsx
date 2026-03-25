@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors, inputField } from '../constants/theme';
 import { InputField, SubInputField, CommonTable, Switch } from '../components/ui';
+import ProformaIcon from '../assets/icons/proforma.svg';
 import PrinterIcon from '../assets/icons/printer.svg';
 import SearchIcon from '../assets/icons/search2.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
@@ -12,8 +13,12 @@ import DeleteActionIcon from '../assets/icons/delete2.svg';
 import EditIcon from '../assets/icons/edit.svg';
 import DuplicateIcon from '../assets/icons/list2.svg';
 
-const primary = colors.primary?.main || '#790728';
+const primary = colors.primary?.main || colors.primary?.DEFAULT || '#790728';
 const primaryHover = colors.primary?.[50] || '#F2E6EA';
+
+/** Tint monochrome SVG `<img>` icons to primary maroon (#790728). */
+const iconFilterPrimary =
+  'invert(13%) sepia(88%) saturate(3223%) hue-rotate(350deg) brightness(92%) contrast(105%)';
 
 const MOCK_CUSTOMERS = [
   { value: 1, label: 'Customer A' },
@@ -604,15 +609,6 @@ export default function Quotation() {
             <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h2 className="text-right text-[10px] font-semibold text-gray-700 sm:text-[11px]">Quotation Terms</h2>
-                <label className="flex cursor-pointer items-center gap-1.5">
-                  <input
-                    type="checkbox"
-                    checked={saveTerms}
-                    onChange={(e) => setSaveTerms(e.target.checked)}
-                    className="h-3.5 w-3.5 rounded"
-                  />
-                  <span className="text-[9px] text-gray-700 sm:text-[10px]">Save</span>
-                </label>
               </div>
 
               <textarea
@@ -629,15 +625,15 @@ export default function Quotation() {
                   className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
                   style={{ color: primary }}
                 >
-                  <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
-                  
+                  <img src={EditIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
+                  Edit
                 </button>
                 <button
                   type="button"
                   className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
                   style={{ color: primary }}
                 >
-                  <img src={DuplicateIcon} alt="" className="h-3.5 w-3.5" />
+                  <img src={DuplicateIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
                   Duplicate
                 </button>
                 <button
@@ -645,24 +641,35 @@ export default function Quotation() {
                   className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
                   style={{ color: primary }}
                 >
-                  <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
+                  <img src={ProformaIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
                   Proforma
                 </button>
               </div>
 
-              <div className="mt-2 flex flex-col gap-1.5 text-[8px] text-gray-600 sm:text-[9px]">
-                <div className="flex items-center gap-1.5">
-                  <Switch id="qtn-print-locn" size="sm" checked={printLocn} onChange={setPrintLocn} />
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[7px] text-gray-600 sm:text-[8px]">
+                <div className="flex items-center gap-1">
+                  <Switch id="qtn-print-locn" size="xs" checked={printLocn} onChange={setPrintLocn} />
                   <span className="leading-tight">Print Loctn.</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Switch id="qtn-print-own-ref" size="sm" checked={printOwnRefNo} onChange={setPrintOwnRefNo} />
+                <div className="flex items-center gap-1">
+                  <Switch id="qtn-print-own-ref" size="xs" checked={printOwnRefNo} onChange={setPrintOwnRefNo} />
                   <span className="leading-tight">Print Own Ref No.</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Switch id="qtn-print-other-format" size="sm" checked={printOtherFormat} onChange={setPrintOtherFormat} />
+                <div className="flex items-center gap-1">
+                  <Switch id="qtn-print-other-format" size="xs" checked={printOtherFormat} onChange={setPrintOtherFormat} />
                   <span className="leading-tight">Other Format</span>
                 </div>
+              </div>
+
+              <div className="mt-3 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setSaveTerms(true)}
+                  className="qtn-primary rounded-md px-3 py-1 text-[9px] font-medium text-white sm:text-[10px]"
+                  style={{ backgroundColor: primary }}
+                >
+                  Save
+                </button>
               </div>
             </div>
           </aside>

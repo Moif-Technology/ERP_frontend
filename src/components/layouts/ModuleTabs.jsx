@@ -27,6 +27,23 @@ function ExpandChevron({ expanded }) {
   );
 }
 
+function BreadcrumbChevron() {
+  return (
+    <svg
+      className="h-3 w-3 text-slate-500"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
 const getActionItems = (moduleIcon, labels) => {
   const iconMap = { List: ListIcon, Edit: ConfigIcon, Search: SearchIcon };
   return labels.map((label) => ({
@@ -65,6 +82,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
   const [selectedAction, setSelectedAction] = useState({ module: null, action: null });
 
   const currentModules = moduleGroups[activeTab] || moduleGroups.customer;
+  const activeTabLabel = activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : '';
 
   const handleActionClick = (module, action) => {
     setSelectedAction({ module, action });
@@ -83,36 +101,60 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
       }`}
     >
       <div className="relative border-b border-rose-200/60">
-        <div className="flex items-center justify-start gap-4 sm:gap-8 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
-          {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
-            const isActive = activeTab === tab.toLowerCase();
-            return (
-              <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab(tab.toLowerCase())}
-                  className="border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors"
-                >
-                  {tab}
-                </button>
-                <div
-                  className={`h-0.5 w-full rounded-full ${
-                    isActive ? 'bg-[#800000]' : 'bg-transparent'
-                  }`}
-                  aria-hidden
-                />
-              </div>
-            );
-          })}
-        </div>
+        {expanded ? (
+          <div className="flex items-center justify-start gap-4 sm:gap-8 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
+            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
+              const isActive = activeTab === tab.toLowerCase();
+              return (
+                <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(tab.toLowerCase())}
+                    className="border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors"
+                  >
+                    {tab}
+                  </button>
+                  <div
+                    className={`h-0.5 w-full rounded-full ${isActive ? 'bg-[#800000]' : 'bg-transparent'}`}
+                    aria-hidden
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex min-w-0 items-center gap-1.5 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
+            <span className="truncate text-[10px] font-semibold text-slate-800 sm:text-[11px]">
+              {activeTabLabel}
+            </span>
+            {(selectedAction?.module || selectedAction?.action) && <BreadcrumbChevron />}
+            {selectedAction?.module && (
+              <span className="truncate text-[10px] font-semibold text-slate-800 sm:text-[11px]">
+                {selectedAction.module}
+              </span>
+            )}
+            {selectedAction?.action && (
+              <>
+                <BreadcrumbChevron />
+                <span className="truncate text-[10px] font-medium text-slate-700 sm:text-[11px]">
+                  {selectedAction.action}
+                </span>
+              </>
+            )}
+          </div>
+        )}
         <button
           type="button"
           onClick={() => onExpandedChange((v) => !v)}
-          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+          className={`absolute right-2 top-1/2 flex -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 ${
+            expanded ? 'h-8 w-8' : 'h-6 w-6'
+          }`}
           aria-expanded={expanded}
           aria-label={expanded ? 'Hide toolbars' : 'Show toolbars'}
         >
-          <ExpandChevron expanded={expanded} />
+          <span className={expanded ? '' : 'scale-[0.85]'} aria-hidden>
+            <ExpandChevron expanded={expanded} />
+          </span>
         </button>
       </div>
 
