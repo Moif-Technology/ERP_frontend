@@ -46,20 +46,32 @@ export default function CommonTable({
         <tbody>
           {rows.map((row, rowIdx) => (
             <tr key={`row-${rowIdx}`}>
-              {row.map((cell, cellIdx) => (
-                <td
-                  key={`cell-${rowIdx}-${cellIdx}`}
-                  className="px-1 py-0.5 sm:px-2 sm:py-1"
-                style={{
-                  border: tableUi.border,
-                  fontSize: 'clamp(6px, 1.2vw, 8px)',
-                  fontWeight: tableUi.body.fontWeight,
-                  color: tableUi.body.color,
-                }}
-                >
-                  {cell}
-                </td>
-              ))}
+              {row.map((cell, cellIdx) => {
+                const isCellObject = cell && typeof cell === 'object' && !React.isValidElement(cell);
+                const content = isCellObject ? (cell.content ?? '') : cell;
+                const colSpan = isCellObject ? (cell.colSpan ?? 1) : 1;
+                const rowSpan = isCellObject ? (cell.rowSpan ?? 1) : 1;
+                const extraClassName = isCellObject ? (cell.className ?? '') : '';
+                const extraStyle = isCellObject ? (cell.style ?? {}) : {};
+
+                return (
+                  <td
+                    key={`cell-${rowIdx}-${cellIdx}`}
+                    colSpan={colSpan}
+                    rowSpan={rowSpan}
+                    className={`px-1 py-0.5 sm:px-2 sm:py-1 ${extraClassName}`.trim()}
+                    style={{
+                      border: tableUi.border,
+                      fontSize: 'clamp(6px, 1.2vw, 8px)',
+                      fontWeight: tableUi.body.fontWeight,
+                      color: tableUi.body.color,
+                      ...extraStyle,
+                    }}
+                  >
+                    {content}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
