@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
@@ -9,16 +9,300 @@ import SaleIcon from '../assets/icons/invoice.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
+import PayIcon from '../assets/icons/pay.svg';
+import RemoveIcon from '../assets/icons/remove.svg';
 import { InputField, SubInputField, DropdownInput, Switch, CommonTable } from '../components/ui';
 
+// Helper: get product details from table row, use "-" for empty values
+function getProductDetails(row, idx) {
+  const orDash = (v) => (v != null && v !== '' ? String(v) : '-');
+  return {
+    productCode: orDash(row[1]),
+    stockOnHand: orDash(null),
+    lastCustomer: orDash(null),
+    unitCost: orDash(null),
+    minUnitPrice: orDash(null),
+    profit: orDash(null),
+    creditLimit: orDash(null),
+    currentOsBal: orDash(null),
+    osBalance: orDash(null),
+    receiptNo: orDash(null),
+    location: orDash(null),
+    productName: orDash(row[0]),
+  };
+}
+
+const initialFormState = {
+  shortDescription: '',
+  hsCode: '',
+  qty: '',
+  unitPrice: '',
+  discPercent: '',
+  discPrice: '',
+  discAmt: '',
+  subTotal: '',
+  taxPercent: '',
+  taxAmt: '',
+  total: '',
+  qutnNo: 'QTN-001',
+  doNo: 'DO-001',
+};
+
+const fieldVisibilityDefaults = {
+  shortDescription: true,
+  hsCode: true,
+  qty: true,
+  unitPrice: true,
+  discPercent: true,
+  discPrice: true,
+  discAmt: true,
+  subTotal: true,
+  taxPercent: true,
+  taxAmt: true,
+  total: true,
+  qutnNo: true,
+  doNo: true,
+};
+
+const fieldVisibilityLabels = {
+  shortDescription: 'Short Description',
+  hsCode: 'Hs Code/Wt',
+  qty: 'Qty',
+  unitPrice: 'Unit Price',
+  discPercent: 'Disc.%',
+  discPrice: 'Disc Price',
+  discAmt: 'Disc.Amt',
+  subTotal: 'Sub total',
+  taxPercent: 'Tax%',
+  taxAmt: 'T.Amt',
+  total: 'Total',
+  qutnNo: 'Qutn. no',
+  doNo: 'DO. no',
+};
+
+const tableColumnKeys = ['checkbox', 'shortDescription', 'hsCode', 'qty', 'sellingPrice', 'discPercent', 'discAmt', 'subTotal', 'taxPercent', 'taxAmt', 'lineTotal', 'action'];
+const tableColumnLabels = {
+  checkbox: 'Select',
+  shortDescription: 'Short Description',
+  hsCode: 'HS Code/Wt',
+  qty: 'Qty',
+  sellingPrice: 'Selling price',
+  discPercent: 'Disc %',
+  discAmt: 'Disc Amt',
+  subTotal: 'Sub total',
+  taxPercent: 'Tax %',
+  taxAmt: 'Tax amt',
+  lineTotal: 'Line total',
+  action: 'Action',
+};
+const tableColumnVisibilityDefaults = Object.fromEntries(tableColumnKeys.map((k) => [k, true]));
+
 export default function Sale() {
-  const [accept, setAccept] = useState(false);
+  const [salesTermsOpen, setSalesTermsOpen] = useState(false);
+  const [saveTerms, setSaveTerms] = useState(false);
+  const [printTerms, setPrintTerms] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [saleRows, setSaleRows] = useState([
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+  ]);
+  const [form, setForm] = useState(initialFormState);
+  const [editingRowIndex, setEditingRowIndex] = useState(null);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [visibleFields, setVisibleFields] = useState(fieldVisibilityDefaults);
+  const [fieldMenu, setFieldMenu] = useState({ open: false, x: 0, y: 0 });
+  const [visibleColumns, setVisibleColumns] = useState(tableColumnVisibilityDefaults);
+  const [tableMenu, setTableMenu] = useState({ open: false, x: 0, y: 0 });
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
   const primaryActive = colors.primary?.[100] || '#E4CDD3';
 
+  useEffect(() => {
+    const closeMenus = () => {
+      setFieldMenu((prev) => ({ ...prev, open: false }));
+      setTableMenu((prev) => ({ ...prev, open: false }));
+    };
+    const closeOnEsc = (e) => {
+      if (e.key === 'Escape') closeMenus();
+    };
+    window.addEventListener('click', closeMenus);
+    window.addEventListener('keydown', closeOnEsc);
+    return () => {
+      window.removeEventListener('click', closeMenus);
+      window.removeEventListener('keydown', closeOnEsc);
+    };
+  }, []);
+
+  const fillFormFromRow = (row) => {
+    setForm({
+      shortDescription: String(row[0] ?? ''),
+      hsCode: String(row[1] ?? ''),
+      qty: String(row[2] ?? ''),
+      unitPrice: String(row[3] ?? ''),
+      discPercent: String(row[4] ?? ''),
+      discPrice: String(row[5] ?? ''),
+      discAmt: String(row[5] ?? ''),
+      subTotal: String(row[6] ?? ''),
+      taxPercent: String(row[7] ?? ''),
+      taxAmt: String(row[8] ?? ''),
+      total: String(row[9] ?? ''),
+      qutnNo: 'QTN-001',
+      doNo: 'DO-001',
+    });
+  };
+
+  const handleEdit = (row, idx) => {
+    fillFormFromRow(row);
+    setEditingRowIndex(idx);
+  };
+
+  const handleDelete = (idx) => {
+    setSaleRows((prev) => prev.filter((_, i) => i !== idx));
+    setSelectedRows((prev) => new Set([...prev].filter((i) => i !== idx).map((i) => (i > idx ? i - 1 : i))));
+    if (editingRowIndex === idx) {
+      setEditingRowIndex(null);
+      setForm(initialFormState);
+    } else if (editingRowIndex !== null && editingRowIndex > idx) {
+      setEditingRowIndex((i) => i - 1);
+    }
+  };
+
+  const toggleRowSelection = (idx) => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = () => {
+    const toDelete = new Set(selectedRows);
+    setSaleRows((prev) => prev.filter((_, i) => !toDelete.has(i)));
+    setSelectedRows(new Set());
+    if (editingRowIndex !== null && toDelete.has(editingRowIndex)) {
+      setEditingRowIndex(null);
+      setForm(initialFormState);
+    } else if (editingRowIndex !== null) {
+      const deletedBefore = [...toDelete].filter((i) => i < editingRowIndex).length;
+      setEditingRowIndex(editingRowIndex - deletedBefore);
+    }
+  };
+
+  const handleSaveOrUpdate = () => {
+    const newRow = [
+      form.shortDescription,
+      form.hsCode,
+      form.qty ? Number(form.qty) : 0,
+      form.unitPrice ? Number(form.unitPrice) : 0,
+      form.discPercent ? Number(form.discPercent) : 0,
+      form.discPrice ? Number(form.discPrice) : 0,
+      form.subTotal ? Number(form.subTotal) : 0,
+      form.taxPercent ? Number(form.taxPercent) : 0,
+      form.taxAmt ? Number(form.taxAmt) : 0,
+      form.total ? Number(form.total) : 0,
+    ];
+    if (editingRowIndex !== null) {
+      setSaleRows((prev) => {
+        const next = [...prev];
+        next[editingRowIndex] = newRow;
+        return next;
+      });
+      setEditingRowIndex(null);
+    } else {
+      setSaleRows((prev) => [newRow, ...prev]);
+    }
+    setForm(initialFormState);
+  };
+
+  const toggleFieldVisibility = (fieldKey) => {
+    setVisibleFields((prev) => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
+  };
+
+  const toggleColumnVisibility = (colKey) => {
+    setVisibleColumns((prev) => ({ ...prev, [colKey]: !prev[colKey] }));
+  };
+
+  // Calculate totals
+  const totalDiscAmt = saleRows.reduce((sum, r) => sum + r[5], 0);
+  const totalSubTotal = saleRows.reduce((sum, r) => sum + r[6], 0);
+  const totalTaxPercent = saleRows.reduce((sum, r) => sum + r[7], 0); // Sum of tax %
+  const totalTaxAmt = saleRows.reduce((sum, r) => sum + r[8], 0);
+  const totalLineTotal = saleRows.reduce((sum, r) => sum + r[9], 0);
+
+  // Build rows with action buttons
+// Build rows with action buttons and totals without labels
+const rowsWithTotal = [
+  ...saleRows.map((r, idx) => [
+    <div key={`chk-${idx}`} className="flex justify-center">
+      <input
+        type="checkbox"
+        checked={selectedRows.has(idx)}
+        onChange={() => toggleRowSelection(idx)}
+        className="h-3 w-3 cursor-pointer sm:h-3.5 sm:w-3.5"
+        style={{ accentColor: primary }}
+      />
+    </div>,
+    r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], 
+
+    <div key={`action-${idx}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+      <button type="button" className="p-1" onClick={() => setSelectedProduct(getProductDetails(r, idx))}>
+        <img src={ViewActionIcon} alt="View" className="h-4 w-4 sm:h-5 sm:w-5" />
+      </button>
+      <button type="button" className="p-1" onClick={() => handleEdit(r, idx)}>
+        <img src={EditActionIcon} alt="Edit" className="h-4 w-4 sm:h-5 sm:w-5" />
+      </button>
+      <button type="button" className="p-1" onClick={() => handleDelete(idx)}>
+        <img src={DeleteActionIcon} alt="Delete" className="h-4 w-4 sm:h-5 sm:w-5" />
+      </button>
+    </div>
+  ]),
+ 
+
+[
+  <div key="total" className="text-right font-bold">Total</div>,
+  '', '', '', '', '',
+  totalDiscAmt.toFixed(2),   // Disc Amt
+  totalSubTotal.toFixed(2),  // Sub total
+  (totalTaxPercent / saleRows.length).toFixed(2), // Tax %
+  totalTaxAmt.toFixed(2),    // Tax amt
+  totalLineTotal.toFixed(2), // Line total
+  '' // No action buttons for totals row
+]
+
+
+
+];
+
+  const tableHeadersFull = ['', 'Short Description', 'HS Code/Wt', ' Qty', 'Selling price', 'Disc %', 'Disc Amt', 'Sub total', 'Tax %', 'Tax amt', 'Line total', 'Action'];
+  const visibleIndices = tableColumnKeys.map((k, i) => (visibleColumns[k] ? i : -1)).filter((i) => i >= 0);
+  const filteredHeaders = visibleIndices.map((i) => tableHeadersFull[i]);
+  const filteredRows = rowsWithTotal.map((row) => visibleIndices.map((i) => row[i]));
+
   return (
-    <>
+    <div className="sale-page">
       <style>{`
         .sale-btn-outline:hover {
           border-color: ${primary} !important;
@@ -46,10 +330,78 @@ export default function Sale() {
         .sale-btn-red-outline:active {
           background: ${primaryActive} !important;
         }
+
+        .sale-form-section input,
+        .sale-form-section select {
+          min-height: 32px !important;
+          height: 32px !important;
+          border: 1px solid #d1d5db !important;
+          border-radius: 6px !important;
+          padding: 6px 10px !important;
+          font-size: 11px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .sale-form-section select {
+          padding-right: 28px !important;
+        }
+        .sale-form-section .sale-form-field div:has(> select) {
+          width: 100% !important;
+          min-height: 32px !important;
+        }
+        .sale-form-section .sale-form-field {
+          min-width: 0;
+        }
+        .sale-form-section label {
+          font-size: 11px !important;
+          color: #374151 !important;
+        }
+        .sale-field-menu,
+        .sale-column-menu {
+          width: 190px;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: #fff;
+          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .sale-table th,
+        .sale-table td {
+          font-size: 12px !important;
+          padding: 8px 10px !important;
+        }
+        .sale-table input[type="checkbox"] {
+          height: 14px !important;
+          width: 14px !important;
+        }
+        .sale-table tbody tr:last-child {
+          position: sticky;
+          bottom: 0;
+          background: #fff !important;
+          z-index: 1;
+          box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
+        }
+        .sale-table tbody tr:last-child td {
+          border-top: 2px solid #e2e8f0 !important;
+          font-weight: 600;
+        }
+        .sale-table thead th {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          background: #F2E6EA !important;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .sale-table-scroll {
+          max-height: min(450px, 55vh);
+          overflow: auto;
+        }
+        .sale-table-scroll .sale-table {
+          overflow: visible !important;
+        }
       `}</style>
 
       <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
-        <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+        <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
 
           {/* Header */}
           <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -58,6 +410,17 @@ export default function Sale() {
             </h1>
 
             <div className="flex gap-2 flex-wrap items-center">
+              {selectedRows.size > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  className="sale-btn-outline flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                  style={{ borderColor: primary, color: primary }}
+                >
+                  <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                  Delete
+                </button>
+              )}
               <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
                 <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
@@ -81,316 +444,614 @@ export default function Sale() {
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
 
             {/* LEFT */}
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-3/4">
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden xl:w-3/4">
               {/* Form section - bordered */}
-              <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="flex flex-col gap-2">
+              <div
+                className="sale-form-section shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 sm:p-4"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setFieldMenu({ open: true, x: e.clientX, y: e.clientY });
+                }}
+              >
+                <div className="flex flex-col gap-3">
                   {/* Row 1: Short Description + numeric fields */}
-                  <div className="flex flex-wrap items-end gap-1 overflow-hidden sm:gap-[6px] xl:flex-nowrap [&>*]:min-w-0">
-                    <InputField label="Short Description" />
-                    <SubInputField label="Hs Code/Wt" type="number" />
-                    <SubInputField label="Qty" type="number" />
-                    <SubInputField label="Unit Price" type="number" />
-                    <SubInputField label="Disc.%" type="number" />
-                    <SubInputField label="Disc Price" type="number" />
-                    <SubInputField label="Disc.Amt" type="number" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 items-end gap-2 lg:gap-3">
+                    {visibleFields.shortDescription && (
+                    <div className="sale-form-field col-span-2">
+                      <InputField
+                        label="Short Description"
+                        value={form.shortDescription}
+                        onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.hsCode && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Hs Code/Wt"
+                        type="number"
+                        value={form.hsCode}
+                        onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.qty && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Qty"
+                        type="number"
+                        value={form.qty}
+                        onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.unitPrice && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Unit Price"
+                        type="number"
+                        value={form.unitPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discPercent && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc.%"
+                        type="number"
+                        value={form.discPercent}
+                        onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discPrice && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc Price"
+                        type="number"
+                        value={form.discPrice}
+                        onChange={(e) => setForm((f) => ({ ...f, discPrice: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.discAmt && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Disc.Amt"
+                        type="number"
+                        value={form.discAmt}
+                        onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
+                      />
+                    </div>
+                    )}
                   </div>
 
                   {/* Row 2 */}
-                  <div className="grid grid-cols-2 items-end gap-1 sm:grid-cols-3 sm:gap-[6px] md:grid-cols-4 lg:grid-cols-7">
-                    <SubInputField label="Sub total" />
-                    <SubInputField label="Tax%" />
-                    <SubInputField label="T.Amt" />
-                    <SubInputField label="Total" />
-
-                    <DropdownInput label="Qutn. no" options={['QTN-001']} />
-                    <DropdownInput label="DO. no" options={['DO-001']} />
-
-                    <div className="flex items-center gap-2">
-                      <Switch checked={accept} onChange={setAccept} description="Accept" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 items-end gap-2 lg:gap-3">
+                    {visibleFields.subTotal && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Sub total"
+                        value={form.subTotal}
+                        onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.taxPercent && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Tax%"
+                        type="number"
+                        value={form.taxPercent}
+                        onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.taxAmt && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="T.Amt"
+                        type="number"
+                        value={form.taxAmt}
+                        onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.total && (
+                    <div className="sale-form-field">
+                      <SubInputField
+                        label="Total"
+                        type="number"
+                        value={form.total}
+                        onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.qutnNo && (
+                    <div className="sale-form-field col-span-2">
+                      <DropdownInput
+                        label="Qutn. no"
+                        options={['QTN-001']}
+                        value={form.qutnNo}
+                        onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
+                      />
+                    </div>
+                    )}
+                    {visibleFields.doNo && (
+                    <div className="sale-form-field col-span-2">
+                      <DropdownInput
+                        label="DO. no"
+                        options={['DO-001']}
+                        value={form.doNo}
+                        onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
+                      />
+                    </div>
+                    )}
+                    <div className="sale-form-field col-span-2 sm:col-span-1 flex items-end pb-0.5">
                       <button
-                        className="rounded px-1.5 py-0.5 text-[9px] text-white sm:px-2 sm:py-1 sm:text-[10px]"
+                        type="button"
+                        className="flex h-8 w-full min-w-[60px] items-center justify-center rounded-md border px-3 py-1.5 text-[10px] font-medium text-white sm:text-[11px]"
                         style={{ backgroundColor: primary }}
+                        onClick={handleSaveOrUpdate}
                       >
-                        Save
+                        {editingRowIndex !== null ? 'Update' : 'Save'}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
+              {fieldMenu.open && (
+                <div
+                  className="sale-field-menu fixed z-50 p-2"
+                  style={{
+                    left: `${Math.max(8, Math.min(fieldMenu.x, window.innerWidth - 210))}px`,
+                    top: `${Math.max(8, Math.min(fieldMenu.y, window.innerHeight - 340))}px`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
+                    Show / hide inputs
+                  </div>
+                  <div className="max-h-[280px] overflow-auto pr-1">
+                    {Object.keys(fieldVisibilityDefaults).map((key) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={visibleFields[key]}
+                          onChange={() => toggleFieldVisibility(key)}
+                          className="h-3.5 w-3.5"
+                          style={{ accentColor: primary }}
+                        />
+                        <span>{fieldVisibilityLabels[key]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              {/* Table section - separate bordered; only this area scrolls on xl */}
-              <div className="min-h-[120px] flex-1 overflow-auto rounded border border-gray-200 bg-white p-2 sm:p-3 xl:min-h-0">
-                <CommonTable
-                  headers={[
-                    '',
-                    'Short Description',
-                    'HS Code/Wt',
-                    'Qty',
-                    'Selling price',
-                    'Disc %',
-                    'Disc Amt',
-                    'Sub total',
-                    'Tax %',
-                    'Tax amt',
-                    'Line total',
-                    'Action',
-                  ]}
-                  rows={[
-                    [
-                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
-                      'Product A',
-                      'HS-1001',
-                      '2',
-                      '120.00',
-                      '5',
-                      '12.00',
-                      '228.00',
-                      '18',
-                      '41.04',
-                      '269.04',
-                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                      </div>,
-                    ],
-                    [
-                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
-                      'Product B',
-                      'HS-2034',
-                      '1',
-                      '450.00',
-                      '10',
-                      '45.00',
-                      '405.00',
-                      '18',
-                      '72.90',
-                      '477.90',
-                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                      </div>,
-                    ],
-                    [
-                      <div className="flex justify-center"><input type="checkbox" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></div>,
-                      'Service C',
-                      'HS-9090',
-                      '3',
-                      '80.00',
-                      '0',
-                      '0.00',
-                      '240.00',
-                      '5',
-                      '12.00',
-                      '252.00',
-                      <div className="flex items-center justify-center gap-0.5 sm:gap-1">
-                        <button type="button" className="p-0.5"><img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                        <button type="button" className="p-0.5"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button>
-                      </div>,
-                    ],
-                  ]}
-                />
-
+              {/* Table section - bordered container; scroll inside when content overflows */}
+              <div
+                className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setTableMenu({ open: true, x: e.clientX, y: e.clientY });
+                }}
+              >
+                <div className="sale-table-scroll min-h-0 min-w-0 flex-1">
+                  <CommonTable className="sale-table" headers={filteredHeaders} rows={filteredRows} />
+                </div>
               </div>
+              {tableMenu.open && (
+                <div
+                  className="sale-column-menu fixed z-50 p-2"
+                  style={{
+                    left: `${Math.max(8, Math.min(tableMenu.x, window.innerWidth - 210))}px`,
+                    top: `${Math.max(8, Math.min(tableMenu.y, window.innerHeight - 340))}px`,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
+                    Show / hide columns
+                  </div>
+                  <div className="max-h-[280px] overflow-auto pr-1">
+                    {tableColumnKeys.map((key) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={visibleColumns[key]}
+                          onChange={() => toggleColumnVisibility(key)}
+                          className="h-3.5 w-3.5"
+                          style={{ accentColor: primary }}
+                        />
+                        <span>{tableColumnLabels[key] || key}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* RIGHT */}
-            {/* <div className="w-full xl:w-1/4 bg-white p-3 border border-gray-200 rounded">
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="flex flex-col gap-2 sm:gap-3 pb-2">
+                {/* Bill / Customer section */}
+                <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
+                  <div className="flex flex-col gap-1 sm:gap-[8px]">
+                    {/* Row 1: Bill no + 2 sub fields */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <div className="flex flex-col gap-[6px]">
+                        <InputField label="Bill no" />
+                      </div>
+                      <SubInputField label="Cust.Lpo 3" />
+                      <SubInputField label="Local bill no" />
+                    </div>
 
-              <div className="flex flex-col gap-2">
+                    {/* Row 2: Customer name + Payment mode */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <InputField label="Customer name" />
+                      <DropdownInput
+                        label=""
+                        options={['000001']}
+                        placeholder="000001"
+                        className="min-w-[80px] sm:min-w-[100px]"
+                      />
+                    </div>
 
-              
-         <div className="flex gap-2 items-end border-b border-gray-200 pb-2 flex-wrap">
-  <SubInputField label="Sub Total" readOnly className="flex-1 min-w-[100px]" />
-  <SubInputField label="Discount Amount" type="number" className="flex-1 min-w-[100px]" />
-  <SubInputField label="Discount %" type="number" suffix="%" className="flex-1 min-w-[100px]" />
-</div>
+                    {/* Row 4: Account head + creditcard no + credit card type */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <InputField label="Account head" />
+                      <SubInputField label="Creditcard no" />
+                      <SubInputField label="Credit card type" />
+                    </div>
 
-       
-                  <InputField label="Total Amount" />
-               
+                    {/* Row 5: Cashier name (dropdown) + Invoice amt */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <DropdownInput
+                        label="Cashier name"
+                        options={['Cashier 1', 'Cashier 2']}
+                        placeholder="Select"
+                      />
+                      <InputField label="Invoice amt" type="number" />
+                    </div>
 
-                <div className="grid grid-cols-2 ">
-                  <SubInputField label="Tax" />
-                  <SubInputField label="Tax %" suffix="%" />
+                    {/* Row 7: Station + Counter */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <InputField label="Station" />
+                      <InputField label="Counter" />
+                    </div>
+
+                    {/* Row 8: Edit + New invoice buttons */}
+                    <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
+                      <button
+                        type="button"
+                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
+                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
+                      >
+                        <img src={EditIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
+                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
+                      >
+                        <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                        New invoice
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 ">
-                  <SubInputField label="Round off" />
-                  <SubInputField label="Net Amount" />
-                </div>
 
+
+
+
+<button
+                  type="button"
+                  onClick={() => setSalesTermsOpen(true)}
+                  className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
+                  style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
+                >
+                  Sales terms
+                </button>
+                </div>
               </div>
-            </div> */}
 
-           <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
-  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
-  <div className="shrink-0 rounded border border-gray-200 bg-white p-2 sm:p-3">
-    <div className="flex flex-col gap-1 sm:gap-[8px]">
+              {/* Paid Amount section - fixed at bottom */}
+              <div className="mt-auto shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-2 sm:p-3">
+                  <div className="flex flex-col gap-1 sm:gap-[8px]">
+                    {/* Paid Amount */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
+                        Paid Amount
+                      </label>
+                      <input
+                        type="number"
+                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                      />
+                    </div>
 
-      {/* Row 1 */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
-        <SubInputField label="Sub Total" type="number" />
-        <SubInputField label="Discount Amount" type="number" />
-        <SubInputField label="Discount %" type="number" suffix="%" />
-      </div>
+                    {/* Balance Amount */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
+                        Balance Amount
+                      </label>
+                      <input
+                        type="number"
+                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                      />
+                    </div>
 
-      {/* Row 2 */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
-        <InputField label="Total Amount" type="number" />
-        <SubInputField label="Tax" type="number" />
-        <SubInputField label="Tax %" type="number" suffix="%" />
-      </div>
+                    {/* Paid by card */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
+                        Paid by card
+                      </label>
+                      <input
+                        type="number"
+                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                      />
+                    </div>
 
-      {/* Row 3 */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px]">
-        <InputField label="Round off" type="number" />
-        <InputField label="Net Amount" type="number" />
-      </div>
-
-    </div>
-  </div>
-
-  {/* Button */}
-  <button
-    type="button"
-    className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
-    style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
-  >
-    Sales terms
-  </button>
-
-  {/* New bordered section below the button */}
-  <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
-    <div className="flex flex-col gap-1 sm:gap-[8px]">
-      {/* Row 1: Bill no + 2 sub fields */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-        <div className="flex-none">
-          <InputField label="Bill no" />
-        </div>
-        <SubInputField label="Cust.Lpo 3" />
-        <SubInputField label="Local bill no" />
-      </div>
-
-      {/* Row 2: Customer name + Payment mode */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-        <InputField label="Customer name" />
-        <DropdownInput
-          label=""
-          options={['000001']}
-          placeholder="000001"
-          className="min-w-[80px] sm:min-w-[100px]"
-        />
-      </div>
-
-      {/* Row 4: Account head + creditcard no + credit card type */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-        <InputField label="Account head" />
-        <SubInputField label="Creditcard no" />
-        <SubInputField label="Credit card type" />
-      </div>
-
-      {/* Row 5: Cashier name (dropdown) + Invoice amt */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-        <DropdownInput
-          label="Cashier name"
-          options={['Cashier 1', 'Cashier 2']}
-          placeholder="Select"
-        />
-        <InputField label="Invoice amt" type="number" />
-      </div>
-
-      {/* Row 7: Station + Counter */}
-      <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-        <InputField label="Station" />
-        <InputField label="Counter" />
-      </div>
-
-      {/* Row 8: Edit + New invoice buttons */}
-      <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
-        <button
-          type="button"
-          className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-          style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-        >
-          <img src={EditIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-          Edit
-        </button>
-
-        <button
-          type="button"
-          className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-          style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-        >
-          <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-          New invoice
-        </button>
-      </div>
-    </div>
-  </div>
-
-
-
-
-
-
-  <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
-    <div className="flex flex-col gap-1 sm:gap-[8px]">
-
-      {/* Paid Amount */}
-      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-        <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-          Paid Amount
-        </label>
-        <input
-          type="number"
-          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-        />
-      </div>
-
-      {/* Balance Amount */}
-      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-        <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-          Balance Amount
-        </label>
-        <input
-          type="number"
-          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-        />
-      </div>
-
-      {/* Paid by card */}
-      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-        <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-          Paid by card
-        </label>
-        <input
-          type="number"
-          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-        />
-      </div>
-
-      {/* Paid by cash */}
-      <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-        <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-          Paid by cash
-        </label>
-        <input
-          type="number"
-          className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-        />
-      </div>
-
-    </div>
-  </div>
-  </div>
+                    {/* Paid by cash */}
+                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
+                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
+                        Paid by cash
+                      </label>
+                      <input
+                        type="number"
+                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </>
+
+      {/* Sales Terms Modal */}
+      {salesTermsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setSalesTermsOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sales-terms-title"
+        >
+          <div
+            className="relative mx-4 w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSalesTermsOpen(false)}
+              className="absolute right-2 top-2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Heading centered */}
+            <h2
+              id="sales-terms-title"
+              className="mb-4 text-center text-base font-bold sm:text-lg"
+              style={{ color: primary }}
+            >
+              Sales terms
+            </h2>
+
+            {/* Form fields - labels left-aligned in one column */}
+            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Sales
+                </label>
+                <input
+                  type="text"
+                  placeholder="Sales"
+                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Agent name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Agent name"
+                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Commission %
+                </label>
+                <input
+                  type="number"
+                  placeholder="%"
+                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Commission amount
+                </label>
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
+                />
+              </div>
+            </div>
+
+            {/* Two switches centered */}
+            <div className="my-4 flex justify-center gap-6">
+              <Switch
+                checked={saveTerms}
+                onChange={setSaveTerms}
+                description="Save terms"
+              />
+              <Switch
+                checked={printTerms}
+                onChange={setPrintTerms}
+                description="Print terms"
+              />
+            </div>
+
+            {/* Two buttons with icons */}
+            <div className="flex justify-center gap-3">
+              <button
+                type="button"
+                className="sale-btn-red-outline flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-colors"
+                style={{ borderColor: primary, color: primary }}
+              >
+                <img src={RemoveIcon} alt="" className="h-4 w-4" />
+                Remove commission
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded border bg-white px-4 py-2 text-sm font-medium transition-colors"
+                style={{ borderColor: primary, color: primary }}
+              >
+                <img src={PayIcon} alt="" className="h-4 w-4" />
+                Pay now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setSelectedProduct(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-details-title"
+        >
+          <div
+            className="relative mx-4 w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedProduct(null)}
+              className="absolute right-2 top-2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2
+              id="product-details-title"
+              className="mb-4 text-center text-base font-bold sm:text-lg"
+              style={{ color: primary }}
+            >
+              Product details
+            </h2>
+
+            {/* Product details - labels left, values right, "-" when empty */}
+            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Product code
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.productCode}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Stock on hand
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.stockOnHand}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Last customer
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.lastCustomer}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Unit cost
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.unitCost}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Min unit price
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.minUnitPrice}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Profit
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.profit}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Credit limit
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.creditLimit}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Current OS bal
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.currentOsBal}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  OS balance
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.osBalance}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Receipt no
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.receiptNo}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-[10px]">
+                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
+                  Location
+                </label>
+                <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
+                  {selectedProduct.location}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
