@@ -6,16 +6,20 @@ import DropdownIcon from '../../assets/icons/dropdown.svg';
  * Dropdown input with label above, arrow icon on the right.
  * Same styling as inputField.box, with dropdown.svg on the right.
  */
-export default function DropdownInput({ label, value, onChange, options = [], placeholder, className, ...props }) {
+export default function DropdownInput({ label, value, onChange, options = [], placeholder, widthPx, heightPx, className, ...props }) {
+  const boxWidth = widthPx != null ? `${widthPx}px` : inputField.dropdown.width;
+  const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dropdown.height;
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: boxWidth }}>
       {label && (
         <label style={inputField.label}>{label}</label>
       )}
       <div
-        className="relative flex min-h-[24px] w-full min-w-0 items-center bg-white text-[8px] outline-none sm:min-h-[28px] sm:text-[9px]"
+        className="relative flex w-full items-center bg-white text-[8px] outline-none sm:text-[9px]"
         style={{
-          width: `min(100%, ${inputField.dropdown.width})`,
+          width: '100%',
+          height: boxHeight,
+          minHeight: boxHeight,
           boxSizing: 'border-box',
           borderRadius: inputField.dropdown.borderRadius,
           background: colors.input?.background ?? '#fff',
@@ -25,11 +29,12 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
         <select
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`h-full min-h-[24px] w-full min-w-0 cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-1 text-[8px] outline-none sm:pl-2 sm:py-1.5 sm:text-[9px] ${className ?? ''}`.trim()}
+          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-0 text-[8px] outline-none sm:pl-2 sm:text-[9px] ${className ?? ''}`.trim()}
           style={{
             height: '100%',
             boxSizing: 'border-box',
             color: '#000',
+            accentColor: '#BB8295',
           }}
           {...props}
         >
