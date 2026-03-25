@@ -250,11 +250,12 @@ const rowsWithTotal = [
                   Delete
                 </button>
               )}
-              <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
+              {/* <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
                 <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </button>
+              </button> */}
 
-              {[{ icon: CancelIcon, label: 'Cancel' },
+              {[{ icon: PrinterIcon, },
+                { icon: CancelIcon, label: 'Cancel' },
                 { icon: PostIcon, label: 'Post' },
                 { icon: UnpostIcon, label: 'Unpost' }
               ].map((btn) => (
@@ -272,8 +273,8 @@ const rowsWithTotal = [
           {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
 
-            {/* LEFT */}
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-3/4">
+            {/* LEFT — ~70% on xl so form + table share space with wider right rail */}
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-[70%] xl:max-w-[70%] xl:shrink-0">
               {/* Form section - bordered */}
               <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
                 <div className="flex flex-col gap-2">
@@ -281,12 +282,14 @@ const rowsWithTotal = [
                   <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
                     <InputField
                       label="Short Description"
+                      widthPx={128}
                       value={form.shortDescription}
                       onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
                     />
                     <SubInputField
                       label="Hs Code/Wt"
                       type="number"
+                      widthPx={72}
                       value={form.hsCode}
                       onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
                     />
@@ -322,8 +325,8 @@ const rowsWithTotal = [
                     />
                   </div>
 
-                  {/* Row 2 */}
-                  <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+                  {/* Row 2: Sub total, tax, totals, Qutn/DO dropdowns, Add — same flex + gap as row 1 */}
+                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
                     <SubInputField
                       label="Sub total"
                       value={form.subTotal}
@@ -347,7 +350,6 @@ const rowsWithTotal = [
                       value={form.total}
                       onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
                     />
-
                     <DropdownInput
                       label="Qutn. no"
                       options={['QTN-001']}
@@ -360,15 +362,14 @@ const rowsWithTotal = [
                       value={form.doNo}
                       onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
                     />
-
-                    <div className="flex items-end">
+                    <div className="flex shrink-0 items-end">
                       <button
                         type="button"
-                        className="flex min-h-[24px] items-center justify-center rounded px-3 py-1.5 text-[9px] font-medium text-white sm:min-h-[28px] sm:px-4 sm:py-2 sm:text-[10px]"
+                        className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
                         style={{ backgroundColor: primary }}
                         onClick={handleSaveOrUpdate}
                       >
-                        {editingRowIndex !== null ? 'Update' : 'Save'}
+                        {editingRowIndex !== null ? 'Update' : 'Add'}
                       </button>
                     </div>
                   </div>
@@ -399,8 +400,8 @@ const rowsWithTotal = [
               </div>
             </div>
 
-            {/* RIGHT */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
+            {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0 xl:overflow-hidden">
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
                
                 
