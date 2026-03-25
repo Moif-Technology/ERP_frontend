@@ -4,11 +4,14 @@ import { inputField, colors } from '../../constants/theme';
 /**
  * Input field with label above. Standard size (165.13 x 20.08).
  */
-export default function InputField({ label, widthPx, heightPx, type, className, ...props }) {
+export default function InputField({ label, widthPx, heightPx, type, className, fullWidth, ...props }) {
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.box.width;
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.box.height;
   return (
-    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: boxWidth }}>
+    <div
+      className={`flex flex-col gap-0.5 ${fullWidth ? 'min-w-0 w-full max-w-full' : 'shrink-0'}`}
+      style={fullWidth ? { width: '100%' } : { width: boxWidth }}
+    >
       {label && (
         <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
       )}

@@ -22,8 +22,7 @@ export default function MiniToolbar() {
   ];
 
   return (
-    <div className="mt-[15px] px-3 sm:px-[15px] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 min-w-0">
-      {/* LEFT SIDE */}
+    <div className="mx-[15px] mt-2 flex min-w-0 flex-col gap-3 px-0 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
       <div className="flex flex-wrap gap-2 min-w-0">
         {leftItems.map((item) => {
           const isActive = active === item.label;
@@ -31,34 +30,40 @@ export default function MiniToolbar() {
           return (
             <button
               key={item.label}
+              type="button"
               onClick={() => setActive(item.label)}
-              className={`flex items-center gap-1 px-2 py-1 text-[9px] sm:text-[10px] rounded 
-                bg-white border transition-all flex-shrink-0
-                ${isActive ? 'shadow-md' : ''}
-              `}
+              className={`flex flex-shrink-0 items-center gap-1 rounded-md border bg-white px-2 py-1 text-[9px] sm:text-[10px] transition-colors ${
+                isActive
+                  ? 'border-slate-400 shadow-sm'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
               style={{
-                borderColor: isActive ? colors.primary.main : '#000',
+                borderColor: isActive ? colors.primary.main : undefined,
+                color: isActive ? colors.primary.main : '#334155',
               }}
             >
-              <img src={item.icon} alt="" className="w-3 h-3 flex-shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <img src={item.icon} alt="" className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate font-medium">{item.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex gap-2 flex-shrink-0">
+      <div className="flex flex-shrink-0 gap-1.5">
         {[SearchIcon, RefreshIcon, EditIcon].map((icon, i) => (
           <button
             key={i}
-            className="w-6 h-6 flex items-center justify-center bg-white border border-black rounded hover:shadow-sm flex-shrink-0"
+            type="button"
+            className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
-            <img src={icon} alt="" className="w-3 h-3" />
+            <img src={icon} alt="" className="h-3 w-3" />
           </button>
         ))}
-        <button className="w-6 h-6 flex items-center justify-center rounded bg-red-500 hover:bg-red-600 flex-shrink-0">
-          <img src={DeleteIcon} alt="" className="w-3 h-3" />
+        <button
+          type="button"
+          className="flex h-7 w-7 items-center justify-center rounded bg-red-600 transition-colors hover:bg-red-700"
+        >
+          <img src={DeleteIcon} alt="" className="h-3 w-3 brightness-0 invert" />
         </button>
       </div>
     </div>

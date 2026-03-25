@@ -1,8 +1,6 @@
 // src/components/layouts/ModuleTabs.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { colors } from '../../constants/theme';
-
 import ProductIcon from '../../assets/icons/ProductIcon.svg';
 import QuotationIcon from '../../assets/icons/QuotationIcon.svg';
 import DeliveryIcon from '../../assets/icons/DeliveryIcon.svg';
@@ -11,6 +9,23 @@ import ReturnIcon from '../../assets/icons/ReturnIcon.svg';
 import ListIcon from '../../assets/icons/list2.svg';
 import SearchIcon from '../../assets/icons/search2.svg';
 import ConfigIcon from '../../assets/icons/edit.svg';
+
+function ExpandChevron({ expanded }) {
+  return (
+    <svg
+      className={`h-3.5 w-3.5 text-slate-600 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
 
 const getActionItems = (moduleIcon, labels) => {
   const iconMap = { List: ListIcon, Edit: ConfigIcon, Search: SearchIcon };
@@ -44,7 +59,7 @@ const moduleGroups = {
   ],
 };
 
-export default function ModuleTabs() {
+export default function ModuleTabs({ expanded, onExpandedChange }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('customer');
   const [selectedAction, setSelectedAction] = useState({ module: null, action: null });
@@ -62,99 +77,99 @@ export default function ModuleTabs() {
   };
 
   return (
-
-
-<div className="sticky top-0 left-0 z-40 min-w-0 min-h-[90px]  sm:min-h-[105px] bg-[#fde8e8] border-b border-[#fbd5d5] box-border my-2 sm:my-[15px] mx-[15px]">
-      {/* Tabs: CUSTOMER | SUPPLIER | ACCOUNTS */}
-      <div className="border-b border-neutral-300 overflow-x-hidden">
-        <div className="flex items-center justify-start gap-4 sm:gap-8 px-2 sm:px-4 py-2">
+    <div
+      className={`sticky top-0 left-0 z-40 min-w-0 overflow-hidden rounded-lg bg-[#fde8e8] shadow-sm ring-1 ring-rose-200/60 box-border my-2 sm:my-[15px] mx-[15px] ${
+        expanded ? 'min-h-[90px] sm:min-h-[105px]' : ''
+      }`}
+    >
+      <div className="relative border-b border-rose-200/60">
+        <div className="flex items-center justify-start gap-4 sm:gap-8 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
           {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
             const isActive = activeTab === tab.toLowerCase();
             return (
-              <div key={tab} className="relative flex flex-col items-start pb-1 flex-shrink-0">
+              <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
                 <button
                   type="button"
                   onClick={() => setActiveTab(tab.toLowerCase())}
-                  className="p-0 text-[9px] sm:text-[10px] font-bold text-black bg-transparent border-none cursor-pointer whitespace-nowrap"
+                  className="border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors"
                 >
                   {tab}
                 </button>
                 <div
-                  className={`absolute inset-x-0 -bottom-2 h-[2px] ${
+                  className={`h-0.5 w-full rounded-full ${
                     isActive ? 'bg-[#800000]' : 'bg-transparent'
                   }`}
+                  aria-hidden
                 />
               </div>
             );
           })}
         </div>
+        <button
+          type="button"
+          onClick={() => onExpandedChange((v) => !v)}
+          className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Hide toolbars' : 'Show toolbars'}
+        >
+          <ExpandChevron expanded={expanded} />
+        </button>
       </div>
 
-      {/* Module Cards */}
-      <div className="flex flex-wrap justify-start gap-3 px-2 sm:px-4 py-3 min-w-0">   {/* 12px gap between cards */}
-        {currentModules.map((module) => (
-          <div
-            key={module.name}
-            className="flex-none w-[120px] h-[64px]
-                       rounded-[6px] bg-white/50 shadow-[0_4px_12px_rgba(0,0,0,0.1)] 
-                       backdrop-blur-sm p-1"   // ← 12px padding (inner box distance)
-          >
-            {/* Module Title */}
-            <div className="mb-2 text-[9px] sm:text-[10px] font-bold text-[#5A6578] leading-tight text-center">
-              {module.name}
-            </div>
+      {expanded ? (
+        <div className="flex flex-wrap justify-start gap-3 px-2 sm:px-4 py-3 min-w-0">
+          {currentModules.map((module) => (
+            <div
+              key={module.name}
+              className="flex-none w-[120px] h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm"
+            >
+              <div className="mb-2 text-[9px] sm:text-[10px] font-bold text-[#5A6578] leading-tight text-center">
+                {module.name}
+              </div>
+              <div className="flex flex-wrap gap-0 p-1">
+                {module.actions.map((action) => {
+                  const makeBlack = ['List'].includes(action.label);
+                  const isSelected =
+                    selectedAction.module === module.name &&
+                    selectedAction.action === action.label;
 
-            {/* Action Buttons - Gap = 6px */}
-            <div className="flex flex-wrap gap-0 p-1">   {/* ← this is your 6px gap */}
-              {module.actions.map((action) => {
-                const makeBlack = ['List'].includes(action.label);
-                const isSelected =
-                  selectedAction.module === module.name &&
-                  selectedAction.action === action.label;
-
-                return (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={() => handleActionClick(module.name, action.label)}
-                    className={`flex flex-col items-center gap-0 p-0 cursor-pointer min-w-0 flex-1 basis-[calc(10.33%-1px)]`}
-                  >
-                    <img
-                      src={action.icon}
-                      alt=""
-                      className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
-                        isSelected
-                          ? ''
-                          : makeBlack
-                          ? 'filter brightness-0'
-                          : ''
-                      }`}
-                      style={
-                        isSelected
-                          ? {
-                              filter:
-                                'invert(13%) sepia(88%) saturate(3223%) hue-rotate(350deg) brightness(92%) contrast(105%)',
-                            }
-                          : undefined
-                      }
-                    />
-                    <span
-                      className={`text-[7px] sm:text-[9px] font-semibold truncate text-center w-full ${
-                        isSelected ? 'text-[#800000]' : 'text-[#5A6578]'
-                      }`}
+                  return (
+                    <button
+                      key={action.label}
+                      type="button"
+                      onClick={() => handleActionClick(module.name, action.label)}
+                      className="flex min-w-0 flex-1 basis-[calc(50%-1px)] cursor-pointer flex-col items-center gap-0 p-0"
                     >
-                      {action.label}
-                    </span>
-                  </button>
-                );
-              })}
+                      <img
+                        src={action.icon}
+                        alt=""
+                        className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
+                          isSelected ? '' : makeBlack ? 'filter brightness-0' : ''
+                        }`}
+                        style={
+                          isSelected
+                            ? {
+                                filter:
+                                  'invert(13%) sepia(88%) saturate(3223%) hue-rotate(350deg) brightness(92%) contrast(105%)',
+                              }
+                            : undefined
+                        }
+                      />
+                      <span
+                        className={`w-full truncate text-center text-[7px] sm:text-[9px] font-semibold ${
+                          isSelected ? 'text-[#800000]' : 'text-[#5A6578]'
+                        }`}
+                      >
+                        {action.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : null}
     </div>
-
-
   );
 }
-

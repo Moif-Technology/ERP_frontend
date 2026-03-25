@@ -6,7 +6,6 @@
 html,
 body {
   margin: 0;
-  overflow: hidden;
   height: 100%;
   background-color: #E5E5E5;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -30,7 +29,6 @@ code {
 html,
 body {
   margin: 0;
-  overflow: hidden;
   height: 100%;
   background-color: #E5E5E5;
 
@@ -121,16 +119,4 @@ code {
 
 .switch input[type="checkbox"]:checked:active + .slider::after {
   transform: translateX(calc(var(--button-width) - var(--toggle-wider) - var(--button-toggle-offset)));
-}
-
-/* Dropdown option selection color - BB8295 */
-select,
-.dropdown-select {
-  accent-color: #BB8295;
-}
-
-select option:checked,
-select option:hover {
-  background-color: #BB8295 !important;
-  color: #fff !important;
 }
