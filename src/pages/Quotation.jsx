@@ -10,7 +10,7 @@ import PrinterIcon from '../assets/icons/printer.svg';
 import SearchIcon from '../assets/icons/search2.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import EditIcon from '../assets/icons/edit.svg';
+import EditIcon from '../assets/icons/edit4.svg';
 import DuplicateIcon from '../assets/icons/list2.svg';
 
 const primary = colors.primary?.main || colors.primary?.DEFAULT || '#790728';
@@ -199,6 +199,40 @@ export default function Quotation() {
     setItems((prev) => prev.filter((_, i) => i !== idx).map((r, i) => ({ ...r, slNo: i + 1 })));
   };
 
+  const handleAddQuotation = () => {
+    setLineItemDetail(null);
+    setQuotationNo('');
+    setQuotationDate(new Date().toISOString().slice(0, 10));
+    setCustRefNo('');
+    setCustRefDate(new Date().toISOString().slice(0, 10));
+    setCustomerId(0);
+    setCustomerAddress('');
+    setContactPerson('');
+    setProductSearch('');
+    setProductResults([]);
+    setShowSearchDropdown(false);
+    setOwnRefNo('');
+    setProductCode('');
+    setShortDescription('');
+    setLocation('');
+    setUnit('');
+    setQty(1);
+    setUnitPrice(0);
+    setDiscPct(0);
+    setDiscAmt(0);
+    setTaxPct(5);
+    setItems([]);
+    setDiscountAmount(0);
+    setRoundOff(0);
+    setQuotationTerms('');
+    setSaveTerms(false);
+    setPrintLocn(false);
+    setPrintOwnRefNo(true);
+    setPrintOtherFormat(false);
+    setProductInfo({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
+    setAttachments(false);
+  };
+
   useEffect(() => {
     let sub = 0;
     let tax = 0;
@@ -226,15 +260,16 @@ export default function Quotation() {
     'min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]';
 
   return (
-    <div className="my-2 flex min-h-0 flex-1 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
+    <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:mb-[15px] sm:mt-0 sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
       <style>{`
         .qtn-outline:hover { border-color: ${primary} !important; background: ${primaryHover} !important; color: ${primary} !important; }
         .qtn-primary:hover { filter: brightness(1.05); }
+        .qtn-scroll-table td:has(button) { white-space: nowrap; }
       `}</style>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+      <div className="flex w-full flex-col gap-2 rounded-lg border border-gray-200 bg-white px-2.5 pb-2.5 pt-1.5 shadow-sm sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
         {/* Header — same outer rhythm as Sale / ModuleTabs content */}
-        <header className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <header className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
             Quotation
           </h1>
@@ -252,17 +287,36 @@ export default function Quotation() {
             >
               Save
             </button>
+            <button
+              type="button"
+              onClick={handleAddQuotation}
+              className="qtn-primary flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium text-white transition-colors sm:px-2 sm:py-1 sm:text-[11px]"
+              style={{ backgroundColor: primary, borderColor: primary }}
+            >
+              <svg
+                className="h-3 w-3 shrink-0 sm:h-4 sm:w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                aria-hidden
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add Quotation
+            </button>
             {/* <button type="button" onClick={() => navigate(-1)} className="qtn-outline flex h-9 items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium transition-colors">Close</button> */}
           </div>
         </header>
 
         {/* Main */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden lg:flex-row lg:gap-4">
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
           {/* Left */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
+          <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
             {/* Quote & Customer */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
                 <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
                   Quote Details
                 </h2>
@@ -303,7 +357,7 @@ export default function Quotation() {
                   </div>
                 </div>
               </div>
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-3">
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
                 <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
                   Customer
                 </h2>
@@ -347,7 +401,7 @@ export default function Quotation() {
             </div>
 
             {/* Add Item — heading row with search on right */}
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold" style={{ color: primary }}>
                   Add Item
@@ -452,9 +506,15 @@ export default function Quotation() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="min-h-[140px] flex-1 overflow-auto p-2 sm:p-3">
+            {/* Table — vertical scroll after 6 item rows; width fits container (no horizontal scroll) */}
+            <div
+              className={`qtn-scroll-table w-full overflow-x-hidden ${
+                items.length > 6 ? 'max-h-[min(13rem,46vh)] overflow-y-auto sm:max-h-[min(15rem,50vh)]' : ''
+              }`}
+            >
               <CommonTable
+                fitParentWidth
+                stickyHeader={items.length > 6}
                 headers={[
                   'Sl',
                   'Own Ref',
@@ -518,8 +578,8 @@ export default function Quotation() {
           </div>
 
           {/* Right: Product Info + Totals */}
-          <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-[260px]">
-            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-3 shadow-sm sm:p-4">
+          <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[250px]">
+            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-2.5 shadow-sm sm:p-3">
               <h2 className="mb-2 text-[10px] font-semibold sm:text-[11px]" style={{ color: primary }}>
                 Product Info
               </h2>
@@ -561,7 +621,7 @@ export default function Quotation() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-3 shadow-md sm:p-4">
+            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-2.5 shadow-md sm:p-3">
               <h2 className="mb-2 text-[10px] font-bold sm:text-[11px]" style={{ color: primary }}>
                 Totals
               </h2>
@@ -606,7 +666,7 @@ export default function Quotation() {
             </div>
 
             {/* Terms (right sidebar - below Totals) */}
-            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm sm:p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h2 className="text-right text-[10px] font-semibold text-gray-700 sm:text-[11px]">Quotation Terms</h2>
               </div>
@@ -619,34 +679,7 @@ export default function Quotation() {
                 className="mb-2 w-full resize-none rounded border border-gray-300 bg-white px-2 py-1 text-[9px] outline-none sm:text-[10px]"
               />
 
-              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-                <button
-                  type="button"
-                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
-                  style={{ color: primary }}
-                >
-                  <img src={EditIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
-                  style={{ color: primary }}
-                >
-                  <img src={DuplicateIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
-                  Duplicate
-                </button>
-                <button
-                  type="button"
-                  className="qtn-outline flex shrink-0 items-center gap-1.5 rounded-md border border-gray-300 px-2 py-1 text-[9px] sm:text-[10px]"
-                  style={{ color: primary }}
-                >
-                  <img src={ProformaIcon} alt="" className="h-3.5 w-3.5" style={{ filter: iconFilterPrimary }} />
-                  Proforma
-                </button>
-              </div>
-
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[7px] text-gray-600 sm:text-[8px]">
+              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[7px] text-gray-600 sm:text-[8px]">
                 <div className="flex items-center gap-1">
                   <Switch id="qtn-print-locn" size="xs" checked={printLocn} onChange={setPrintLocn} />
                   <span className="leading-tight">Print Loctn.</span>
@@ -661,11 +694,37 @@ export default function Quotation() {
                 </div>
               </div>
 
-              <div className="mt-3 flex justify-center">
+              <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-0.5 overflow-hidden">
+                <button
+                  type="button"
+                  className="qtn-outline flex size-5 shrink-0 items-center justify-center rounded border border-gray-300 p-0 sm:size-6"
+                  style={{ color: primary }}
+                  aria-label="Edit"
+                >
+                  <img src={EditIcon} alt="" className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
+                </button>
+                <button
+                  type="button"
+                  title="Duplicate"
+                  className="qtn-outline flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded border border-gray-300 px-0.5 py-0.5 text-[7px] font-medium leading-none sm:gap-1 sm:px-1 sm:text-[8px]"
+                  style={{ color: primary }}
+                >
+                  <img src={DuplicateIcon} alt="" className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" style={{ filter: iconFilterPrimary }} />
+                  <span className="min-w-0 truncate">Duplicate</span>
+                </button>
+                <button
+                  type="button"
+                  title="Proforma"
+                  className="qtn-outline flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded border border-gray-300 px-0.5 py-0.5 text-[7px] font-medium leading-none sm:gap-1 sm:px-1 sm:text-[8px]"
+                  style={{ color: primary }}
+                >
+                  <img src={ProformaIcon} alt="" className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" style={{ filter: iconFilterPrimary }} />
+                  <span className="min-w-0 truncate">Proforma</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setSaveTerms(true)}
-                  className="qtn-primary rounded-md px-3 py-1 text-[9px] font-medium text-white sm:text-[10px]"
+                  className="qtn-primary shrink-0 whitespace-nowrap rounded border border-transparent px-1.5 py-0.5 text-[7px] font-medium leading-none text-white sm:px-2 sm:text-[8px]"
                   style={{ backgroundColor: primary }}
                 >
                   Save
