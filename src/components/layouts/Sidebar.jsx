@@ -38,7 +38,7 @@ const menuItems = [
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
   { label: 'Stock Hub', to: '/stock-hub', icon: StockIcon },
   { label: 'Exchange Hub', to: '/exchange-hub', icon: ExchangeIcon },
-  { label: 'Sales Activities', to: '/sales-activities', icon: SalesIcon },
+  { label: 'Sales Activities', to: '/delivery-order', icon: SalesIcon },
   { label: 'Procurement', to: '/procurement', icon: ProcurementIcon },
   { label: 'Financials', to: '/financials', icon: FinancialsIcon },
   { label: 'Manufacturing', to: '/manufacturing', icon: ManufacturingIcon },
