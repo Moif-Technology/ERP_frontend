@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import ProductList from './pages/ProductList';
 import Sale from './pages/Sale';
 import Quotation from './pages/Quotation';
+import DeliveryOrder from './pages/DeliveryOrder';
 
 export default function AppRoutes() {
   return (
@@ -12,6 +13,7 @@ export default function AppRoutes() {
       <Route path="/products" element={<ProductList />} />
       <Route path="/sales" element={<Sale />} />
       <Route path="/quotation" element={<Quotation />} />
+      <Route path="/delivery-order" element={<DeliveryOrder />} />
       <Route
         path="*"
         element={

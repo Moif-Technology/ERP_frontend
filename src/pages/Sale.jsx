@@ -48,7 +48,7 @@ const initialFormState = {
   doNo: 'DO-001',
 };
 
-export default function Sale() {
+export default function Sale({ pageTitle = 'Sales', termsTitle = 'Sales terms' }) {
   const [salesTermsOpen, setSalesTermsOpen] = useState(false);
   const [saveTerms, setSaveTerms] = useState(false);
   const [printTerms, setPrintTerms] = useState(false);
@@ -235,7 +235,7 @@ const rowsWithTotal = [
           {/* Header */}
           <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-              Sales
+              {pageTitle}
             </h1>
 
             <div className="flex gap-2 flex-wrap items-center">
@@ -271,7 +271,7 @@ const rowsWithTotal = [
           </div>
 
           {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden xl:flex-row">
 
             {/* LEFT — ~70% on xl so form + table share space with wider right rail */}
             <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-[70%] xl:max-w-[70%] xl:shrink-0">
@@ -378,7 +378,7 @@ const rowsWithTotal = [
 
               {/* Table section - bordered container; scroll inside when content overflows */}
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+                <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
                   <CommonTable
                     headers={[
         '',
@@ -401,8 +401,8 @@ const rowsWithTotal = [
             </div>
 
             {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0 xl:overflow-hidden">
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
                
                 
 
@@ -484,7 +484,7 @@ const rowsWithTotal = [
                   className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
                   style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
                 >
-                  Sales terms
+                  {termsTitle}
                 </button>
 
 
@@ -576,7 +576,7 @@ const rowsWithTotal = [
               className="mb-4 text-center text-base font-bold sm:text-lg"
               style={{ color: primary }}
             >
-              Sales terms
+              {termsTitle}
             </h2>
 
             {/* Form fields - labels left-aligned in one column */}
