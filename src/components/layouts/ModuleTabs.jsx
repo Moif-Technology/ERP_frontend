@@ -6,6 +6,8 @@ import QuotationIcon from '../../assets/icons/QuotationIcon.svg';
 import DeliveryIcon from '../../assets/icons/DeliveryIcon.svg';
 import SaleIcon from '../../assets/icons/SaleIcon.svg';
 import ReturnIcon from '../../assets/icons/ReturnIcon.svg';
+import PurchaseIcon from '../../assets/icons/purchase.svg';
+import PurchaseOrderIcon from '../../assets/icons/purchase order.svg';
 import ListIcon from '../../assets/icons/list2.svg';
 import SearchIcon from '../../assets/icons/search2.svg';
 import ConfigIcon from '../../assets/icons/edit.svg';
@@ -61,8 +63,8 @@ const moduleGroups = {
     { name: 'Sale Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
   ],
   supplier: [
-    { name: 'Purchase', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Purchases', 'List']) },
-    { name: 'Purchase Order', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Orders', 'List']) },
+    { name: 'Purchase', icon: PurchaseIcon, actions: getActionItems(PurchaseIcon, ['Purchases', 'List']) },
+    { name: 'Purchase Order', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['Orders', 'List']) },
     { name: 'GRN', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['GRN', 'List']) },
     { name: 'Supplier Invoice', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Invoices', 'List']) },
     { name: 'Supplier Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
@@ -111,7 +113,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     >
       <div className="relative border-b border-rose-200/60">
         {expanded ? (
-          <div className="flex items-center justify-start gap-4 sm:gap-8 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
+          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12">
             {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
               const isActive = activeTab === tab.toLowerCase();
               return (
