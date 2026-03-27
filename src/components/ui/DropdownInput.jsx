@@ -6,11 +6,14 @@ import DropdownIcon from '../../assets/icons/dropdown.svg';
  * Dropdown input with label above, arrow icon on the right.
  * Same styling as inputField.box, with dropdown.svg on the right.
  */
-export default function DropdownInput({ label, value, onChange, options = [], placeholder, widthPx, heightPx, className, ...props }) {
-  const boxWidth = widthPx != null ? `${widthPx}px` : inputField.dropdown.width;
+export default function DropdownInput({ label, value, onChange, options = [], placeholder, widthPx, heightPx, fullWidth = false, className, ...props }) {
+  const boxWidth = fullWidth ? '100%' : (widthPx != null ? `${widthPx}px` : inputField.dropdown.width);
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dropdown.height;
   return (
-    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: boxWidth }}>
+    <div
+      className={`flex flex-col gap-0.5 ${fullWidth ? 'min-w-0 w-full max-w-full' : 'shrink-0'}`}
+      style={{ width: boxWidth }}
+    >
       {label && (
         <label style={inputField.label}>{label}</label>
       )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
@@ -7,41 +7,56 @@ import UnpostIcon from '../assets/icons/unpost.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable } from '../components/ui';
+import EditIcon from '../assets/icons/edit.svg';
+import SaleIcon from '../assets/icons/sales.svg';
+import { InputField, SubInputField, DropdownInput, DateInputField, Switch, CommonTable } from '../components/ui';
 
-export default function DeliveryOrder() {
-  const [doDate, setDoDate] = useState('');
-  const [enteredDate, setEnteredDate] = useState('');
+export default function Purchase() {
   const [tableRows, setTableRows] = useState([
-    ['1', 'OR-001', 'Product A', 'Main Store', 'SR-1001', 'Box Pack', 'PCS', '1', '250.00', '5', '12.50', '237.50', '5', '11.88', '249.38'],
+    ['1', 'OR-001', 'P-101', 'Product A', 'Box Pack', '120.00', '5', '10', '1', '118.00', '130.00', '5', '65.00', '1235.00', '5', '61.75', '1296.75'],
   ]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [editingRowData, setEditingRowData] = useState([]);
   const [itemForm, setItemForm] = useState({
     ownRefNo: '',
+    supRefNo: '',
     productCode: '',
     shortDescription: '',
+    pack: '',
     serialNo: '',
     packetDetails: '',
-    unit: '',
+    lastPurchCost: '',
+    lpoQty: '',
     qty: '',
-    unitPrice: '',
+    focQty: '',
+    unitCost: '',
+    sellingPrice: '',
     discPercent: '',
     disc: '',
     subTotal: '',
-    taxPercent: '',
-    taxAmt: '',
-    lineTotal: '',
+    vatPercent: '',
+    vatAmount: '',
+    total: '',
   });
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
+  const [purchaseMeta, setPurchaseMeta] = useState({
+    purchaseNo: '',
+    supplierInvNo: '',
+    supplier: '',
+    bySupplier: false,
+    enteredBy: 'Admin',
+    purchaseDate: '',
+    paymentMode: 'Cash',
+    accountHead: 'General',
+    enteredDate: '',
+    station: 'Main',
+    invoiceAmount: '',
+  });
+  const [paymentInfo, setPaymentInfo] = useState({
+    remark: '',
+    paymentNo: '',
+    paymentNow: false,
+  });
 
   const primary = colors.primary?.main || '#790728';
 
@@ -58,41 +73,51 @@ export default function DeliveryOrder() {
   const updateItemForm = (key, value) => {
     setItemForm((prev) => ({ ...prev, [key]: value }));
   };
+  const updatePurchaseMeta = (key, value) => {
+    setPurchaseMeta((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleAddRow = () => {
     const newRow = [
       String(tableRows.length + 1),
       itemForm.ownRefNo || '-',
-      itemForm.shortDescription || '-',
       itemForm.productCode || '-',
-      itemForm.serialNo || '-',
+      itemForm.shortDescription || '-',
       itemForm.packetDetails || '-',
-      itemForm.unit || '-',
+      itemForm.lastPurchCost || '0.00',
+      itemForm.lpoQty || '0',
       itemForm.qty || '0',
-      itemForm.unitPrice || '0.00',
+      itemForm.focQty || '0',
+      itemForm.unitCost || '0.00',
+      itemForm.sellingPrice || '0.00',
       itemForm.discPercent || '0',
       itemForm.disc || '0.00',
       itemForm.subTotal || '0.00',
-      itemForm.taxPercent || '0',
-      itemForm.taxAmt || '0.00',
-      itemForm.lineTotal || '0.00',
+      itemForm.vatPercent || '0',
+      itemForm.vatAmount || '0.00',
+      itemForm.total || '0.00',
     ];
     setTableRows((prev) => [newRow, ...prev]);
     setItemForm({
       ownRefNo: '',
+      supRefNo: '',
       productCode: '',
       shortDescription: '',
+      pack: '',
       serialNo: '',
       packetDetails: '',
-      unit: '',
+      lastPurchCost: '',
+      lpoQty: '',
       qty: '',
-      unitPrice: '',
+      focQty: '',
+      unitCost: '',
+      sellingPrice: '',
       discPercent: '',
       disc: '',
       subTotal: '',
-      taxPercent: '',
-      taxAmt: '',
-      lineTotal: '',
+      vatPercent: '',
+      vatAmount: '',
+      total: '',
     });
   };
 
@@ -143,11 +168,11 @@ export default function DeliveryOrder() {
     let totalTaxAmt = 0;
     let totalLine = 0;
     tableRows.forEach((row) => {
-      totalDisc += parseCellNum(row[10]);
-      totalSub += parseCellNum(row[11]);
-      sumTaxPct += parseCellNum(row[12]);
-      totalTaxAmt += parseCellNum(row[13]);
-      totalLine += parseCellNum(row[14]);
+      totalDisc += parseCellNum(row[12]);
+      totalSub += parseCellNum(row[13]);
+      sumTaxPct += parseCellNum(row[14]);
+      totalTaxAmt += parseCellNum(row[15]);
+      totalLine += parseCellNum(row[16]);
     });
     return {
       totalDisc,
@@ -161,23 +186,23 @@ export default function DeliveryOrder() {
   return (
     <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:mb-[15px] sm:mt-0 sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
       <style>{`
-        .delivery-btn-outline:hover {
+        .purchase-btn-outline:hover {
           border-color: ${primary} !important;
           background: #F2E6EA !important;
           color: ${primary} !important;
         }
-        .delivery-order-table table {
+        .purchase-table table {
           table-layout: fixed;
         }
-        .delivery-order-table th,
-        .delivery-order-table td {
+        .purchase-table th,
+        .purchase-table td {
           vertical-align: middle;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .delivery-order-table th:first-child,
-        .delivery-order-table td:first-child {
+        .purchase-table th:first-child,
+        .purchase-table td:first-child {
           width: 34px !important;
           min-width: 34px !important;
           max-width: 34px !important;
@@ -185,35 +210,39 @@ export default function DeliveryOrder() {
           padding-left: 4px !important;
           padding-right: 4px !important;
         }
-        .delivery-order-table th:nth-child(8),
-        .delivery-order-table td:nth-child(8),
-        .delivery-order-table th:nth-child(9),
-        .delivery-order-table td:nth-child(9),
-        .delivery-order-table th:nth-child(10),
-        .delivery-order-table td:nth-child(10),
-        .delivery-order-table th:nth-child(11),
-        .delivery-order-table td:nth-child(11),
-        .delivery-order-table th:nth-child(12),
-        .delivery-order-table td:nth-child(12),
-        .delivery-order-table th:nth-child(13),
-        .delivery-order-table td:nth-child(13),
-        .delivery-order-table th:nth-child(14),
-        .delivery-order-table td:nth-child(14),
-        .delivery-order-table th:nth-child(15),
-        .delivery-order-table td:nth-child(15) {
+        .purchase-table th:nth-child(8),
+        .purchase-table td:nth-child(8),
+        .purchase-table th:nth-child(9),
+        .purchase-table td:nth-child(9),
+        .purchase-table th:nth-child(10),
+        .purchase-table td:nth-child(10),
+        .purchase-table th:nth-child(11),
+        .purchase-table td:nth-child(11),
+        .purchase-table th:nth-child(12),
+        .purchase-table td:nth-child(12),
+        .purchase-table th:nth-child(13),
+        .purchase-table td:nth-child(13),
+        .purchase-table th:nth-child(14),
+        .purchase-table td:nth-child(14),
+        .purchase-table th:nth-child(15),
+        .purchase-table td:nth-child(15),
+        .purchase-table th:nth-child(16),
+        .purchase-table td:nth-child(16),
+        .purchase-table th:nth-child(17),
+        .purchase-table td:nth-child(17) {
           text-align: center;
         }
-        .delivery-order-table th:last-child,
-        .delivery-order-table td:last-child {
+        .purchase-table th:last-child,
+        .purchase-table td:last-child {
           width: 90px !important;
           min-width: 90px !important;
           text-align: center;
         }
-        .delivery-order-table tbody tr:last-child td {
+        .purchase-table tbody tr:last-child td {
           font-weight: 700;
           background-color: #faf5f6;
         }
-        .delivery-order-table tbody tr:last-child td:first-child {
+        .purchase-table tbody tr:last-child td:first-child {
           text-align: left !important;
           padding-left: 8px !important;
         }
@@ -222,14 +251,14 @@ export default function DeliveryOrder() {
       <div className="flex h-[100%] w-full min-h-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-            DELIVERY ORDER
+            PURCHASE ENTRY
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: PostIcon, label: 'Post' }, { icon: UnpostIcon, label: 'UnPost' }].map((btn) => (
               <button
                 key={btn.label || 'print'}
                 type="button"
-                className="delivery-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                className="purchase-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
               >
                 <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 {btn.label}
@@ -237,7 +266,7 @@ export default function DeliveryOrder() {
             ))}
             <button
               type="button"
-              className="delivery-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              className="purchase-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
             >
               Save
             </button>
@@ -257,65 +286,43 @@ export default function DeliveryOrder() {
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              DELIVERY ORDER
+              PURCHASE ENTRY
             </button>
           </div>
         </div>
 
         <div className="grid h-full min-h-0 grid-cols-1 gap-3 overflow-hidden xl:grid-cols-[1.72fr_1.28fr]">
         <div className="flex min-h-0 flex-col gap-3">
-          <div
-            className="w-full rounded bg-white xl:w-[860px]"
-            style={{
-              borderRadius: '9.9px',
-              border: '0.49px solid #e5e7eb',
-              padding: '3.99px 5px',
-              minHeight: '117.95px',
-            }}
-          >
-            <div className="flex flex-col gap-[5.94px]">
-              <div className="flex flex-wrap items-end gap-[5.94px] xl:flex-nowrap">
-                <SubInputField label="DO No" widthPx={82} />
-                <DateInputField label="DO date" value={doDate} onChange={setDoDate} widthPx={108} />
-                <DateInputField label="Entered Date" value={enteredDate} onChange={setEnteredDate} widthPx={108} />
-                <InputField label="Customer name" widthPx={152} />
-                <InputField label="Customer LPO No" widthPx={152} />
-                <SubInputField label="Delivery By" widthPx={90} />
-                <SubInputField label="Bill #" widthPx={82} />
-              </div>
-              <div className="flex flex-wrap items-end gap-[5.94px] xl:flex-nowrap">
-                <DropdownInput
-                  label="Sales Man"
-                  options={['000001', '000002']}
-                  value="000001"
-                  onChange={() => {}}
-                  widthPx={108}
-                />
-                <SubInputField label="Counter" widthPx={82} />
-              </div>
-            </div>
-          </div>
-
-
-
           <div className="w-full rounded border border-gray-200 bg-white p-2 sm:p-3 xl:w-[860px]">
             <div className="flex flex-col gap-2.5">
               <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
                 <SubInputField label="Own Ref No" widthPx={80} value={itemForm.ownRefNo} onChange={(e) => updateItemForm('ownRefNo', e.target.value)} />
+                <SubInputField label="Sup Ref No" widthPx={80} value={itemForm.supRefNo} onChange={(e) => updateItemForm('supRefNo', e.target.value)} />
                 <SubInputField label="Product Code" widthPx={80} value={itemForm.productCode} onChange={(e) => updateItemForm('productCode', e.target.value)} />
                 <InputField label="Short Description" widthPx={145} value={itemForm.shortDescription} onChange={(e) => updateItemForm('shortDescription', e.target.value)} />
-                <SubInputField label="Serial #" widthPx={80} value={itemForm.serialNo} onChange={(e) => updateItemForm('serialNo', e.target.value)} />
-                <InputField label="Packet details" widthPx={145} value={itemForm.packetDetails} onChange={(e) => updateItemForm('packetDetails', e.target.value)} />
+                <SubInputField label="Last purch cost" widthPx={80} value={itemForm.lastPurchCost} onChange={(e) => updateItemForm('lastPurchCost', e.target.value)} />
+                <SubInputField label="Lpo qty" widthPx={80} value={itemForm.lpoQty} onChange={(e) => updateItemForm('lpoQty', e.target.value)} />
+                <SubInputField label="Packet details" widthPx={100} value={itemForm.packetDetails} onChange={(e) => updateItemForm('packetDetails', e.target.value)} />
                 <SubInputField label="Qty" widthPx={64} value={itemForm.qty} onChange={(e) => updateItemForm('qty', e.target.value)} />
-                <SubInputField label="Unit Price" widthPx={80} value={itemForm.unitPrice} onChange={(e) => updateItemForm('unitPrice', e.target.value)} />
-                <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
               </div>
               <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
+                <SubInputField label="Foc Qty" widthPx={80} value={itemForm.focQty} onChange={(e) => updateItemForm('focQty', e.target.value)} />
+                <SubInputField label="Unit cost" widthPx={80} value={itemForm.unitCost} onChange={(e) => updateItemForm('unitCost', e.target.value)} />
+                <SubInputField label="Selling price" widthPx={80} value={itemForm.sellingPrice} onChange={(e) => updateItemForm('sellingPrice', e.target.value)} />
+                <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
                 <SubInputField label="Disc." widthPx={80} value={itemForm.disc} onChange={(e) => updateItemForm('disc', e.target.value)} />
-                <SubInputField label="Sub total" widthPx={80} value={itemForm.subTotal} onChange={(e) => updateItemForm('subTotal', e.target.value)} />
-                <SubInputField label="Tax%" widthPx={80} value={itemForm.taxPercent} onChange={(e) => updateItemForm('taxPercent', e.target.value)} />
-                <SubInputField label="T.Amt" widthPx={80} value={itemForm.taxAmt} onChange={(e) => updateItemForm('taxAmt', e.target.value)} />
-                <SubInputField label="Total" widthPx={80} value={itemForm.lineTotal} onChange={(e) => updateItemForm('lineTotal', e.target.value)} />
+                <SubInputField label="Sub. total" widthPx={80} value={itemForm.subTotal} onChange={(e) => updateItemForm('subTotal', e.target.value)} />
+                <DropdownInput
+                  label="Vat %"
+                  options={['0', '5', '10', '15']}
+                  value={itemForm.vatPercent}
+                  onChange={(val) => updateItemForm('vatPercent', val)}
+                  widthPx={80}
+                />
+                <SubInputField label="Vat amount" widthPx={80} value={itemForm.vatAmount} onChange={(e) => updateItemForm('vatAmount', e.target.value)} />
+                <SubInputField label="Total" widthPx={80} value={itemForm.total} onChange={(e) => updateItemForm('total', e.target.value)} />
+              </div>
+              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
                 <div className="ml-auto flex items-end">
                   <button
                     type="button"
@@ -333,10 +340,10 @@ export default function DeliveryOrder() {
           
 
           <div className="hidden min-h-0 flex-1 flex-col rounded bg-white p-2 sm:p-3 xl:flex xl:w-[860px]">
-            <div className="min-h-0 overflow-y-auto max-h-[185px]">
+            <div className="min-h-0 overflow-y-auto max-h-[500px]">
               <CommonTable
-                className="delivery-order-table"
-                headers={['Sl no', 'Own Ref No', 'Short Description', 'Location', 'Serial #', 'Packet details', 'Unit', 'Qty', 'Unit Price', 'Disc%', 'Disc.', 'Sub total', 'Tax%', 'T.Amt', 'Line Total', 'Action']}
+                className="purchase-table"
+                headers={['Sl no', 'Own Ref #', 'Product code', 'Short description', 'Packet details', 'Last purch cost', 'Lpo qty', 'Qty', 'Foc qty', 'Actual cost', 'Selling price', 'Disc%', 'Disc. amt', 'Sub total', 'Vat%', 'Vat amt', 'Total', 'Action']}
                 fitParentWidth
                 rows={[
                   ...tableRows.map((row, idx) => [
@@ -386,7 +393,7 @@ export default function DeliveryOrder() {
                     </div>,
                   ]),
                   [
-                    { content: 'Total', colSpan: 10, className: 'text-left font-bold' },
+                    { content: 'Total', colSpan: 12, className: 'text-left font-bold' },
                     tableTotals.totalDisc.toFixed(2),
                     tableTotals.totalSub.toFixed(2),
                     tableTotals.avgTaxPct.toFixed(2),
@@ -401,22 +408,13 @@ export default function DeliveryOrder() {
         </div>
 
         <div className="flex min-h-0 flex-col gap-3">
-          <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
-            <div className="flex flex-col gap-2.5">
-              {['Qtn no', 'Job no', 'Product code', 'Stock', 'Min Price'].map((label) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <label className="w-[92px] shrink-0 text-[10px] font-semibold text-gray-700 sm:w-[100px]">{label}</label>
-                  <SubInputField label="" fullWidth />
-                </div>
-              ))}
-            </div>
-          </div>
+
+
           <div
-            className="w-full rounded bg-white xl:h-[165px]"
+            className="w-full rounded bg-white p-3 sm:p-3.5 xl:h-[165px]"
             style={{
               borderRadius: '9.9px',
               border: '0.49px solid #e5e7eb',
-              padding: '3.99px 5px',
             }}
           >
             <div className="flex flex-col gap-2.5">
@@ -436,14 +434,123 @@ export default function DeliveryOrder() {
               </div>
             </div>
           </div>
+
+          <div className="grid w-full grid-cols-2 gap-2">
+            <button
+              type="button"
+              className="h-6 rounded border text-[10px] font-semibold text-white sm:h-7 sm:text-[11px]"
+              style={{ backgroundColor: primary, borderColor: primary }}
+            >
+              Lpo No
+            </button>
+            <button
+              type="button"
+              className="h-6 rounded border text-[10px] font-semibold text-white sm:h-7 sm:text-[11px]"
+              style={{ backgroundColor: primary, borderColor: primary }}
+            >
+              GRN
+            </button>
+          </div>
+
+          <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
+            <div className="flex flex-col gap-3 sm:gap-3.5">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+                <SubInputField label="Purchase #" fullWidth value={purchaseMeta.purchaseNo} onChange={(e) => updatePurchaseMeta('purchaseNo', e.target.value)} />
+                <SubInputField label="Sup Inv#" fullWidth value={purchaseMeta.supplierInvNo} onChange={(e) => updatePurchaseMeta('supplierInvNo', e.target.value)} />
+                <SubInputField label="Supplier" fullWidth value={purchaseMeta.supplier} onChange={(e) => updatePurchaseMeta('supplier', e.target.value)} />
+                <div className="flex min-w-0 items-end">
+                  <Switch
+                    checked={purchaseMeta.bySupplier}
+                    onChange={(v) => updatePurchaseMeta('bySupplier', v)}
+                    description="By supplier"
+                    size="xs"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                <DropdownInput
+                  label="Entered by"
+                  fullWidth
+                  value={purchaseMeta.enteredBy}
+                  onChange={(val) => updatePurchaseMeta('enteredBy', val)}
+                  options={['Admin', 'User 1', 'User 2']}
+                />
+                <DateInputField label="Purchase date" fullWidth value={purchaseMeta.purchaseDate} onChange={(val) => updatePurchaseMeta('purchaseDate', val)} />
+                <DropdownInput
+                  label="Payment mode"
+                  fullWidth
+                  value={purchaseMeta.paymentMode}
+                  onChange={(val) => updatePurchaseMeta('paymentMode', val)}
+                  options={['Cash', 'Card', 'Bank Transfer', 'Credit']}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                <DropdownInput
+                  label="Account head"
+                  fullWidth
+                  value={purchaseMeta.accountHead}
+                  onChange={(val) => updatePurchaseMeta('accountHead', val)}
+                  options={['General', 'Purchase A/C', 'Expenses A/C']}
+                />
+                <DateInputField label="Entered date" fullWidth value={purchaseMeta.enteredDate} onChange={(val) => updatePurchaseMeta('enteredDate', val)} />
+                <DropdownInput
+                  label="Station"
+                  fullWidth
+                  value={purchaseMeta.station}
+                  onChange={(val) => updatePurchaseMeta('station', val)}
+                  options={['Main', 'Branch 1', 'Branch 2']}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2.5">
+                <SubInputField label="Invoice amt" fullWidth value={purchaseMeta.invoiceAmount} onChange={(e) => updatePurchaseMeta('invoiceAmount', e.target.value)} />
+              </div>
+            </div>
+            <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
+              <button
+                type="button"
+                className="sale-btn-red-outline flex h-7 flex-1 items-center justify-center gap-1 rounded border px-1 py-1 text-[8px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:h-8 sm:px-1.5 sm:py-1.5 sm:text-[10px]"
+                style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
+              >
+                <img src={EditIcon} alt="" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                Edit
+              </button>
+              <button
+                type="button"
+                className="sale-btn-red-outline flex h-7 flex-1 items-center justify-center gap-1 rounded border px-1 py-1 text-[8px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:h-8 sm:px-1.5 sm:py-1.5 sm:text-[10px]"
+                style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
+              >
+                <img src={SaleIcon} alt="" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                New purchase
+              </button>
+            </div>
+          </div>
+        
           <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
             <div className="flex flex-col gap-2.5">
-              {['Attention', 'Remark'].map((label) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <label className="w-[92px] shrink-0 text-[10px] font-semibold text-gray-700 sm:w-[100px]">{label}</label>
-                  <InputField label="" fullWidth />
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-700">Remark</label>
+                <textarea
+                  value={paymentInfo.remark}
+                  onChange={(e) => setPaymentInfo((prev) => ({ ...prev, remark: e.target.value }))}
+                  className="min-h-[56px] w-full resize-y rounded border border-gray-200 bg-white px-2 py-1 text-[10px] outline-none sm:text-[11px]"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <SubInputField
+                  label="Payment no"
+                  fullWidth
+                  value={paymentInfo.paymentNo}
+                  onChange={(e) => setPaymentInfo((prev) => ({ ...prev, paymentNo: e.target.value }))}
+                />
+                <div className="flex min-w-0 items-end">
+                  <Switch
+                    checked={paymentInfo.paymentNow}
+                    onChange={(v) => setPaymentInfo((prev) => ({ ...prev, paymentNow: v }))}
+                    description="Payment now"
+                    size="xs"
+                  />
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
@@ -465,20 +572,22 @@ export default function DeliveryOrder() {
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               {[
                 ['Sl no', selectedRow[0]],
-                ['Own Ref No', selectedRow[1]],
-                ['Short Description', selectedRow[2]],
-                ['Location', selectedRow[3]],
-                ['Serial #', selectedRow[4]],
-                ['Packet details', selectedRow[5]],
-                ['Unit', selectedRow[6]],
+                ['Own Ref #', selectedRow[1]],
+                ['Product code', selectedRow[2]],
+                ['Short description', selectedRow[3]],
+                ['Packet details', selectedRow[4]],
+                ['Last purch cost', selectedRow[5]],
+                ['Lpo qty', selectedRow[6]],
                 ['Qty', selectedRow[7]],
-                ['Unit Price', selectedRow[8]],
-                ['Disc%', selectedRow[9]],
-                ['Disc.', selectedRow[10]],
-                ['Sub total', selectedRow[11]],
-                ['Tax%', selectedRow[12]],
-                ['T.Amt', selectedRow[13]],
-                ['Line Total', selectedRow[14]],
+                ['Foc qty', selectedRow[8]],
+                ['Actual cost', selectedRow[9]],
+                ['Selling price', selectedRow[10]],
+                ['Disc%', selectedRow[11]],
+                ['Disc. amt', selectedRow[12]],
+                ['Sub total', selectedRow[13]],
+                ['Vat%', selectedRow[14]],
+                ['Vat amt', selectedRow[15]],
+                ['Total', selectedRow[16]],
               ].map(([label, value]) => (
                 <React.Fragment key={label}>
                   <div className="font-semibold text-gray-700">{label}</div>

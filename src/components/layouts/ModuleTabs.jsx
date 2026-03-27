@@ -95,6 +95,9 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Delivery Order' && (action === 'Delivery' || action === 'List')) {
       navigate('/delivery-order');
     }
+    if (module === 'Purchase' && (action === 'Purchases' || action === 'List')) {
+      navigate('/purchase');
+    }
   };
 
   return (

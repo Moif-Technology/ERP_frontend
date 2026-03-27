@@ -506,15 +506,15 @@ export default function Quotation() {
               </div>
             </div>
 
-            {/* Table — vertical scroll after 6 item rows; width fits container (no horizontal scroll) */}
+            {/* Table — vertical scroll after 7 item rows; width fits container (no horizontal scroll) */}
             <div
               className={`qtn-scroll-table w-full overflow-x-hidden ${
-                items.length > 6 ? 'max-h-[min(13rem,46vh)] overflow-y-auto sm:max-h-[min(15rem,50vh)]' : ''
+                items.length > 5? 'max-h-[min(15rem,48vh)] overflow-y-auto sm:max-h-[min(17rem,52vh)]' : ''
               }`}
             >
               <CommonTable
                 fitParentWidth
-                stickyHeader={items.length > 6}
+                stickyHeader={items.length > 7}
                 headers={[
                   'Sl',
                   'Own Ref',
