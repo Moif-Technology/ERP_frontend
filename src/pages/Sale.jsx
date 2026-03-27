@@ -236,6 +236,8 @@ const initialFormState = {
 };
 
 export default function Sale() {
+  const pageTitle = 'Sales Entry';
+  const termsTitle = 'Sales Terms';
   const [init, setInit] = useState(null);
   const [initLoading, setInitLoading] = useState(true);
   const [initError, setInitError] = useState('');
@@ -306,6 +308,11 @@ export default function Sale() {
     setApiError('');
     setApiSuccess('');
   }, []);
+
+  const resolvedCustomerName = useMemo(
+    () => customers.find((c) => String(c.customerId) === String(customerId))?.customerName || '',
+    [customers, customerId]
+  );
 
   const applyLineRecalc = useCallback(
     (base) => recalcLineFormFields(base, n(init?.taxDefaults?.tax1Percentage, 0)),
@@ -1185,7 +1192,7 @@ export default function Sale() {
           {/* Header */}
           <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
             <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-              Sales
+              {pageTitle}
             </h1>
 
             <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
@@ -1207,15 +1214,40 @@ export default function Sale() {
               )}
               <button
                 type="button"
-                className="flex h-8 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-[10px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
+                disabled={saving}
+                onClick={handleSaveBill}
+                className="sale-btn-primary rounded border px-1.5 py-0.5 text-[9px] font-medium sm:px-2 sm:py-1 sm:text-[11px]"
+                style={{ backgroundColor: primary, color: '#fff', borderColor: primary, opacity: saving ? 0.7 : 1 }}
               >
-                <img src={PrinterIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                Print
+                {saving ? 'Saving...' : 'Save'}
               </button>
               <button
                 type="button"
-                onClick={() => runPosting(cancelSalesEntry, 'Cancel')}
-                className="flex h-8 items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 text-[10px] font-medium text-rose-700 shadow-sm transition-colors hover:bg-rose-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
+                onClick={handleLoadBill}
+                className="sale-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              >
+                Load
+              </button>
+              <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
+                <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  clearApiMessages();
+                  if (!salesId) {
+                    setApiError('Save the bill first');
+                    return;
+                  }
+                  if (!window.confirm('Cancel this bill?')) return;
+                  try {
+                    const res = await cancelSalesEntry({ salesId, stationId: n(stationId) });
+                    setApiSuccess(res.message || 'Cancelled');
+                  } catch (e) {
+                    setApiError(e.message || 'Cancel failed');
+                  }
+                }}
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
               >
                 <img src={CancelIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Cancel
@@ -1223,7 +1255,7 @@ export default function Sale() {
               <button
                 type="button"
                 onClick={() => runPosting(postSalesEntry, 'Post')}
-                className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-[10px] font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
               >
                 <img src={PostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Post
@@ -1231,24 +1263,10 @@ export default function Sale() {
               <button
                 type="button"
                 onClick={() => runPosting(unpostSalesEntry, 'Unpost')}
-                className="flex h-8 items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-medium text-amber-700 shadow-sm transition-colors hover:bg-amber-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
               >
                 <img src={UnpostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Unpost
-              </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={handleSaveBill}
-                className="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-semibold text-white shadow-sm transition-all hover:brightness-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:px-3 sm:text-[11px]"
-                style={{ borderColor: primary, backgroundColor: primary }}
-              >
-                <img
-                  src={SaleIcon}
-                  alt=""
-                  className="h-4 w-4 shrink-0 brightness-0 invert sm:h-[18px] sm:w-[18px]"
-                />
-                {saving ? 'Saving…' : 'Save bill'}
               </button>
             </div>
           </div>
@@ -1264,7 +1282,7 @@ export default function Sale() {
           )}
 
           {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden xl:flex-row">
 
             {/* LEFT — ~70% on xl so form + table share space with wider right rail */}
             <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-[70%] xl:max-w-[70%] xl:shrink-0">
@@ -1283,8 +1301,8 @@ export default function Sale() {
                       className="cursor-pointer"
                     />
                     <SubInputField
-                      label="Barcode"
-                      widthPx={72}
+                      label="Hs Code/Wt"
+                      type="number"
                       value={form.hsCode}
                       onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
                       onClick={() => openProductSearch('barcode')}
@@ -1323,8 +1341,8 @@ export default function Sale() {
                     />
                   </div>
 
-                  {/* Row 2: computed subtotal / tax / total + Add */}
-                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                  {/* Row 2 */}
+                  <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
                     <SubInputField
                       label="Sub total"
                       value={form.subTotal}
@@ -1347,10 +1365,29 @@ export default function Sale() {
                     <SubInputField
                       label="Total"
                       value={form.total}
-                      readOnly
-                      className="bg-gray-50"
+                      onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
                     />
-                    <div className="flex shrink-0 items-end">
+
+                    <button
+                      type="button"
+                      onClick={() => setQuotationModalOpen(true)}
+                      className="sale-btn-outline h-[20.08px] min-h-[20.08px] rounded border px-2 text-[8px] font-medium sm:px-3 sm:text-[9px]"
+                      style={{ borderColor: primary, color: primary }}
+                      title={quotationRefSummary}
+                    >
+                      QTN ({quotationRefs.length || 0})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDoModalOpen(true)}
+                      className="sale-btn-outline h-[20.08px] min-h-[20.08px] rounded border px-2 text-[8px] font-medium sm:px-3 sm:text-[9px]"
+                      style={{ borderColor: primary, color: primary }}
+                      title={doRefSummary}
+                    >
+                      DO ({doRefs.length || 0})
+                    </button>
+
+                    <div className="flex items-end">
                       <button
                         type="button"
                         className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
@@ -1366,7 +1403,7 @@ export default function Sale() {
 
               {/* Table section - bordered container; scroll inside when content overflows */}
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+                <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
                   <CommonTable
                     headers={[
         '',
@@ -1388,95 +1425,35 @@ export default function Sale() {
               </div>
             </div>
 
-            {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0 xl:overflow-hidden">
-              <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto sm:gap-2">
-                <div className="grid w-full shrink-0 grid-cols-2 gap-1 sm:gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuotationModalFilter('');
-                      setQuotationModalOpen(true);
-                    }}
-                    className="sale-qtn-do-btn group flex min-h-[34px] items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-1.5 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[38px] sm:gap-1.5 sm:px-2"
-                  >
-                    <img
-                      src={QuotationIcon}
-                      alt=""
-                      className="h-3 w-3 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
-                      aria-hidden
-                    />
-                    <span className="text-[9px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[10px]">
-                      Quotation ({quotationRefs.length})
-                    </span>
-                    <span className="max-w-[72px] truncate text-[8px] leading-none text-gray-500 sm:max-w-[86px]">
-                      {quotationRefSummary}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDoModalFilter('');
-                      setDoModalOpen(true);
-                    }}
-                    className="sale-qtn-do-btn group flex min-h-[34px] items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-1.5 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[38px] sm:gap-1.5 sm:px-2"
-                  >
-                    <img
-                      src={DeliveryIcon}
-                      alt=""
-                      className="h-3 w-3 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
-                      aria-hidden
-                    />
-                    <span className="text-[9px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[10px]">
-                      DO ({doRefs.length})
-                    </span>
-                    <span className="max-w-[72px] truncate text-[8px] leading-none text-gray-500 sm:max-w-[86px]">
-                      {doRefSummary}
-                    </span>
-                  </button>
-                </div>
+            {/* RIGHT */}
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
+               
+                
 
-                {/* Bill / Customer — full-width fields in 2-col grid to avoid fixed pixel gaps */}
-                <div className="overflow-hidden rounded border border-gray-200 bg-white p-1 sm:p-1.5">
-                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-x-1.5 sm:gap-y-0.5">
-                    <div className="min-w-0">
-                      <InputField label="Bill no" value={billNo} readOnly fullWidth className="bg-gray-50" />
-                    </div>
-                    <div className="flex min-w-0 items-end gap-1">
-                      <div className="min-w-0 flex-1">
-                        <SubInputField
-                          label="Sales ID"
-                          value={loadSalesIdInput}
-                          onChange={(e) => setLoadSalesIdInput(e.target.value)}
-                          fullWidth
-                        />
+                {/* Bill / Customer section */}
+                <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
+                  <div className="flex flex-col gap-1 sm:gap-[8px]">
+                    {/* Row 1: Bill no + 2 sub fields */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <div className="flex flex-col gap-[6px]">
+                        <InputField label="Bill no" value={billNo || ''} readOnly />
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleLoadBill}
-                        className="mb-[1px] h-[22px] shrink-0 rounded border px-1.5 text-[9px] font-medium sm:h-[24px] sm:px-2 sm:text-[10px]"
-                        style={{ borderColor: primary, color: primary }}
-                      >
-                        Load
-                      </button>
-                    </div>
-                    <div className="min-w-0">
                       <SubInputField
-                        label="Cust.LPO"
+                        label="Cust.Lpo 3"
                         value={customerLpo}
                         onChange={(e) => setCustomerLpo(e.target.value)}
-                        fullWidth
                       />
-                    </div>
-                    <div className="min-w-0">
                       <SubInputField
                         label="Local bill no"
                         value={localBillNo}
                         onChange={(e) => setLocalBillNo(e.target.value)}
-                        fullWidth
                       />
                     </div>
-                    <div className="min-w-0">
+
+                    {/* Row 2: Customer name + Payment mode */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <InputField label="Customer name" value={resolvedCustomerName} readOnly />
                       <DropdownInput
                         label="Customer"
                         options={customerOptions}
@@ -1560,6 +1537,15 @@ export default function Sale() {
                         fullWidth
                       />
                     </div>
+                    <div className="min-w-0">
+                      <SubInputField
+                        label="Load by sales ID"
+                        type="number"
+                        value={loadSalesIdInput}
+                        onChange={(e) => setLoadSalesIdInput(e.target.value)}
+                        fullWidth
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={handleNewInvoice}
@@ -1578,7 +1564,7 @@ export default function Sale() {
                   className="sale-btn-primary mt-0.5 w-full rounded border px-2 py-1 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]"
                   style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
                 >
-                  Sales terms
+                  {termsTitle}
                 </button>
 
 
@@ -1816,7 +1802,7 @@ export default function Sale() {
               className="mb-4 text-center text-base font-bold sm:text-lg"
               style={{ color: primary }}
             >
-              Sales terms
+              {termsTitle}
             </h2>
 
             {/* Form fields - labels left-aligned in one column */}

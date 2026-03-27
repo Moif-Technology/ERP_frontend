@@ -48,6 +48,8 @@ export default function Layout({ children }) {
           transition: 'margin-left 180ms ease',
         }}
       >
+        <ModuleTabs expanded={headerToolsExpanded} onExpandedChange={setHeaderToolsExpanded} />
+        {headerToolsExpanded ? <MiniToolbar /> : null}
         <ModuleTabs
           expanded={headerToolsExpanded}
           onExpandedChange={setHeaderToolsExpanded}
@@ -72,6 +74,9 @@ export default function Layout({ children }) {
             marginLeft: SIDEBAR_WIDTH,
             transition: 'margin-left 180ms ease',
             padding: '24px 28px 32px',
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto',
           }}
         >
           {children ?? <Outlet />}
