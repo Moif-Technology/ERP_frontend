@@ -1,34 +1,222 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
 import PostIcon from '../assets/icons/post.svg';
 import UnpostIcon from '../assets/icons/unpost.svg';
-import EditIcon from '../assets/icons/edit3.svg';
 import SaleIcon from '../assets/icons/invoice.svg';
+import QuotationIcon from '../assets/icons/QuotationIcon.svg';
+import DeliveryIcon from '../assets/icons/DeliveryIcon.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
 import PayIcon from '../assets/icons/pay.svg';
 import RemoveIcon from '../assets/icons/remove.svg';
 import { InputField, SubInputField, DropdownInput, Switch, CommonTable } from '../components/ui';
+import {
+  fetchSalesEntryInit,
+  fetchSalesEntryCustomers,
+  fetchSalesCustomerSummary,
+  fetchSalesProductLookup,
+  fetchSalesQuotationList,
+  fetchSalesDOList,
+  loadSalesQuotationItems,
+  loadSalesDOItems,
+  fetchSalesEntryById,
+  saveSalesEntry,
+  postSalesEntry,
+  unpostSalesEntry,
+  cancelSalesEntry,
+} from '../api/sales/salesEntry.service.js';
 
-// Helper: get product details from table row, use "-" for empty values
-function getProductDetails(row, idx) {
+function n(v, fallback = 0) {
+  const x = Number(v);
+  return Number.isFinite(x) ? x : fallback;
+}
+
+function roundMoney(x) {
+  if (!Number.isFinite(x)) return 0;
+  return Math.round((x + Number.EPSILON) * 100) / 100;
+}
+
+/** Line math: gross = qty × price; discount from % (if > 0) else disc amt; tax on discounted subtotal; total = sub + tax. */
+function recalcLineFormFields(base, defaultTaxPercent) {
+  const qty = n(base.qty);
+  const unitPrice = n(base.unitPrice);
+  const gross = roundMoney(qty * unitPrice);
+  const discPct = n(base.discPercent);
+  let discount = 0;
+  if (discPct > 0 && gross > 0) {
+    discount = roundMoney(gross * (discPct / 100));
+  } else {
+    discount = roundMoney(n(base.discAmt) || n(base.discPrice));
+    if (discount > gross) discount = gross;
+  }
+  const subTotal = roundMoney(Math.max(0, gross - discount));
+  const taxRaw = base.taxPercent;
+  const taxEmpty =
+    taxRaw === '' || taxRaw == null || (typeof taxRaw === 'string' && taxRaw.trim() === '');
+  const taxPct = taxEmpty ? n(defaultTaxPercent, 0) : n(taxRaw);
+  const taxAmt = roundMoney(subTotal * (taxPct / 100));
+  const total = roundMoney(subTotal + taxAmt);
+  const next = {
+    ...base,
+    subTotal: subTotal.toFixed(2),
+    taxAmt: taxAmt.toFixed(2),
+    total: total.toFixed(2),
+    taxPercent: String(taxPct),
+  };
+  if (discPct > 0) {
+    next.discAmt = discount.toFixed(2);
+    next.discPrice = discount.toFixed(2);
+  }
+  return next;
+}
+
+function lineKey() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function emptyLine() {
+  return {
+    key: lineKey(),
+    shortDescription: '',
+    barCode: '',
+    qty: 0,
+    unitPrice: 0,
+    discPercent: 0,
+    discAmt: 0,
+    subTotal: 0,
+    taxPercent: 0,
+    taxAmt: 0,
+    lineTotal: 0,
+    productId: null,
+    uniqueMultiProductId: null,
+    salesChildId: null,
+    productType: '',
+    qtyOnHand: null,
+    unitCost: null,
+    minUnitPrice: null,
+  };
+}
+
+function lineToCells(line) {
+  return [
+    line.shortDescription,
+    line.barCode,
+    line.qty,
+    line.unitPrice,
+    line.discPercent,
+    line.discAmt,
+    line.subTotal,
+    line.taxPercent,
+    line.taxAmt,
+    line.lineTotal,
+  ];
+}
+
+function mapQuotationLine(it) {
+  const qty = n(it.qty);
+  const unitPrice = n(it.unitPrice);
+  const disc = n(it.itemDiscount);
+  const subTotal = qty * unitPrice - disc;
+  const taxAmt = n(it.tax1AmountC);
+  const taxPct = n(it.tax1RateC);
+  const lineTotal = subTotal + taxAmt;
+  return {
+    key: lineKey(),
+    shortDescription: it.description || it.shortDescription || '',
+    barCode: it.barCode || '',
+    qty,
+    unitPrice,
+    discPercent: unitPrice * qty ? (disc / (unitPrice * qty)) * 100 : 0,
+    discAmt: disc,
+    subTotal,
+    taxPercent: taxPct,
+    taxAmt,
+    lineTotal,
+    productId: it.productId,
+    uniqueMultiProductId: it.uniqueMultiProductId ?? null,
+    salesChildId: null,
+    productType: '',
+    qtyOnHand: n(it.qtyOnHand),
+    unitCost: n(it.avgCost),
+    minUnitPrice: n(it.minUnitPrice),
+  };
+}
+
+function mapDOLine(it) {
+  const qty = n(it.qty);
+  const unitPrice = n(it.unitPrice);
+  const disc = n(it.itemDiscount);
+  const subTotal = qty * unitPrice - disc;
+  const taxAmt = n(it.tax1AmountC);
+  const taxPct = n(it.tax1RateC);
+  const lineTotal = subTotal + taxAmt;
+  return {
+    key: lineKey(),
+    shortDescription: it.shortDescription || it.description || '',
+    barCode: it.barCode || '',
+    qty,
+    unitPrice,
+    discPercent: unitPrice * qty ? (disc / (unitPrice * qty)) * 100 : 0,
+    discAmt: disc,
+    subTotal,
+    taxPercent: taxPct,
+    taxAmt,
+    lineTotal,
+    productId: it.productId,
+    uniqueMultiProductId: it.uniqueMultiProductId ?? null,
+    salesChildId: null,
+    productType: '',
+    qtyOnHand: n(it.qtyOnHand),
+    unitCost: n(it.averageCost),
+    minUnitPrice: n(it.minUnitPrice),
+  };
+}
+
+function mapSavedLine(it) {
+  const disc = n(it.discount);
+  const qty = n(it.qty);
+  const unitPrice = n(it.unitPrice);
+  const subTotal = n(it.subTotalC, qty * unitPrice - disc);
+  return {
+    key: `sc-${it.salesChildId}-${lineKey()}`,
+    shortDescription: it.shortDescription || '',
+    barCode: it.barCode || '',
+    qty,
+    unitPrice,
+    discPercent: unitPrice * qty ? (disc / (unitPrice * qty)) * 100 : 0,
+    discAmt: disc,
+    subTotal,
+    taxPercent: n(it.tax1RateC),
+    taxAmt: n(it.tax1AmountC),
+    lineTotal: n(it.lineTotal),
+    productId: it.productId,
+    uniqueMultiProductId: it.uniqueMultiProductId ?? null,
+    salesChildId: it.salesChildId,
+    productType: it.productType || '',
+    qtyOnHand: n(it.qtyOnHand),
+    unitCost: n(it.unitCost),
+    minUnitPrice: null,
+  };
+}
+
+function getProductDetails(line) {
   const orDash = (v) => (v != null && v !== '' ? String(v) : '-');
   return {
-    productCode: orDash(row[1]),
-    stockOnHand: orDash(null),
-    lastCustomer: orDash(null),
-    unitCost: orDash(null),
-    minUnitPrice: orDash(null),
-    profit: orDash(null),
-    creditLimit: orDash(null),
-    currentOsBal: orDash(null),
-    osBalance: orDash(null),
-    receiptNo: orDash(null),
-    location: orDash(null),
-    productName: orDash(row[0]),
+    productCode: orDash(line.barCode),
+    stockOnHand: orDash(line.qtyOnHand),
+    lastCustomer: '-',
+    unitCost: orDash(line.unitCost),
+    minUnitPrice: orDash(line.minUnitPrice),
+    profit: '-',
+    creditLimit: '-',
+    currentOsBal: '-',
+    osBalance: '-',
+    receiptNo: '-',
+    location: '-',
+    productName: orDash(line.shortDescription),
   };
 }
 
@@ -44,146 +232,350 @@ const initialFormState = {
   taxPercent: '',
   taxAmt: '',
   total: '',
-  qutnNo: 'QTN-001',
-  doNo: 'DO-001',
 };
-
-const fieldVisibilityDefaults = {
-  shortDescription: true,
-  hsCode: true,
-  qty: true,
-  unitPrice: true,
-  discPercent: true,
-  discPrice: true,
-  discAmt: true,
-  subTotal: true,
-  taxPercent: true,
-  taxAmt: true,
-  total: true,
-  qutnNo: true,
-  doNo: true,
-};
-
-const fieldVisibilityLabels = {
-  shortDescription: 'Short Description',
-  hsCode: 'Hs Code/Wt',
-  qty: 'Qty',
-  unitPrice: 'Unit Price',
-  discPercent: 'Disc.%',
-  discPrice: 'Disc Price',
-  discAmt: 'Disc.Amt',
-  subTotal: 'Sub total',
-  taxPercent: 'Tax%',
-  taxAmt: 'T.Amt',
-  total: 'Total',
-  qutnNo: 'Qutn. no',
-  doNo: 'DO. no',
-};
-
-const tableColumnKeys = ['checkbox', 'shortDescription', 'hsCode', 'qty', 'sellingPrice', 'discPercent', 'discAmt', 'subTotal', 'taxPercent', 'taxAmt', 'lineTotal', 'action'];
-const tableColumnLabels = {
-  checkbox: 'Select',
-  shortDescription: 'Short Description',
-  hsCode: 'HS Code/Wt',
-  qty: 'Qty',
-  sellingPrice: 'Selling price',
-  discPercent: 'Disc %',
-  discAmt: 'Disc Amt',
-  subTotal: 'Sub total',
-  taxPercent: 'Tax %',
-  taxAmt: 'Tax amt',
-  lineTotal: 'Line total',
-  action: 'Action',
-};
-const tableColumnVisibilityDefaults = Object.fromEntries(tableColumnKeys.map((k) => [k, true]));
 
 export default function Sale() {
+  const [init, setInit] = useState(null);
+  const [initLoading, setInitLoading] = useState(true);
+  const [initError, setInitError] = useState('');
+  const [customers, setCustomers] = useState([]);
+  const [stationId, setStationId] = useState('');
+  const [salesManId, setSalesManId] = useState('');
+  const [customerId, setCustomerId] = useState('');
+  const [paymentMode, setPaymentMode] = useState('CASH');
+  const [accountHeadId, setAccountHeadId] = useState('');
+  const [billNo, setBillNo] = useState('');
+  const [salesId, setSalesId] = useState(null);
+  const [postStatus, setPostStatus] = useState('');
+  const [loadSalesIdInput, setLoadSalesIdInput] = useState('');
+  const [counterNo, setCounterNo] = useState('99');
+  const [customerLpo, setCustomerLpo] = useState('');
+  const [localBillNo, setLocalBillNo] = useState('');
+  const [billDate, setBillDate] = useState('');
+  const [billTime, setBillTime] = useState('');
+  const [customerSummary, setCustomerSummary] = useState(null);
+  const [quotationList, setQuotationList] = useState([]);
+  const [doList, setDoList] = useState([]);
+  const [quotationRefs, setQuotationRefs] = useState([]);
+  const [doRefs, setDoRefs] = useState([]);
+  const [deletedChildIds, setDeletedChildIds] = useState([]);
+  const [draftLineMeta, setDraftLineMeta] = useState(null);
+  const [productSearchOpen, setProductSearchOpen] = useState(false);
+  const [productSearchMode, setProductSearchMode] = useState('description');
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productSearchResults, setProductSearchResults] = useState([]);
+  const [productSearchLoading, setProductSearchLoading] = useState(false);
+  const productSearchInputRef = useRef(null);
+  const [quotationModalOpen, setQuotationModalOpen] = useState(false);
+  const [doModalOpen, setDoModalOpen] = useState(false);
+  const [quotationModalFilter, setQuotationModalFilter] = useState('');
+  const [doModalFilter, setDoModalFilter] = useState('');
+  const [apiError, setApiError] = useState('');
+  const [apiSuccess, setApiSuccess] = useState('');
+  const [saveSuccessModalOpen, setSaveSuccessModalOpen] = useState(false);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState('Bill saved successfully');
+  const [saving, setSaving] = useState(false);
+
   const [salesTermsOpen, setSalesTermsOpen] = useState(false);
   const [saveTerms, setSaveTerms] = useState(false);
   const [printTerms, setPrintTerms] = useState(false);
+  const [salesTermsText, setSalesTermsText] = useState('');
+  const [agentId, setAgentId] = useState('');
+  const [agentCommissionPct, setAgentCommissionPct] = useState('');
+  const [agentCommissionAmt, setAgentCommissionAmt] = useState('');
+
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [saleRows, setSaleRows] = useState([
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
-  ]);
+  const [saleLines, setSaleLines] = useState([]);
   const [form, setForm] = useState(initialFormState);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [visibleFields, setVisibleFields] = useState(fieldVisibilityDefaults);
-  const [fieldMenu, setFieldMenu] = useState({ open: false, x: 0, y: 0 });
-  const [visibleColumns, setVisibleColumns] = useState(tableColumnVisibilityDefaults);
-  const [tableMenu, setTableMenu] = useState({ open: false, x: 0, y: 0 });
+
+  const [summaryTab, setSummaryTab] = useState('payment');
+  const [docDiscPct, setDocDiscPct] = useState('');
+  const [docDiscAmt, setDocDiscAmt] = useState('');
+  const [summaryTaxPct, setSummaryTaxPct] = useState('');
+  const [roundOffAdjInput, setRoundOffAdjInput] = useState('');
+  const [paidAmountEntry, setPaidAmountEntry] = useState('');
+  const [paidByCashEntry, setPaidByCashEntry] = useState('');
+  const [paidByCardEntry, setPaidByCardEntry] = useState('');
+
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
   const primaryActive = colors.primary?.[100] || '#E4CDD3';
 
+  const clearApiMessages = useCallback(() => {
+    setApiError('');
+    setApiSuccess('');
+  }, []);
+
+  const applyLineRecalc = useCallback(
+    (base) => recalcLineFormFields(base, n(init?.taxDefaults?.tax1Percentage, 0)),
+    [init]
+  );
+
+  const patchLineForm = useCallback(
+    (patch) => {
+      setForm((f) => applyLineRecalc({ ...f, ...patch }));
+    },
+    [applyLineRecalc]
+  );
+
   useEffect(() => {
-    const closeMenus = () => {
-      setFieldMenu((prev) => ({ ...prev, open: false }));
-      setTableMenu((prev) => ({ ...prev, open: false }));
-    };
-    const closeOnEsc = (e) => {
-      if (e.key === 'Escape') closeMenus();
-    };
-    window.addEventListener('click', closeMenus);
-    window.addEventListener('keydown', closeOnEsc);
+    let cancelled = false;
+    (async () => {
+      setInitLoading(true);
+      setInitError('');
+      try {
+        const data = await fetchSalesEntryInit();
+        if (cancelled) return;
+        setInit(data);
+        setStationId(String(data.stationId ?? ''));
+        const sm = data.salesMen?.[0];
+        if (sm) setSalesManId(String(sm.staffId));
+        setPaymentMode(data.paymentModes?.[0] || 'CASH');
+        const defAcc = data.defaults?.defaultCashInHandAccID;
+        if (defAcc) setAccountHeadId(String(defAcc));
+        const bd = data.billDefaults?.billDateTime;
+        if (bd) {
+          const d = new Date(bd);
+          setBillDate(d.toISOString().slice(0, 10));
+          setBillTime(d.toISOString());
+        }
+        if (data.flags?.salesTerms != null) setSalesTermsText(String(data.flags.salesTerms));
+        const dc = data.defaults?.defaultCashCustomer;
+        if (dc) setCustomerId(String(dc));
+      } catch (e) {
+        if (!cancelled) setInitError(e.message || 'Failed to load sales entry');
+      } finally {
+        if (!cancelled) setInitLoading(false);
+      }
+    })();
     return () => {
-      window.removeEventListener('click', closeMenus);
-      window.removeEventListener('keydown', closeOnEsc);
+      cancelled = true;
     };
   }, []);
 
-  const fillFormFromRow = (row) => {
-    setForm({
-      shortDescription: String(row[0] ?? ''),
-      hsCode: String(row[1] ?? ''),
-      qty: String(row[2] ?? ''),
-      unitPrice: String(row[3] ?? ''),
-      discPercent: String(row[4] ?? ''),
-      discPrice: String(row[5] ?? ''),
-      discAmt: String(row[5] ?? ''),
-      subTotal: String(row[6] ?? ''),
-      taxPercent: String(row[7] ?? ''),
-      taxAmt: String(row[8] ?? ''),
-      total: String(row[9] ?? ''),
-      qutnNo: 'QTN-001',
-      doNo: 'DO-001',
+  useEffect(() => {
+    if (!saveSuccessModalOpen) return undefined;
+    const id = setTimeout(() => setSaveSuccessModalOpen(false), 1800);
+    return () => clearTimeout(id);
+  }, [saveSuccessModalOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await fetchSalesEntryCustomers();
+        if (!cancelled) setCustomers(list);
+      } catch {
+        if (!cancelled) setCustomers([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const cid = n(customerId);
+    if (!cid) {
+      setCustomerSummary(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchSalesCustomerSummary(cid);
+        if (cancelled) return;
+        setCustomerSummary(data.customer);
+        const pm = data.customer?.paymentMode;
+        if (pm) setPaymentMode(String(pm).toUpperCase());
+      } catch {
+        if (!cancelled) setCustomerSummary(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [customerId]);
+
+  // Picker lists: when customer selected, show only that customer's refs; otherwise show all station refs.
+  useEffect(() => {
+    const sid = n(stationId);
+    if (!sid) return;
+    let cancelled = false;
+    (async () => {
+      const cid = n(customerId) || undefined;
+      const [quRes, doRes] = await Promise.allSettled([
+        fetchSalesQuotationList({ stationId: sid, customerId: cid }),
+        fetchSalesDOList({ stationId: sid, customerId: cid, pendingOnly: false }),
+      ]);
+      if (cancelled) return;
+      setQuotationList(quRes.status === 'fulfilled' ? quRes.value : []);
+      setDoList(doRes.status === 'fulfilled' ? doRes.value : []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stationId, customerId]);
+
+  useEffect(() => {
+    if (!quotationModalOpen && !doModalOpen) return;
+    const sid = n(stationId);
+    if (!sid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cid = n(customerId) || undefined;
+        if (quotationModalOpen) {
+          const qu = await fetchSalesQuotationList({ stationId: sid, customerId: cid });
+          if (!cancelled) setQuotationList(qu);
+        }
+        if (doModalOpen) {
+          const dos = await fetchSalesDOList({ stationId: sid, customerId: cid, pendingOnly: false });
+          if (!cancelled) setDoList(dos);
+        }
+      } catch {
+        /* keep existing list */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [quotationModalOpen, doModalOpen, stationId, customerId]);
+
+  const openProductSearch = useCallback((mode) => {
+    setProductSearchMode(mode);
+    setProductSearchQuery(mode === 'barcode' ? (form.hsCode || '') : (form.shortDescription || ''));
+    setProductSearchResults([]);
+    setProductSearchOpen(true);
+  }, [form.hsCode, form.shortDescription]);
+
+  useEffect(() => {
+    if (!productSearchOpen) return;
+    const id = requestAnimationFrame(() => {
+      productSearchInputRef.current?.focus();
+      productSearchInputRef.current?.select();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [productSearchOpen]);
+
+  useEffect(() => {
+    if (!productSearchOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setProductSearchOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [productSearchOpen]);
+
+  useEffect(() => {
+    if (!productSearchOpen) return;
+    const sid = n(stationId);
+    if (!sid) return;
+    const q = productSearchQuery.trim();
+    if (!q) {
+      setProductSearchResults([]);
+      setProductSearchLoading(false);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setProductSearchLoading(true);
+      try {
+        const params = { stationId: sid };
+        if (productSearchMode === 'barcode') params.barCode = q;
+        else params.shortDescription = q;
+        const res = await fetchSalesProductLookup(params);
+        if (!cancelled) setProductSearchResults(res.items || []);
+      } catch {
+        if (!cancelled) setProductSearchResults([]);
+      } finally {
+        if (!cancelled) setProductSearchLoading(false);
+      }
+    }, 320);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [productSearchOpen, productSearchQuery, productSearchMode, stationId]);
+
+  const applyLookupItem = useCallback(
+    (it) => {
+      const qty = n(form.qty, 1) || 1;
+      const unitPrice = n(it.unitPrice);
+      setDraftLineMeta({
+        productId: it.productId,
+        uniqueMultiProductId: it.uniqueMultiProductId ?? null,
+        productType: it.productType || '',
+        barCode: it.barCode || '',
+        qtyOnHand: n(it.qtyOnHand),
+        unitCost: n(it.averageCost),
+        minUnitPrice: n(it.minimumRetailPrice),
+      });
+      setForm((f) =>
+        applyLineRecalc({
+          ...f,
+          shortDescription: it.shortDescription || it.description || '',
+          hsCode: it.barCode || '',
+          qty: String(qty),
+          unitPrice: String(unitPrice),
+          discPercent: '0',
+          discPrice: '0',
+          discAmt: '0',
+          taxPercent: '',
+        })
+      );
+      setProductSearchOpen(false);
+      clearApiMessages();
+    },
+    [form.qty, applyLineRecalc, clearApiMessages]
+  );
+
+  const fillFormFromLine = (line) => {
+    setForm(
+      applyLineRecalc({
+        ...initialFormState,
+        shortDescription: String(line.shortDescription ?? ''),
+        hsCode: String(line.barCode ?? ''),
+        qty: String(line.qty ?? ''),
+        unitPrice: String(line.unitPrice ?? ''),
+        discPercent: String(line.discPercent ?? ''),
+        discPrice: String(line.discAmt ?? ''),
+        discAmt: String(line.discAmt ?? ''),
+        taxPercent:
+          line.taxPercent !== undefined && line.taxPercent !== null && line.taxPercent !== ''
+            ? String(line.taxPercent)
+            : '',
+      })
+    );
+    setDraftLineMeta({
+      productId: line.productId,
+      uniqueMultiProductId: line.uniqueMultiProductId,
+      productType: line.productType,
+      barCode: line.barCode,
+      qtyOnHand: line.qtyOnHand,
+      unitCost: line.unitCost,
+      minUnitPrice: line.minUnitPrice,
     });
   };
 
-  const handleEdit = (row, idx) => {
-    fillFormFromRow(row);
+  const handleEdit = (line, idx) => {
+    fillFormFromLine(line);
     setEditingRowIndex(idx);
   };
 
   const handleDelete = (idx) => {
-    setSaleRows((prev) => prev.filter((_, i) => i !== idx));
+    const line = saleLines[idx];
+    if (line?.salesChildId) {
+      setDeletedChildIds((prev) => [...prev, line.salesChildId]);
+    }
+    setSaleLines((prev) => prev.filter((_, i) => i !== idx));
     setSelectedRows((prev) => new Set([...prev].filter((i) => i !== idx).map((i) => (i > idx ? i - 1 : i))));
     if (editingRowIndex === idx) {
       setEditingRowIndex(null);
       setForm(initialFormState);
+      setDraftLineMeta(null);
     } else if (editingRowIndex !== null && editingRowIndex > idx) {
       setEditingRowIndex((i) => i - 1);
     }
@@ -200,63 +592,494 @@ export default function Sale() {
 
   const handleDeleteSelected = () => {
     const toDelete = new Set(selectedRows);
-    setSaleRows((prev) => prev.filter((_, i) => !toDelete.has(i)));
+    setSaleLines((prev) => {
+      const removed = prev.filter((_, i) => toDelete.has(i));
+      const ids = removed.map((l) => l.salesChildId).filter(Boolean);
+      if (ids.length) setDeletedChildIds((d) => [...d, ...ids]);
+      return prev.filter((_, i) => !toDelete.has(i));
+    });
     setSelectedRows(new Set());
     if (editingRowIndex !== null && toDelete.has(editingRowIndex)) {
       setEditingRowIndex(null);
       setForm(initialFormState);
+      setDraftLineMeta(null);
     } else if (editingRowIndex !== null) {
       const deletedBefore = [...toDelete].filter((i) => i < editingRowIndex).length;
       setEditingRowIndex(editingRowIndex - deletedBefore);
     }
   };
 
+  const buildLineFromForm = (existingLine, formSnapshot) => {
+    const fd = formSnapshot || form;
+    const discAmt = n(fd.discAmt || fd.discPrice);
+    const base = existingLine || {};
+    const meta = {
+      productId: draftLineMeta?.productId ?? base.productId,
+      uniqueMultiProductId: draftLineMeta?.uniqueMultiProductId ?? base.uniqueMultiProductId,
+      productType: draftLineMeta?.productType ?? base.productType,
+      barCode: draftLineMeta?.barCode ?? base.barCode,
+      qtyOnHand: draftLineMeta?.qtyOnHand ?? base.qtyOnHand,
+      unitCost: draftLineMeta?.unitCost ?? base.unitCost,
+      minUnitPrice: draftLineMeta?.minUnitPrice ?? base.minUnitPrice,
+    };
+    return {
+      key: existingLine?.key || lineKey(),
+      shortDescription: fd.shortDescription,
+      barCode: fd.hsCode || meta.barCode || '',
+      qty: n(fd.qty),
+      unitPrice: n(fd.unitPrice),
+      discPercent: n(fd.discPercent),
+      discAmt,
+      subTotal: n(fd.subTotal),
+      taxPercent: n(fd.taxPercent),
+      taxAmt: n(fd.taxAmt),
+      lineTotal: n(fd.total),
+      productId: meta.productId ?? null,
+      uniqueMultiProductId: meta.uniqueMultiProductId ?? null,
+      salesChildId: existingLine?.salesChildId ?? null,
+      productType: meta.productType || '',
+      qtyOnHand: meta.qtyOnHand ?? null,
+      unitCost: meta.unitCost ?? null,
+      minUnitPrice: meta.minUnitPrice ?? null,
+    };
+  };
+
   const handleSaveOrUpdate = () => {
-    const newRow = [
-      form.shortDescription,
-      form.hsCode,
-      form.qty ? Number(form.qty) : 0,
-      form.unitPrice ? Number(form.unitPrice) : 0,
-      form.discPercent ? Number(form.discPercent) : 0,
-      form.discPrice ? Number(form.discPrice) : 0,
-      form.subTotal ? Number(form.subTotal) : 0,
-      form.taxPercent ? Number(form.taxPercent) : 0,
-      form.taxAmt ? Number(form.taxAmt) : 0,
-      form.total ? Number(form.total) : 0,
-    ];
+    const existing = editingRowIndex !== null ? saleLines[editingRowIndex] : null;
+    const resolvedProductId = draftLineMeta?.productId ?? existing?.productId;
+    if (!resolvedProductId) {
+      setApiError('Use Lookup to resolve a product before adding a line');
+      return;
+    }
+    const snapshot = applyLineRecalc(form);
+    const line = buildLineFromForm(existing, snapshot);
     if (editingRowIndex !== null) {
-      setSaleRows((prev) => {
+      setSaleLines((prev) => {
         const next = [...prev];
-        next[editingRowIndex] = newRow;
+        next[editingRowIndex] = line;
         return next;
       });
       setEditingRowIndex(null);
     } else {
-      setSaleRows((prev) => [newRow, ...prev]);
+      setSaleLines((prev) => [line, ...prev]);
     }
     setForm(initialFormState);
+    setDraftLineMeta(null);
+    clearApiMessages();
   };
 
-  const toggleFieldVisibility = (fieldKey) => {
-    setVisibleFields((prev) => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
+  const totalDiscAmt = saleLines.reduce((sum, r) => sum + n(r.discAmt), 0);
+  const totalSubTotal = saleLines.reduce((sum, r) => sum + n(r.subTotal), 0);
+  const totalTaxPercent = saleLines.length
+    ? saleLines.reduce((sum, r) => sum + n(r.taxPercent), 0) / saleLines.length
+    : 0;
+  const totalTaxAmt = saleLines.reduce((sum, r) => sum + n(r.taxAmt), 0);
+  const totalLineTotal = saleLines.reduce((sum, r) => sum + n(r.lineTotal), 0);
+
+  const taxRateOptions = useMemo(() => {
+    const t1 = n(init?.taxDefaults?.tax1Percentage, 0);
+    const t2 = n(init?.taxDefaults?.tax2Percentage, 0);
+    const t3 = n(init?.taxDefaults?.tax3Percentage, 0);
+    const uniq = [...new Set([t1, t2, t3].filter((x) => x >= 0))];
+    if (!uniq.length) uniq.push(0);
+    return uniq.map((x) => ({ value: String(x), label: String(x) }));
+  }, [init]);
+
+  const documentSummary = useMemo(() => {
+    const sub = totalSubTotal;
+    let extraDisc = 0;
+    if (n(docDiscPct) > 0 && sub > 0) {
+      extraDisc = roundMoney(sub * (n(docDiscPct) / 100));
+    } else {
+      extraDisc = roundMoney(n(docDiscAmt));
+      if (extraDisc > sub) extraDisc = sub;
+    }
+    const totalAmt = roundMoney(Math.max(0, sub - extraDisc));
+    const defaultRate = n(init?.taxDefaults?.tax1Percentage, 0);
+    const rate =
+      summaryTaxPct === '' || summaryTaxPct == null ? defaultRate : n(summaryTaxPct, defaultRate);
+    const tax = roundMoney(totalAmt * (rate / 100));
+    const ro = roundMoney(n(roundOffAdjInput));
+    const net = roundMoney(totalAmt + tax + ro);
+    return {
+      subTotal: sub,
+      extraDisc,
+      lineDiscSum: totalDiscAmt,
+      totalDiscountForSave: roundMoney(totalDiscAmt + extraDisc),
+      totalAmount: totalAmt,
+      taxRate: rate,
+      taxAmt: tax,
+      roundOff: ro,
+      net,
+    };
+  }, [
+    totalSubTotal,
+    totalDiscAmt,
+    docDiscPct,
+    docDiscAmt,
+    summaryTaxPct,
+    roundOffAdjInput,
+    init,
+  ]);
+
+  const stationOptions = useMemo(
+    () =>
+      (init?.stations || []).map((s) => ({
+        value: String(s.stationId),
+        label: `${s.stationName} (${s.stationId})`,
+      })),
+    [init]
+  );
+  const salesManOptions = useMemo(
+    () =>
+      (init?.salesMen || []).map((s) => ({
+        value: String(s.staffId),
+        label: s.staffName,
+      })),
+    [init]
+  );
+  const paymentOptions = useMemo(
+    () =>
+      (init?.paymentModes || ['CASH', 'CREDIT', 'CREDITCARD']).map((p) => ({
+        value: p,
+        label: p,
+      })),
+    [init]
+  );
+  const accountHeadOptions = useMemo(
+    () =>
+      (init?.accountHeads || []).map((a) => ({
+        value: String(a.accountId),
+        label: `${a.accountNo ?? ''} ${a.accountHead ?? ''}`.trim(),
+      })),
+    [init]
+  );
+  const customerOptions = useMemo(
+    () => [
+      { value: '', label: 'Walk-in / cash' },
+      ...customers.map((c) => ({
+        value: String(c.customerId),
+        label: c.customerName || `Customer ${c.customerId}`,
+      })),
+    ],
+    [customers]
+  );
+  const filteredQuotationList = useMemo(() => {
+    const t = quotationModalFilter.trim().toLowerCase();
+    if (!t) return quotationList;
+    return quotationList.filter((q) => String(q.quotationNo).toLowerCase().includes(t));
+  }, [quotationList, quotationModalFilter]);
+
+  const filteredDoList = useMemo(() => {
+    const t = doModalFilter.trim().toLowerCase();
+    if (!t) return doList;
+    return doList.filter((d) => String(d.doNo).toLowerCase().includes(t));
+  }, [doList, doModalFilter]);
+
+  const quotationRefSummary = useMemo(() => {
+    if (!quotationRefs.length) return 'None';
+    const nums = quotationRefs
+      .map((r) => n(r.quotationNo))
+      .filter((v) => v > 0)
+      .slice(0, 3)
+      .join(', ');
+    if (!nums) return `${quotationRefs.length} selected`;
+    return quotationRefs.length > 3 ? `${nums}, +${quotationRefs.length - 3}` : nums;
+  }, [quotationRefs]);
+
+  const doRefSummary = useMemo(() => {
+    if (!doRefs.length) return 'None';
+    const nums = doRefs
+      .map((r) => n(r.doNo))
+      .filter((v) => v > 0)
+      .slice(0, 3)
+      .join(', ');
+    if (!nums) return `${doRefs.length} selected`;
+    return doRefs.length > 3 ? `${nums}, +${doRefs.length - 3}` : nums;
+  }, [doRefs]);
+
+  const lineItemsPayload = useCallback(() => {
+    return saleLines
+      .filter((l) => n(l.qty) > 0)
+      .map((l) => ({
+        productId: n(l.productId),
+        uniqueMultiProductId: n(l.uniqueMultiProductId),
+        salesChildId: l.salesChildId || undefined,
+        qty: n(l.qty),
+        unitPrice: n(l.unitPrice),
+        discount: n(l.discAmt),
+        subTotalC: n(l.subTotal),
+        tax1AmountC: n(l.taxAmt),
+        lineTotal: n(l.lineTotal),
+        shortDescription: l.shortDescription,
+        barCode: l.barCode,
+        productType: l.productType || undefined,
+      }));
+  }, [saleLines]);
+
+  const handleSaveBill = async () => {
+    clearApiMessages();
+    const sid = n(stationId);
+    if (!sid) {
+      setApiError('Select a station');
+      return;
+    }
+    const needsAccount = paymentMode === 'CASH' || paymentMode === 'CREDITCARD';
+    if (needsAccount && !n(accountHeadId)) {
+      setApiError('Select account head for CASH / CREDITCARD');
+      return;
+    }
+    const items = lineItemsPayload();
+    if (!items.length) {
+      setApiError('Add at least one line with quantity');
+      return;
+    }
+    if (items.some((it) => !it.productId)) {
+      setApiError('Each line must have a product — use Lookup or load from QTN/DO');
+      return;
+    }
+    const payload = {
+      stationId: sid,
+      salesManId: n(salesManId),
+      customerId: n(customerId),
+      customerName:
+        customers.find((c) => String(c.customerId) === String(customerId))?.customerName || '',
+      paymentMode,
+      billDate: billDate || new Date().toISOString().slice(0, 10),
+      billTime: billTime || new Date().toISOString(),
+      counterNo: counterNo || '99',
+      customerLpoNo: customerLpo,
+      localBillNo: n(localBillNo),
+      subTotalM: documentSummary.subTotal,
+      discountAmount: documentSummary.totalDiscountForSave,
+      taxableAmount: documentSummary.totalAmount,
+      tax1AmountM: documentSummary.taxAmt,
+      tax1RateM: documentSummary.taxRate,
+      roundOffAdj: documentSummary.roundOff,
+      amount: documentSummary.net,
+      paidAmount: n(paidAmountEntry) || documentSummary.net,
+      balancePaid: roundMoney(documentSummary.net - (n(paidAmountEntry) || documentSummary.net)),
+      accountHeadId: needsAccount ? n(accountHeadId) : 0,
+      items,
+      saveTerms,
+      salesTerms: salesTermsText,
+      agentId: n(agentId),
+      agentCommissionPercentage: n(agentCommissionPct),
+      agentCommissionAmount: n(agentCommissionAmt),
+      quotationRefs: quotationRefs.map((r) => ({
+        quotationId: r.quotationId,
+        quotationNo: r.quotationNo,
+      })),
+      doRefs: doRefs.map((r) => ({ doId: r.doId, doNo: r.doNo })),
+    };
+    if (salesId) {
+      payload.salesId = salesId;
+      payload.billNo = n(billNo);
+      if (deletedChildIds.length) payload.deletedChildIds = deletedChildIds;
+    }
+    setSaving(true);
+    try {
+      const res = await saveSalesEntry(payload);
+      setSalesId(res.salesId);
+      setBillNo(String(res.billNo ?? ''));
+      setPostStatus('NOT POSTED');
+      setDeletedChildIds([]);
+      try {
+        const full = await fetchSalesEntryById({ salesId: res.salesId, stationId: sid });
+        setSaleLines((full.items || []).map(mapSavedLine));
+        setQuotationRefs(full.quotationRefs || []);
+        setDoRefs(full.doRefs || []);
+      } catch {
+        /* lines stay as saved; salesChildId refresh optional */
+      }
+      setApiSuccess(res.message || 'Saved');
+      setSaveSuccessMessage(res.message || 'Bill saved successfully');
+      setSaveSuccessModalOpen(true);
+    } catch (e) {
+      setSaveSuccessModalOpen(false);
+      setApiError(e.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleColumnVisibility = (colKey) => {
-    setVisibleColumns((prev) => ({ ...prev, [colKey]: !prev[colKey] }));
+  const handleLoadQuotation = async (row) => {
+    clearApiMessages();
+    const qid = row?.quotationId != null ? n(row.quotationId) : 0;
+    const qno =
+      row?.quotationNo !== undefined && row?.quotationNo !== null && row?.quotationNo !== ''
+        ? n(row.quotationNo)
+        : 0;
+    if (!qid && !qno) {
+      setApiError('Select a quotation');
+      return;
+    }
+    setQuotationModalOpen(false);
+    setQuotationModalFilter('');
+    try {
+      const data = await loadSalesQuotationItems({
+        stationId: n(stationId),
+        ...(qid ? { quotationId: qid } : { quotationNo: qno }),
+        currentCustomerId: n(customerId) || undefined,
+      });
+      const loadedCustomerId = n(data.customer?.customerId);
+      const currentCustomer = n(customerId);
+      if (currentCustomer && loadedCustomerId && currentCustomer !== loadedCustomerId) {
+        setApiError('Selected quotation belongs to a different customer.');
+        return;
+      }
+      const incomingLines = (data.items || []).map(mapQuotationLine);
+      setSaleLines((prev) => [...prev, ...incomingLines]);
+      setQuotationRefs((prev) => {
+        const nextId = n(data.quotationId);
+        const nextNo = n(data.quotationNo);
+        if (prev.some((r) => n(r.quotationId) === nextId || n(r.quotationNo) === nextNo)) return prev;
+        return [...prev, { quotationId: data.quotationId, quotationNo: data.quotationNo }];
+      });
+      if (!n(customerId) && loadedCustomerId) setCustomerId(String(loadedCustomerId));
+      setApiSuccess(`Added ${data.count ?? data.items?.length ?? 0} quotation line(s)`);
+    } catch (e) {
+      setApiError(e.message || 'Load quotation failed');
+    }
   };
 
-  // Calculate totals
-  const totalDiscAmt = saleRows.reduce((sum, r) => sum + r[5], 0);
-  const totalSubTotal = saleRows.reduce((sum, r) => sum + r[6], 0);
-  const totalTaxPercent = saleRows.reduce((sum, r) => sum + r[7], 0); // Sum of tax %
-  const totalTaxAmt = saleRows.reduce((sum, r) => sum + r[8], 0);
-  const totalLineTotal = saleRows.reduce((sum, r) => sum + r[9], 0);
+  const handleLoadDO = async (row) => {
+    clearApiMessages();
+    const did = row?.doId != null ? n(row.doId) : 0;
+    const dno =
+      row?.doNo !== undefined && row?.doNo !== null && row?.doNo !== '' ? n(row.doNo) : 0;
+    if (!did && !dno) {
+      setApiError('Select a delivery order');
+      return;
+    }
+    setDoModalOpen(false);
+    setDoModalFilter('');
+    try {
+      const data = await loadSalesDOItems({
+        stationId: n(stationId),
+        ...(did ? { doId: did } : { doNo: dno }),
+        currentCustomerId: n(customerId) || undefined,
+        pendingOnly: true,
+      });
+      const loadedCustomerId = n(data.customer?.customerId);
+      const currentCustomer = n(customerId);
+      if (currentCustomer && loadedCustomerId && currentCustomer !== loadedCustomerId) {
+        setApiError('Selected DO belongs to a different customer.');
+        return;
+      }
+      const incomingLines = (data.items || []).map(mapDOLine);
+      setSaleLines((prev) => [...prev, ...incomingLines]);
+      setDoRefs((prev) => {
+        const nextId = n(data.doId);
+        const nextNo = n(data.doNo);
+        if (prev.some((r) => n(r.doId) === nextId || n(r.doNo) === nextNo)) return prev;
+        return [...prev, { doId: data.doId, doNo: data.doNo }];
+      });
+      if (!n(customerId) && loadedCustomerId) setCustomerId(String(loadedCustomerId));
+      setApiSuccess(`Added ${data.count ?? data.items?.length ?? 0} DO line(s)`);
+    } catch (e) {
+      setApiError(e.message || 'Load DO failed');
+    }
+  };
 
-  // Build rows with action buttons
-// Build rows with action buttons and totals without labels
-const rowsWithTotal = [
-  ...saleRows.map((r, idx) => [
-    <div key={`chk-${idx}`} className="flex justify-center">
+  const handleLoadBill = async () => {
+    clearApiMessages();
+    const sidSale = n(loadSalesIdInput);
+    if (!sidSale) {
+      setApiError('Enter sales ID to load');
+      return;
+    }
+    try {
+      const data = await fetchSalesEntryById({
+        salesId: sidSale,
+        stationId: n(stationId),
+      });
+      setSalesId(data.salesId);
+      setBillNo(String(data.billNo ?? ''));
+      setPostStatus(data.postStatus || '');
+      setStationId(String(data.stationId ?? stationId));
+      setSalesManId(String(data.salesManId ?? ''));
+      setCustomerId(String(data.customerId ?? ''));
+      setPaymentMode(data.paymentMode || 'CASH');
+      setCounterNo(String(data.counterNo || '99'));
+      setCustomerLpo(data.customerLpoNo || '');
+      setLocalBillNo(String(data.localBillNo ?? ''));
+      setSaleLines((data.items || []).map(mapSavedLine));
+      setQuotationRefs(data.quotationRefs || []);
+      setDoRefs(data.doRefs || []);
+      setDeletedChildIds([]);
+      if (data.billDate) {
+        const d = new Date(data.billDate);
+        setBillDate(d.toISOString().slice(0, 10));
+      }
+      if (data.billTime) setBillTime(new Date(data.billTime).toISOString());
+      setSalesTermsText(data.remarks || salesTermsText);
+      setApiSuccess('Bill loaded for edit');
+    } catch (e) {
+      setApiError(e.message || 'Load bill failed');
+    }
+  };
+
+  const handleNewInvoice = () => {
+    clearApiMessages();
+    setSalesId(null);
+    setBillNo('');
+    setPostStatus('');
+    setLoadSalesIdInput('');
+    setSaleLines([]);
+    setDeletedChildIds([]);
+    setQuotationRefs([]);
+    setDoRefs([]);
+    setForm(initialFormState);
+    setEditingRowIndex(null);
+    setDraftLineMeta(null);
+    setSelectedRows(new Set());
+    setAgentId('');
+    setAgentCommissionPct('');
+    setAgentCommissionAmt('');
+    if (init?.billDefaults?.billDateTime) {
+      const d = new Date(init.billDefaults.billDateTime);
+      setBillDate(d.toISOString().slice(0, 10));
+      setBillTime(d.toISOString());
+    }
+    const dc = init?.defaults?.defaultCashCustomer;
+    setCustomerId(dc != null ? String(dc) : '');
+    setSummaryTab('payment');
+    setDocDiscPct('');
+    setDocDiscAmt('');
+    setSummaryTaxPct(
+      init?.taxDefaults?.tax1Percentage != null
+        ? String(n(init.taxDefaults.tax1Percentage, 0))
+        : ''
+    );
+    setRoundOffAdjInput('');
+    setPaidAmountEntry('');
+    setPaidByCashEntry('');
+    setPaidByCardEntry('');
+  };
+
+  const runPosting = async (fn, label) => {
+    clearApiMessages();
+    if (!salesId) {
+      setApiError('Save the bill first');
+      return;
+    }
+    if (!window.confirm(`${label} this bill?`)) return;
+    try {
+      const res = await fn({ salesId, stationId: n(stationId) });
+      setPostStatus(res.postStatus || postStatus);
+      setApiSuccess(res.message || 'OK');
+    } catch (e) {
+      setApiError(e.message || `${label} failed`);
+    }
+  };
+
+  const rowsWithTotal = useMemo(
+    () => [
+      ...saleLines.map((line, idx) => {
+        const r = lineToCells(line);
+        return [
+    <div key={`chk-${line.key}`} className="flex justify-center">
       <input
         type="checkbox"
         checked={selectedRows.has(idx)}
@@ -265,44 +1088,67 @@ const rowsWithTotal = [
         style={{ accentColor: primary }}
       />
     </div>,
-    r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], 
-
-    <div key={`action-${idx}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-      <button type="button" className="p-1" onClick={() => setSelectedProduct(getProductDetails(r, idx))}>
-        <img src={ViewActionIcon} alt="View" className="h-4 w-4 sm:h-5 sm:w-5" />
+    ...r,
+    <div key={`action-${line.key}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+      <button type="button" className="p-0.5" onClick={() => setSelectedProduct(getProductDetails(line))}>
+        <img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
-      <button type="button" className="p-1" onClick={() => handleEdit(r, idx)}>
-        <img src={EditActionIcon} alt="Edit" className="h-4 w-4 sm:h-5 sm:w-5" />
+      <button type="button" className="p-0.5" onClick={() => handleEdit(line, idx)}>
+        <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
-      <button type="button" className="p-1" onClick={() => handleDelete(idx)}>
-        <img src={DeleteActionIcon} alt="Delete" className="h-4 w-4 sm:h-5 sm:w-5" />
+      <button type="button" className="p-0.5" onClick={() => handleDelete(idx)}>
+        <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
-    </div>
-  ]),
+    </div>,
+  ];
+      }),
  
 
 [
   <div key="total" className="text-right font-bold">Total</div>,
   '', '', '', '', '',
-  totalDiscAmt.toFixed(2),   // Disc Amt
-  totalSubTotal.toFixed(2),  // Sub total
-  (totalTaxPercent / saleRows.length).toFixed(2), // Tax %
-  totalTaxAmt.toFixed(2),    // Tax amt
-  totalLineTotal.toFixed(2), // Line total
-  '' // No action buttons for totals row
+  totalDiscAmt.toFixed(2),
+  totalSubTotal.toFixed(2),
+  totalTaxPercent.toFixed(2),
+  totalTaxAmt.toFixed(2),
+  totalLineTotal.toFixed(2),
+  '',
 ]
 
 
 
-];
+],
+    [
+      saleLines,
+      selectedRows,
+      primary,
+      totalDiscAmt,
+      totalSubTotal,
+      totalTaxPercent,
+      totalTaxAmt,
+      totalLineTotal,
+    ]
+  );
 
-  const tableHeadersFull = ['', 'Short Description', 'HS Code/Wt', ' Qty', 'Selling price', 'Disc %', 'Disc Amt', 'Sub total', 'Tax %', 'Tax amt', 'Line total', 'Action'];
-  const visibleIndices = tableColumnKeys.map((k, i) => (visibleColumns[k] ? i : -1)).filter((i) => i >= 0);
-  const filteredHeaders = visibleIndices.map((i) => tableHeadersFull[i]);
-  const filteredRows = rowsWithTotal.map((row) => visibleIndices.map((i) => row[i]));
+  if (initLoading) {
+    return (
+      <div className="p-4 text-center text-sm text-gray-600" style={{ color: primary }}>
+        Loading sales entry…
+      </div>
+    );
+  }
+
+  if (initError) {
+    return (
+      <div className="p-4 text-center text-sm text-red-600">
+        {initError}
+        <p className="mt-2 text-gray-600">Ensure you are logged in and VITE_API_BASE_URL points at the ERP API.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="sale-page">
+    <div className="sale-page -mt-1">
       <style>{`
         .sale-btn-outline:hover {
           border-color: ${primary} !important;
@@ -330,86 +1176,23 @@ const rowsWithTotal = [
         .sale-btn-red-outline:active {
           background: ${primaryActive} !important;
         }
-
-        .sale-form-section input,
-        .sale-form-section select {
-          min-height: 32px !important;
-          height: 32px !important;
-          border: 1px solid #d1d5db !important;
-          border-radius: 6px !important;
-          padding: 6px 10px !important;
-          font-size: 11px !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        .sale-form-section select {
-          padding-right: 28px !important;
-        }
-        .sale-form-section .sale-form-field div:has(> select) {
-          width: 100% !important;
-          min-height: 32px !important;
-        }
-        .sale-form-section .sale-form-field {
-          min-width: 0;
-        }
-        .sale-form-section label {
-          font-size: 11px !important;
-          color: #374151 !important;
-        }
-        .sale-field-menu,
-        .sale-column-menu {
-          width: 190px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          background: #fff;
-          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
-        }
-        .sale-table th,
-        .sale-table td {
-          font-size: 12px !important;
-          padding: 8px 10px !important;
-        }
-        .sale-table input[type="checkbox"] {
-          height: 14px !important;
-          width: 14px !important;
-        }
-        .sale-table tbody tr:last-child {
-          position: sticky;
-          bottom: 0;
-          background: #fff !important;
-          z-index: 1;
-          box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.08);
-        }
-        .sale-table tbody tr:last-child td {
-          border-top: 2px solid #e2e8f0 !important;
-          font-weight: 600;
-        }
-        .sale-table thead th {
-          position: sticky;
-          top: 0;
-          z-index: 2;
-          background: #F2E6EA !important;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-        }
-        .sale-table-scroll {
-          max-height: min(450px, 55vh);
-          overflow: auto;
-        }
-        .sale-table-scroll .sale-table {
-          overflow: visible !important;
-        }
       `}</style>
 
-      <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
-        <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+      <div className="mt-0 mb-0 flex flex-1 min-h-0 flex-col overflow-hidden px-0 sm:mt-0 sm:mb-0 sm:mx-[-6px] sm:px-0">
+        <div className="flex flex-1 min-h-0 flex-col gap-1 overflow-hidden rounded-lg border border-gray-200 bg-white p-1 shadow-sm sm:gap-1.5 sm:p-1.5">
 
           {/* Header */}
-          <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex shrink-0 flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
             <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
               Sales
             </h1>
 
             <div className="flex gap-2 flex-wrap items-center">
+              {postStatus && (
+                <span className="rounded border border-gray-200 px-2 py-0.5 text-[9px] text-gray-600 sm:text-[10px]">
+                  {postStatus}
+                </span>
+              )}
               {selectedRows.size > 0 && (
                 <button
                   type="button"
@@ -421,319 +1204,349 @@ const rowsWithTotal = [
                   Delete
                 </button>
               )}
-              <button className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8">
-                <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSaveBill}
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-semibold sm:px-2 sm:py-1 sm:text-[11px]"
+                style={{ borderColor: primary, color: primary }}
+              >
+                {saving ? 'Saving…' : 'Save bill'}
               </button>
-
-              {[{ icon: CancelIcon, label: 'Cancel' },
-                { icon: PostIcon, label: 'Post' },
-                { icon: UnpostIcon, label: 'Unpost' }
-              ].map((btn) => (
-                <button
-                  key={btn.label}
-                  className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
-                >
-                  <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                  {btn.label}
-                </button>
-              ))}
+              <button
+                type="button"
+                className="sale-btn-outline flex h-7 items-center justify-center rounded border border-gray-300 bg-white px-1.5 sm:h-8 sm:px-2"
+              >
+                <img src={PrinterIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => runPosting(cancelSalesEntry, 'Cancel')}
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              >
+                <img src={CancelIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => runPosting(postSalesEntry, 'Post')}
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              >
+                <img src={PostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                Post
+              </button>
+              <button
+                type="button"
+                onClick={() => runPosting(unpostSalesEntry, 'Unpost')}
+                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              >
+                <img src={UnpostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                Unpost
+              </button>
             </div>
           </div>
+
+          {(apiError || apiSuccess) && (
+            <div
+              className={`rounded border px-2 py-1.5 text-[10px] sm:text-[11px] ${
+                apiError ? 'border-red-200 bg-red-50 text-red-800' : 'border-green-200 bg-green-50 text-green-800'
+              }`}
+            >
+              {apiError || apiSuccess}
+            </div>
+          )}
 
           {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto xl:flex-row xl:overflow-hidden">
 
-            {/* LEFT */}
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden xl:w-3/4">
+            {/* LEFT — ~70% on xl so form + table share space with wider right rail */}
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-[70%] xl:max-w-[70%] xl:shrink-0">
               {/* Form section - bordered */}
-              <div
-                className="sale-form-section shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 sm:p-4"
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  setFieldMenu({ open: true, x: e.clientX, y: e.clientY });
-                }}
-              >
-                <div className="flex flex-col gap-3">
+              <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
+                <div className="flex flex-col gap-2">
                   {/* Row 1: Short Description + numeric fields */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 items-end gap-2 lg:gap-3">
-                    {visibleFields.shortDescription && (
-                    <div className="sale-form-field col-span-2">
-                      <InputField
-                        label="Short Description"
-                        value={form.shortDescription}
-                        onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.hsCode && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Hs Code/Wt"
-                        type="number"
-                        value={form.hsCode}
-                        onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.qty && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Qty"
-                        type="number"
-                        value={form.qty}
-                        onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.unitPrice && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Unit Price"
-                        type="number"
-                        value={form.unitPrice}
-                        onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.discPercent && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Disc.%"
-                        type="number"
-                        value={form.discPercent}
-                        onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.discPrice && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Disc Price"
-                        type="number"
-                        value={form.discPrice}
-                        onChange={(e) => setForm((f) => ({ ...f, discPrice: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.discAmt && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Disc.Amt"
-                        type="number"
-                        value={form.discAmt}
-                        onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
-                      />
-                    </div>
-                    )}
+                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                    <InputField
+                      label="Short Description"
+                      widthPx={128}
+                      value={form.shortDescription}
+                      onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
+                      onClick={() => openProductSearch('description')}
+                      title="Click to search products"
+                      className="cursor-pointer"
+                    />
+                    <SubInputField
+                      label="Barcode"
+                      widthPx={72}
+                      value={form.hsCode}
+                      onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
+                      onClick={() => openProductSearch('barcode')}
+                      title="Click to search by barcode"
+                      className="cursor-pointer"
+                    />
+                    <SubInputField
+                      label="Qty"
+                      type="number"
+                      value={form.qty}
+                      onChange={(e) => patchLineForm({ qty: e.target.value })}
+                    />
+                    <SubInputField
+                      label="Unit Price"
+                      type="number"
+                      value={form.unitPrice}
+                      onChange={(e) => patchLineForm({ unitPrice: e.target.value })}
+                    />
+                    <SubInputField
+                      label="Disc.%"
+                      type="number"
+                      value={form.discPercent}
+                      onChange={(e) => patchLineForm({ discPercent: e.target.value })}
+                    />
+                    <SubInputField
+                      label="Disc Price"
+                      type="number"
+                      value={form.discPrice}
+                      onChange={(e) => patchLineForm({ discPrice: e.target.value, discPercent: '' })}
+                    />
+                    <SubInputField
+                      label="Disc.Amt"
+                      type="number"
+                      value={form.discAmt}
+                      onChange={(e) => patchLineForm({ discAmt: e.target.value, discPercent: '' })}
+                    />
                   </div>
 
-                  {/* Row 2 */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 items-end gap-2 lg:gap-3">
-                    {visibleFields.subTotal && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Sub total"
-                        value={form.subTotal}
-                        onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.taxPercent && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Tax%"
-                        type="number"
-                        value={form.taxPercent}
-                        onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.taxAmt && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="T.Amt"
-                        type="number"
-                        value={form.taxAmt}
-                        onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.total && (
-                    <div className="sale-form-field">
-                      <SubInputField
-                        label="Total"
-                        type="number"
-                        value={form.total}
-                        onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.qutnNo && (
-                    <div className="sale-form-field col-span-2">
-                      <DropdownInput
-                        label="Qutn. no"
-                        options={['QTN-001']}
-                        value={form.qutnNo}
-                        onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
-                      />
-                    </div>
-                    )}
-                    {visibleFields.doNo && (
-                    <div className="sale-form-field col-span-2">
-                      <DropdownInput
-                        label="DO. no"
-                        options={['DO-001']}
-                        value={form.doNo}
-                        onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
-                      />
-                    </div>
-                    )}
-                    <div className="sale-form-field col-span-2 sm:col-span-1 flex items-end pb-0.5">
+                  {/* Row 2: computed subtotal / tax / total + Add */}
+                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                    <SubInputField
+                      label="Sub total"
+                      value={form.subTotal}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                    <SubInputField
+                      label="Tax%"
+                      type="number"
+                      value={form.taxPercent}
+                      onChange={(e) => patchLineForm({ taxPercent: e.target.value })}
+                      title={`Default ${n(init?.taxDefaults?.tax1Percentage, 0)}% from parameters (clear field to reset)`}
+                    />
+                    <SubInputField
+                      label="T.Amt"
+                      value={form.taxAmt}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                    <SubInputField
+                      label="Total"
+                      value={form.total}
+                      readOnly
+                      className="bg-gray-50"
+                    />
+                    <div className="flex shrink-0 items-end">
                       <button
                         type="button"
-                        className="flex h-8 w-full min-w-[60px] items-center justify-center rounded-md border px-3 py-1.5 text-[10px] font-medium text-white sm:text-[11px]"
+                        className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
                         style={{ backgroundColor: primary }}
                         onClick={handleSaveOrUpdate}
                       >
-                        {editingRowIndex !== null ? 'Update' : 'Save'}
+                        {editingRowIndex !== null ? 'Update' : 'Add'}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-              {fieldMenu.open && (
-                <div
-                  className="sale-field-menu fixed z-50 p-2"
-                  style={{
-                    left: `${Math.max(8, Math.min(fieldMenu.x, window.innerWidth - 210))}px`,
-                    top: `${Math.max(8, Math.min(fieldMenu.y, window.innerHeight - 340))}px`,
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
-                    Show / hide inputs
-                  </div>
-                  <div className="max-h-[280px] overflow-auto pr-1">
-                    {Object.keys(fieldVisibilityDefaults).map((key) => (
-                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={visibleFields[key]}
-                          onChange={() => toggleFieldVisibility(key)}
-                          className="h-3.5 w-3.5"
-                          style={{ accentColor: primary }}
-                        />
-                        <span>{fieldVisibilityLabels[key]}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* Table section - bordered container; scroll inside when content overflows */}
-              <div
-                className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3"
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  setTableMenu({ open: true, x: e.clientX, y: e.clientY });
-                }}
-              >
-                <div className="sale-table-scroll min-h-0 min-w-0 flex-1">
-                  <CommonTable className="sale-table" headers={filteredHeaders} rows={filteredRows} />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
+                <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+                  <CommonTable
+                    headers={[
+        '',
+        'Short Description',
+        'HS Code/Wt',
+        ' Qty',
+        'Selling price',
+        'Disc %',
+        'Disc Amt',
+        'Sub total',
+        'Tax %',
+        'Tax amt',
+        'Line total',
+        'Action',
+      ]}
+                    rows={rowsWithTotal}
+                  />
                 </div>
               </div>
-              {tableMenu.open && (
-                <div
-                  className="sale-column-menu fixed z-50 p-2"
-                  style={{
-                    left: `${Math.max(8, Math.min(tableMenu.x, window.innerWidth - 210))}px`,
-                    top: `${Math.max(8, Math.min(tableMenu.y, window.innerHeight - 340))}px`,
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="mb-1 border-b border-gray-100 pb-1 text-[10px] font-semibold text-gray-700">
-                    Show / hide columns
-                  </div>
-                  <div className="max-h-[280px] overflow-auto pr-1">
-                    {tableColumnKeys.map((key) => (
-                      <label key={key} className="flex cursor-pointer items-center gap-2 py-0.5 text-[11px] text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={visibleColumns[key]}
-                          onChange={() => toggleColumnVisibility(key)}
-                          className="h-3.5 w-3.5"
-                          style={{ accentColor: primary }}
-                        />
-                        <span>{tableColumnLabels[key] || key}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* RIGHT */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="flex flex-col gap-2 sm:gap-3 pb-2">
+            {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0 xl:overflow-hidden">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
+                <div className="grid w-full shrink-0 grid-cols-2 gap-1.5 sm:gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuotationModalFilter('');
+                      setQuotationModalOpen(true);
+                    }}
+                    className="sale-qtn-do-btn group flex min-h-[40px] items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-2 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[44px] sm:gap-2 sm:px-2.5"
+                  >
+                    <img
+                      src={QuotationIcon}
+                      alt=""
+                      className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-4 sm:w-4"
+                      aria-hidden
+                    />
+                    <span className="text-[10px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[11px]">
+                      Quotation ({quotationRefs.length})
+                    </span>
+                    <span className="max-w-[78px] truncate text-[9px] leading-none text-gray-500 sm:max-w-[92px]">
+                      {quotationRefSummary}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDoModalFilter('');
+                      setDoModalOpen(true);
+                    }}
+                    className="sale-qtn-do-btn group flex min-h-[40px] items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-2 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[44px] sm:gap-2 sm:px-2.5"
+                  >
+                    <img
+                      src={DeliveryIcon}
+                      alt=""
+                      className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-4 sm:w-4"
+                      aria-hidden
+                    />
+                    <span className="text-[10px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[11px]">
+                      DO ({doRefs.length})
+                    </span>
+                    <span className="max-w-[78px] truncate text-[9px] leading-none text-gray-500 sm:max-w-[92px]">
+                      {doRefSummary}
+                    </span>
+                  </button>
+                </div>
+
                 {/* Bill / Customer section */}
                 <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
                   <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Row 1: Bill no + 2 sub fields */}
+                    {/* Row 1: Bill no + load + LPO + local bill */}
                     <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <div className="flex flex-col gap-[6px]">
-                        <InputField label="Bill no" />
+                      <div className="flex min-w-0 flex-col gap-[6px]">
+                        <InputField label="Bill no" value={billNo} readOnly className="bg-gray-50" />
                       </div>
-                      <SubInputField label="Cust.Lpo 3" />
-                      <SubInputField label="Local bill no" />
-                    </div>
-
-                    {/* Row 2: Customer name + Payment mode */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Customer name" />
-                      <DropdownInput
-                        label=""
-                        options={['000001']}
-                        placeholder="000001"
-                        className="min-w-[80px] sm:min-w-[100px]"
+                      <SubInputField
+                        label="Sales ID"
+                        value={loadSalesIdInput}
+                        onChange={(e) => setLoadSalesIdInput(e.target.value)}
+                        widthPx={72}
+                      />
+                      <div className="flex shrink-0 items-end pb-0.5">
+                        <button
+                          type="button"
+                          onClick={handleLoadBill}
+                          className="rounded border px-2 py-1 text-[8px] font-medium sm:text-[9px]"
+                          style={{ borderColor: primary, color: primary }}
+                        >
+                          Load
+                        </button>
+                      </div>
+                      <SubInputField
+                        label="Cust.LPO"
+                        value={customerLpo}
+                        onChange={(e) => setCustomerLpo(e.target.value)}
+                      />
+                      <SubInputField
+                        label="Local bill no"
+                        value={localBillNo}
+                        onChange={(e) => setLocalBillNo(e.target.value)}
                       />
                     </div>
 
-                    {/* Row 4: Account head + creditcard no + credit card type */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Account head" />
-                      <SubInputField label="Creditcard no" />
-                      <SubInputField label="Credit card type" />
-                    </div>
-
-                    {/* Row 5: Cashier name (dropdown) + Invoice amt */}
+                    {/* Row 2: Customer + Payment */}
                     <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
                       <DropdownInput
-                        label="Cashier name"
-                        options={['Cashier 1', 'Cashier 2']}
+                        label="Customer"
+                        options={customerOptions}
+                        value={customerId}
+                        onChange={(v) => setCustomerId(v)}
+                        widthPx={160}
+                        className="min-w-[120px] sm:min-w-[140px]"
+                      />
+                      <DropdownInput
+                        label="Payment"
+                        options={paymentOptions}
+                        value={paymentMode}
+                        onChange={(v) => setPaymentMode(v)}
+                        widthPx={120}
+                      />
+                    </div>
+
+                    {/* Row 3: Account head + card fields */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <DropdownInput
+                        label="Account head"
+                        options={accountHeadOptions}
                         placeholder="Select"
+                        value={accountHeadId}
+                        onChange={(v) => setAccountHeadId(v)}
+                        widthPx={180}
+                        className="min-w-[140px]"
                       />
-                      <InputField label="Invoice amt" type="number" />
+                      <SubInputField label="Creditcard no" widthPx={88} />
+                      <SubInputField label="Card type" widthPx={88} />
                     </div>
 
-                    {/* Row 7: Station + Counter */}
+                    {/* Row 4: Cashier + Invoice amt + dates */}
                     <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Station" />
-                      <InputField label="Counter" />
+                      <DropdownInput
+                        label="Cashier (salesman)"
+                        options={salesManOptions}
+                        placeholder="Select"
+                        value={salesManId}
+                        onChange={(v) => setSalesManId(v)}
+                        widthPx={140}
+                      />
+                      <SubInputField
+                        label="Invoice amt (net)"
+                        value={documentSummary.net ? documentSummary.net.toFixed(2) : ''}
+                        readOnly
+                        className="bg-gray-50 text-red-600"
+                      />
+                      <SubInputField
+                        label="Bill date"
+                        type="date"
+                        value={billDate}
+                        onChange={(e) => setBillDate(e.target.value)}
+                        widthPx={118}
+                      />
                     </div>
 
-                    {/* Row 8: Edit + New invoice buttons */}
+                    {/* Row 5: Station + Counter */}
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                      <DropdownInput
+                        label="Station"
+                        options={stationOptions}
+                        value={stationId}
+                        onChange={(v) => setStationId(v)}
+                        widthPx={160}
+                        className="min-w-[120px]"
+                      />
+                      <SubInputField
+                        label="Counter"
+                        value={counterNo}
+                        onChange={(e) => setCounterNo(e.target.value)}
+                        widthPx={64}
+                      />
+                    </div>
+
+                    {/* Row 6: New invoice */}
                     <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
                       <button
                         type="button"
-                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-                      >
-                        <img src={EditIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
+                        onClick={handleNewInvoice}
                         className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
                         style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
                       >
@@ -756,61 +1569,251 @@ const rowsWithTotal = [
                 >
                   Sales terms
                 </button>
-                </div>
-              </div>
 
-              {/* Paid Amount section - fixed at bottom */}
-              <div className="mt-auto shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-2 sm:p-3">
-                  <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Paid Amount */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid Amount
-                      </label>
-                      <input
-                        type="number"
-                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                      />
-                    </div>
 
-                    {/* Balance Amount */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Balance Amount
-                      </label>
-                      <input
-                        type="number"
-                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                      />
-                    </div>
 
-                    {/* Paid by card */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid by card
-                      </label>
-                      <input
-                        type="number"
-                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                      />
-                    </div>
 
-                    {/* Paid by cash */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid by cash
-                      </label>
-                      <input
-                        type="number"
-                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                      />
-                    </div>
+
+
+                {/* Payment + Total summary (tabs) */}
+                <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white sm:mt-[8px]">
+                  <div className="flex border-b border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setSummaryTab('payment')}
+                      className={`min-h-[36px] flex-1 px-2 py-2 text-[10px] font-bold transition-colors sm:text-[11px] ${
+                        summaryTab === 'payment' ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                      }`}
+                      style={{
+                        color: summaryTab === 'payment' ? primary : undefined,
+                        boxShadow: summaryTab === 'payment' ? `inset 0 -2px 0 0 ${primary}` : undefined,
+                      }}
+                    >
+                      Payment details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSummaryTab('totals')}
+                      className={`min-h-[36px] flex-1 px-2 py-2 text-[10px] font-bold transition-colors sm:text-[11px] ${
+                        summaryTab === 'totals' ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                      }`}
+                      style={{
+                        color: summaryTab === 'totals' ? primary : undefined,
+                        boxShadow: summaryTab === 'totals' ? `inset 0 -2px 0 0 ${primary}` : undefined,
+                      }}
+                    >
+                      Total details
+                    </button>
+                  </div>
+                  <div className="p-2 sm:p-3">
+                    {summaryTab === 'payment' ? (
+                      <div className="flex flex-col gap-3 sm:gap-4">
+                        <div>
+                          <p className="mb-1 text-[11px] font-bold sm:text-xs" style={{ color: primary }}>
+                            Paid Amount
+                          </p>
+                          <input
+                            type="number"
+                            value={paidAmountEntry}
+                            onChange={(e) => setPaidAmountEntry(e.target.value)}
+                            placeholder={documentSummary.net ? documentSummary.net.toFixed(2) : '0.00'}
+                            className="box-border w-full rounded border border-gray-200 bg-white px-2 py-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-gray-400 sm:text-base"
+                          />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-[11px] font-bold sm:text-xs" style={{ color: primary }}>
+                            Balance Amount
+                          </p>
+                          <input
+                            type="text"
+                            readOnly
+                            value={
+                              documentSummary.net
+                                ? roundMoney(
+                                    documentSummary.net - (n(paidAmountEntry) || documentSummary.net)
+                                  ).toFixed(2)
+                                : ''
+                            }
+                            className="box-border w-full rounded border border-gray-200 bg-gray-50 px-2 py-2 text-right text-sm font-semibold tabular-nums text-gray-800 sm:text-base"
+                          />
+                          {customerSummary?.currentOsBalance != null ? (
+                            <p className="mt-1 text-[9px] text-gray-500">
+                              Customer OS: {String(customerSummary.currentOsBalance)}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                          <div className="min-w-0 flex-1">
+                            <SubInputField
+                              label="Paid by cash"
+                              type="number"
+                              value={paidByCashEntry}
+                              onChange={(e) => setPaidByCashEntry(e.target.value)}
+                              fullWidth
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <SubInputField
+                              label="Paid by card"
+                              type="number"
+                              value={paidByCardEntry}
+                              onChange={(e) => setPaidByCardEntry(e.target.value)}
+                              fullWidth
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2.5 sm:gap-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
+                            Sub Total
+                          </span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={documentSummary.subTotal ? documentSummary.subTotal.toFixed(2) : ''}
+                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:max-w-[180px] sm:text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
+                            Discount Amount
+                          </span>
+                          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-1.5">
+                            <SubInputField
+                              label=""
+                              type="number"
+                              widthPx={44}
+                              value={docDiscPct}
+                              onChange={(e) => {
+                                setDocDiscPct(e.target.value);
+                                if (e.target.value) setDocDiscAmt('');
+                              }}
+                              placeholder="%"
+                            />
+                            <span className="pb-1 text-[10px] text-gray-600">%</span>
+                            <SubInputField
+                              label=""
+                              type="number"
+                              widthPx={88}
+                              value={n(docDiscPct) > 0 ? documentSummary.extraDisc.toFixed(2) : docDiscAmt}
+                              onChange={(e) => {
+                                setDocDiscAmt(e.target.value);
+                                setDocDiscPct('');
+                              }}
+                              readOnly={n(docDiscPct) > 0}
+                              className={n(docDiscPct) > 0 ? 'bg-gray-50' : ''}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
+                            Total Amount
+                          </span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={documentSummary.totalAmount ? documentSummary.totalAmount.toFixed(2) : ''}
+                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:max-w-[180px] sm:text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-wrap items-end justify-between gap-2">
+                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
+                            Tax
+                          </span>
+                          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-1.5">
+                            <DropdownInput
+                              label=""
+                              options={taxRateOptions}
+                              value={
+                                summaryTaxPct !== '' && summaryTaxPct != null
+                                  ? summaryTaxPct
+                                  : String(n(init?.taxDefaults?.tax1Percentage, 0))
+                              }
+                              onChange={(v) => setSummaryTaxPct(v)}
+                              widthPx={56}
+                              className="min-w-[56px]"
+                            />
+                            <span className="pb-1 text-[10px] text-gray-600">%</span>
+                            <input
+                              type="text"
+                              readOnly
+                              value={documentSummary.taxAmt ? documentSummary.taxAmt.toFixed(2) : ''}
+                              className="w-[88px] shrink-0 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:w-[100px] sm:text-xs"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
+                            Round Off
+                          </span>
+                          <SubInputField
+                            label=""
+                            type="number"
+                            widthPx={100}
+                            value={roundOffAdjInput}
+                            onChange={(e) => setRoundOffAdjInput(e.target.value)}
+                            className="max-w-[120px]"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
+                          <span className="shrink-0 text-[10px] font-bold text-gray-800 sm:text-[11px]">
+                            Net Amount
+                          </span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={documentSummary.net ? documentSummary.net.toFixed(2) : ''}
+                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-bold tabular-nums text-red-600 sm:max-w-[180px] sm:text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {saveSuccessModalOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/25"
+          onClick={() => setSaveSuccessModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="save-success-title"
+        >
+          <div
+            className="mx-4 w-full max-w-xs rounded-lg border border-green-200 bg-white px-4 py-3 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-[11px] font-bold text-green-700">
+                ✓
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 id="save-success-title" className="text-sm font-semibold text-green-800">
+                  Saved
+                </h3>
+                <p className="mt-0.5 text-xs text-gray-700">{saveSuccessMessage}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSaveSuccessModalOpen(false)}
+                className="rounded p-1 text-gray-500 hover:bg-gray-100"
+                aria-label="Close success message"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sales Terms Modal */}
       {salesTermsOpen && (
@@ -849,21 +1852,25 @@ const rowsWithTotal = [
             <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
               <div className="flex items-center gap-2 sm:gap-[10px]">
                 <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Sales
+                  Terms text
                 </label>
                 <input
                   type="text"
-                  placeholder="Sales"
+                  placeholder="Printed / saved terms"
+                  value={salesTermsText}
+                  onChange={(e) => setSalesTermsText(e.target.value)}
                   className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                 />
               </div>
               <div className="flex items-center gap-2 sm:gap-[10px]">
                 <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Agent name
+                  Agent ID
                 </label>
                 <input
-                  type="text"
-                  placeholder="Agent name"
+                  type="number"
+                  placeholder="Agent master ID"
+                  value={agentId}
+                  onChange={(e) => setAgentId(e.target.value)}
                   className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                 />
               </div>
@@ -874,6 +1881,8 @@ const rowsWithTotal = [
                 <input
                   type="number"
                   placeholder="%"
+                  value={agentCommissionPct}
+                  onChange={(e) => setAgentCommissionPct(e.target.value)}
                   className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                 />
               </div>
@@ -884,6 +1893,8 @@ const rowsWithTotal = [
                 <input
                   type="number"
                   placeholder="Amount"
+                  value={agentCommissionAmt}
+                  onChange={(e) => setAgentCommissionAmt(e.target.value)}
                   className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                 />
               </div>
@@ -907,6 +1918,11 @@ const rowsWithTotal = [
             <div className="flex justify-center gap-3">
               <button
                 type="button"
+                onClick={() => {
+                  setAgentId('');
+                  setAgentCommissionPct('');
+                  setAgentCommissionAmt('');
+                }}
                 className="sale-btn-red-outline flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-colors"
                 style={{ borderColor: primary, color: primary }}
               >
@@ -922,6 +1938,286 @@ const rowsWithTotal = [
                 Pay now
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quotation picker — list + search */}
+      {quotationModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2"
+          onClick={() => setQuotationModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quotation-modal-title"
+        >
+          <div
+            className="relative flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setQuotationModalOpen(false)}
+              className="absolute right-2 top-2 z-10 rounded p-1 text-gray-500 hover:bg-gray-100"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2
+              id="quotation-modal-title"
+              className="border-b border-gray-100 px-4 py-3 pr-10 text-sm font-bold"
+              style={{ color: primary }}
+            >
+              Load quotation
+            </h2>
+            <div className="border-b border-gray-100 px-4 py-2">
+              <input
+                type="search"
+                value={quotationModalFilter}
+                onChange={(e) => setQuotationModalFilter(e.target.value)}
+                placeholder="Filter by quotation no…"
+                className="w-full rounded border border-gray-200 px-3 py-2 text-[12px] outline-none"
+                autoComplete="off"
+              />
+              {!n(stationId) ? (
+                <p className="mt-2 text-[10px] text-amber-800">Select a station first.</p>
+              ) : (
+                <p className="mt-1 text-[10px] text-gray-500">
+                  {quotationList.length} quotation(s) {n(customerId) ? 'for selected customer' : 'for this station'}
+                </p>
+              )}
+            </div>
+            <ul className="min-h-0 max-h-[50vh] flex-1 overflow-y-auto text-left text-[11px]">
+              {filteredQuotationList.length === 0 ? (
+                <li className="px-4 py-8 text-center text-gray-500">No quotations match.</li>
+              ) : (
+                filteredQuotationList.map((q) => (
+                  <li
+                    key={q.quotationId != null ? `qid-${q.quotationId}` : `qno-${q.quotationNo}`}
+                    className="border-b border-gray-100"
+                  >
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 text-left hover:bg-rose-50/60"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        void handleLoadQuotation(q);
+                      }}
+                    >
+                      <span className="font-semibold text-gray-900">QTN {q.quotationNo}</span>
+                      {q.customerId ? (
+                        <span className="mt-0.5 block text-[10px] text-gray-500">Customer #{q.customerId}</span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* DO picker — list + search */}
+      {doModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2"
+          onClick={() => setDoModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="do-modal-title"
+        >
+          <div
+            className="relative flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setDoModalOpen(false)}
+              className="absolute right-2 top-2 z-10 rounded p-1 text-gray-500 hover:bg-gray-100"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2
+              id="do-modal-title"
+              className="border-b border-gray-100 px-4 py-3 pr-10 text-sm font-bold"
+              style={{ color: primary }}
+            >
+              Load delivery order
+            </h2>
+            <div className="border-b border-gray-100 px-4 py-2">
+              <input
+                type="search"
+                value={doModalFilter}
+                onChange={(e) => setDoModalFilter(e.target.value)}
+                placeholder="Filter by DO no…"
+                className="w-full rounded border border-gray-200 px-3 py-2 text-[12px] outline-none"
+                autoComplete="off"
+              />
+              {!n(stationId) ? (
+                <p className="mt-2 text-[10px] text-amber-800">Select a station first.</p>
+              ) : (
+                <p className="mt-1 text-[10px] text-gray-500">
+                  {doList.length} delivery order(s) {n(customerId) ? 'for selected customer' : 'for this station'}
+                </p>
+              )}
+            </div>
+            <ul className="min-h-0 max-h-[50vh] flex-1 overflow-y-auto text-left text-[11px]">
+              {filteredDoList.length === 0 ? (
+                <li className="px-4 py-8 text-center text-gray-500">No delivery orders match.</li>
+              ) : (
+                filteredDoList.map((d) => (
+                  <li
+                    key={d.doId != null ? `did-${d.doId}` : `dno-${d.doNo}`}
+                    className="border-b border-gray-100"
+                  >
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 text-left hover:bg-rose-50/60"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        void handleLoadDO(d);
+                      }}
+                    >
+                      <span className="font-semibold text-gray-900">DO {d.doNo}</span>
+                      {d.customerId ? (
+                        <span className="mt-0.5 block text-[10px] text-gray-500">Customer #{d.customerId}</span>
+                      ) : null}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Product search — opened from Short description / Barcode fields */}
+      {productSearchOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2"
+          onClick={() => setProductSearchOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="product-search-title"
+        >
+          <div
+            className="relative flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setProductSearchOpen(false)}
+              className="absolute right-2 top-2 z-10 rounded p-1 text-gray-500 hover:bg-gray-100"
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2
+              id="product-search-title"
+              className="border-b border-gray-100 px-4 py-3 pr-10 text-sm font-bold"
+              style={{ color: primary }}
+            >
+              Find product
+            </h2>
+            <div className="border-b border-gray-100 px-4 py-2">
+              {!n(stationId) ? (
+                <p className="mb-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[10px] text-amber-900">
+                  Select a station on the right before searching products.
+                </p>
+              ) : null}
+              <div className="mb-2 flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setProductSearchMode('description')}
+                  className={`rounded border px-2 py-1 text-[10px] font-medium sm:text-[11px] ${
+                    productSearchMode === 'description'
+                      ? 'border-transparent text-white'
+                      : 'border-gray-200 bg-white text-gray-700'
+                  }`}
+                  style={
+                    productSearchMode === 'description'
+                      ? { backgroundColor: primary, borderColor: primary }
+                      : undefined
+                  }
+                >
+                  By description
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductSearchMode('barcode')}
+                  className={`rounded border px-2 py-1 text-[10px] font-medium sm:text-[11px] ${
+                    productSearchMode === 'barcode'
+                      ? 'border-transparent text-white'
+                      : 'border-gray-200 bg-white text-gray-700'
+                  }`}
+                  style={
+                    productSearchMode === 'barcode'
+                      ? { backgroundColor: primary, borderColor: primary }
+                      : undefined
+                  }
+                >
+                  By barcode
+                </button>
+              </div>
+              <label className="sr-only" htmlFor="product-search-input">
+                Search products
+              </label>
+              <input
+                id="product-search-input"
+                ref={productSearchInputRef}
+                type="text"
+                value={productSearchQuery}
+                onChange={(e) => setProductSearchQuery(e.target.value)}
+                placeholder={
+                  productSearchMode === 'barcode'
+                    ? 'Scan or type barcode…'
+                    : 'Type name or description…'
+                }
+                className="w-full rounded border border-gray-200 px-3 py-2 text-[12px] outline-none focus:border-gray-400"
+                autoComplete="off"
+              />
+              <p className="mt-1 text-[10px] text-gray-500">
+                {productSearchLoading
+                  ? 'Searching…'
+                  : productSearchQuery.trim()
+                    ? `${productSearchResults.length} match(es)`
+                    : 'Type to search — results appear as you type'}
+              </p>
+            </div>
+            <ul className="min-h-0 flex-1 overflow-y-auto text-left text-[11px]">
+              {!productSearchLoading &&
+                productSearchQuery.trim() &&
+                productSearchResults.length === 0 &&
+                n(stationId) > 0 && (
+                  <li className="px-4 py-6 text-center text-[11px] text-gray-500">No products found.</li>
+                )}
+              {productSearchResults.map((it) => (
+                <li key={`${it.productId}-${it.uniqueMultiProductId}`} className="border-b border-gray-100">
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2.5 text-left hover:bg-rose-50/60"
+                    onClick={() => applyLookupItem(it)}
+                  >
+                    <span className="font-medium text-gray-900">
+                      {it.shortDescription || it.description || '—'}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] text-gray-500">
+                      #{it.productId} · {it.barCode || '—'} · Stock {it.qtyOnHand ?? '—'} · {it.unitPrice != null ? `${it.unitPrice}` : '—'}{' '}
+                      / unit
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
