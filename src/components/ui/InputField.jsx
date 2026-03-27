@@ -4,7 +4,7 @@ import { inputField, colors } from '../../constants/theme';
 /**
  * Input field with label above. Standard size (165.13 x 20.08).
  */
-export default function InputField({ label, widthPx, type, className, ...props }) {
+export default function InputField({ label, widthPx, type, className, fullWidth, ...props }) {
   const boxWidth = widthPx ? `${widthPx}px` : inputField.box.width;
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
@@ -21,7 +21,8 @@ export default function InputField({ label, widthPx, type, className, ...props }
           borderRadius: inputField.box.borderRadius,
           minHeight: '24px',
           height: 'auto',
-          width: `min(100%, ${boxWidth})`,
+          width: fullWidth ? '100%' : `min(100%, ${boxWidth})`,
+          maxWidth: fullWidth ? '100%' : undefined,
         }}
         {...props}
       />

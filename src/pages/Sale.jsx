@@ -13,6 +13,7 @@ import DeleteActionIcon from '../assets/icons/delete2.svg';
 import PayIcon from '../assets/icons/pay.svg';
 import RemoveIcon from '../assets/icons/remove.svg';
 import { InputField, SubInputField, DropdownInput, Switch, CommonTable } from '../components/ui';
+import { alertSuccess, alertWarning } from '../components/ui/sweetAlertTheme.jsx';
 import {
   fetchSalesEntryInit,
   fetchSalesEntryCustomers,
@@ -272,8 +273,6 @@ export default function Sale() {
   const [doModalFilter, setDoModalFilter] = useState('');
   const [apiError, setApiError] = useState('');
   const [apiSuccess, setApiSuccess] = useState('');
-  const [saveSuccessModalOpen, setSaveSuccessModalOpen] = useState(false);
-  const [saveSuccessMessage, setSaveSuccessMessage] = useState('Bill saved successfully');
   const [saving, setSaving] = useState(false);
 
   const [salesTermsOpen, setSalesTermsOpen] = useState(false);
@@ -354,12 +353,6 @@ export default function Sale() {
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (!saveSuccessModalOpen) return undefined;
-    const id = setTimeout(() => setSaveSuccessModalOpen(false), 1800);
-    return () => clearTimeout(id);
-  }, [saveSuccessModalOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -821,21 +814,29 @@ export default function Sale() {
     clearApiMessages();
     const sid = n(stationId);
     if (!sid) {
-      setApiError('Select a station');
+      const message = 'Select a station';
+      setApiError(message);
+      await alertWarning(message, { title: 'Save failed' });
       return;
     }
     const needsAccount = paymentMode === 'CASH' || paymentMode === 'CREDITCARD';
     if (needsAccount && !n(accountHeadId)) {
-      setApiError('Select account head for CASH / CREDITCARD');
+      const message = 'Select account head for CASH / CREDITCARD';
+      setApiError(message);
+      await alertWarning(message, { title: 'Save failed' });
       return;
     }
     const items = lineItemsPayload();
     if (!items.length) {
-      setApiError('Add at least one line with quantity');
+      const message = 'Add at least one line with quantity';
+      setApiError(message);
+      await alertWarning(message, { title: 'Save failed' });
       return;
     }
     if (items.some((it) => !it.productId)) {
-      setApiError('Each line must have a product — use Lookup or load from QTN/DO');
+      const message = 'Each line must have a product — use Lookup or load from QTN/DO';
+      setApiError(message);
+      await alertWarning(message, { title: 'Save failed' });
       return;
     }
     const payload = {
@@ -893,11 +894,11 @@ export default function Sale() {
         /* lines stay as saved; salesChildId refresh optional */
       }
       setApiSuccess(res.message || 'Saved');
-      setSaveSuccessMessage(res.message || 'Bill saved successfully');
-      setSaveSuccessModalOpen(true);
+      await alertSuccess(res.message || 'Bill saved successfully');
     } catch (e) {
-      setSaveSuccessModalOpen(false);
-      setApiError(e.message || 'Save failed');
+      const message = e.message || 'Save failed';
+      setApiError(message);
+      await alertWarning(message, { title: 'Save failed' });
     } finally {
       setSaving(false);
     }
@@ -1148,7 +1149,7 @@ export default function Sale() {
   }
 
   return (
-    <div className="sale-page -mt-1">
+    <div className="sale-page -mt-2 sm:-mt-3">
       <style>{`
         .sale-btn-outline:hover {
           border-color: ${primary} !important;
@@ -1178,7 +1179,7 @@ export default function Sale() {
         }
       `}</style>
 
-      <div className="mt-0 mb-0 flex flex-1 min-h-0 flex-col overflow-hidden px-0 sm:mt-0 sm:mb-0 sm:mx-[-6px] sm:px-0">
+      <div className="mt-0 mb-0 flex flex-1 min-h-0 flex-col overflow-y-auto px-0 pb-2 sm:mt-0 sm:mb-0 sm:mx-[-6px] sm:px-0">
         <div className="flex flex-1 min-h-0 flex-col gap-1 overflow-hidden rounded-lg border border-gray-200 bg-white p-1 shadow-sm sm:gap-1.5 sm:p-1.5">
 
           {/* Header */}
@@ -1187,7 +1188,7 @@ export default function Sale() {
               Sales
             </h1>
 
-            <div className="flex gap-2 flex-wrap items-center">
+            <div className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
               {postStatus && (
                 <span className="rounded border border-gray-200 px-2 py-0.5 text-[9px] text-gray-600 sm:text-[10px]">
                   {postStatus}
@@ -1206,23 +1207,15 @@ export default function Sale() {
               )}
               <button
                 type="button"
-                disabled={saving}
-                onClick={handleSaveBill}
-                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-semibold sm:px-2 sm:py-1 sm:text-[11px]"
-                style={{ borderColor: primary, color: primary }}
-              >
-                {saving ? 'Saving…' : 'Save bill'}
-              </button>
-              <button
-                type="button"
-                className="sale-btn-outline flex h-7 items-center justify-center rounded border border-gray-300 bg-white px-1.5 sm:h-8 sm:px-2"
+                className="flex h-8 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-[10px] font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
               >
                 <img src={PrinterIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                Print
               </button>
               <button
                 type="button"
                 onClick={() => runPosting(cancelSalesEntry, 'Cancel')}
-                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                className="flex h-8 items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 text-[10px] font-medium text-rose-700 shadow-sm transition-colors hover:bg-rose-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
               >
                 <img src={CancelIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Cancel
@@ -1230,7 +1223,7 @@ export default function Sale() {
               <button
                 type="button"
                 onClick={() => runPosting(postSalesEntry, 'Post')}
-                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                className="flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-[10px] font-medium text-emerald-700 shadow-sm transition-colors hover:bg-emerald-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
               >
                 <img src={PostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Post
@@ -1238,10 +1231,24 @@ export default function Sale() {
               <button
                 type="button"
                 onClick={() => runPosting(unpostSalesEntry, 'Unpost')}
-                className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                className="flex h-8 items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-medium text-amber-700 shadow-sm transition-colors hover:bg-amber-100 active:scale-[0.98] sm:h-9 sm:px-3 sm:text-[11px]"
               >
                 <img src={UnpostIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 Unpost
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSaveBill}
+                className="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[10px] font-semibold text-white shadow-sm transition-all hover:brightness-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:h-9 sm:px-3 sm:text-[11px]"
+                style={{ borderColor: primary, backgroundColor: primary }}
+              >
+                <img
+                  src={SaleIcon}
+                  alt=""
+                  className="h-4 w-4 shrink-0 brightness-0 invert sm:h-[18px] sm:w-[18px]"
+                />
+                {saving ? 'Saving…' : 'Save bill'}
               </button>
             </div>
           </div>
@@ -1383,26 +1390,26 @@ export default function Sale() {
 
             {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
             <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0 xl:overflow-hidden">
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
-                <div className="grid w-full shrink-0 grid-cols-2 gap-1.5 sm:gap-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto sm:gap-2">
+                <div className="grid w-full shrink-0 grid-cols-2 gap-1 sm:gap-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       setQuotationModalFilter('');
                       setQuotationModalOpen(true);
                     }}
-                    className="sale-qtn-do-btn group flex min-h-[40px] items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-2 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[44px] sm:gap-2 sm:px-2.5"
+                    className="sale-qtn-do-btn group flex min-h-[34px] items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-1.5 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[38px] sm:gap-1.5 sm:px-2"
                   >
                     <img
                       src={QuotationIcon}
                       alt=""
-                      className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-4 sm:w-4"
+                      className="h-3 w-3 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
                       aria-hidden
                     />
-                    <span className="text-[10px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[11px]">
+                    <span className="text-[9px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[10px]">
                       Quotation ({quotationRefs.length})
                     </span>
-                    <span className="max-w-[78px] truncate text-[9px] leading-none text-gray-500 sm:max-w-[92px]">
+                    <span className="max-w-[72px] truncate text-[8px] leading-none text-gray-500 sm:max-w-[86px]">
                       {quotationRefSummary}
                     </span>
                   </button>
@@ -1412,159 +1419,163 @@ export default function Sale() {
                       setDoModalFilter('');
                       setDoModalOpen(true);
                     }}
-                    className="sale-qtn-do-btn group flex min-h-[40px] items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-2 py-2 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[44px] sm:gap-2 sm:px-2.5"
+                    className="sale-qtn-do-btn group flex min-h-[34px] items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-1.5 text-center transition-colors duration-150 hover:border-gray-300 hover:bg-gray-50/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 focus-visible:ring-offset-1 active:scale-[0.99] sm:min-h-[38px] sm:gap-1.5 sm:px-2"
                   >
                     <img
                       src={DeliveryIcon}
                       alt=""
-                      className="h-3.5 w-3.5 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-4 sm:w-4"
+                      className="h-3 w-3 shrink-0 opacity-70 transition-opacity group-hover:opacity-100 sm:h-3.5 sm:w-3.5"
                       aria-hidden
                     />
-                    <span className="text-[10px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[11px]">
+                    <span className="text-[9px] font-semibold leading-none tracking-tight text-gray-800 sm:text-[10px]">
                       DO ({doRefs.length})
                     </span>
-                    <span className="max-w-[78px] truncate text-[9px] leading-none text-gray-500 sm:max-w-[92px]">
+                    <span className="max-w-[72px] truncate text-[8px] leading-none text-gray-500 sm:max-w-[86px]">
                       {doRefSummary}
                     </span>
                   </button>
                 </div>
 
-                {/* Bill / Customer section */}
-                <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                  <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Row 1: Bill no + load + LPO + local bill */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <div className="flex min-w-0 flex-col gap-[6px]">
-                        <InputField label="Bill no" value={billNo} readOnly className="bg-gray-50" />
+                {/* Bill / Customer — full-width fields in 2-col grid to avoid fixed pixel gaps */}
+                <div className="overflow-hidden rounded border border-gray-200 bg-white p-1 sm:p-1.5">
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 sm:gap-x-1.5 sm:gap-y-0.5">
+                    <div className="min-w-0">
+                      <InputField label="Bill no" value={billNo} readOnly fullWidth className="bg-gray-50" />
+                    </div>
+                    <div className="flex min-w-0 items-end gap-1">
+                      <div className="min-w-0 flex-1">
+                        <SubInputField
+                          label="Sales ID"
+                          value={loadSalesIdInput}
+                          onChange={(e) => setLoadSalesIdInput(e.target.value)}
+                          fullWidth
+                        />
                       </div>
-                      <SubInputField
-                        label="Sales ID"
-                        value={loadSalesIdInput}
-                        onChange={(e) => setLoadSalesIdInput(e.target.value)}
-                        widthPx={72}
-                      />
-                      <div className="flex shrink-0 items-end pb-0.5">
-                        <button
-                          type="button"
-                          onClick={handleLoadBill}
-                          className="rounded border px-2 py-1 text-[8px] font-medium sm:text-[9px]"
-                          style={{ borderColor: primary, color: primary }}
-                        >
-                          Load
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={handleLoadBill}
+                        className="mb-[1px] h-[22px] shrink-0 rounded border px-1.5 text-[9px] font-medium sm:h-[24px] sm:px-2 sm:text-[10px]"
+                        style={{ borderColor: primary, color: primary }}
+                      >
+                        Load
+                      </button>
+                    </div>
+                    <div className="min-w-0">
                       <SubInputField
                         label="Cust.LPO"
                         value={customerLpo}
                         onChange={(e) => setCustomerLpo(e.target.value)}
+                        fullWidth
                       />
+                    </div>
+                    <div className="min-w-0">
                       <SubInputField
                         label="Local bill no"
                         value={localBillNo}
                         onChange={(e) => setLocalBillNo(e.target.value)}
+                        fullWidth
                       />
                     </div>
-
-                    {/* Row 2: Customer + Payment */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                    <div className="min-w-0">
                       <DropdownInput
                         label="Customer"
                         options={customerOptions}
                         value={customerId}
                         onChange={(v) => setCustomerId(v)}
-                        widthPx={160}
-                        className="min-w-[120px] sm:min-w-[140px]"
+                        fullWidth
+                        className="min-w-0 w-full"
                       />
+                    </div>
+                    <div className="min-w-0">
                       <DropdownInput
                         label="Payment"
                         options={paymentOptions}
                         value={paymentMode}
                         onChange={(v) => setPaymentMode(v)}
-                        widthPx={120}
+                        fullWidth
+                        className="min-w-0 w-full"
                       />
                     </div>
-
-                    {/* Row 3: Account head + card fields */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                    <div className="min-w-0">
                       <DropdownInput
                         label="Account head"
                         options={accountHeadOptions}
                         placeholder="Select"
                         value={accountHeadId}
                         onChange={(v) => setAccountHeadId(v)}
-                        widthPx={180}
-                        className="min-w-[140px]"
+                        fullWidth
+                        className="min-w-0 w-full"
                       />
-                      <SubInputField label="Creditcard no" widthPx={88} />
-                      <SubInputField label="Card type" widthPx={88} />
                     </div>
-
-                    {/* Row 4: Cashier + Invoice amt + dates */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                    <div className="min-w-0">
+                      <SubInputField label="Creditcard no" fullWidth />
+                    </div>
+                    <div className="min-w-0">
+                      <SubInputField label="Card type" fullWidth />
+                    </div>
+                    <div className="min-w-0">
                       <DropdownInput
                         label="Cashier (salesman)"
                         options={salesManOptions}
                         placeholder="Select"
                         value={salesManId}
                         onChange={(v) => setSalesManId(v)}
-                        widthPx={140}
+                        fullWidth
+                        className="min-w-0 w-full"
                       />
+                    </div>
+                    <div className="min-w-0">
                       <SubInputField
                         label="Invoice amt (net)"
                         value={documentSummary.net ? documentSummary.net.toFixed(2) : ''}
                         readOnly
+                        fullWidth
                         className="bg-gray-50 text-red-600"
                       />
+                    </div>
+                    <div className="min-w-0">
                       <SubInputField
                         label="Bill date"
                         type="date"
                         value={billDate}
                         onChange={(e) => setBillDate(e.target.value)}
-                        widthPx={118}
+                        fullWidth
                       />
                     </div>
-
-                    {/* Row 5: Station + Counter */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
+                    <div className="min-w-0">
                       <DropdownInput
                         label="Station"
                         options={stationOptions}
                         value={stationId}
                         onChange={(v) => setStationId(v)}
-                        widthPx={160}
-                        className="min-w-[120px]"
+                        fullWidth
+                        className="min-w-0 w-full"
                       />
+                    </div>
+                    <div className="min-w-0">
                       <SubInputField
                         label="Counter"
                         value={counterNo}
                         onChange={(e) => setCounterNo(e.target.value)}
-                        widthPx={64}
+                        fullWidth
                       />
                     </div>
-
-                    {/* Row 6: New invoice */}
-                    <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
-                      <button
-                        type="button"
-                        onClick={handleNewInvoice}
-                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-                      >
-                        <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                        New invoice
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleNewInvoice}
+                      className="sale-btn-red-outline col-span-1 flex w-full items-center justify-center gap-1 rounded border py-0.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:col-span-2 sm:py-1 sm:text-[10px]"
+                      style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
+                    >
+                      <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+                      New invoice
+                    </button>
                   </div>
                 </div>
 
-
-
-
-
-<button
+                <button
                   type="button"
                   onClick={() => setSalesTermsOpen(true)}
-                  className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
+                  className="sale-btn-primary mt-0.5 w-full rounded border px-2 py-1 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]"
                   style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
                 >
                   Sales terms
@@ -1572,16 +1583,13 @@ export default function Sale() {
 
 
 
-
-
-
                 {/* Payment + Total summary (tabs) */}
-                <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white sm:mt-[8px]">
+                <div className="mt-0.5 overflow-hidden rounded border border-gray-200 bg-white sm:mt-1">
                   <div className="flex border-b border-gray-200">
                     <button
                       type="button"
                       onClick={() => setSummaryTab('payment')}
-                      className={`min-h-[36px] flex-1 px-2 py-2 text-[10px] font-bold transition-colors sm:text-[11px] ${
+                      className={`min-h-[30px] flex-1 px-2 py-1.5 text-[9px] font-bold transition-colors sm:min-h-[32px] sm:text-[10px] ${
                         summaryTab === 'payment' ? 'bg-white' : 'bg-gray-50 text-gray-500'
                       }`}
                       style={{
@@ -1594,7 +1602,7 @@ export default function Sale() {
                     <button
                       type="button"
                       onClick={() => setSummaryTab('totals')}
-                      className={`min-h-[36px] flex-1 px-2 py-2 text-[10px] font-bold transition-colors sm:text-[11px] ${
+                      className={`min-h-[30px] flex-1 px-2 py-1.5 text-[9px] font-bold transition-colors sm:min-h-[32px] sm:text-[10px] ${
                         summaryTab === 'totals' ? 'bg-white' : 'bg-gray-50 text-gray-500'
                       }`}
                       style={{
@@ -1605,9 +1613,9 @@ export default function Sale() {
                       Total details
                     </button>
                   </div>
-                  <div className="p-2 sm:p-3">
+                  <div className="p-1.5 sm:p-2">
                     {summaryTab === 'payment' ? (
-                      <div className="flex flex-col gap-3 sm:gap-4">
+                      <div className="flex flex-col gap-2 sm:gap-2.5">
                         <div>
                           <p className="mb-1 text-[11px] font-bold sm:text-xs" style={{ color: primary }}>
                             Paid Amount
@@ -1777,43 +1785,6 @@ export default function Sale() {
           </div>
         </div>
       </div>
-
-      {saveSuccessModalOpen && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/25"
-          onClick={() => setSaveSuccessModalOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="save-success-title"
-        >
-          <div
-            className="mx-4 w-full max-w-xs rounded-lg border border-green-200 bg-white px-4 py-3 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start gap-2">
-              <div className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-[11px] font-bold text-green-700">
-                ✓
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 id="save-success-title" className="text-sm font-semibold text-green-800">
-                  Saved
-                </h3>
-                <p className="mt-0.5 text-xs text-gray-700">{saveSuccessMessage}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSaveSuccessModalOpen(false)}
-                className="rounded p-1 text-gray-500 hover:bg-gray-100"
-                aria-label="Close success message"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Sales Terms Modal */}
       {salesTermsOpen && (

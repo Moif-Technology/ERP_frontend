@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -6,17 +6,16 @@ import ModuleTabs from './ModuleTabs';
 import MiniToolbar from './MiniToolbar'; 
 
 const HEADER_HEIGHT = 30;
-const SIDEBAR_WIDTH_EXPANDED = 232;
-const SIDEBAR_WIDTH_COLLAPSED = 76;
-const SIDEBAR_STORAGE_KEY = 'ui_sidebar_collapsed';
+const SIDEBAR_WIDTH = 232;
+const HEADER_TOOLS_EXPANDED_KEY = 'ui_header_tools_expanded';
 
 export default function Layout({ children }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [headerToolsExpanded, setHeaderToolsExpanded] = useState(true);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-      if (raw === '1') setSidebarCollapsed(true);
+      const toolsRaw = localStorage.getItem(HEADER_TOOLS_EXPANDED_KEY);
+      if (toolsRaw === '0') setHeaderToolsExpanded(false);
     } catch {
       // ignore storage issues
     }
@@ -24,16 +23,11 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? '1' : '0');
+      localStorage.setItem(HEADER_TOOLS_EXPANDED_KEY, headerToolsExpanded ? '1' : '0');
     } catch {
       // ignore storage issues
     }
-  }, [sidebarCollapsed]);
-
-  const sidebarWidth = useMemo(
-    () => (sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED),
-    [sidebarCollapsed]
-  );
+  }, [headerToolsExpanded]);
 
   return (
     <div
@@ -50,14 +44,19 @@ export default function Layout({ children }) {
           position: 'sticky',
           top: HEADER_HEIGHT,
           zIndex: 40,
-          marginLeft: sidebarWidth,
+          marginLeft: SIDEBAR_WIDTH,
           transition: 'margin-left 180ms ease',
         }}
       >
-        <ModuleTabs />
-        <div className="mt-1">
-          <MiniToolbar />
-        </div>
+        <ModuleTabs
+          expanded={headerToolsExpanded}
+          onExpandedChange={setHeaderToolsExpanded}
+        />
+        {headerToolsExpanded ? (
+          <div className="mt-1">
+            <MiniToolbar />
+          </div>
+        ) : null}
       </div>
       <div
         style={{
@@ -65,16 +64,12 @@ export default function Layout({ children }) {
           minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
         }}
       >
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          width={sidebarWidth}
-          onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
-        />
+        <Sidebar width={SIDEBAR_WIDTH} />
         <main
           style={{
             flex: 1,
             minWidth: 0,
-            marginLeft: sidebarWidth,
+            marginLeft: SIDEBAR_WIDTH,
             transition: 'margin-left 180ms ease',
             padding: '24px 28px 32px',
           }}
