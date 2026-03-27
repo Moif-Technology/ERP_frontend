@@ -2,38 +2,30 @@ import React, { useMemo, useState } from 'react';
 import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
-import PostIcon from '../assets/icons/post.svg';
-import UnpostIcon from '../assets/icons/unpost.svg';
+import EditIcon from '../assets/icons/edit.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import EditIcon from '../assets/icons/edit.svg';
 import SaleIcon from '../assets/icons/sales.svg';
 import { InputField, SubInputField, DropdownInput, DateInputField, Switch, CommonTable } from '../components/ui';
 
 export default function Purchase() {
   const [tableRows, setTableRows] = useState([
-    ['1', 'OR-001', 'P-101', 'Product A', 'Box Pack', '120.00', '5', '10', '1', '118.00', '130.00', '5', '65.00', '1235.00', '5', '61.75', '1296.75'],
+    ['1', 'OR-001', 'P-101', 'Product A', '10', 'PCS', '5', '120.00', '5', '118.00', '1235.00', '5', '61.75', '1296.75'],
   ]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [editingRowData, setEditingRowData] = useState([]);
   const [itemForm, setItemForm] = useState({
     ownRefNo: '',
-    supRefNo: '',
-    productCode: '',
+    barCode: '',
     shortDescription: '',
-    pack: '',
-    serialNo: '',
-    packetDetails: '',
-    lastPurchCost: '',
-    lpoQty: '',
+    uom: 'PCS',
+    packQty: '',
     qty: '',
-    focQty: '',
+    baseCost: '',
     unitCost: '',
-    sellingPrice: '',
     discPercent: '',
-    disc: '',
     subTotal: '',
     vatPercent: '',
     vatAmount: '',
@@ -81,17 +73,14 @@ export default function Purchase() {
     const newRow = [
       String(tableRows.length + 1),
       itemForm.ownRefNo || '-',
-      itemForm.productCode || '-',
+      itemForm.barCode || '-',
       itemForm.shortDescription || '-',
-      itemForm.packetDetails || '-',
-      itemForm.lastPurchCost || '0.00',
-      itemForm.lpoQty || '0',
       itemForm.qty || '0',
-      itemForm.focQty || '0',
-      itemForm.unitCost || '0.00',
-      itemForm.sellingPrice || '0.00',
+      itemForm.uom || '-',
+      itemForm.packQty || '0',
+      itemForm.baseCost || '0.00',
       itemForm.discPercent || '0',
-      itemForm.disc || '0.00',
+      itemForm.unitCost || '0.00',
       itemForm.subTotal || '0.00',
       itemForm.vatPercent || '0',
       itemForm.vatAmount || '0.00',
@@ -100,20 +89,14 @@ export default function Purchase() {
     setTableRows((prev) => [newRow, ...prev]);
     setItemForm({
       ownRefNo: '',
-      supRefNo: '',
-      productCode: '',
+      barCode: '',
       shortDescription: '',
-      pack: '',
-      serialNo: '',
-      packetDetails: '',
-      lastPurchCost: '',
-      lpoQty: '',
+      uom: 'PCS',
+      packQty: '',
       qty: '',
-      focQty: '',
+      baseCost: '',
       unitCost: '',
-      sellingPrice: '',
       discPercent: '',
-      disc: '',
       subTotal: '',
       vatPercent: '',
       vatAmount: '',
@@ -155,30 +138,34 @@ export default function Purchase() {
     const n = tableRows.length;
     if (n === 0) {
       return {
-        totalDisc: 0,
-        totalSub: 0,
-        avgTaxPct: 0,
-        totalTaxAmt: 0,
+        avgDiscPct: 0,
+        totalUnitCost: 0,
+        totalMid: 0,
+        avgVatPct: 0,
+        totalVatAmt: 0,
         totalLine: 0,
       };
     }
-    let totalDisc = 0;
-    let totalSub = 0;
-    let sumTaxPct = 0;
-    let totalTaxAmt = 0;
+    let sumDiscPct = 0;
+    let totalUnitCost = 0;
+    let totalMid = 0;
+    let sumVatPct = 0;
+    let totalVatAmt = 0;
     let totalLine = 0;
     tableRows.forEach((row) => {
-      totalDisc += parseCellNum(row[12]);
-      totalSub += parseCellNum(row[13]);
-      sumTaxPct += parseCellNum(row[14]);
-      totalTaxAmt += parseCellNum(row[15]);
-      totalLine += parseCellNum(row[16]);
+      sumDiscPct += parseCellNum(row[8]);
+      totalUnitCost += parseCellNum(row[9]);
+      totalMid += parseCellNum(row[10]);
+      sumVatPct += parseCellNum(row[11]);
+      totalVatAmt += parseCellNum(row[12]);
+      totalLine += parseCellNum(row[13]);
     });
     return {
-      totalDisc,
-      totalSub,
-      avgTaxPct: sumTaxPct / n,
-      totalTaxAmt,
+      avgDiscPct: sumDiscPct / n,
+      totalUnitCost,
+      totalMid,
+      avgVatPct: sumVatPct / n,
+      totalVatAmt,
       totalLine,
     };
   }, [tableRows]);
@@ -210,6 +197,12 @@ export default function Purchase() {
           padding-left: 4px !important;
           padding-right: 4px !important;
         }
+        .purchase-table th:nth-child(5),
+        .purchase-table td:nth-child(5),
+        .purchase-table th:nth-child(6),
+        .purchase-table td:nth-child(6),
+        .purchase-table th:nth-child(7),
+        .purchase-table td:nth-child(7),
         .purchase-table th:nth-child(8),
         .purchase-table td:nth-child(8),
         .purchase-table th:nth-child(9),
@@ -223,13 +216,7 @@ export default function Purchase() {
         .purchase-table th:nth-child(13),
         .purchase-table td:nth-child(13),
         .purchase-table th:nth-child(14),
-        .purchase-table td:nth-child(14),
-        .purchase-table th:nth-child(15),
-        .purchase-table td:nth-child(15),
-        .purchase-table th:nth-child(16),
-        .purchase-table td:nth-child(16),
-        .purchase-table th:nth-child(17),
-        .purchase-table td:nth-child(17) {
+        .purchase-table td:nth-child(14) {
           text-align: center;
         }
         .purchase-table th:last-child,
@@ -254,7 +241,7 @@ export default function Purchase() {
             PURCHASE ENTRY
           </h1>
           <div className="flex flex-wrap items-center gap-2">
-            {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: PostIcon, label: 'Post' }, { icon: UnpostIcon, label: 'UnPost' }].map((btn) => (
+            {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: EditIcon, label: 'Edit' }].map((btn) => (
               <button
                 key={btn.label || 'print'}
                 type="button"
@@ -297,20 +284,20 @@ export default function Purchase() {
             <div className="flex flex-col gap-2.5">
               <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
                 <SubInputField label="Own Ref No" widthPx={80} value={itemForm.ownRefNo} onChange={(e) => updateItemForm('ownRefNo', e.target.value)} />
-                <SubInputField label="Sup Ref No" widthPx={80} value={itemForm.supRefNo} onChange={(e) => updateItemForm('supRefNo', e.target.value)} />
-                <SubInputField label="Product Code" widthPx={80} value={itemForm.productCode} onChange={(e) => updateItemForm('productCode', e.target.value)} />
+                <SubInputField label="Bar code" widthPx={80} value={itemForm.barCode} onChange={(e) => updateItemForm('barCode', e.target.value)} />
                 <InputField label="Short Description" widthPx={145} value={itemForm.shortDescription} onChange={(e) => updateItemForm('shortDescription', e.target.value)} />
-                <SubInputField label="Last purch cost" widthPx={80} value={itemForm.lastPurchCost} onChange={(e) => updateItemForm('lastPurchCost', e.target.value)} />
-                <SubInputField label="Lpo qty" widthPx={80} value={itemForm.lpoQty} onChange={(e) => updateItemForm('lpoQty', e.target.value)} />
-                <SubInputField label="Packet details" widthPx={100} value={itemForm.packetDetails} onChange={(e) => updateItemForm('packetDetails', e.target.value)} />
                 <SubInputField label="Qty" widthPx={64} value={itemForm.qty} onChange={(e) => updateItemForm('qty', e.target.value)} />
-              </div>
-              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
-                <SubInputField label="Foc Qty" widthPx={80} value={itemForm.focQty} onChange={(e) => updateItemForm('focQty', e.target.value)} />
-                <SubInputField label="Unit cost" widthPx={80} value={itemForm.unitCost} onChange={(e) => updateItemForm('unitCost', e.target.value)} />
-                <SubInputField label="Selling price" widthPx={80} value={itemForm.sellingPrice} onChange={(e) => updateItemForm('sellingPrice', e.target.value)} />
+                <DropdownInput
+                  label="UOM"
+                  options={['PCS', 'BOX', 'CTN', 'KG', 'LTR']}
+                  value={itemForm.uom}
+                  onChange={(val) => updateItemForm('uom', val)}
+                  widthPx={80}
+                />
+                <SubInputField label="Pack Qty" widthPx={80} value={itemForm.packQty} onChange={(e) => updateItemForm('packQty', e.target.value)} />
+                <SubInputField label="Base cost" widthPx={80} value={itemForm.baseCost} onChange={(e) => updateItemForm('baseCost', e.target.value)} />
                 <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
-                <SubInputField label="Disc." widthPx={80} value={itemForm.disc} onChange={(e) => updateItemForm('disc', e.target.value)} />
+                <SubInputField label="Unit cost" widthPx={80} value={itemForm.unitCost} onChange={(e) => updateItemForm('unitCost', e.target.value)} />
                 <SubInputField label="Sub. total" widthPx={80} value={itemForm.subTotal} onChange={(e) => updateItemForm('subTotal', e.target.value)} />
                 <DropdownInput
                   label="Vat %"
@@ -343,7 +330,7 @@ export default function Purchase() {
             <div className="min-h-0 overflow-y-auto max-h-[500px]">
               <CommonTable
                 className="purchase-table"
-                headers={['Sl no', 'Own Ref #', 'Product code', 'Short description', 'Packet details', 'Last purch cost', 'Lpo qty', 'Qty', 'Foc qty', 'Actual cost', 'Selling price', 'Disc%', 'Disc. amt', 'Sub total', 'Vat%', 'Vat amt', 'Total', 'Action']}
+                headers={['SL No', 'Own REF No', 'Barcode', 'shortDescription', 'Qty', 'UOM', 'pack qty', 'base cost', 'disc%', 'unit cost', 'total', 'vat%', 'Vat Amt', 'line total', 'Action']}
                 fitParentWidth
                 rows={[
                   ...tableRows.map((row, idx) => [
@@ -393,11 +380,12 @@ export default function Purchase() {
                     </div>,
                   ]),
                   [
-                    { content: 'Total', colSpan: 12, className: 'text-left font-bold' },
-                    tableTotals.totalDisc.toFixed(2),
-                    tableTotals.totalSub.toFixed(2),
-                    tableTotals.avgTaxPct.toFixed(2),
-                    tableTotals.totalTaxAmt.toFixed(2),
+                    { content: 'Total', colSpan: 8, className: 'text-left font-bold' },
+                    tableTotals.avgDiscPct.toFixed(2),
+                    tableTotals.totalUnitCost.toFixed(2),
+                    tableTotals.totalMid.toFixed(2),
+                    tableTotals.avgVatPct.toFixed(2),
+                    tableTotals.totalVatAmt.toFixed(2),
                     tableTotals.totalLine.toFixed(2),
                     '',
                   ],
@@ -433,23 +421,6 @@ export default function Purchase() {
                 <InputField label="Net Amount" defaultValue="00000.00" fullWidth />
               </div>
             </div>
-          </div>
-
-          <div className="grid w-full grid-cols-2 gap-2">
-            <button
-              type="button"
-              className="h-6 rounded border text-[10px] font-semibold text-white sm:h-7 sm:text-[11px]"
-              style={{ backgroundColor: primary, borderColor: primary }}
-            >
-              Lpo No
-            </button>
-            <button
-              type="button"
-              className="h-6 rounded border text-[10px] font-semibold text-white sm:h-7 sm:text-[11px]"
-              style={{ backgroundColor: primary, borderColor: primary }}
-            >
-              GRN
-            </button>
           </div>
 
           <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
@@ -571,23 +542,20 @@ export default function Purchase() {
             </div>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               {[
-                ['Sl no', selectedRow[0]],
-                ['Own Ref #', selectedRow[1]],
-                ['Product code', selectedRow[2]],
-                ['Short description', selectedRow[3]],
-                ['Packet details', selectedRow[4]],
-                ['Last purch cost', selectedRow[5]],
-                ['Lpo qty', selectedRow[6]],
-                ['Qty', selectedRow[7]],
-                ['Foc qty', selectedRow[8]],
-                ['Actual cost', selectedRow[9]],
-                ['Selling price', selectedRow[10]],
-                ['Disc%', selectedRow[11]],
-                ['Disc. amt', selectedRow[12]],
-                ['Sub total', selectedRow[13]],
-                ['Vat%', selectedRow[14]],
-                ['Vat amt', selectedRow[15]],
-                ['Total', selectedRow[16]],
+                ['SL No', selectedRow[0]],
+                ['Own REF No', selectedRow[1]],
+                ['Barcode', selectedRow[2]],
+                ['shortDescription', selectedRow[3]],
+                ['Qty', selectedRow[4]],
+                ['UOM', selectedRow[5]],
+                ['pack qty', selectedRow[6]],
+                ['base cost', selectedRow[7]],
+                ['disc%', selectedRow[8]],
+                ['unit cost', selectedRow[9]],
+                ['total', selectedRow[10]],
+                ['vat%', selectedRow[11]],
+                ['Vat Amt', selectedRow[12]],
+                ['line total', selectedRow[13]],
               ].map(([label, value]) => (
                 <React.Fragment key={label}>
                   <div className="font-semibold text-gray-700">{label}</div>

@@ -5,6 +5,7 @@ import Sale from './pages/Sale';
 import Quotation from './pages/Quotation';
 import DeliveryOrder from './pages/DeliveryOrder';
 import Purchase from './pages/Purchase';
+import PurchaseOrder from './pages/PurchaseOrder';
 
 export default function AppRoutes() {
   return (
@@ -16,6 +17,7 @@ export default function AppRoutes() {
       <Route path="/quotation" element={<Quotation />} />
       <Route path="/delivery-order" element={<DeliveryOrder />} />
       <Route path="/purchase" element={<Purchase />} />
+      <Route path="/purchase-order" element={<PurchaseOrder />} />
       <Route
         path="*"
         element={
