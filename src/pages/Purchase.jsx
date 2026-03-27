@@ -297,6 +297,8 @@ export default function Purchase() {
                 <SubInputField label="Pack Qty" widthPx={80} value={itemForm.packQty} onChange={(e) => updateItemForm('packQty', e.target.value)} />
                 <SubInputField label="Base cost" widthPx={80} value={itemForm.baseCost} onChange={(e) => updateItemForm('baseCost', e.target.value)} />
                 <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
+              </div>
+              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
                 <SubInputField label="Unit cost" widthPx={80} value={itemForm.unitCost} onChange={(e) => updateItemForm('unitCost', e.target.value)} />
                 <SubInputField label="Sub. total" widthPx={80} value={itemForm.subTotal} onChange={(e) => updateItemForm('subTotal', e.target.value)} />
                 <DropdownInput
@@ -308,8 +310,6 @@ export default function Purchase() {
                 />
                 <SubInputField label="Vat amount" widthPx={80} value={itemForm.vatAmount} onChange={(e) => updateItemForm('vatAmount', e.target.value)} />
                 <SubInputField label="Total" widthPx={80} value={itemForm.total} onChange={(e) => updateItemForm('total', e.target.value)} />
-              </div>
-              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
                 <div className="ml-auto flex items-end">
                   <button
                     type="button"
