@@ -3,17 +3,14 @@ import { colors } from '../constants/theme';
 import PrinterIcon from '../assets/icons/printer.svg';
 import CancelIcon from '../assets/icons/cancel.svg';
 import PostIcon from '../assets/icons/post.svg';
-import UnpostIcon from '../assets/icons/unpost.svg';
-import EditIcon from '../assets/icons/edit3.svg';
-import SaleIcon from '../assets/icons/invoice.svg';
+import LedgerIcon from '../assets/icons/ledger.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import PayIcon from '../assets/icons/pay.svg';
-import RemoveIcon from '../assets/icons/remove.svg';
-import { InputField, SubInputField, DropdownInput, Switch, CommonTable } from '../components/ui';
+import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable } from '../components/ui';
 
 // Helper: get product details from table row, use "-" for empty values
+// Row: [0 OwnRef, 1 Product Code, 2 Short description, ...]
 function getProductDetails(row, idx) {
   const orDash = (v) => (v != null && v !== '' ? String(v) : '-');
   return {
@@ -28,17 +25,22 @@ function getProductDetails(row, idx) {
     osBalance: orDash(null),
     receiptNo: orDash(null),
     location: orDash(null),
-    productName: orDash(row[0]),
+    productName: orDash(row[2]),
   };
 }
 
 const initialFormState = {
+  ownRef: '',
+  productCode: '',
   shortDescription: '',
-  hsCode: '',
-  qty: '',
+  serialNo: '',
+  packetDetails: '',
+  unit: '',
+  salesQty: '',
+  focQty: '',
+  returnQty: '',
   unitPrice: '',
   discPercent: '',
-  discPrice: '',
   discAmt: '',
   subTotal: '',
   taxPercent: '',
@@ -48,17 +50,43 @@ const initialFormState = {
   doNo: 'DO-001',
 };
 
-export default function Sale({ pageTitle = 'Sales', termsTitle = 'Sales terms' }) {
-  const [salesTermsOpen, setSalesTermsOpen] = useState(false);
-  const [saveTerms, setSaveTerms] = useState(false);
-  const [printTerms, setPrintTerms] = useState(false);
+const returnFormInitial = {
+  returnType: 'Full',
+  billNo: '',
+  counterNo: '',
+  billDate: '',
+  paymentMode: 'Cash',
+  station: 'Main',
+};
+
+const billPanelInitial = {
+  returnBillNo: '',
+  custLpo: '',
+  localBillNo: '',
+  customerName: '',
+  returnBillDate: '',
+  paymentDate: '',
+  creditCardNo: '',
+  creditCard: '',
+  cashierName: '',
+  invoiceAmt: '',
+  station: 'Main',
+  salesTerms: '',
+  counterNo: '',
+  paidAmount: '',
+  balanceAmount: '',
+};
+
+export default function Sale({ pageTitle = 'Sales', useReturnHeaderForm = false }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [saleRows, setSaleRows] = useState([
-    ['Product A', 'HS-1001', 2, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
-    ['Product B', 'HS-2034', 1, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
-    ['Service C', 'HS-9090', 3, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
+    ['OR-001', 'PC-1001', 'Product A', 'SN-001', 'pkt 10', 'PCS', 2, 0, 0, 120.0, 5, 12.0, 228.0, 18, 41.04, 269.04],
+    ['OR-002', 'PC-2034', 'Product B', 'SN-002', 'ea', 'EA', 1, 0, 0, 450.0, 10, 45.0, 405.0, 18, 72.9, 477.9],
+    ['OR-003', 'PC-9090', 'Service C', 'SN-003', '-', 'HR', 3, 0, 0, 80.0, 0, 0.0, 240.0, 5, 12.0, 252.0],
   ]);
   const [form, setForm] = useState(initialFormState);
+  const [returnForm, setReturnForm] = useState(returnFormInitial);
+  const [billPanel, setBillPanel] = useState(billPanelInitial);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const primary = colors.primary?.main || '#790728';
@@ -67,17 +95,22 @@ export default function Sale({ pageTitle = 'Sales', termsTitle = 'Sales terms' }
 
   const fillFormFromRow = (row) => {
     setForm({
-      shortDescription: String(row[0] ?? ''),
-      hsCode: String(row[1] ?? ''),
-      qty: String(row[2] ?? ''),
-      unitPrice: String(row[3] ?? ''),
-      discPercent: String(row[4] ?? ''),
-      discPrice: String(row[5] ?? ''),
-      discAmt: String(row[5] ?? ''),
-      subTotal: String(row[6] ?? ''),
-      taxPercent: String(row[7] ?? ''),
-      taxAmt: String(row[8] ?? ''),
-      total: String(row[9] ?? ''),
+      ownRef: String(row[0] ?? ''),
+      productCode: String(row[1] ?? ''),
+      shortDescription: String(row[2] ?? ''),
+      serialNo: String(row[3] ?? ''),
+      packetDetails: String(row[4] ?? ''),
+      unit: String(row[5] ?? ''),
+      salesQty: String(row[6] ?? ''),
+      focQty: String(row[7] ?? ''),
+      returnQty: String(row[8] ?? ''),
+      unitPrice: String(row[9] ?? ''),
+      discPercent: String(row[10] ?? ''),
+      discAmt: String(row[11] ?? ''),
+      subTotal: String(row[12] ?? ''),
+      taxPercent: String(row[13] ?? ''),
+      taxAmt: String(row[14] ?? ''),
+      total: String(row[15] ?? ''),
       qutnNo: 'QTN-001',
       doNo: 'DO-001',
     });
@@ -123,12 +156,18 @@ export default function Sale({ pageTitle = 'Sales', termsTitle = 'Sales terms' }
 
   const handleSaveOrUpdate = () => {
     const newRow = [
+      form.ownRef,
+      form.productCode,
       form.shortDescription,
-      form.hsCode,
-      form.qty ? Number(form.qty) : 0,
+      form.serialNo,
+      form.packetDetails,
+      form.unit,
+      form.salesQty ? Number(form.salesQty) : 0,
+      form.focQty ? Number(form.focQty) : 0,
+      form.returnQty ? Number(form.returnQty) : 0,
       form.unitPrice ? Number(form.unitPrice) : 0,
       form.discPercent ? Number(form.discPercent) : 0,
-      form.discPrice ? Number(form.discPrice) : 0,
+      form.discAmt ? Number(form.discAmt) : 0,
       form.subTotal ? Number(form.subTotal) : 0,
       form.taxPercent ? Number(form.taxPercent) : 0,
       form.taxAmt ? Number(form.taxAmt) : 0,
@@ -147,12 +186,44 @@ export default function Sale({ pageTitle = 'Sales', termsTitle = 'Sales terms' }
     setForm(initialFormState);
   };
 
-  // Calculate totals
-  const totalDiscAmt = saleRows.reduce((sum, r) => sum + r[5], 0);
-  const totalSubTotal = saleRows.reduce((sum, r) => sum + r[6], 0);
-  const totalTaxPercent = saleRows.reduce((sum, r) => sum + r[7], 0); // Sum of tax %
-  const totalTaxAmt = saleRows.reduce((sum, r) => sum + r[8], 0);
-  const totalLineTotal = saleRows.reduce((sum, r) => sum + r[9], 0);
+  const handleReturnAdd = () => {
+    const desc = `Return (${returnForm.returnType}) — Bill ${returnForm.billNo || '-'}`;
+    const newRow = [
+      '',
+      returnForm.counterNo || '-',
+      desc,
+      '',
+      '',
+      '',
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+    ];
+    if (editingRowIndex !== null) {
+      setSaleRows((prev) => {
+        const next = [...prev];
+        next[editingRowIndex] = newRow;
+        return next;
+      });
+      setEditingRowIndex(null);
+    } else {
+      setSaleRows((prev) => [newRow, ...prev]);
+    }
+  };
+
+  // Calculate totals (column indices: 11 Disc Amt, 12 Sub total, 13 Tax %, 14 Tax amt, 15 Line total)
+  const totalDiscAmt = saleRows.reduce((sum, r) => sum + Number(r[11] ?? 0), 0);
+  const totalSubTotal = saleRows.reduce((sum, r) => sum + Number(r[12] ?? 0), 0);
+  const totalTaxPercent = saleRows.reduce((sum, r) => sum + Number(r[13] ?? 0), 0);
+  const totalTaxAmt = saleRows.reduce((sum, r) => sum + Number(r[14] ?? 0), 0);
+  const totalLineTotal = saleRows.reduce((sum, r) => sum + Number(r[15] ?? 0), 0);
 
   // Build rows with action buttons
 // Build rows with action buttons and totals without labels
@@ -167,7 +238,22 @@ const rowsWithTotal = [
         style={{ accentColor: primary }}
       />
     </div>,
-    r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], 
+    r[0],
+    r[1],
+    r[2],
+    r[3],
+    r[4],
+    r[5],
+    r[6],
+    r[7],
+    r[8],
+    r[9],
+    r[10],
+    r[11],
+    r[12],
+    r[13],
+    r[14],
+    r[15],
 
     <div key={`action-${idx}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
       <button type="button" className="p-0.5" onClick={() => setSelectedProduct(getProductDetails(r, idx))}>
@@ -184,14 +270,21 @@ const rowsWithTotal = [
  
 
 [
-  <div key="total" className="text-right font-bold">Total</div>,
-  '', '', '', '', '',
-  totalDiscAmt.toFixed(2),   // Disc Amt
-  totalSubTotal.toFixed(2),  // Sub total
-  (totalTaxPercent / saleRows.length).toFixed(2), // Tax %
-  totalTaxAmt.toFixed(2),    // Tax amt
-  totalLineTotal.toFixed(2), // Line total
-  '' // No action buttons for totals row
+  {
+    content: (
+      <div key="total" className="text-left font-bold">
+        Total
+      </div>
+    ),
+    colSpan: 12,
+    className: 'align-middle font-bold',
+  },
+  totalDiscAmt.toFixed(2),
+  totalSubTotal.toFixed(2),
+  saleRows.length ? (totalTaxPercent / saleRows.length).toFixed(2) : '0.00',
+  totalTaxAmt.toFixed(2),
+  totalLineTotal.toFixed(2),
+  '',
 ]
 
 
@@ -254,13 +347,15 @@ const rowsWithTotal = [
                 <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button> */}
 
-              {[{ icon: PrinterIcon, },
+              {[
+                { icon: PrinterIcon },
                 { icon: CancelIcon, label: 'Cancel' },
+                { icon: LedgerIcon, label: 'Acc Post Temp' },
                 { icon: PostIcon, label: 'Post' },
-                { icon: UnpostIcon, label: 'Unpost' }
-              ].map((btn) => (
+              ].map((btn, idx) => (
                 <button
-                  key={btn.label}
+                  key={btn.label ?? `toolbar-${idx}`}
+                  type="button"
                   className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
                 >
                   <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -278,263 +373,429 @@ const rowsWithTotal = [
               {/* Form section - bordered */}
               <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
                 <div className="flex flex-col gap-2">
-                  {/* Row 1: Short Description + numeric fields */}
-                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
-                    <InputField
-                      label="Short Description"
-                      widthPx={128}
-                      value={form.shortDescription}
-                      onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Hs Code/Wt"
-                      type="number"
-                      widthPx={72}
-                      value={form.hsCode}
-                      onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Qty"
-                      type="number"
-                      value={form.qty}
-                      onChange={(e) => setForm((f) => ({ ...f, qty: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Unit Price"
-                      type="number"
-                      value={form.unitPrice}
-                      onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc.%"
-                      type="number"
-                      value={form.discPercent}
-                      onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc Price"
-                      type="number"
-                      value={form.discPrice}
-                      onChange={(e) => setForm((f) => ({ ...f, discPrice: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Disc.Amt"
-                      type="number"
-                      value={form.discAmt}
-                      onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
-                    />
-                  </div>
-
-                  {/* Row 2: Sub total, tax, totals, Qutn/DO dropdowns, Add — same flex + gap as row 1 */}
-                  <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
-                    <SubInputField
-                      label="Sub total"
-                      value={form.subTotal}
-                      onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Tax%"
-                      type="number"
-                      value={form.taxPercent}
-                      onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="T.Amt"
-                      type="number"
-                      value={form.taxAmt}
-                      onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
-                    />
-                    <SubInputField
-                      label="Total"
-                      type="number"
-                      value={form.total}
-                      onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
-                    />
-                    <DropdownInput
-                      label="Qutn. no"
-                      options={['QTN-001']}
-                      value={form.qutnNo}
-                      onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
-                    />
-                    <DropdownInput
-                      label="DO. no"
-                      options={['DO-001']}
-                      value={form.doNo}
-                      onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
-                    />
-                    <div className="flex shrink-0 items-end">
-                      <button
-                        type="button"
-                        className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
-                        style={{ backgroundColor: primary }}
-                        onClick={handleSaveOrUpdate}
-                      >
-                        {editingRowIndex !== null ? 'Update' : 'Add'}
-                      </button>
+                  {useReturnHeaderForm ? (
+                    <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                      <DropdownInput
+                        label="Return type"
+                        options={['Full', 'Partial', 'Credit note', 'Exchange']}
+                        value={returnForm.returnType}
+                        onChange={(v) => setReturnForm((f) => ({ ...f, returnType: v }))}
+                        widthPx={120}
+                      />
+                      <SubInputField
+                        label="Bill no"
+                        widthPx={88}
+                        value={returnForm.billNo}
+                        onChange={(e) => setReturnForm((f) => ({ ...f, billNo: e.target.value }))}
+                      />
+                      <SubInputField
+                        label="Counter no"
+                        widthPx={88}
+                        value={returnForm.counterNo}
+                        onChange={(e) => setReturnForm((f) => ({ ...f, counterNo: e.target.value }))}
+                      />
+                      <DateInputField
+                        label="Bill date"
+                        widthPx={118}
+                        value={returnForm.billDate}
+                        onChange={(v) => setReturnForm((f) => ({ ...f, billDate: v }))}
+                      />
+                      <DropdownInput
+                        label="Payment mode"
+                        options={['Cash', 'Card', 'Bank Transfer', 'Credit', 'Cheque']}
+                        value={returnForm.paymentMode}
+                        onChange={(v) => setReturnForm((f) => ({ ...f, paymentMode: v }))}
+                        widthPx={130}
+                      />
+                      <DropdownInput
+                        label="Station"
+                        options={['Main', 'Branch 1', 'Branch 2', 'Warehouse']}
+                        value={returnForm.station}
+                        onChange={(v) => setReturnForm((f) => ({ ...f, station: v }))}
+                        widthPx={120}
+                      />
+                      <div className="flex shrink-0 items-end">
+                        <button
+                          type="button"
+                          className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
+                          style={{ backgroundColor: primary }}
+                          onClick={handleReturnAdd}
+                        >
+                          {editingRowIndex !== null ? 'Update' : 'Add'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {/* Row 1: OwnRef, product, description, serial, packet */}
+                      <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                        <SubInputField
+                          label="OwnRef #"
+                          widthPx={72}
+                          value={form.ownRef}
+                          onChange={(e) => setForm((f) => ({ ...f, ownRef: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Product Code"
+                          widthPx={88}
+                          value={form.productCode}
+                          onChange={(e) => setForm((f) => ({ ...f, productCode: e.target.value }))}
+                        />
+                        <InputField
+                          label="Short description"
+                          widthPx={128}
+                          value={form.shortDescription}
+                          onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="serial#"
+                          widthPx={72}
+                          value={form.serialNo}
+                          onChange={(e) => setForm((f) => ({ ...f, serialNo: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="packet details"
+                          widthPx={88}
+                          value={form.packetDetails}
+                          onChange={(e) => setForm((f) => ({ ...f, packetDetails: e.target.value }))}
+                        />
+                      </div>
+
+                      {/* Row 2: unit, qtys, selling price */}
+                      <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                        <SubInputField
+                          label="unit"
+                          widthPx={56}
+                          value={form.unit}
+                          onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="sales Qty"
+                          type="number"
+                          value={form.salesQty}
+                          onChange={(e) => setForm((f) => ({ ...f, salesQty: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="FOC Qty"
+                          type="number"
+                          value={form.focQty}
+                          onChange={(e) => setForm((f) => ({ ...f, focQty: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Return Qty"
+                          type="number"
+                          value={form.returnQty}
+                          onChange={(e) => setForm((f) => ({ ...f, returnQty: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Selling price"
+                          type="number"
+                          value={form.unitPrice}
+                          onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
+                        />
+                      </div>
+
+                      {/* Row 3: Disc, sub, tax, line total, Qutn/DO, Add */}
+                      <div className="flex flex-wrap items-end gap-2 overflow-hidden xl:flex-nowrap">
+                        <SubInputField
+                          label="Disc %"
+                          type="number"
+                          value={form.discPercent}
+                          onChange={(e) => setForm((f) => ({ ...f, discPercent: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Disc Amt"
+                          type="number"
+                          value={form.discAmt}
+                          onChange={(e) => setForm((f) => ({ ...f, discAmt: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Sub total"
+                          value={form.subTotal}
+                          onChange={(e) => setForm((f) => ({ ...f, subTotal: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Tax %"
+                          type="number"
+                          value={form.taxPercent}
+                          onChange={(e) => setForm((f) => ({ ...f, taxPercent: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Tax amt"
+                          type="number"
+                          value={form.taxAmt}
+                          onChange={(e) => setForm((f) => ({ ...f, taxAmt: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Line total"
+                          type="number"
+                          value={form.total}
+                          onChange={(e) => setForm((f) => ({ ...f, total: e.target.value }))}
+                        />
+                        <DropdownInput
+                          label="Qutn. no"
+                          options={['QTN-001']}
+                          value={form.qutnNo}
+                          onChange={(v) => setForm((f) => ({ ...f, qutnNo: v }))}
+                        />
+                        <DropdownInput
+                          label="DO. no"
+                          options={['DO-001']}
+                          value={form.doNo}
+                          onChange={(v) => setForm((f) => ({ ...f, doNo: v }))}
+                        />
+                        <div className="flex shrink-0 items-end">
+                          <button
+                            type="button"
+                            className="flex h-[20.08px] min-h-[20.08px] items-center justify-center rounded px-2 text-[8px] font-medium text-white sm:px-3 sm:text-[9px]"
+                            style={{ backgroundColor: primary }}
+                            onClick={handleSaveOrUpdate}
+                          >
+                            {editingRowIndex !== null ? 'Update' : 'Add'}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Table section - bordered container; scroll inside when content overflows */}
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-                  <CommonTable
-                    headers={[
-        '',
-        'Short Description',
-        'HS Code/Wt',
-        ' Qty',
-        'Selling price',
-        'Disc %',
-        'Disc Amt',
-        'Sub total',
-        'Tax %',
-        'Tax amt',
-        'Line total',
-        'Action',
-      ]}
-                    rows={rowsWithTotal}
-                  />
-                </div>
+              {/* Table — fits column width (table-fixed); no nested vertical scroll */}
+              <div className="w-full min-w-0 rounded border border-gray-200 bg-white p-2 sm:p-3">
+                <CommonTable
+                  fitParentWidth
+                  maxVisibleRows={11}
+                  headers={[
+                    '',
+                    'OwnRef #',
+                    'Product Code',
+                    'Short description',
+                    'serial#',
+                    'packet details',
+                    'unit',
+                    'sales Qty',
+                    'FOC Qty',
+                    'Return Qty',
+                    'Selling price',
+                    'Disc %',
+                    'Disc Amt',
+                    'Sub total',
+                    'Tax %',
+                    'Tax amt',
+                    'Line Total',
+                    'Action',
+                  ]}
+                  rows={rowsWithTotal}
+                />
               </div>
             </div>
 
-            {/* RIGHT — ~30% on xl (was 25%) for bill / summary */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[260px] xl:shrink-0">
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
-               
-                
-
-                {/* Bill / Customer section */}
-                <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                  <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Row 1: Bill no + 2 sub fields */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <div className="flex flex-col gap-[6px]">
-                        <InputField label="Bill no" />
+            {/* RIGHT — ~30% on xl; scrolls inside viewport so totals + bill + terms fit on screen */}
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[30%] xl:min-h-0 xl:min-w-[min(100%,280px)] xl:shrink-0 xl:max-h-[calc(100dvh-7.5rem)] xl:overflow-y-auto xl:overflow-x-hidden xl:overscroll-contain xl:pr-1">
+              <div className="flex min-w-0 flex-col gap-2 sm:gap-2.5">
+                {/* Totals — compact grid for narrow rail */}
+                <div
+                  className="w-full min-w-0 rounded bg-white p-2 sm:p-2.5"
+                  style={{
+                    borderRadius: '8px',
+                    border: '0.49px solid #e5e7eb',
+                  }}
+                >
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+                      <div className="min-w-0">
+                        <InputField label="Sub Total" defaultValue="00000.00" fullWidth />
                       </div>
-                      <SubInputField label="Cust.Lpo 3" />
-                      <SubInputField label="Local bill no" />
+                      <div className="min-w-0 shrink-0">
+                        <SubInputField label="Discount Amount" defaultValue="1" widthPx={92} />
+                      </div>
+                      <div className="min-w-0 shrink-0">
+                        <SubInputField label="" defaultValue="11" suffix="%" widthPx={72} />
+                      </div>
                     </div>
-
-                    {/* Row 2: Customer name + Payment mode */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Customer name" />
-                      <DropdownInput
-                        label=""
-                        options={['000001']}
-                        placeholder="000001"
-                        className="min-w-[80px] sm:min-w-[100px]"
-                      />
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+                      <div className="min-w-0">
+                        <InputField label="Total Amount" defaultValue="00000.00" fullWidth />
+                      </div>
+                      <div className="min-w-0 shrink-0">
+                        <SubInputField label="Tax" defaultValue="1" widthPx={92} />
+                      </div>
+                      <div className="min-w-0 shrink-0">
+                        <SubInputField label="" defaultValue="67" suffix="%" widthPx={72} />
+                      </div>
                     </div>
-
-                    {/* Row 4: Account head + creditcard no + credit card type */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Account head" />
-                      <SubInputField label="Creditcard no" />
-                      <SubInputField label="Credit card type" />
-                    </div>
-
-                    {/* Row 5: Cashier name (dropdown) + Invoice amt */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <DropdownInput
-                        label="Cashier name"
-                        options={['Cashier 1', 'Cashier 2']}
-                        placeholder="Select"
-                      />
-                      <InputField label="Invoice amt" type="number" />
-                    </div>
-
-                    {/* Row 7: Station + Counter */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Station" />
-                      <InputField label="Counter" />
-                    </div>
-
-                    {/* Row 8: Edit + New invoice buttons */}
-                    <div className="mt-1 flex gap-1 sm:mt-[8px] sm:gap-[6px]">
-                      <button
-                        type="button"
-                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-                      >
-                        <img src={EditIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="sale-btn-red-outline flex flex-1 items-center justify-center gap-1 rounded border px-1.5 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:px-2 sm:py-2 sm:text-[11px]"
-                        style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
-                      >
-                        <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                        New invoice
-                      </button>
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                      <InputField label="Round Off" defaultValue="00000.00" fullWidth />
+                      <InputField label="Net Amount" defaultValue="00000.00" fullWidth />
                     </div>
                   </div>
                 </div>
 
+                {/* Bill / Customer section — return bill + dates + card + cashier + station */}
+                <div className="min-w-0 rounded border border-gray-200 bg-white p-2 sm:p-2.5">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    {/* Row 1: Return bill no + Cust.Lpo # + Local Bill No */}
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="min-w-0">
+                        <InputField
+                          label="Return bill no"
+                          fullWidth
+                          value={billPanel.returnBillNo}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, returnBillNo: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <SubInputField
+                          label="Cust.Lpo #"
+                          fullWidth
+                          value={billPanel.custLpo}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, custLpo: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <SubInputField
+                          label="Local Bill No"
+                          fullWidth
+                          value={billPanel.localBillNo}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, localBillNo: e.target.value }))}
+                        />
+                      </div>
+                    </div>
 
+                    {/* Row 2: Customer name + Return bill date + Payment date — always three columns from sm up (one row) */}
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="min-w-0">
+                        <InputField
+                          label="Customer name"
+                          fullWidth
+                          value={billPanel.customerName}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, customerName: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <DateInputField
+                          label="Return bill date"
+                          fullWidth
+                          value={billPanel.returnBillDate}
+                          onChange={(v) => setBillPanel((p) => ({ ...p, returnBillDate: v }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <DateInputField
+                          label="Payment date"
+                          fullWidth
+                          value={billPanel.paymentDate}
+                          onChange={(v) => setBillPanel((p) => ({ ...p, paymentDate: v }))}
+                        />
+                      </div>
+                    </div>
 
+                    {/* Row 3: Credit card no + Credit card */}
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="min-w-0">
+                        <InputField
+                          label="Credit card no"
+                          fullWidth
+                          value={billPanel.creditCardNo}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, creditCardNo: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <InputField
+                          label="Credit card"
+                          fullWidth
+                          value={billPanel.creditCard}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, creditCard: e.target.value }))}
+                        />
+                      </div>
+                    </div>
 
+                    {/* Row 4: Cashier name (dropdown) + Invoice amt */}
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="min-w-0">
+                        <DropdownInput
+                          label="Cashier name"
+                          options={['Cashier 1', 'Cashier 2']}
+                          placeholder="Select"
+                          fullWidth
+                          value={billPanel.cashierName}
+                          onChange={(v) => setBillPanel((p) => ({ ...p, cashierName: v }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <InputField
+                          label="Invoice amt"
+                          type="number"
+                          fullWidth
+                          value={billPanel.invoiceAmt}
+                          onChange={(e) => setBillPanel((p) => ({ ...p, invoiceAmt: e.target.value }))}
+                        />
+                      </div>
+                    </div>
 
-<button
-                  type="button"
-                  onClick={() => setSalesTermsOpen(true)}
-                  className="sale-btn-primary mt-1 w-full rounded border px-2 py-1.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-[6px] sm:px-3 sm:py-2 sm:text-[11px]"
-                  style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
-                >
-                  {termsTitle}
-                </button>
+                    {/* Station — full width of row */}
+                    <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="min-w-0 sm:col-span-2">
+                        <DropdownInput
+                          label="Station"
+                          options={['Main', 'Branch 1', 'Branch 2', 'Warehouse']}
+                          fullWidth
+                          value={billPanel.station}
+                          onChange={(v) => setBillPanel((p) => ({ ...p, station: v }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Sales terms + Counter # + Paid / Balance — compact labels for narrow rail */}
+                <div className="rounded border border-gray-200 bg-white p-2 sm:p-2.5">
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:gap-2">
+                      <label className="min-w-0 shrink-0 pt-0.5 text-[9px] font-semibold text-gray-700 sm:w-[96px] sm:pt-1 sm:text-right sm:text-[10px]">
+                        Sales terms
+                      </label>
+                      <textarea
+                        value={billPanel.salesTerms}
+                        onChange={(e) => setBillPanel((p) => ({ ...p, salesTerms: e.target.value }))}
+                        rows={2}
+                        className="min-h-[44px] min-w-0 flex-1 resize-y rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:text-[10px]"
+                        placeholder="Sales terms"
+                      />
+                    </div>
 
-
-
-
-
-                {/* Paid Amount section */}
-                <div className="mt-1 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:mt-[8px] sm:p-3">
-                  <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Paid Amount */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid Amount
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-2">
+                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[96px] sm:text-right sm:text-[10px]">
+                        Counter #
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        value={billPanel.counterNo}
+                        onChange={(e) => setBillPanel((p) => ({ ...p, counterNo: e.target.value }))}
                         className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                       />
                     </div>
 
-                    {/* Balance Amount */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Balance Amount
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-2">
+                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[96px] sm:text-right sm:text-[10px]">
+                        Paid amount
                       </label>
                       <input
                         type="number"
+                        value={billPanel.paidAmount}
+                        onChange={(e) => setBillPanel((p) => ({ ...p, paidAmount: e.target.value }))}
                         className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                       />
                     </div>
 
-                    {/* Paid by card */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid by card
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-2">
+                      <label className="min-w-0 shrink-0 text-[9px] font-semibold text-gray-700 sm:w-[96px] sm:text-right sm:text-[10px]">
+                        Balance amount
                       </label>
                       <input
                         type="number"
-                        className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                      />
-                    </div>
-
-                    {/* Paid by cash */}
-                    <div className="flex items-center justify-center gap-2 sm:gap-[10px]">
-                      <label className="min-w-0 shrink-0 text-[9px] text-gray-700 sm:w-[120px] sm:text-right sm:text-[10px]">
-                        Paid by cash
-                      </label>
-                      <input
-                        type="number"
+                        value={billPanel.balanceAmount}
+                        onChange={(e) => setBillPanel((p) => ({ ...p, balanceAmount: e.target.value }))}
                         className="min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
                       />
                     </div>
@@ -545,120 +806,6 @@ const rowsWithTotal = [
           </div>
         </div>
       </div>
-
-      {/* Sales Terms Modal */}
-      {salesTermsOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-          onClick={() => setSalesTermsOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="sales-terms-title"
-        >
-          <div
-            className="relative mx-4 w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setSalesTermsOpen(false)}
-              className="absolute right-2 top-2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Close"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Heading centered */}
-            <h2
-              id="sales-terms-title"
-              className="mb-4 text-center text-base font-bold sm:text-lg"
-              style={{ color: primary }}
-            >
-              {termsTitle}
-            </h2>
-
-            {/* Form fields - labels left-aligned in one column */}
-            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
-              <div className="flex items-center gap-2 sm:gap-[10px]">
-                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Sales
-                </label>
-                <input
-                  type="text"
-                  placeholder="Sales"
-                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-[10px]">
-                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Agent name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Agent name"
-                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-[10px]">
-                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Commission %
-                </label>
-                <input
-                  type="number"
-                  placeholder="%"
-                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:gap-[10px]">
-                <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                  Commission amount
-                </label>
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  className="min-h-[24px] min-w-0 flex-1 rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]"
-                />
-              </div>
-            </div>
-
-            {/* Two switches centered */}
-            <div className="my-4 flex justify-center gap-6">
-              <Switch
-                checked={saveTerms}
-                onChange={setSaveTerms}
-                description="Save terms"
-              />
-              <Switch
-                checked={printTerms}
-                onChange={setPrintTerms}
-                description="Print terms"
-              />
-            </div>
-
-            {/* Two buttons with icons */}
-            <div className="flex justify-center gap-3">
-              <button
-                type="button"
-                className="sale-btn-red-outline flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-colors"
-                style={{ borderColor: primary, color: primary }}
-              >
-                <img src={RemoveIcon} alt="" className="h-4 w-4" />
-                Remove commission
-              </button>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded border bg-white px-4 py-2 text-sm font-medium transition-colors"
-                style={{ borderColor: primary, color: primary }}
-              >
-                <img src={PayIcon} alt="" className="h-4 w-4" />
-                Pay now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Product Details Modal */}
       {selectedProduct && (

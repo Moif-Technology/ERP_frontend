@@ -103,6 +103,9 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Purchase Order' && (action === 'Orders' || action === 'List')) {
       navigate('/purchase-order');
     }
+    if (module === 'Sale Return' && (action === 'Returns' || action === 'List')) {
+      navigate('/sales-return');
+    }
   };
 
   return (

@@ -18,6 +18,8 @@ import ReportsIcon from '../../assets/icons/reports.svg';
 import ToolsIcon from '../../assets/icons/tools.svg';
 import ManagementIcon from '../../assets/icons/management.svg';
 import ConfigIcon from '../../assets/icons/config.svg';
+import VendorIcon from '../../assets/icons/vendor.svg';
+import ProductEntryIcon from '../../assets/icons/stock-hub.svg';
 import ChevronDown from '../../assets/chevron-down.svg';
 import SearchIcon from '../../assets/iconsax-search.svg';
 
@@ -30,9 +32,9 @@ const menuItems = [
     label: 'Data Entry',
     icon: DataEntryIcon,
     subItems: [
-      { label: 'Sub 1', to: '/sub 1', icon: ListIcon },
-      { label: 'Sub 2', to: '/sub 2', icon: StockIcon },
-      { label: 'Sub 3', to: '/sub 3', icon: ExchangeIcon },
+      { label: 'Customer entry', to: '/data-entry/customer-entry', icon: ManagementIcon },
+      { label: 'Supplier entry', to: '/data-entry/supplier-entry', icon: VendorIcon },
+      { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon },
     ],
   },
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
@@ -138,7 +140,15 @@ export default function Sidebar() {
                         }`
                       }
                     >
-                      <img src={sub.icon} alt="" className="w-4 h-4" />
+                      <img
+                        src={sub.icon}
+                        alt=""
+                        className={`w-4 h-4 ${
+                          sub.label === 'Supplier entry' || sub.label === 'Product entry'
+                            ? 'filter brightness-0 invert'
+                            : ''
+                        }`.trim()}
+                      />
                       <span>{sub.label}</span>
                     </NavLink>
                   ))}
