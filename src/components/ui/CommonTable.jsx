@@ -26,6 +26,8 @@ export default function CommonTable({
   headerTextColor,
   /** Fit container width: no horizontal scroll; columns share width (table-fixed). */
   fitParentWidth = false,
+  /** When fitParentWidth: give every column the same width (100% / n). */
+  equalColumnWidth = false,
   /** Sticky header row (use with a vertically scrollable parent). */
   stickyHeader = false,
   /**
@@ -48,6 +50,10 @@ export default function CommonTable({
   const colWidthsPct = useMemo(() => {
     if (!fitParentWidth || !headers.length) return null;
     const n = headers.length;
+    if (equalColumnWidth) {
+      const pct = 100 / n;
+      return headers.map(() => pct);
+    }
     if (n === 1) return [100];
     if (n === 2) return [50, 50];
     const firstPct = 3;
@@ -59,7 +65,7 @@ export default function CommonTable({
       if (idx === n - 1) return lastPct;
       return midPct;
     });
-  }, [fitParentWidth, headers]);
+  }, [fitParentWidth, headers, equalColumnWidth]);
 
   const tableClass = `w-full border-collapse ${fitParentWidth ? 'table-fixed' : ''}`;
 
