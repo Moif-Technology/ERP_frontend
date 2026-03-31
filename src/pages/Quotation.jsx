@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { colors, inputField } from '../constants/theme';
-import { InputField, SubInputField, CommonTable, Switch } from '../components/ui';
+import { InputField, SubInputField, CommonTable, Switch, ConfirmDialog } from '../components/ui';
 import ProformaIcon from '../assets/icons/proforma.svg';
 import PrinterIcon from '../assets/icons/printer.svg';
 import SearchIcon from '../assets/icons/search2.svg';
@@ -128,6 +128,7 @@ export default function Quotation() {
   const [productInfo, setProductInfo] = useState({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
   const [attachments, setAttachments] = useState(false);
   const [lineItemDetail, setLineItemDetail] = useState(null);
+  const [pendingRemoveIndex, setPendingRemoveIndex] = useState(null);
 
   const orDash = (v) => (v != null && v !== '' ? String(v) : '—');
 
@@ -554,7 +555,7 @@ export default function Quotation() {
                       <button type="button" className="p-0.5" onClick={() => setLineItemDetail(r)} aria-label="View line">
                         <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </button>
-                      <button type="button" className="p-0.5" onClick={() => removeItem(i)} aria-label="Delete line">
+                      <button type="button" className="p-0.5" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete line">
                         <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </div>,
@@ -737,6 +738,19 @@ export default function Quotation() {
       </div>
 
       {/* Line item detail (view) */}
+      <ConfirmDialog
+        open={pendingRemoveIndex !== null}
+        title="Delete line item?"
+        message="This will remove the line from the quotation. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onClose={() => setPendingRemoveIndex(null)}
+        onConfirm={() => {
+          if (pendingRemoveIndex !== null) removeItem(pendingRemoveIndex);
+        }}
+      />
+
       {lineItemDetail && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"

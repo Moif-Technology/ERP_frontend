@@ -12,6 +12,7 @@ import {
   DropdownInput,
   CommonTable,
   Switch,
+  ConfirmDialog,
 } from '../components/ui';
 
 const mainInitial = {
@@ -105,6 +106,8 @@ export default function ProductEntry() {
   const [searchUnitPrice, setSearchUnitPrice] = useState('');
   /** Substitute products: { productCode, productName, unitPrice } */
   const [substituteRows, setSubstituteRows] = useState(substituteDummyRows);
+  /** null | { type: 'line', idx } | { type: 'substitute', idx } */
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const toggleSelect = (idx) => {
     setSelectedRows((prev) => {
@@ -229,7 +232,7 @@ export default function ProductEntry() {
           <button type="button" className="p-0.5" onClick={() => handleEdit(r, idx)}>
             <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
-          <button type="button" className="p-0.5" onClick={() => handleDelete(idx)}>
+          <button type="button" className="p-0.5" onClick={() => setPendingDelete({ type: 'line', idx })}>
             <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>,
@@ -258,7 +261,7 @@ export default function ProductEntry() {
         row.productName,
         row.unitPrice,
         <div key={`sub-act-${idx}`} className="flex justify-center">
-          <button type="button" className="p-0.5" onClick={() => removeSubstituteRow(idx)} aria-label="Remove row">
+          <button type="button" className="p-0.5" onClick={() => setPendingDelete({ type: 'substitute', idx })} aria-label="Remove row">
             <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>,
@@ -801,6 +804,25 @@ export default function ProductEntry() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDelete?.type === 'substitute' ? 'Remove substitute product?' : 'Delete line item?'}
+        message={
+          pendingDelete?.type === 'substitute'
+            ? 'This will remove the substitute from the list. This action cannot be undone.'
+            : 'This will remove the row from the table. This action cannot be undone.'
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          if (pendingDelete.type === 'line') handleDelete(pendingDelete.idx);
+          else removeSubstituteRow(pendingDelete.idx);
+        }}
+      />
     </div>
   );
 }

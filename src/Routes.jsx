@@ -7,6 +7,7 @@ import Quotation from './pages/Quotation';
 import DeliveryOrder from './pages/DeliveryOrder';
 import Purchase from './pages/Purchase';
 import PurchaseOrder from './pages/PurchaseOrder';
+import GoodsReceiveNote from './pages/GoodsReceiveNote';
 import CustomerEntry from './pages/CustomerEntry';
 import SupplierEntry from './pages/SupplierEntry';
 import ProductEntry from './pages/ProductEntry';
@@ -23,6 +24,7 @@ export default function AppRoutes() {
       <Route path="/delivery-order" element={<DeliveryOrder />} />
       <Route path="/purchase" element={<Purchase />} />
       <Route path="/purchase-order" element={<PurchaseOrder />} />
+      <Route path="/goods-receive-note" element={<GoodsReceiveNote />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />

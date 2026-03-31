@@ -1,0 +1,13 @@
+<svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Goods Receive Note: document + lines + check (received) -->
+  <rect x="2" y="1.5" width="9.5" height="12" rx="1.1" stroke="black" stroke-width="0.95" fill="none" />
+  <path d="M4.35 4.4h5.3M4.35 6.35h6.3M4.35 8.3h4.2" stroke="black" stroke-width="0.72" stroke-linecap="round" />
+  <path
+    d="M5.2 11.35 6.85 12.85 10.5 8.15"
+    stroke="black"
+    stroke-width="0.95"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

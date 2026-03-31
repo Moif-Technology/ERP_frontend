@@ -6,7 +6,7 @@ import EditIcon from '../assets/icons/edit.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable } from '../components/ui';
+import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable, ConfirmDialog } from '../components/ui';
 
 export default function DeliveryOrder() {
   const [doDate, setDoDate] = useState('');
@@ -15,6 +15,7 @@ export default function DeliveryOrder() {
     ['1', 'OR-001', 'Product A', 'Main Store', 'SR-1001', 'Box Pack', 'PCS', '1', '250.00', '5', '12.50', '237.50', '5', '11.88', '249.38'],
   ]);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [editingRowData, setEditingRowData] = useState([]);
   const [itemForm, setItemForm] = useState({
@@ -377,7 +378,7 @@ export default function DeliveryOrder() {
                           <button type="button" className="rounded p-0.5" aria-label="Edit row" onClick={() => handleEditRow(idx)}>
                             <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           </button>
-                          <button type="button" className="rounded p-0.5" aria-label="Delete row" onClick={() => handleDeleteRow(idx)}>
+                          <button type="button" className="rounded p-0.5" aria-label="Delete row" onClick={() => setPendingDeleteIndex(idx)}>
                             <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           </button>
                         </>
@@ -447,6 +448,19 @@ export default function DeliveryOrder() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="Delete line item?"
+        message="This will remove the row from the delivery order. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onClose={() => setPendingDeleteIndex(null)}
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) handleDeleteRow(pendingDeleteIndex);
+        }}
+      />
 
       {selectedRow && (
         <div
