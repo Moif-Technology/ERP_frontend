@@ -6,8 +6,11 @@ import QuotationIcon from '../../assets/icons/QuotationIcon.svg';
 import DeliveryIcon from '../../assets/icons/DeliveryIcon.svg';
 import SaleIcon from '../../assets/icons/SaleIcon.svg';
 import ReturnIcon from '../../assets/icons/ReturnIcon.svg';
+import SalesReturnIcon from '../../assets/icons/refresh.svg';
 import PurchaseIcon from '../../assets/icons/purchase.svg';
 import PurchaseOrderIcon from '../../assets/icons/purchase order.svg';
+import GrnIcon from '../../assets/icons/grn.svg';
+import SupplierInvoiceIcon from '../../assets/icons/invoice.svg';
 import ListIcon from '../../assets/icons/list2.svg';
 import SearchIcon from '../../assets/icons/search2.svg';
 import ConfigIcon from '../../assets/icons/edit.svg';
@@ -60,13 +63,13 @@ const moduleGroups = {
     { name: 'Quotation', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Quotation', 'List']) },
     { name: 'Delivery Order', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Delivery', 'List']) },
     { name: 'Sale', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Sales', 'List']) },
-    { name: 'Sale Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
+    { name: 'Sale Return', icon: SalesReturnIcon, actions: getActionItems(SalesReturnIcon, ['Returns', 'List']) },
   ],
   supplier: [
     { name: 'Purchase', icon: PurchaseIcon, actions: getActionItems(PurchaseIcon, ['Purchases', 'List']) },
-    { name: 'Purchase Order', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['Orders', 'List']) },
-    { name: 'GRN', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['GRN', 'List']) },
-    { name: 'Supplier Invoice', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Invoices', 'List']) },
+    { name: 'Local Purchase Order', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['LPO', 'List']) },
+    { name: 'GRN', icon: GrnIcon, actions: getActionItems(GrnIcon, ['GRN', 'List']) },
+    { name: 'Supplier Invoice', icon: SupplierInvoiceIcon, actions: getActionItems(SupplierInvoiceIcon, ['Invoices', 'List']) },
     { name: 'Supplier Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
   ],
   accounts: [
@@ -100,8 +103,11 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Purchase' && (action === 'Purchases' || action === 'List')) {
       navigate('/purchase');
     }
-    if (module === 'Purchase Order' && (action === 'Orders' || action === 'List')) {
+    if (module === 'Local Purchase Order' && (action === 'LPO' || action === 'List')) {
       navigate('/purchase-order');
+    }
+    if (module === 'GRN' && (action === 'GRN' || action === 'List')) {
+      navigate('/goods-receive-note');
     }
     if (module === 'Sale Return' && (action === 'Returns' || action === 'List')) {
       navigate('/sales-return');

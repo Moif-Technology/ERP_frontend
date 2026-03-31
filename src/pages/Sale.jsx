@@ -7,7 +7,7 @@ import LedgerIcon from '../assets/icons/ledger.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable } from '../components/ui';
+import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable, ConfirmDialog } from '../components/ui';
 
 // Helper: get product details from table row, use "-" for empty values
 // Row: [0 OwnRef, 1 Product Code, 2 Short description, ...]
@@ -89,6 +89,8 @@ export default function Sale({ pageTitle = 'Sales', useReturnHeaderForm = false 
   const [billPanel, setBillPanel] = useState(billPanelInitial);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  /** null | { mode: 'single', idx: number } | { mode: 'bulk' } */
+  const [pendingDelete, setPendingDelete] = useState(null);
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
   const primaryActive = colors.primary?.[100] || '#E4CDD3';
@@ -262,7 +264,7 @@ const rowsWithTotal = [
       <button type="button" className="p-0.5" onClick={() => handleEdit(r, idx)}>
         <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
-      <button type="button" className="p-0.5" onClick={() => handleDelete(idx)}>
+      <button type="button" className="p-0.5" onClick={() => setPendingDelete({ mode: 'single', idx })}>
         <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
     </div>
@@ -335,7 +337,7 @@ const rowsWithTotal = [
               {selectedRows.size > 0 && (
                 <button
                   type="button"
-                  onClick={handleDeleteSelected}
+                  onClick={() => setPendingDelete({ mode: 'bulk' })}
                   className="sale-btn-outline flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
                   style={{ borderColor: primary, color: primary }}
                 >
@@ -806,6 +808,25 @@ const rowsWithTotal = [
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDelete?.mode === 'bulk' ? 'Delete selected lines?' : 'Delete line item?'}
+        message={
+          pendingDelete?.mode === 'bulk'
+            ? `This will remove ${selectedRows.size} selected row(s). This action cannot be undone.`
+            : 'This will remove the row from the sale. This action cannot be undone.'
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete) return;
+          if (pendingDelete.mode === 'bulk') handleDeleteSelected();
+          else handleDelete(pendingDelete.idx);
+        }}
+      />
 
       {/* Product Details Modal */}
       {selectedProduct && (

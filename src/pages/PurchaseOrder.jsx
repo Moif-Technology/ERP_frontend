@@ -6,7 +6,15 @@ import EditIcon from '../assets/icons/edit.svg';
 import ViewActionIcon from '../assets/icons/view.svg';
 import EditActionIcon from '../assets/icons/edit4.svg';
 import DeleteActionIcon from '../assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, Switch, CommonTable } from '../components/ui';
+import {
+  InputField,
+  SubInputField,
+  DropdownInput,
+  DateInputField,
+  Switch,
+  CommonTable,
+  ConfirmDialog,
+} from '../components/ui';
 
 export default function PurchaseOrder() {
   const [tableRows, setTableRows] = useState(
@@ -18,6 +26,7 @@ export default function PurchaseOrder() {
       String(10 + idx),
       'PCS',
       String(5 + (idx % 3)),
+      String(idx % 2),
       (120 + idx).toFixed(2),
       '5',
       (118 + idx).toFixed(2),
@@ -36,6 +45,7 @@ export default function PurchaseOrder() {
     shortDescription: '',
     uom: 'PCS',
     packQty: '',
+    foc: '',
     qty: '',
     baseCost: '',
     unitCost: '',
@@ -62,6 +72,8 @@ export default function PurchaseOrder() {
     listItem: false,
     useDiscPct: false,
   });
+  /** Row index pending delete confirmation; null when dialog closed */
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
 
   const primary = colors.primary?.main || '#790728';
 
@@ -87,6 +99,7 @@ export default function PurchaseOrder() {
       itemForm.qty || '0',
       itemForm.uom || '-',
       itemForm.packQty || '0',
+      itemForm.foc || '0',
       itemForm.baseCost || '0.00',
       itemForm.discPercent || '0',
       itemForm.unitCost || '0.00',
@@ -102,6 +115,7 @@ export default function PurchaseOrder() {
       shortDescription: '',
       uom: 'PCS',
       packQty: '',
+      foc: '',
       qty: '',
       baseCost: '',
       unitCost: '',
@@ -162,12 +176,12 @@ export default function PurchaseOrder() {
     let totalVatAmt = 0;
     let totalLine = 0;
     tableRows.forEach((row) => {
-      sumDiscPct += parseCellNum(row[8]);
-      totalUnitCost += parseCellNum(row[9]);
-      totalMid += parseCellNum(row[10]);
-      sumVatPct += parseCellNum(row[11]);
-      totalVatAmt += parseCellNum(row[12]);
-      totalLine += parseCellNum(row[13]);
+      sumDiscPct += parseCellNum(row[9]);
+      totalUnitCost += parseCellNum(row[10]);
+      totalMid += parseCellNum(row[11]);
+      sumVatPct += parseCellNum(row[12]);
+      totalVatAmt += parseCellNum(row[13]);
+      totalLine += parseCellNum(row[14]);
     });
     return {
       avgDiscPct: sumDiscPct / n,
@@ -225,7 +239,9 @@ export default function PurchaseOrder() {
         .purchase-order-table th:nth-child(13),
         .purchase-order-table td:nth-child(13),
         .purchase-order-table th:nth-child(14),
-        .purchase-order-table td:nth-child(14) {
+        .purchase-order-table td:nth-child(14),
+        .purchase-order-table th:nth-child(15),
+        .purchase-order-table td:nth-child(15) {
           text-align: center;
         }
         .purchase-order-table th:last-child,
@@ -247,7 +263,7 @@ export default function PurchaseOrder() {
       <div className="flex h-[100%] w-full min-h-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-            PURCHASE ORDER
+            LOCAL PURCHASE ORDER
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: EditIcon, label: 'Edit' }].map((btn) => (
@@ -264,7 +280,7 @@ export default function PurchaseOrder() {
               type="button"
               className="purchase-order-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
             >
-              Save
+              Add
             </button>
             <button
               type="button"
@@ -282,7 +298,7 @@ export default function PurchaseOrder() {
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              PurchaseOrder
+              Local Purchase Order
             </button>
           </div>
         </div>
@@ -304,6 +320,7 @@ export default function PurchaseOrder() {
                   widthPx={80}
                 />
                 <SubInputField label="Pack Qty" widthPx={80} value={itemForm.packQty} onChange={(e) => updateItemForm('packQty', e.target.value)} />
+                <SubInputField label="FOC" widthPx={64} value={itemForm.foc} onChange={(e) => updateItemForm('foc', e.target.value)} />
                 <SubInputField label="Base cost" widthPx={80} value={itemForm.baseCost} onChange={(e) => updateItemForm('baseCost', e.target.value)} />
                 <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
               </div>
@@ -326,7 +343,7 @@ export default function PurchaseOrder() {
                     className="h-[20.08px] rounded border px-3 text-[11px] font-medium text-white"
                     style={{ backgroundColor: primary, borderColor: primary }}
                   >
-                    Save
+                    Add
                   </button>
                 </div>
               </div>
@@ -335,12 +352,13 @@ export default function PurchaseOrder() {
 
           
 
-          <div className="hidden min-h-0 flex-1 flex-col rounded bg-white p-2 sm:p-3 xl:flex xl:w-[860px]">
-            <div className="min-h-0 overflow-y-auto max-h-[500px]">
+          <div className="hidden min-h-0 flex-1 flex-col rounded bg-white xl:flex xl:w-[860px]">
+            <div className="min-h-0 min-w-0 w-full">
               <CommonTable
                 className="purchase-order-table"
-                headers={['SL No', 'Own REF No', 'Barcode', 'shortDescription', 'Qty', 'UOM', 'pack qty', 'base cost', 'disc%', 'unit cost', 'total', 'vat%', 'Vat Amt', 'line total', 'Action']}
+                headers={['SL No', 'Own REF No', 'Barcode', 'shortDescription', 'Qty', 'UOM', 'pack qty', 'FOC', 'base cost', 'disc%', 'unit cost', 'total', 'vat%', 'Vat Amt', 'line total', 'Action']}
                 fitParentWidth
+                maxVisibleRows={20}
                 rows={[
                   ...tableRows.map((row, idx) => [
                     ...row.map((cell, cellIdx) =>
@@ -355,41 +373,54 @@ export default function PurchaseOrder() {
                         cell
                       )
                     ),
-                    <div key={`action-${idx}`} className="flex min-w-[90px] items-center justify-center gap-0.5 text-center">
-                      {editingRowIndex === idx ? (
-                        <>
-                          <button
-                            type="button"
-                            className="rounded border border-gray-300 px-1 py-0 text-[7px]"
-                            onClick={handleSaveEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded border border-gray-300 px-1 py-0 text-[7px]"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" className="rounded p-0.5" aria-label="View row details" onClick={() => setSelectedRow(row)}>
-                            <img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                          <button type="button" className="rounded p-0.5" aria-label="Edit row" onClick={() => handleEditRow(idx)}>
-                            <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                          <button type="button" className="rounded p-0.5" aria-label="Delete row" onClick={() => handleDeleteRow(idx)}>
-                            <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                        </>
-                      )}
-                    </div>,
+                    {
+                      content: (
+                        <div className="flex min-w-0 flex-wrap items-center justify-center gap-px text-center leading-none">
+                          {editingRowIndex === idx ? (
+                            <>
+                              <button
+                                type="button"
+                                className="rounded border border-gray-300 px-0.5 py-px text-[6px] leading-tight"
+                                onClick={handleSaveEdit}
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                className="rounded border border-gray-300 px-0.5 py-px text-[6px] leading-tight"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                className="rounded border border-red-200 bg-red-50 px-0.5 py-px text-[6px] leading-tight text-red-700 hover:bg-red-100"
+                                aria-label="Delete row"
+                                onClick={() => setPendingDeleteIndex(idx)}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button type="button" className="rounded p-px" aria-label="View row details" onClick={() => setSelectedRow(row)}>
+                                <img src={ViewActionIcon} alt="" className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5" />
+                              </button>
+                              <button type="button" className="rounded p-px" aria-label="Edit row" onClick={() => handleEditRow(idx)}>
+                                <img src={EditActionIcon} alt="" className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5" />
+                              </button>
+                              <button type="button" className="rounded p-px" aria-label="Delete row" onClick={() => setPendingDeleteIndex(idx)}>
+                                <img src={DeleteActionIcon} alt="" className="h-2.5 w-2.5 sm:h-2.5 sm:w-2.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ),
+                      className: '!px-0.5 !py-0 sm:!px-0.5 sm:!py-0',
+                    },
                   ]),
                   [
-                    { content: 'Total', colSpan: 8, className: 'text-left font-bold' },
+                    { content: 'Total', colSpan: 9, className: 'text-left font-bold' },
                     tableTotals.avgDiscPct.toFixed(2),
                     tableTotals.totalUnitCost.toFixed(2),
                     tableTotals.totalMid.toFixed(2),
@@ -482,6 +513,19 @@ export default function PurchaseOrder() {
         </div>
       </div>
 
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="Delete line item?"
+        message="This will remove the row from the purchase order. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        danger
+        onClose={() => setPendingDeleteIndex(null)}
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) handleDeleteRow(pendingDeleteIndex);
+        }}
+      />
+
       {selectedRow && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
@@ -504,13 +548,14 @@ export default function PurchaseOrder() {
                 ['Qty', selectedRow[4]],
                 ['UOM', selectedRow[5]],
                 ['pack qty', selectedRow[6]],
-                ['base cost', selectedRow[7]],
-                ['disc%', selectedRow[8]],
-                ['unit cost', selectedRow[9]],
-                ['total', selectedRow[10]],
-                ['vat%', selectedRow[11]],
-                ['Vat Amt', selectedRow[12]],
-                ['line total', selectedRow[13]],
+                ['FOC', selectedRow[7]],
+                ['base cost', selectedRow[8]],
+                ['disc%', selectedRow[9]],
+                ['unit cost', selectedRow[10]],
+                ['total', selectedRow[11]],
+                ['vat%', selectedRow[12]],
+                ['Vat Amt', selectedRow[13]],
+                ['line total', selectedRow[14]],
               ].map(([label, value]) => (
                 <React.Fragment key={label}>
                   <div className="font-semibold text-gray-700">{label}</div>
