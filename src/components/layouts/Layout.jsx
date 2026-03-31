@@ -50,15 +50,7 @@ export default function Layout({ children }) {
       >
         <ModuleTabs expanded={headerToolsExpanded} onExpandedChange={setHeaderToolsExpanded} />
         {headerToolsExpanded ? <MiniToolbar /> : null}
-        <ModuleTabs
-          expanded={headerToolsExpanded}
-          onExpandedChange={setHeaderToolsExpanded}
-        />
-        {headerToolsExpanded ? (
-          <div className="mt-1">
-            <MiniToolbar />
-          </div>
-        ) : null}
+      
       </div>
       <div
         style={{

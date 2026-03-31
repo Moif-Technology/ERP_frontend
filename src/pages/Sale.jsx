@@ -1282,10 +1282,10 @@ export default function Sale() {
           )}
 
           {/* Content: fills viewport; xl = side-by-side with internal scroll; stacked = scroll inside main */}
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden xl:flex-row">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden xl:flex-row">
 
-            {/* LEFT — ~70% on xl so form + table share space with wider right rail */}
-            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-[70%] xl:max-w-[70%] xl:shrink-0">
+            {/* LEFT */}
+            <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-2 xl:w-[72%] xl:max-w-[72%] xl:shrink-0">
               {/* Form section - bordered */}
               <div className="shrink-0 overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
                 <div className="flex flex-col gap-2">
@@ -1426,345 +1426,396 @@ export default function Sale() {
             </div>
 
             {/* RIGHT */}
-            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-1/4 xl:min-h-0 xl:overflow-hidden">
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-3">
-               
-                
+            <div className="flex w-full min-w-0 shrink-0 flex-col xl:w-[28%] xl:min-h-0 xl:overflow-hidden">
+              <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
 
                 {/* Bill / Customer section */}
-                <div className="overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                  <div className="flex flex-col gap-1 sm:gap-[8px]">
-                    {/* Row 1: Bill no + 2 sub fields */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <div className="flex flex-col gap-[6px]">
-                        <InputField label="Bill no" value={billNo || ''} readOnly />
+                <div className="shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+                  {/* Section header */}
+                  <div
+                    className="flex items-center justify-between border-b border-gray-200 px-2.5 py-1.5"
+                    style={{ background: 'linear-gradient(90deg, #fdf2f5 0%, #fff 100%)' }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <img src={SaleIcon} alt="" className="h-3 w-3 opacity-70" style={{ filter: 'sepia(1) saturate(3) hue-rotate(300deg)' }} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: primary }}>
+                        Invoice Details
+                      </span>
+                    </div>
+                    <span className="rounded px-1.5 py-0.5 text-[9px] font-semibold" style={{ background: `${primary}15`, color: primary }}>
+                      {billNo || 'NEW'}
+                    </span>
+                  </div>
+
+                  {/* Compact field rows */}
+                  <div className="divide-y divide-gray-100">
+
+                    {/* Bill no / LPO / Local */}
+                    <div className="grid grid-cols-3 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Bill no</span>
+                        <input readOnly value={billNo || ''} className="h-[22px] w-full rounded border border-gray-200 bg-gray-50 px-1.5 text-[10px] font-medium text-gray-700 outline-none" />
                       </div>
-                      <SubInputField
-                        label="Cust.Lpo 3"
-                        value={customerLpo}
-                        onChange={(e) => setCustomerLpo(e.target.value)}
-                      />
-                      <SubInputField
-                        label="Local bill no"
-                        value={localBillNo}
-                        onChange={(e) => setLocalBillNo(e.target.value)}
-                      />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Cust. LPO</span>
+                        <input value={customerLpo} onChange={(e) => setCustomerLpo(e.target.value)} className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Local Bill</span>
+                        <input value={localBillNo} onChange={(e) => setLocalBillNo(e.target.value)} className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
                     </div>
 
-                    {/* Row 2: Customer name + Payment mode */}
-                    <div className="flex flex-wrap items-end gap-1 sm:gap-[6px] xl:flex-nowrap">
-                      <InputField label="Customer name" value={resolvedCustomerName} readOnly />
-                      <DropdownInput
-                        label="Customer"
-                        options={customerOptions}
-                        value={customerId}
-                        onChange={(v) => setCustomerId(v)}
-                        fullWidth
-                        className="min-w-0 w-full"
-                      />
+                    {/* Customer name / dropdown */}
+                    <div className="grid grid-cols-2 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Cust. Name</span>
+                        <input readOnly value={resolvedCustomerName} className="h-[22px] w-full rounded border border-gray-200 bg-gray-50 px-1.5 text-[10px] text-gray-700 outline-none" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Customer</span>
+                        <div className="relative h-[22px]">
+                          <select value={customerId} onChange={(e) => setCustomerId(e.target.value)}
+                            className="h-full w-full appearance-none rounded border border-gray-200 bg-[#f5f5f5] pl-1.5 pr-5 text-[10px] outline-none focus:border-gray-400 focus:bg-white">
+                            {customerOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <svg className="pointer-events-none absolute right-1.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <DropdownInput
-                        label="Payment"
-                        options={paymentOptions}
-                        value={paymentMode}
-                        onChange={(v) => setPaymentMode(v)}
-                        fullWidth
-                        className="min-w-0 w-full"
-                      />
+
+                    {/* Payment / Account head */}
+                    <div className="grid grid-cols-2 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Payment</span>
+                        <div className="relative h-[22px]">
+                          <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)}
+                            className="h-full w-full appearance-none rounded border border-gray-200 bg-[#f5f5f5] pl-1.5 pr-5 text-[10px] outline-none focus:border-gray-400 focus:bg-white">
+                            {paymentOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <svg className="pointer-events-none absolute right-1.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Account head</span>
+                        <div className="relative h-[22px]">
+                          <select value={accountHeadId} onChange={(e) => setAccountHeadId(e.target.value)}
+                            className="h-full w-full appearance-none rounded border border-gray-200 bg-[#f5f5f5] pl-1.5 pr-5 text-[10px] outline-none focus:border-gray-400 focus:bg-white">
+                            {accountHeadOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <svg className="pointer-events-none absolute right-1.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <DropdownInput
-                        label="Account head"
-                        options={accountHeadOptions}
-                        placeholder="Select"
-                        value={accountHeadId}
-                        onChange={(v) => setAccountHeadId(v)}
-                        fullWidth
-                        className="min-w-0 w-full"
-                      />
+
+                    {/* Credit card / Card type */}
+                    <div className="grid grid-cols-2 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Card no</span>
+                        <input className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Card type</span>
+                        <input className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <SubInputField label="Creditcard no" fullWidth />
+
+                    {/* Cashier full width */}
+                    <div className="px-2.5 py-1.5">
+                      <span className="text-[9px] font-medium text-gray-500">Cashier (salesman)</span>
+                      <div className="relative mt-0.5 h-[22px]">
+                        <select value={salesManId} onChange={(e) => setSalesManId(e.target.value)}
+                          className="h-full w-full appearance-none rounded border border-gray-200 bg-[#f5f5f5] pl-1.5 pr-5 text-[10px] outline-none focus:border-gray-400 focus:bg-white">
+                          {salesManOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        <svg className="pointer-events-none absolute right-1.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <SubInputField label="Card type" fullWidth />
+
+                    {/* Invoice amt / Bill date */}
+                    <div className="grid grid-cols-2 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Inv. Amount</span>
+                        <input readOnly value={documentSummary.net ? documentSummary.net.toFixed(2) : ''} className="h-[22px] w-full rounded border border-gray-200 bg-gray-50 px-1.5 text-right text-[10px] font-semibold outline-none" style={{ color: '#c00000' }} />
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Bill date</span>
+                        <input type="date" value={billDate} onChange={(e) => setBillDate(e.target.value)} className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <DropdownInput
-                        label="Cashier (salesman)"
-                        options={salesManOptions}
-                        placeholder="Select"
-                        value={salesManId}
-                        onChange={(v) => setSalesManId(v)}
-                        fullWidth
-                        className="min-w-0 w-full"
-                      />
+
+                    {/* Station / Counter */}
+                    <div className="grid grid-cols-2 gap-1.5 px-2.5 py-1.5">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Station</span>
+                        <div className="relative h-[22px]">
+                          <select value={stationId} onChange={(e) => setStationId(e.target.value)}
+                            className="h-full w-full appearance-none rounded border border-gray-200 bg-[#f5f5f5] pl-1.5 pr-5 text-[10px] outline-none focus:border-gray-400 focus:bg-white">
+                            {stationOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
+                          <svg className="pointer-events-none absolute right-1.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[9px] font-medium text-gray-500">Counter</span>
+                        <input value={counterNo} onChange={(e) => setCounterNo(e.target.value)} className="h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Invoice amt (net)"
-                        value={documentSummary.net ? documentSummary.net.toFixed(2) : ''}
-                        readOnly
-                        fullWidth
-                        className="bg-gray-50 text-red-600"
-                      />
+
+                    {/* Load by sales ID */}
+                    <div className="px-2.5 py-1.5">
+                      <span className="text-[9px] font-medium text-gray-500">Load by Sales ID</span>
+                      <input type="number" value={loadSalesIdInput} onChange={(e) => setLoadSalesIdInput(e.target.value)} className="mt-0.5 h-[22px] w-full rounded border border-gray-200 bg-[#f5f5f5] px-1.5 text-[10px] outline-none focus:border-gray-400 focus:bg-white" />
                     </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Bill date"
-                        type="date"
-                        value={billDate}
-                        onChange={(e) => setBillDate(e.target.value)}
-                        fullWidth
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <DropdownInput
-                        label="Station"
-                        options={stationOptions}
-                        value={stationId}
-                        onChange={(v) => setStationId(v)}
-                        fullWidth
-                        className="min-w-0 w-full"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Counter"
-                        value={counterNo}
-                        onChange={(e) => setCounterNo(e.target.value)}
-                        fullWidth
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Load by sales ID"
-                        type="number"
-                        value={loadSalesIdInput}
-                        onChange={(e) => setLoadSalesIdInput(e.target.value)}
-                        fullWidth
-                      />
-                    </div>
+
+                  </div>
+
+                  {/* New Invoice button */}
+                  <div className="border-t border-gray-200 px-2.5 py-1.5">
                     <button
                       type="button"
                       onClick={handleNewInvoice}
-                      className="sale-btn-red-outline col-span-1 flex w-full items-center justify-center gap-1 rounded border py-0.5 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:col-span-2 sm:py-1 sm:text-[10px]"
+                      className="flex w-full items-center justify-center gap-1.5 rounded border py-1 text-[10px] font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
                       style={{ backgroundColor: 'transparent', color: primary, borderColor: primary }}
                     >
-                      <img src={SaleIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                      New invoice
+                      <img src={SaleIcon} alt="" className="h-3 w-3" />
+                      New Invoice
                     </button>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSalesTermsOpen(true)}
-                  className="sale-btn-primary mt-0.5 w-full rounded border px-2 py-1 text-[9px] font-medium transition-all duration-150 hover:shadow-sm active:scale-[0.98] sm:mt-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]"
-                  style={{ backgroundColor: primary, color: '#fff', borderColor: primary }}
-                >
-                  {termsTitle}
-                </button>
+                {/* Sales Terms + Summary Panel */}
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
 
-
-
-                {/* Payment + Total summary (tabs) */}
-                <div className="mt-0.5 overflow-hidden rounded border border-gray-200 bg-white sm:mt-1">
-                  <div className="flex border-b border-gray-200">
-                    <button
-                      type="button"
-                      onClick={() => setSummaryTab('payment')}
-                      className={`min-h-[30px] flex-1 px-2 py-1.5 text-[9px] font-bold transition-colors sm:min-h-[32px] sm:text-[10px] ${
-                        summaryTab === 'payment' ? 'bg-white' : 'bg-gray-50 text-gray-500'
-                      }`}
-                      style={{
-                        color: summaryTab === 'payment' ? primary : undefined,
-                        boxShadow: summaryTab === 'payment' ? `inset 0 -2px 0 0 ${primary}` : undefined,
-                      }}
-                    >
-                      Payment details
-                    </button>
+                  {/* Tab bar */}
+                  <div className="flex shrink-0 border-b border-gray-200" style={{ background: '#fafafa' }}>
                     <button
                       type="button"
                       onClick={() => setSummaryTab('totals')}
-                      className={`min-h-[30px] flex-1 px-2 py-1.5 text-[9px] font-bold transition-colors sm:min-h-[32px] sm:text-[10px] ${
-                        summaryTab === 'totals' ? 'bg-white' : 'bg-gray-50 text-gray-500'
+                      className={`flex min-h-[32px] flex-1 items-center justify-center gap-1.5 px-2 py-2 text-[10px] font-bold transition-colors ${
+                        summaryTab === 'totals' ? 'bg-white' : 'text-gray-500 hover:text-gray-700'
                       }`}
                       style={{
                         color: summaryTab === 'totals' ? primary : undefined,
                         boxShadow: summaryTab === 'totals' ? `inset 0 -2px 0 0 ${primary}` : undefined,
                       }}
                     >
-                      Total details
+                      <svg className="h-3 w-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      Totals
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSummaryTab('payment')}
+                      className={`flex min-h-[32px] flex-1 items-center justify-center gap-1.5 px-2 py-2 text-[10px] font-bold transition-colors ${
+                        summaryTab === 'payment' ? 'bg-white' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      style={{
+                        color: summaryTab === 'payment' ? primary : undefined,
+                        boxShadow: summaryTab === 'payment' ? `inset 0 -2px 0 0 ${primary}` : undefined,
+                      }}
+                    >
+                      <svg className="h-3 w-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                      Payment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSalesTermsOpen(true)}
+                      className="flex min-h-[32px] flex-1 items-center justify-center gap-1.5 px-2 py-2 text-[10px] font-bold text-gray-500 transition-colors hover:text-gray-700"
+                    >
+                      <svg className="h-3 w-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      Terms
                     </button>
                   </div>
-                  <div className="p-1.5 sm:p-2">
-                    {summaryTab === 'payment' ? (
-                      <div className="flex flex-col gap-2 sm:gap-2.5">
-                        <div>
-                          <p className="mb-1 text-[11px] font-bold sm:text-xs" style={{ color: primary }}>
+
+                  {/* ── TOTALS TAB ── */}
+                  {summaryTab === 'totals' && (
+                    <div className="flex min-h-0 flex-1 flex-col">
+                      {/* Summary rows */}
+                      <div className="flex-1 divide-y divide-gray-50 overflow-y-auto">
+                        {/* Sub Total */}
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                          <span className="shrink-0 text-[10px] text-gray-500 sm:text-[11px]">Sub Total</span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={documentSummary.subTotal ? documentSummary.subTotal.toFixed(2) : '0.00'}
+                            className="w-[90px] shrink-0 rounded border border-gray-100 bg-gray-50 px-2 py-1 text-right text-[10px] font-semibold tabular-nums text-gray-800 outline-none sm:w-[100px] sm:text-[11px]"
+                          />
+                        </div>
+
+                        {/* Discount */}
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                          <span className="shrink-0 text-[10px] text-gray-500 sm:text-[11px]">Discount</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={docDiscPct}
+                              onChange={(e) => { setDocDiscPct(e.target.value); if (e.target.value) setDocDiscAmt(''); }}
+                              placeholder="%"
+                              className="w-[36px] rounded border border-gray-200 bg-white px-1 py-1 text-center text-[9px] tabular-nums outline-none focus:border-gray-400 sm:text-[10px]"
+                            />
+                            <span className="text-[9px] text-gray-400">%</span>
+                            <input
+                              type="number"
+                              value={n(docDiscPct) > 0 ? documentSummary.extraDisc.toFixed(2) : docDiscAmt}
+                              onChange={(e) => { setDocDiscAmt(e.target.value); setDocDiscPct(''); }}
+                              readOnly={n(docDiscPct) > 0}
+                              className={`w-[68px] rounded border border-gray-200 px-2 py-1 text-right text-[10px] tabular-nums outline-none sm:text-[11px] ${n(docDiscPct) > 0 ? 'bg-gray-50 text-gray-600' : 'bg-white'}`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Total after discount */}
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                          <span className="shrink-0 text-[10px] text-gray-500 sm:text-[11px]">Total Amount</span>
+                          <input
+                            type="text"
+                            readOnly
+                            value={documentSummary.totalAmount ? documentSummary.totalAmount.toFixed(2) : '0.00'}
+                            className="w-[90px] shrink-0 rounded border border-gray-100 bg-gray-50 px-2 py-1 text-right text-[10px] font-semibold tabular-nums text-gray-800 outline-none sm:w-[100px] sm:text-[11px]"
+                          />
+                        </div>
+
+                        {/* Tax */}
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                          <span className="shrink-0 text-[10px] text-gray-500 sm:text-[11px]">Tax</span>
+                          <div className="flex items-center gap-1">
+                            <DropdownInput
+                              label=""
+                              options={taxRateOptions}
+                              value={summaryTaxPct !== '' && summaryTaxPct != null ? summaryTaxPct : String(n(init?.taxDefaults?.tax1Percentage, 0))}
+                              onChange={(v) => setSummaryTaxPct(v)}
+                              widthPx={52}
+                            />
+                            <span className="text-[9px] text-gray-400">%</span>
+                            <input
+                              type="text"
+                              readOnly
+                              value={documentSummary.taxAmt ? documentSummary.taxAmt.toFixed(2) : '0.00'}
+                              className="w-[68px] shrink-0 rounded border border-gray-100 bg-gray-50 px-2 py-1 text-right text-[10px] tabular-nums text-gray-800 outline-none sm:text-[11px]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Round Off */}
+                        <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                          <span className="shrink-0 text-[10px] text-gray-500 sm:text-[11px]">Round Off</span>
+                          <input
+                            type="number"
+                            value={roundOffAdjInput}
+                            onChange={(e) => setRoundOffAdjInput(e.target.value)}
+                            className="w-[90px] shrink-0 rounded border border-gray-200 bg-white px-2 py-1 text-right text-[10px] tabular-nums outline-none focus:border-gray-400 sm:w-[100px] sm:text-[11px]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* NET AMOUNT — prominent footer */}
+                      <div
+                        className="flex items-center justify-between px-3 py-2.5"
+                        style={{ background: `linear-gradient(90deg, #fdf2f5 0%, #fff5f7 100%)`, borderTop: `2px solid ${primary}20` }}
+                      >
+                        <span className="text-[11px] font-bold sm:text-[12px]" style={{ color: primary }}>
+                          NET AMOUNT
+                        </span>
+                        <div
+                          className="rounded px-3 py-1 text-right text-sm font-bold tabular-nums sm:text-base"
+                          style={{ color: primary, background: `${primary}10`, border: `1px solid ${primary}30` }}
+                        >
+                          {documentSummary.net ? documentSummary.net.toFixed(2) : '0.00'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── PAYMENT TAB ── */}
+                  {summaryTab === 'payment' && (
+                    <div className="flex min-h-0 flex-1 flex-col">
+                      {/* Invoice total reference */}
+                      <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-3 py-2">
+                        <span className="text-[10px] font-medium text-gray-500">Invoice Total</span>
+                        <span className="text-[11px] font-bold tabular-nums" style={{ color: primary }}>
+                          {documentSummary.net ? documentSummary.net.toFixed(2) : '0.00'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-1 flex-col gap-0 divide-y divide-gray-50 overflow-y-auto px-3 pb-0">
+                        {/* Paid Amount */}
+                        <div className="py-2">
+                          <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-gray-400 sm:text-[10px]">
                             Paid Amount
-                          </p>
+                          </label>
                           <input
                             type="number"
                             value={paidAmountEntry}
                             onChange={(e) => setPaidAmountEntry(e.target.value)}
                             placeholder={documentSummary.net ? documentSummary.net.toFixed(2) : '0.00'}
-                            className="box-border w-full rounded border border-gray-200 bg-white px-2 py-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-gray-400 sm:text-base"
+                            className="box-border w-full rounded border border-gray-200 bg-white px-2.5 py-2 text-right text-sm font-bold tabular-nums outline-none focus:border-gray-400 sm:text-base"
+                            style={{ color: primary }}
                           />
                         </div>
-                        <div>
-                          <p className="mb-1 text-[11px] font-bold sm:text-xs" style={{ color: primary }}>
+
+                        {/* Balance Amount */}
+                        <div className="py-2">
+                          <label className="mb-1 block text-[9px] font-semibold uppercase tracking-wide text-gray-400 sm:text-[10px]">
                             Balance Amount
-                          </p>
-                          <input
-                            type="text"
-                            readOnly
-                            value={
-                              documentSummary.net
-                                ? roundMoney(
-                                    documentSummary.net - (n(paidAmountEntry) || documentSummary.net)
-                                  ).toFixed(2)
-                                : ''
-                            }
-                            className="box-border w-full rounded border border-gray-200 bg-gray-50 px-2 py-2 text-right text-sm font-semibold tabular-nums text-gray-800 sm:text-base"
-                          />
-                          {customerSummary?.currentOsBalance != null ? (
-                            <p className="mt-1 text-[9px] text-gray-500">
-                              Customer OS: {String(customerSummary.currentOsBalance)}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
-                          <div className="min-w-0 flex-1">
-                            <SubInputField
-                              label="Paid by cash"
-                              type="number"
-                              value={paidByCashEntry}
-                              onChange={(e) => setPaidByCashEntry(e.target.value)}
-                              fullWidth
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <SubInputField
-                              label="Paid by card"
-                              type="number"
-                              value={paidByCardEntry}
-                              onChange={(e) => setPaidByCardEntry(e.target.value)}
-                              fullWidth
-                            />
-                          </div>
+                          </label>
+                          {(() => {
+                            const bal = documentSummary.net
+                              ? roundMoney(documentSummary.net - (n(paidAmountEntry) || documentSummary.net))
+                              : 0;
+                            const isNeg = bal < 0;
+                            return (
+                              <>
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={documentSummary.net ? bal.toFixed(2) : ''}
+                                  className="box-border w-full rounded border px-2.5 py-2 text-right text-sm font-bold tabular-nums outline-none sm:text-base"
+                                  style={{
+                                    background: bal === 0 ? '#f0fdf4' : isNeg ? '#fff7ed' : '#fef2f2',
+                                    borderColor: bal === 0 ? '#86efac' : isNeg ? '#fed7aa' : '#fca5a5',
+                                    color: bal === 0 ? '#16a34a' : isNeg ? '#ea580c' : '#dc2626',
+                                  }}
+                                />
+                                {customerSummary?.currentOsBalance != null && (
+                                  <p className="mt-1 flex items-center gap-1 text-[9px] text-gray-500">
+                                    <svg className="h-2.5 w-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Customer O/S: {String(customerSummary.currentOsBalance)}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex flex-col gap-2.5 sm:gap-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
-                            Sub Total
-                          </span>
-                          <input
-                            type="text"
-                            readOnly
-                            value={documentSummary.subTotal ? documentSummary.subTotal.toFixed(2) : ''}
-                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:max-w-[180px] sm:text-xs"
-                          />
-                        </div>
-                        <div className="flex flex-wrap items-end justify-between gap-2">
-                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
-                            Discount Amount
-                          </span>
-                          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-1.5">
-                            <SubInputField
-                              label=""
-                              type="number"
-                              widthPx={44}
-                              value={docDiscPct}
-                              onChange={(e) => {
-                                setDocDiscPct(e.target.value);
-                                if (e.target.value) setDocDiscAmt('');
-                              }}
-                              placeholder="%"
-                            />
-                            <span className="pb-1 text-[10px] text-gray-600">%</span>
-                            <SubInputField
-                              label=""
-                              type="number"
-                              widthPx={88}
-                              value={n(docDiscPct) > 0 ? documentSummary.extraDisc.toFixed(2) : docDiscAmt}
-                              onChange={(e) => {
-                                setDocDiscAmt(e.target.value);
-                                setDocDiscPct('');
-                              }}
-                              readOnly={n(docDiscPct) > 0}
-                              className={n(docDiscPct) > 0 ? 'bg-gray-50' : ''}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
-                            Total Amount
-                          </span>
-                          <input
-                            type="text"
-                            readOnly
-                            value={documentSummary.totalAmount ? documentSummary.totalAmount.toFixed(2) : ''}
-                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:max-w-[180px] sm:text-xs"
-                          />
-                        </div>
-                        <div className="flex flex-wrap items-end justify-between gap-2">
-                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
-                            Tax
-                          </span>
-                          <div className="flex min-w-0 flex-1 items-center justify-end gap-1 sm:gap-1.5">
-                            <DropdownInput
-                              label=""
-                              options={taxRateOptions}
-                              value={
-                                summaryTaxPct !== '' && summaryTaxPct != null
-                                  ? summaryTaxPct
-                                  : String(n(init?.taxDefaults?.tax1Percentage, 0))
-                              }
-                              onChange={(v) => setSummaryTaxPct(v)}
-                              widthPx={56}
-                              className="min-w-[56px]"
-                            />
-                            <span className="pb-1 text-[10px] text-gray-600">%</span>
-                            <input
-                              type="text"
-                              readOnly
-                              value={documentSummary.taxAmt ? documentSummary.taxAmt.toFixed(2) : ''}
-                              className="w-[88px] shrink-0 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-semibold tabular-nums text-red-600 sm:w-[100px] sm:text-xs"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="shrink-0 text-[10px] font-semibold text-gray-700 sm:text-[11px]">
-                            Round Off
-                          </span>
+
+                      {/* Cash / Card split — pinned to bottom */}
+                      <div
+                        className="mt-auto shrink-0 px-3 py-2.5"
+                        style={{ background: '#fafafa', borderTop: '1px solid #f1f5f9' }}
+                      >
+                        <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wide text-gray-400 sm:text-[10px]">
+                          Payment Split
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
                           <SubInputField
-                            label=""
+                            label="Paid by cash"
                             type="number"
-                            widthPx={100}
-                            value={roundOffAdjInput}
-                            onChange={(e) => setRoundOffAdjInput(e.target.value)}
-                            className="max-w-[120px]"
+                            value={paidByCashEntry}
+                            onChange={(e) => setPaidByCashEntry(e.target.value)}
+                            fullWidth
                           />
-                        </div>
-                        <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2">
-                          <span className="shrink-0 text-[10px] font-bold text-gray-800 sm:text-[11px]">
-                            Net Amount
-                          </span>
-                          <input
-                            type="text"
-                            readOnly
-                            value={documentSummary.net ? documentSummary.net.toFixed(2) : ''}
-                            className="min-w-0 max-w-[140px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 text-right text-[11px] font-bold tabular-nums text-red-600 sm:max-w-[180px] sm:text-sm"
+                          <SubInputField
+                            label="Paid by card"
+                            type="number"
+                            value={paidByCardEntry}
+                            onChange={(e) => setPaidByCardEntry(e.target.value)}
+                            fullWidth
                           />
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
