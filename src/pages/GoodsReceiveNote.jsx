@@ -16,7 +16,7 @@ import {
   ConfirmDialog,
 } from '../components/ui';
 
-export default function PurchaseOrder() {
+export default function GoodsReceiveNote() {
   const [tableRows, setTableRows] = useState(
     Array.from({ length: 10 }, (_, idx) => [
       String(idx + 1),
@@ -59,15 +59,16 @@ export default function PurchaseOrder() {
     total: '',
     discountAmount: '',
     netAmount: '',
-    lpoTerms: '',
+    grnTerms: '',
   });
-  const [lpoInfo, setLpoInfo] = useState({
-    lpoNo: '',
-    orderFrom: '',
-    lpoSupplierName: '',
-    supplierQuotationNo: '',
-    lpoDate: '',
+  const [grnInfo, setGrnInfo] = useState({
+    grnNo: '',
+    orderFormNo: '',
+    supplierName: '',
+    supplierDocNo: '',
+    grnDate: '',
     discount: 'None',
+    purchaseNo: '',
     bySupplier: false,
     listItem: false,
     useDiscPct: false,
@@ -196,23 +197,23 @@ export default function PurchaseOrder() {
   return (
     <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:mb-[15px] sm:mt-0 sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
       <style>{`
-        .purchase-order-btn-outline:hover {
+        .grn-btn-outline:hover {
           border-color: ${primary} !important;
           background: #F2E6EA !important;
           color: ${primary} !important;
         }
-        .purchase-order-table table {
+        .grn-table table {
           table-layout: fixed;
         }
-        .purchase-order-table th,
-        .purchase-order-table td {
+        .grn-table th,
+        .grn-table td {
           vertical-align: middle;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .purchase-order-table th:first-child,
-        .purchase-order-table td:first-child {
+        .grn-table th:first-child,
+        .grn-table td:first-child {
           width: 34px !important;
           min-width: 34px !important;
           max-width: 34px !important;
@@ -220,41 +221,41 @@ export default function PurchaseOrder() {
           padding-left: 4px !important;
           padding-right: 4px !important;
         }
-        .purchase-order-table th:nth-child(5),
-        .purchase-order-table td:nth-child(5),
-        .purchase-order-table th:nth-child(6),
-        .purchase-order-table td:nth-child(6),
-        .purchase-order-table th:nth-child(7),
-        .purchase-order-table td:nth-child(7),
-        .purchase-order-table th:nth-child(8),
-        .purchase-order-table td:nth-child(8),
-        .purchase-order-table th:nth-child(9),
-        .purchase-order-table td:nth-child(9),
-        .purchase-order-table th:nth-child(10),
-        .purchase-order-table td:nth-child(10),
-        .purchase-order-table th:nth-child(11),
-        .purchase-order-table td:nth-child(11),
-        .purchase-order-table th:nth-child(12),
-        .purchase-order-table td:nth-child(12),
-        .purchase-order-table th:nth-child(13),
-        .purchase-order-table td:nth-child(13),
-        .purchase-order-table th:nth-child(14),
-        .purchase-order-table td:nth-child(14),
-        .purchase-order-table th:nth-child(15),
-        .purchase-order-table td:nth-child(15) {
+        .grn-table th:nth-child(5),
+        .grn-table td:nth-child(5),
+        .grn-table th:nth-child(6),
+        .grn-table td:nth-child(6),
+        .grn-table th:nth-child(7),
+        .grn-table td:nth-child(7),
+        .grn-table th:nth-child(8),
+        .grn-table td:nth-child(8),
+        .grn-table th:nth-child(9),
+        .grn-table td:nth-child(9),
+        .grn-table th:nth-child(10),
+        .grn-table td:nth-child(10),
+        .grn-table th:nth-child(11),
+        .grn-table td:nth-child(11),
+        .grn-table th:nth-child(12),
+        .grn-table td:nth-child(12),
+        .grn-table th:nth-child(13),
+        .grn-table td:nth-child(13),
+        .grn-table th:nth-child(14),
+        .grn-table td:nth-child(14),
+        .grn-table th:nth-child(15),
+        .grn-table td:nth-child(15) {
           text-align: center;
         }
-        .purchase-order-table th:last-child,
-        .purchase-order-table td:last-child {
+        .grn-table th:last-child,
+        .grn-table td:last-child {
           width: 90px !important;
           min-width: 90px !important;
           text-align: center;
         }
-        .purchase-order-table tbody tr:last-child td {
+        .grn-table tbody tr:last-child td {
           font-weight: 700;
           background-color: #faf5f6;
         }
-        .purchase-order-table tbody tr:last-child td:first-child {
+        .grn-table tbody tr:last-child td:first-child {
           text-align: left !important;
           padding-left: 8px !important;
         }
@@ -263,14 +264,14 @@ export default function PurchaseOrder() {
       <div className="flex h-[100%] w-full min-h-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-            LOCAL PURCHASE ORDER
+            GOODS RECEIVE NOTE
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: EditIcon, label: 'Edit' }].map((btn) => (
               <button
                 key={btn.label || 'print'}
                 type="button"
-                className="purchase-order-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+                className="grn-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
               >
                 <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
                 {btn.label}
@@ -278,7 +279,7 @@ export default function PurchaseOrder() {
             ))}
             <button
               type="button"
-              className="purchase-order-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              className="grn-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
             >
               Add
             </button>
@@ -298,7 +299,7 @@ export default function PurchaseOrder() {
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Local Purchase Order
+              Goods Receive Note
             </button>
           </div>
         </div>
@@ -355,7 +356,7 @@ export default function PurchaseOrder() {
           <div className="hidden min-h-0 flex-1 flex-col rounded bg-white xl:flex xl:w-[860px]">
             <div className="min-h-0 min-w-0 w-full">
               <CommonTable
-                className="purchase-order-table"
+                className="grn-table"
                 headers={['SL No', 'Own REF No', 'Barcode', 'shortDescription', 'Qty', 'UOM', 'pack qty', 'FOC', 'base cost', 'disc%', 'unit cost', 'total', 'vat%', 'Vat Amt', 'line total', 'Action']}
                 fitParentWidth
                 maxVisibleRows={20}
@@ -439,7 +440,7 @@ export default function PurchaseOrder() {
 
 
           <div
-            className="w-full rounded bg-white p-3 sm:p-3.5 xl:h-[165px]"
+            className="w-full rounded bg-white p-3 sm:p-3.5"
             style={{
               borderRadius: '9.9px',
               border: '0.49px solid #e5e7eb',
@@ -447,25 +448,48 @@ export default function PurchaseOrder() {
           >
             <div className="flex flex-col gap-2.5">
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                <SubInputField label="LPO no" fullWidth value={lpoInfo.lpoNo} onChange={(e) => setLpoInfo((prev) => ({ ...prev, lpoNo: e.target.value }))} />
-                <SubInputField label="Order form" fullWidth value={lpoInfo.orderFrom} onChange={(e) => setLpoInfo((prev) => ({ ...prev, orderFrom: e.target.value }))} />
-                <InputField label="LPO Supplier name" fullWidth value={lpoInfo.lpoSupplierName} onChange={(e) => setLpoInfo((prev) => ({ ...prev, lpoSupplierName: e.target.value }))} />
+                <SubInputField label="GRN no" fullWidth value={grnInfo.grnNo} onChange={(e) => setGrnInfo((prev) => ({ ...prev, grnNo: e.target.value }))} />
+                <SubInputField label="Order Form No" fullWidth value={grnInfo.orderFormNo} onChange={(e) => setGrnInfo((prev) => ({ ...prev, orderFormNo: e.target.value }))} />
+                <InputField label="Supplier name" fullWidth value={grnInfo.supplierName} onChange={(e) => setGrnInfo((prev) => ({ ...prev, supplierName: e.target.value }))} />
               </div>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                <InputField label="Supplier Quot. No" fullWidth value={lpoInfo.supplierQuotationNo} onChange={(e) => setLpoInfo((prev) => ({ ...prev, supplierQuotationNo: e.target.value }))} />
-                <DateInputField label="LPO date" fullWidth value={lpoInfo.lpoDate} onChange={(val) => setLpoInfo((prev) => ({ ...prev, lpoDate: val }))} />
+                <DateInputField label="GRN date" fullWidth value={grnInfo.grnDate} onChange={(val) => setGrnInfo((prev) => ({ ...prev, grnDate: val }))} />
+                <InputField
+                  label="Supplier Quot./Invoice No"
+                  fullWidth
+                  value={grnInfo.supplierDocNo}
+                  onChange={(e) => setGrnInfo((prev) => ({ ...prev, supplierDocNo: e.target.value }))}
+                />
                 <DropdownInput
                   label="Discount"
                   fullWidth
-                  value={lpoInfo.discount}
-                  onChange={(val) => setLpoInfo((prev) => ({ ...prev, discount: val }))}
+                  value={grnInfo.discount}
+                  onChange={(val) => setGrnInfo((prev) => ({ ...prev, discount: val }))}
                   options={['None', 'Flat', 'Percentage']}
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Switch checked={lpoInfo.bySupplier} onChange={(v) => setLpoInfo((prev) => ({ ...prev, bySupplier: v }))} description="supplier" size="xs" />
-                <Switch checked={lpoInfo.listItem} onChange={(v) => setLpoInfo((prev) => ({ ...prev, listItem: v }))} description="list item" size="xs" />
-                <Switch checked={lpoInfo.useDiscPct} onChange={(v) => setLpoInfo((prev) => ({ ...prev, useDiscPct: v }))} description="use Disc%" size="xs" />
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                <SubInputField
+                  label="Purchase No"
+                  fullWidth
+                  value={grnInfo.purchaseNo}
+                  onChange={(e) => setGrnInfo((prev) => ({ ...prev, purchaseNo: e.target.value }))}
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Switch checked={grnInfo.bySupplier} onChange={(v) => setGrnInfo((prev) => ({ ...prev, bySupplier: v }))} description="with supplier" size="xs" />
+                  <Switch checked={grnInfo.listItem} onChange={(v) => setGrnInfo((prev) => ({ ...prev, listItem: v }))} description="list items" size="xs" />
+                  <Switch checked={grnInfo.useDiscPct} onChange={(v) => setGrnInfo((prev) => ({ ...prev, useDiscPct: v }))} description="use Disc %" size="xs" />
+                </div>
+                <button
+                  type="button"
+                  className="rounded border px-2 py-1 text-[10px] font-semibold text-white hover:opacity-95 sm:text-[11px]"
+                  style={{ backgroundColor: primary, borderColor: primary }}
+                >
+                  View
+                </button>
               </div>
             </div>
           </div>
@@ -500,10 +524,10 @@ export default function PurchaseOrder() {
                 />
               </div>
               <div className="flex items-start gap-2.5">
-                <label className="w-[120px] shrink-0 pt-1 text-[10px] font-semibold text-gray-700 sm:w-[130px]">LPO Terms</label>
+                <label className="w-[120px] shrink-0 pt-1 text-[10px] font-semibold text-gray-700 sm:w-[130px]">GRN Terms</label>
                 <textarea
-                  value={summaryInfo.lpoTerms}
-                  onChange={(e) => setSummaryInfo((prev) => ({ ...prev, lpoTerms: e.target.value }))}
+                  value={summaryInfo.grnTerms}
+                  onChange={(e) => setSummaryInfo((prev) => ({ ...prev, grnTerms: e.target.value }))}
                   className="min-h-[56px] w-full rounded border border-gray-200 bg-white px-2 py-1 text-[10px] outline-none sm:text-[11px]"
                 />
               </div>
@@ -516,7 +540,7 @@ export default function PurchaseOrder() {
       <ConfirmDialog
         open={pendingDeleteIndex !== null}
         title="Delete line item?"
-        message="This will remove the row from the purchase order. This action cannot be undone."
+        message="This will remove the row from the goods receive note. This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         danger

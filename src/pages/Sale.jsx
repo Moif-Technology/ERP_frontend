@@ -222,12 +222,17 @@ function getProductDetails(line) {
 }
 
 const initialFormState = {
+  ownRef: '',
+  productCode: '',
   shortDescription: '',
-  hsCode: '',
-  qty: '',
+  serialNo: '',
+  packetDetails: '',
+  unit: '',
+  salesQty: '',
+  focQty: '',
+  returnQty: '',
   unitPrice: '',
   discPercent: '',
-  discPrice: '',
   discAmt: '',
   subTotal: '',
   taxPercent: '',
@@ -288,6 +293,8 @@ export default function Sale() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [saleLines, setSaleLines] = useState([]);
   const [form, setForm] = useState(initialFormState);
+  const [returnForm, setReturnForm] = useState(returnFormInitial);
+  const [billPanel, setBillPanel] = useState(billPanelInitial);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
 
@@ -1104,7 +1111,7 @@ export default function Sale() {
       <button type="button" className="p-0.5" onClick={() => handleEdit(line, idx)}>
         <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
-      <button type="button" className="p-0.5" onClick={() => handleDelete(idx)}>
+      <button type="button" className="p-0.5" onClick={() => setPendingDelete({ mode: 'single', idx })}>
         <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </button>
     </div>,
@@ -1204,7 +1211,7 @@ export default function Sale() {
               {selectedRows.size > 0 && (
                 <button
                   type="button"
-                  onClick={handleDeleteSelected}
+                  onClick={() => setPendingDelete({ mode: 'bulk' })}
                   className="sale-btn-outline flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
                   style={{ borderColor: primary, color: primary }}
                 >
@@ -1401,27 +1408,33 @@ export default function Sale() {
                 </div>
               </div>
 
-              {/* Table section - bordered container; scroll inside when content overflows */}
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded border border-gray-200 bg-white p-2 sm:p-3">
-                <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-                  <CommonTable
-                    headers={[
-        '',
-        'Short Description',
-        'HS Code/Wt',
-        ' Qty',
-        'Selling price',
-        'Disc %',
-        'Disc Amt',
-        'Sub total',
-        'Tax %',
-        'Tax amt',
-        'Line total',
-        'Action',
-      ]}
-                    rows={rowsWithTotal}
-                  />
-                </div>
+              {/* Table — fits column width (table-fixed); no nested vertical scroll */}
+              <div className="w-full min-w-0 rounded border border-gray-200 bg-white p-2 sm:p-3">
+                <CommonTable
+                  fitParentWidth
+                  maxVisibleRows={11}
+                  headers={[
+                    '',
+                    'OwnRef #',
+                    'Product Code',
+                    'Short description',
+                    'serial#',
+                    'packet details',
+                    'unit',
+                    'sales Qty',
+                    'FOC Qty',
+                    'Return Qty',
+                    'Selling price',
+                    'Disc %',
+                    'Disc Amt',
+                    'Sub total',
+                    'Tax %',
+                    'Tax amt',
+                    'Line Total',
+                    'Action',
+                  ]}
+                  rows={rowsWithTotal}
+                />
               </div>
             </div>
 

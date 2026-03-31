@@ -18,6 +18,8 @@ import ReportsIcon from '../../assets/icons/reports.svg';
 import ToolsIcon from '../../assets/icons/tools.svg';
 import ManagementIcon from '../../assets/icons/management.svg';
 import ConfigIcon from '../../assets/icons/config.svg';
+import VendorIcon from '../../assets/icons/vendor.svg';
+import ProductEntryIcon from '../../assets/icons/stock-hub.svg';
 import ChevronDown from '../../assets/chevron-down.svg';
 import SearchIcon from '../../assets/iconsax-search.svg';
 
@@ -47,9 +49,9 @@ const menuItems = [
     label: 'Data Entry',
     icon: DataEntryIcon,
     subItems: [
-      { label: 'Sub 1', to: '/sub 1', icon: ListIcon },
-      { label: 'Sub 2', to: '/sub 2', icon: StockIcon },
-      { label: 'Sub 3', to: '/sub 3', icon: ExchangeIcon },
+      { label: 'Customer entry', to: '/data-entry/customer-entry', icon: ManagementIcon },
+      { label: 'Supplier entry', to: '/data-entry/supplier-entry', icon: VendorIcon },
+      { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon },
     ],
   },
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
@@ -235,18 +237,23 @@ export default function Sidebar({ collapsed = false, width = DEFAULT_WIDTH, onTo
                       key={`${item.label}-${sub.label}`}
                       to={sub.to}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] text-white/90 no-underline transition-colors duration-200 hover:bg-white/10 active:bg-white/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-inset min-h-[44px] ${
-                          isActive ? 'bg-white/18 border border-white/14 font-semibold text-white' : 'font-normal'
+                        `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
+                          isActive
+                            ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
+                            : 'hover:bg-white/8 font-light'
                         }`
                       }
                     >
                       <img
                         src={sub.icon}
                         alt=""
-                        aria-hidden="true"
-                        className={iconClass(sub.icon, `${ICON_SIZE} shrink-0 opacity-90`)}
+                        className={`w-4 h-4 ${
+                          sub.label === 'Supplier entry' || sub.label === 'Product entry'
+                            ? 'filter brightness-0 invert'
+                            : ''
+                        }`.trim()}
                       />
-                      <span className="truncate">{sub.label}</span>
+                      <span>{sub.label}</span>
                     </NavLink>
                   ))}
                 </div>

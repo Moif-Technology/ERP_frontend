@@ -117,6 +117,7 @@ export default function Quotation() {
   const [productInfo, setProductInfo] = useState({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
   const [attachments, setAttachments] = useState(false);
   const [lineItemDetail, setLineItemDetail] = useState(null);
+  const [pendingRemoveIndex, setPendingRemoveIndex] = useState(null);
 
   const orDash = (v) => (v != null && v !== '' ? String(v) : '—');
 
@@ -780,7 +781,7 @@ export default function Quotation() {
                       <button type="button" className="p-0.5" onClick={() => setLineItemDetail(r)} aria-label="View line">
                         <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </button>
-                      <button type="button" className="p-0.5" onClick={() => removeItem(i)} aria-label="Delete line">
+                      <button type="button" className="p-0.5" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete line">
                         <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </button>
                     </div>,
