@@ -15,6 +15,8 @@ export default function Layout({ children }) {
     <div
       style={{
         minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         background: '#f6f7fb',
         paddingTop: HEADER_HEIGHT,
       }}
@@ -25,6 +27,7 @@ export default function Layout({ children }) {
           position: 'sticky',
           top: HEADER_HEIGHT,
           zIndex: 40,
+          flexShrink: 0,
           marginLeft: SIDEBAR_WIDTH,
         }}
       >
@@ -34,7 +37,8 @@ export default function Layout({ children }) {
       <div
         style={{
           display: 'flex',
-          minHeight: `calc(100vh - ${HEADER_HEIGHT}px)`,
+          flex: 1,
+          minHeight: 0,
         }}
       >
         <Sidebar />
@@ -48,6 +52,7 @@ export default function Layout({ children }) {
             display: 'flex',
             flexDirection: 'column',
             overflowY: 'auto',
+            overflowX: 'hidden',
           }}
         >
           {children ?? <Outlet />}

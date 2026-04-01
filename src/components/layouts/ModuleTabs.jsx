@@ -94,8 +94,11 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Sale' && action === 'Sales') {
       navigate('/sales');
     }
-    if (module === 'Quotation' && (action === 'Quotation' || action === 'List')) {
+    if (module === 'Quotation' && action === 'Quotation') {
       navigate('/quotation');
+    }
+    if (module === 'Quotation' && action === 'List') {
+      navigate('/quotation-list');
     }
     if (module === 'Delivery Order' && (action === 'Delivery' || action === 'List')) {
       navigate('/delivery-order');

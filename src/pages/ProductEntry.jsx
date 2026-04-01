@@ -282,7 +282,7 @@ export default function ProductEntry() {
         }
       `}</style>
 
-      <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden px-1 sm:my-[15px] sm:mx-[-10px] sm:px-0">
+      <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden sm:my-[15px]">
         <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
           {/* Header + toolbar */}
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -327,7 +327,7 @@ export default function ProductEntry() {
               <div className={`min-w-0 w-full ${fieldBox}`}>
                 <div className="flex min-w-0 flex-col gap-2">
                   <div className="flex flex-wrap items-end gap-2.5">
-                    <SubInputField
+                    <InputField
                       label="Barcode"
                       widthPx={130}
                       heightPx={18}
@@ -414,7 +414,7 @@ export default function ProductEntry() {
 
                   <div className="flex flex-col gap-2 md:flex-row md:items-end md:gap-2.5">
                     <div className="min-w-0 w-full md:flex-1">
-                      <SubInputField
+                      <InputField
                         label="Product Brand"
                         fullWidth
                         heightPx={18}
@@ -423,7 +423,7 @@ export default function ProductEntry() {
                       />
                     </div>
                     <div className="min-w-0 w-full md:flex-1">
-                      <SubInputField
+                      <InputField
                         label="Group"
                         fullWidth
                         heightPx={18}
@@ -432,7 +432,7 @@ export default function ProductEntry() {
                       />
                     </div>
                     <div className="min-w-0 w-full md:flex-1">
-                      <SubInputField
+                      <InputField
                         label="Subgroup"
                         fullWidth
                         heightPx={18}
@@ -441,7 +441,7 @@ export default function ProductEntry() {
                       />
                     </div>
                     <div className="min-w-0 w-full md:flex-1">
-                      <SubInputField
+                      <InputField
                         label="SubSubGroup"
                         fullWidth
                         heightPx={18}
@@ -468,35 +468,35 @@ export default function ProductEntry() {
                       value={main.lastPurchCost}
                       onChange={(e) => setMain((m) => ({ ...m, lastPurchCost: e.target.value }))}
                     />
-                    <SubInputField
+                    <InputField
                       label="Margin%"
                       widthPx={100}
                       heightPx={18}
                       value={main.marginPct}
                       onChange={(e) => setMain((m) => ({ ...m, marginPct: e.target.value }))}
                     />
-                    <SubInputField
+                    <InputField
                       label="Min UNIT Price"
                       widthPx={120}
                       heightPx={18}
                       value={main.minUnitPrice}
                       onChange={(e) => setMain((m) => ({ ...m, minUnitPrice: e.target.value }))}
                     />
-                    <SubInputField
+                    <InputField
                       label="Unit Price"
                       widthPx={110}
                       heightPx={18}
                       value={main.unitPrice}
                       onChange={(e) => setMain((m) => ({ ...m, unitPrice: e.target.value }))}
                     />
-                    <SubInputField
+                    <InputField
                       label="base cost"
                       widthPx={110}
                       heightPx={18}
                       value={main.baseCost}
                       onChange={(e) => setMain((m) => ({ ...m, baseCost: e.target.value }))}
                     />
-                    <SubInputField
+                    <InputField
                       label="Discount %"
                       widthPx={110}
                       heightPx={18}
@@ -554,7 +554,7 @@ export default function ProductEntry() {
                       />
                     </div>
                     <div className="min-w-0 w-full md:flex-1">
-                      <SubInputField
+                      <InputField
                         label="COST WITH VAT"
                         fullWidth
                         heightPx={18}
@@ -565,7 +565,7 @@ export default function ProductEntry() {
                   </div>
 
                   <div className="flex flex-wrap items-end gap-2.5">
-                    <SubInputField
+                    <InputField
                       label="PRICE WITH VAT"
                       widthPx={140}
                       heightPx={18}
