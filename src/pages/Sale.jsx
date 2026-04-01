@@ -293,8 +293,6 @@ export default function Sale() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [saleLines, setSaleLines] = useState([]);
   const [form, setForm] = useState(initialFormState);
-  const [returnForm, setReturnForm] = useState(returnFormInitial);
-  const [billPanel, setBillPanel] = useState(billPanelInitial);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
 
@@ -1120,8 +1118,13 @@ export default function Sale() {
  
 
 [
-  <div key="total" className="text-right font-bold">Total</div>,
-  '', '', '', '', '',
+  <div key="total-chk" />,
+  <div key="total-label" className="text-right font-bold">Total</div>,
+  '',
+  '',
+  '',
+  '',
+  '',
   totalDiscAmt.toFixed(2),
   totalSubTotal.toFixed(2),
   totalTaxPercent.toFixed(2),
@@ -1415,16 +1418,10 @@ export default function Sale() {
                   maxVisibleRows={11}
                   headers={[
                     '',
-                    'OwnRef #',
-                    'Product Code',
                     'Short description',
-                    'serial#',
-                    'packet details',
-                    'unit',
-                    'sales Qty',
-                    'FOC Qty',
-                    'Return Qty',
-                    'Selling price',
+                    'Product Code',
+                    'Qty',
+                    'Unit price',
                     'Disc %',
                     'Disc Amt',
                     'Sub total',
