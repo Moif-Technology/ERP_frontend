@@ -4,6 +4,7 @@ import ProductList from './pages/ProductList';
 import Sale from './pages/Sale';
 import SalesReturn from './pages/SalesReturn';
 import Quotation from './pages/Quotation';
+import QuotationList from './pages/QuotationList';
 import DeliveryOrder from './pages/DeliveryOrder';
 import Purchase from './pages/Purchase';
 import PurchaseOrder from './pages/PurchaseOrder';
@@ -21,6 +22,7 @@ export default function AppRoutes() {
       <Route path="/sales" element={<Sale />} />
       <Route path="/sales-return" element={<SalesReturn />} />
       <Route path="/quotation" element={<Quotation />} />
+      <Route path="/quotation-list" element={<QuotationList />} />
       <Route path="/delivery-order" element={<DeliveryOrder />} />
       <Route path="/purchase" element={<Purchase />} />
       <Route path="/purchase-order" element={<PurchaseOrder />} />
