@@ -10,8 +10,8 @@ function formatDate(dateValue) {
 
 export default function DateInputField({ label, value, onChange, widthPx, heightPx, fullWidth }) {
   const dateRef = useRef(null);
-  const boxWidth = widthPx != null ? `${widthPx}px` : inputField.subBox.width;
-  const boxHeight = heightPx != null ? `${heightPx}px` : inputField.subBox.height;
+  const boxWidth = widthPx != null ? `${widthPx}px` : inputField.dateBox.width;
+  const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dateBox.height;
   const displayValue = useMemo(() => formatDate(value), [value]);
 
   const openPicker = () => {
@@ -41,7 +41,7 @@ export default function DateInputField({ label, value, onChange, widthPx, height
           style={{
             background: colors.input?.background ?? '#fff',
             borderColor: '#e2e8f0',
-            borderRadius: inputField.subBox.borderRadius,
+            borderRadius: inputField.dateBox.borderRadius,
             width: '100%',
             height: boxHeight,
             minHeight: boxHeight,

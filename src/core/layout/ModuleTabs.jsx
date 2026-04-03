@@ -14,6 +14,9 @@ import SupplierInvoiceIcon from '../../shared/assets/icons/invoice.svg';
 import ListIcon from '../../shared/assets/icons/list2.svg';
 import SearchIcon from '../../shared/assets/icons/search2.svg';
 import ConfigIcon from '../../shared/assets/icons/edit.svg';
+import PurchaseVoucherIcon from '../../shared/assets/icons/purchase_voucher.svg';
+import SalesVoucherIcon from '../../shared/assets/icons/sales_voucher.svg';
+import DebitNoteIcon from '../../shared/assets/icons/debit_note.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -73,11 +76,15 @@ const moduleGroups = {
     { name: 'Supplier Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
   ],
   accounts: [
-    { name: 'Ledger', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Ledgers', 'List']) },
-    { name: 'Journal', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Journals', 'List']) },
-    { name: 'Receipt', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Receipts', 'List']) },
-    { name: 'Payment', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Payments', 'List']) },
-    { name: 'Contra', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Contras', 'List']) },
+    { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Vouchers', 'List']) },
+    { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Vouchers', 'List']) },
+    { name: 'Debit note', icon: DebitNoteIcon, actions: getActionItems(DebitNoteIcon, ['Debit note', 'List']) },
+    { name: 'Income/Expense voucher', icon: SupplierInvoiceIcon, actions: getActionItems(SupplierInvoiceIcon, ['Vouchers', 'List']) },
+    { name: 'Payment Voucher', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['Vouchers', 'List']) },
+    { name: 'Receipt/contra Voucher', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Vouchers', 'List']) },
+    { name: 'Journal Voucher', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Journals', 'List']) },
+    { name: 'Account details', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Accounts', 'List']) },
+    { name: 'Statement Of Accounts', icon: ListIcon, actions: getActionItems(ListIcon, ['Statements', 'List']) },
   ],
 };
 
@@ -88,11 +95,15 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
 
   const currentModules = moduleGroups[activeTab] || moduleGroups.customer;
   const activeTabLabel = activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : '';
+  const isAccountsTab = activeTab === 'accounts';
 
   const handleActionClick = (module, action) => {
     setSelectedAction({ module, action });
     if (module === 'Sale' && action === 'Sales') {
       navigate('/sales');
+    }
+    if (module === 'Sale' && action === 'List') {
+      navigate('/sales-list');
     }
     if (module === 'Quotation' && action === 'Quotation') {
       navigate('/quotation');
@@ -114,6 +125,24 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     }
     if (module === 'Sale Return' && (action === 'Returns' || action === 'List')) {
       navigate('/sales-return');
+    }
+    if (module === 'Purchase voucher' && action === 'Vouchers') {
+      navigate('/purchase-voucher-entry');
+    }
+    if (module === 'Purchase voucher' && action === 'List') {
+      navigate('/purchase-voucher-list');
+    }
+    if (module === 'Sales voucher' && action === 'Vouchers') {
+      navigate('/sales-voucher-entry');
+    }
+    if (module === 'Sales voucher' && action === 'List') {
+      navigate('/sales-voucher-list');
+    }
+    if (module === 'Debit note' && action === 'Debit note') {
+      navigate('/debit-note-entry');
+    }
+    if (module === 'Debit note' && action === 'List') {
+      navigate('/debit-note-list');
     }
   };
 
@@ -152,7 +181,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
             </span>
             {(selectedAction?.module || selectedAction?.action) && <BreadcrumbChevron />}
             {selectedAction?.module && (
-              <span className="truncate text-[10px] font-semibold text-slate-800 sm:text-[11px]">
+              <span className="max-w-[min(100%,14rem)] truncate whitespace-nowrap text-[10px] font-semibold text-slate-800 sm:text-[11px]">
                 {selectedAction.module}
               </span>
             )}
@@ -186,9 +215,15 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
           {currentModules.map((module) => (
             <div
               key={module.name}
-              className="flex-none w-[120px] h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm"
+              className={`flex-none h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
+                isAccountsTab ? 'w-[162px] sm:w-[172px]' : 'w-[120px]'
+              }`}
             >
-              <div className="mb-2 text-[9px] sm:text-[10px] font-bold text-[#5A6578] leading-tight text-center">
+              <div
+                className={`mb-2 font-bold leading-tight text-[#5A6578] text-center whitespace-nowrap px-0.5 ${
+                  isAccountsTab ? 'text-[8px] sm:text-[9px]' : 'text-[9px] sm:text-[10px]'
+                }`}
+              >
                 {module.name}
               </div>
               <div className="flex flex-wrap gap-0 p-1">

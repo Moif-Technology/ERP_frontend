@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
+import SalesFilterDrawer from '../../../shared/components/ui/SalesFilterDrawer';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
@@ -11,7 +12,6 @@ import FilterIcon from '../../../shared/assets/icons/filter.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-/** Figma toolbar chevron ~8×8px */
 function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
@@ -21,76 +21,76 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
 }
 
 const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
+const STN_CODES = ['STN-M01', 'STN-N02', 'STN-S03', 'STN-W04', 'STN-EX05'];
 
-const DUMMY_CUSTOMER_NAMES = [
-  'Al Noor Trading LLC',
-  'Gulf Fresh Markets',
-  'City Hyper Stores',
-  'Prime Wholesale Co.',
-  'Emirates Retail Group',
-  'Desert Bloom Supplies',
-  'Harbor View Trading',
-  'Oasis Foods LLC',
-  'Metro Cash & Carry',
-  'Sunrise General Trading',
-  'Pearl Coast Distributors',
-  'Falcon Electronics',
-  'Royal Star Hypermarket',
-  'Blue Wave Imports',
-  'Golden Sands Wholesale',
+const PARTICULARS = [
+  'Purchase – inventory (against supplier invoice)',
+  'Office supplies – petty cash reimbursement',
+  'Freight & forwarding – monthly accrual',
+  'Utilities – warehouse (service period Mar 2026)',
+  'Professional fees – as per contract',
+  'Spare parts – stock receipt #GRN-441',
+  'Packaging material – walk-in vendor',
 ];
+
+const VOUCHER_TYPES = ['Purchase expense', 'Petty cash', 'Credit note', 'Service invoice', 'Stock adjustment'];
+const VOUCHER_GROUPS = ['Purchase', 'Expense', 'Petty cash', 'Journal', 'Credit note'];
+const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Deterministic dummy list for filters, sort, and pagination */
-function buildDummyQuotations(count) {
+/** Checkbox + Sl no, Voucher no/date, Particular (wide), Voucher type, Ref no, amounts, Status, Remark, STN, TRN */
+const PV_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
+
+function buildDummyPurchaseVouchers(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const seq = 900 - i;
+    const seq = 2400 - i;
     const d = 1 + (i % 28);
     const m = 1 + (i % 4);
     const y = 2026;
-    const quotationDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const refD = Math.max(1, d - (1 + (i % 5)));
-    const custRefDate = `${String(refD).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const h = 8 + (i % 10);
-    const min = (i * 7) % 60;
-    const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-    const baseAmt = 1500 + (i * 173) % 42000 + (i % 3) * 99.5;
-    const disc = (i % 4 === 0 ? 0 : ((i * 41) % 500) + (i % 7) * 12.5).toFixed(2);
-    const amt = baseAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const voucherDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    const subNum = 950 + (i * 173) % 42000 + (i % 7) * 88.5;
+    const taxNum = subNum * 0.05 + (i % 3) * 12;
+    const voucherNum = subNum + taxNum;
+    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
       id: String(i + 1),
       station: STATIONS[i % STATIONS.length],
-      quotationNo: `QTN-2026-${String(seq).padStart(4, '0')}`,
-      quotationDate,
-      time,
-      custRefNo: `CR-${8000 + (i * 13) % 5000}`,
-      custRefDate,
-      customerName: DUMMY_CUSTOMER_NAMES[i % DUMMY_CUSTOMER_NAMES.length],
-      discountAmount: disc,
-      quotationAmount: amt,
+      stnCode: STN_CODES[i % STN_CODES.length],
+      voucherGroup: VOUCHER_GROUPS[i % VOUCHER_GROUPS.length],
+      voucherNo: `PV-2026-${String(seq).padStart(5, '0')}`,
+      voucherDate,
+      particular: PARTICULARS[i % PARTICULARS.length],
+      voucherType: VOUCHER_TYPES[i % VOUCHER_TYPES.length],
+      refNo: `REF-${(88000 + i * 31) % 99000}`,
+      subTotal: fmt(subNum),
+      taxAmount: fmt(taxNum),
+      voucherAmount: fmt(voucherNum),
+      status: i % 9 === 0 ? 'Draft' : 'Posted',
+      remark: i % 5 === 0 ? 'Approved by accounts' : i % 5 === 1 ? 'Pending GRN' : '—',
+      trnNo: `100-${(200000000 + i * 100001) % 900000000}`,
     });
   }
   return rows;
 }
 
-const DUMMY_QUOTATIONS = buildDummyQuotations(52);
+const DUMMY_PV = buildDummyPurchaseVouchers(42);
 
-/** Figma control bar: 0.5px black outline, 3px radius, h-7 row */
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
 const figmaToolbarBtn =
   `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
 
-/** Compact search (Figma: pl-1.5 pr-44 was frame-relative; here capped width, not full row) */
 const figmaSearchBox =
-  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px] sm:max-w-[520px] sm:pr-3 md:min-w-[280px] md:max-w-[320px]`;
 
-/** Checkbox, Qtn no, Qtn date, Time, Cust ref, Cust ref date, Customer, Disc, Amount — sums to 100 */
-const QUOTATION_LIST_COL_PCT = [3.5, 12, 10, 6, 10, 10, 26, 10, 12.5];
+function parseMoneyValue(s) {
+  const n = Number(String(s ?? '').replace(/,/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
 
-function parseQuotationListDate(ddmmyyyy) {
+function parseVoucherDate(ddmmyyyy) {
   const parts = String(ddmmyyyy).split('/');
   if (parts.length !== 3) return null;
   const d = Number(parts[0]);
@@ -103,22 +103,20 @@ function parseQuotationListDate(ddmmyyyy) {
   return dt;
 }
 
-function parseMoneyValue(s) {
-  const n = Number(String(s ?? '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
-
-export default function QuotationList() {
+export default function PurchaseVoucherList() {
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [stationFilter, setStationFilter] = useState(null);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [pvFilters, setPvFilters] = useState({
+    station: null,
+    postStatus: null,
+    transactionType: null,
+  });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
-  const filterWrapRef = useRef(null);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -131,57 +129,63 @@ export default function QuotationList() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortBy, appliedDateRange, stationFilter]);
+  }, [search, sortBy, appliedDateRange, pvFilters]);
 
-  useEffect(() => {
-    if (!filterOpen) return;
-    const onDown = (e) => {
-      if (filterWrapRef.current && !filterWrapRef.current.contains(e.target)) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [filterOpen]);
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (pvFilters.station) n += 1;
+    if (pvFilters.postStatus) n += 1;
+    if (pvFilters.transactionType) n += 1;
+    return n;
+  }, [pvFilters]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = q
-      ? DUMMY_QUOTATIONS.filter(
+      ? DUMMY_PV.filter(
           (r) =>
-            r.quotationNo.toLowerCase().includes(q) ||
-            r.customerName.toLowerCase().includes(q) ||
-            r.custRefNo.toLowerCase().includes(q)
+            r.voucherNo.toLowerCase().includes(q) ||
+            r.particular.toLowerCase().includes(q) ||
+            r.refNo.toLowerCase().includes(q) ||
+            r.remark.toLowerCase().includes(q) ||
+            r.stnCode.toLowerCase().includes(q) ||
+            r.station.toLowerCase().includes(q) ||
+            r.trnNo.toLowerCase().includes(q)
         )
-      : [...DUMMY_QUOTATIONS];
+      : [...DUMMY_PV];
 
     if (appliedDateRange?.from && appliedDateRange?.to) {
       const rf = appliedDateRange.from.getTime();
       const rt = appliedDateRange.to.getTime();
       list = list.filter((r) => {
-        const rd = parseQuotationListDate(r.quotationDate);
+        const rd = parseVoucherDate(r.voucherDate);
         if (!rd) return false;
         const t = rd.getTime();
         return t >= rf && t <= rt;
       });
     }
 
-    if (stationFilter) {
-      list = list.filter((r) => r.station === stationFilter);
+    if (pvFilters.station) {
+      list = list.filter((r) => r.station === pvFilters.station);
+    }
+    if (pvFilters.postStatus) {
+      list = list.filter((r) => r.status === pvFilters.postStatus);
+    }
+    if (pvFilters.transactionType) {
+      list = list.filter((r) => r.voucherGroup === pvFilters.transactionType);
     }
 
     const sorted = [...list];
     if (sortBy === 'dateDesc') {
-      sorted.sort((a, b) => String(b.quotationDate).localeCompare(String(a.quotationDate)));
+      sorted.sort((a, b) => String(b.voucherDate).localeCompare(String(a.voucherDate)));
     } else if (sortBy === 'amountDesc') {
       sorted.sort(
         (a, b) =>
-          Number(String(b.quotationAmount).replace(/,/g, '')) -
-          Number(String(a.quotationAmount).replace(/,/g, ''))
+          parseMoneyValue(b.voucherAmount) - parseMoneyValue(a.voucherAmount)
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, stationFilter]);
+  }, [search, sortBy, appliedDateRange, pvFilters]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -208,18 +212,21 @@ export default function QuotationList() {
     return n;
   }, [filteredIdSet, selectedIds]);
 
-  const quotationColumnTotals = useMemo(() => {
-    let disc = 0;
-    let amt = 0;
+  const columnTotals = useMemo(() => {
+    let sub = 0;
+    let tax = 0;
+    let voucher = 0;
     for (const r of filteredRows) {
-      disc += parseMoneyValue(r.discountAmount);
-      amt += parseMoneyValue(r.quotationAmount);
+      sub += parseMoneyValue(r.subTotal);
+      tax += parseMoneyValue(r.taxAmount);
+      voucher += parseMoneyValue(r.voucherAmount);
     }
-    return { disc, amt };
+    return { sub, tax, voucher };
   }, [filteredRows]);
 
   const tableRows = useMemo(() => {
-    const dataRows = paginatedRows.map((r) => {
+    const dataRows = paginatedRows.map((r, idx) => {
+      const slNo = (page - 1) * pageSize + idx + 1;
       const checked = selectedIds.has(r.id);
       return [
         <div key={`chk-${r.id}`} className="flex justify-center">
@@ -229,36 +236,47 @@ export default function QuotationList() {
             onChange={() => toggleRowSelected(r.id)}
             className="h-3.5 w-3.5 cursor-pointer sm:h-4 sm:w-4"
             style={{ accentColor: primary }}
-            aria-label={`Select ${r.quotationNo}`}
+            aria-label={`Select ${r.voucherNo}`}
           />
         </div>,
-        r.quotationNo,
-        r.quotationDate,
-        r.time,
-        r.custRefNo,
-        r.custRefDate,
-        r.customerName,
-        r.discountAmount,
-        r.quotationAmount,
+        slNo,
+        r.voucherNo,
+        r.voucherDate,
+        r.particular,
+        r.voucherType,
+        r.refNo,
+        r.subTotal,
+        r.taxAmount,
+        r.voucherAmount,
+        r.status,
+        r.remark,
+        r.stnCode,
+        r.trnNo,
       ];
     });
 
+    const fmtTot = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const totalRow = [
       {
         content: (
-          <div key="quotation-list-total" className="text-left font-bold">
+          <div key="pv-list-total" className="text-left font-bold">
             Total
           </div>
         ),
         colSpan: 7,
         className: 'align-middle font-bold',
       },
-      quotationColumnTotals.disc.toFixed(2),
-      quotationColumnTotals.amt.toFixed(2),
+      fmtTot(columnTotals.sub),
+      fmtTot(columnTotals.tax),
+      fmtTot(columnTotals.voucher),
+      '',
+      '',
+      '',
+      '',
     ];
 
     return [...dataRows, totalRow];
-  }, [paginatedRows, selectedIds, toggleRowSelected, quotationColumnTotals]);
+  }, [paginatedRows, page, pageSize, selectedIds, toggleRowSelected, columnTotals]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -271,12 +289,14 @@ export default function QuotationList() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
-  /* Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain */
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-          QUOTATION LIST
+        <h1
+          className="shrink-0 text-base font-bold sm:text-lg xl:text-xl"
+          style={{ color: primary }}
+        >
+          PURCHASE VOUCHER LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -293,7 +313,6 @@ export default function QuotationList() {
         </div>
       </div>
 
-      {/* Figma control row: 1170×28 reference; stacks on small screens */}
       <div className="flex w-full min-w-0 flex-col gap-2 sm:h-7 sm:flex-row sm:items-center sm:justify-between sm:gap-2.5">
         <div className={figmaSearchBox}>
           <img src={SearchIcon} alt="" className="h-3.5 w-3.5 shrink-0 opacity-90" />
@@ -325,7 +344,7 @@ export default function QuotationList() {
 
           <QuotationDateRangeModal
             open={dateModalOpen}
-            title="Quotation Date"
+            title="Voucher date"
             initialRange={appliedDateRange}
             onClose={() => setDateModalOpen(false)}
             onApply={(range) => setAppliedDateRange(range)}
@@ -347,87 +366,70 @@ export default function QuotationList() {
             </span>
           </div>
 
-          <div className="relative shrink-0" ref={filterWrapRef}>
-            <button
-              type="button"
-              className={figmaToolbarBtn}
-              aria-expanded={filterOpen}
-              aria-haspopup="listbox"
-              onClick={() => setFilterOpen((o) => !o)}
-            >
-              <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-              <span className="max-w-[5rem] truncate sm:max-w-[6rem]">
-                {stationFilter ? `Station: ${stationFilter}` : 'Filters'}
-              </span>
-              <ToolbarChevron />
-            </button>
-            {filterOpen ? (
-              <div
-                className="absolute right-0 top-full z-50 mt-0.5 min-w-[9.5rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
-                role="listbox"
-                aria-label="Stations"
-              >
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={stationFilter === null}
-                  className="w-full px-2.5 py-1.5 text-left text-[10px] font-semibold text-gray-700 hover:bg-rose-50 sm:px-3 sm:text-[11px]"
-                  onClick={() => {
-                    setStationFilter(null);
-                    setFilterOpen(false);
-                  }}
-                >
-                  All stations
-                </button>
-                <div className="my-0.5 border-t border-gray-100" />
-                {STATIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    role="option"
-                    aria-selected={stationFilter === s}
-                    className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold hover:bg-rose-50 sm:px-3 sm:text-[11px] ${
-                      stationFilter === s ? 'text-[#790728] bg-rose-50/80' : 'text-gray-800'
-                    }`}
-                    onClick={() => {
-                      setStationFilter(s);
-                      setFilterOpen(false);
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <button
+            type="button"
+            className={figmaToolbarBtn}
+            aria-expanded={filterDrawerOpen}
+            aria-haspopup="dialog"
+            onClick={() => setFilterDrawerOpen(true)}
+          >
+            <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
+            <span className="max-w-[6rem] truncate sm:max-w-[7rem]">
+              {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
+            </span>
+            <ToolbarChevron />
+          </button>
         </div>
       </div>
 
+      <SalesFilterDrawer
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        fieldOrder={['postStatus', 'transactionType', 'station']}
+        filterLabels={{
+          postStatus: 'Post status',
+          transactionType: 'Voucher group',
+          station: 'Station',
+        }}
+        stations={STATIONS}
+        postStatusOptions={POST_STATUS_OPTIONS}
+        transactionTypeOptions={VOUCHER_GROUPS}
+        applied={pvFilters}
+        onApply={setPvFilters}
+      />
+
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="quotation-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="purchase-voucher-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll
-          columnWidthPercents={QUOTATION_LIST_COL_PCT}
-          tableClassName="min-w-[min(100%,640px)] sm:min-w-[760px] lg:min-w-0"
+          truncateHeader
+          truncateBody
+          columnWidthPercents={PV_LIST_COL_PCT}
+          tableClassName="min-w-[1020px] w-full"
           hideVerticalCellBorders
           cellAlign="center"
-          headerFontSize="clamp(7px, 0.9vw, 9px)"
+          headerFontSize="clamp(7px, 0.85vw, 10px)"
           headerTextColor="#6b7280"
-          bodyFontSize="clamp(9px, 1.25vw, 12px)"
-          cellPaddingClass="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-2.5 md:py-2.5"
+          bodyFontSize="clamp(8px, 1vw, 10px)"
+          cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={Math.min(pageSize + 1, 24)}
           headers={[
             '',
-            'Quotation no',
-            'Quotation date',
-            'Time',
-            'Cust ref no',
-            'Cust. ref date',
-            'Customer name',
-            'Discount amount',
-            'Quotation amount',
+            'Sl no',
+            'Voucher no',
+            'Voucher date',
+            'Particular',
+            'Voucher type',
+            'Ref no',
+            'Sub total',
+            'Tax amount',
+            'Voucher amount',
+            'Status',
+            'Remark',
+            'STN code',
+            'TRN no',
           ]}
           rows={tableRows}
         />

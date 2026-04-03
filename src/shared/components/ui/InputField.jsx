@@ -2,7 +2,7 @@ import React from 'react';
 import { inputField, colors } from '../../constants/theme';
 
 /**
- * Input field with label above. Standard size (165.13 x 20.08).
+ * Input field with label above. Size from theme `inputField.box` (default 180×26px).
  */
 export default function InputField({ label, widthPx, heightPx, type, className, fullWidth, ...props }) {
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.box.width;

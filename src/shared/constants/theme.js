@@ -8,6 +8,7 @@ export const colors = {
   // Primary (Maroon)
   primary: {
     DEFAULT: "#790728",
+    main: "#790728",
     gradient: 'linear-gradient(180deg, #C44972 0%, #923A53 23%, #85203E 52%, #790728 95%)',
     50: "#F2E6EA",
     100: "#E4CDD3",
@@ -98,22 +99,28 @@ export const inputField = {
     color: "#000000",
     lineHeight: "15px",
   },
-  /** The input box itself — fixed 165.13 × 20.08; parent gap controls spacing */
+  /** The input box itself — DateInputField uses dateBox for width; parent gap controls spacing */
   box: {
-    width: "165.13px",
-    height: "20.08px",
+    width: "180px",
+    height: "26px",
     borderRadius: "4px",
   },
   /** Dropdown — same footprint as box */
   dropdown: {
-    width: "165.13px",
-    height: "20.08px",
+    width: "180px",
+    height: "26px",
     borderRadius: "4px",
   },
   /** Sub input field — half-width of box, same height */
   subBox: {
-    width: "82.57px",
-    height: "20.08px",
+    width: "90px",
+    height: "26px",
+    borderRadius: "4px",
+  },
+  /** Date field — same height as box, narrower width for DD/MM/YYYY */
+  dateBox: {
+    width: "120px",
+    height: "26px",
     borderRadius: "4px",
   },
 };

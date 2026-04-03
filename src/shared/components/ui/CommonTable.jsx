@@ -60,6 +60,15 @@ export default function CommonTable({
   tableClassName = '',
   /** When true with fitParentWidth, outer area uses horizontal scroll instead of clipping. */
   allowHorizontalScroll = false,
+  /** When true with fitParentWidth: header text truncates with ellipsis (title shows full text). */
+  truncateHeader = false,
+  /** When true with fitParentWidth: string/number body cells truncate with ellipsis. */
+  truncateBody = false,
+  /**
+   * Optional footer row: same cell shapes as `rows` (strings, elements, or { content, colSpan?, className?, style? }).
+   * Renders as <tfoot>; aligns with split thead/tbody layout via matching <colgroup>.
+   */
+  footerRow = null,
 }) {
   const headerBg = headerBackgroundColor ?? tableUi.header.backgroundColor;
   const useBodyScroll = maxVisibleRows != null && maxVisibleRows > 0;
@@ -76,10 +85,9 @@ export default function CommonTable({
         : 'overflow-x-hidden overflow-y-visible'
       : 'overflow-x-auto overflow-y-visible';
 
-  const tbodyScrollClass =
-    useBodyScroll && allowHorizontalScroll
-      ? 'min-w-0 w-full overflow-y-auto overflow-x-hidden overscroll-contain'
-      : 'min-w-0 w-full overflow-x-auto overflow-y-auto overscroll-contain';
+  const tbodyScrollClass = `min-w-0 w-full overflow-y-auto overscroll-contain ${
+    allowHorizontalScroll || fitParentWidth ? 'overflow-x-hidden' : 'overflow-x-auto'
+  }`;
 
   const colWidthsPct = useMemo(() => {
     if (!fitParentWidth || !headers.length) return null;
@@ -150,11 +158,31 @@ export default function CommonTable({
         }
       : { border: tableUi.border };
 
+  const tdFooterBorderStyle = hideVerticalCellBorders
+    ? {
+        borderLeft: 'none',
+        borderRight: 'none',
+        borderTop: tableUi.border,
+        borderBottom: 'none',
+      }
+    : { border: tableUi.border };
+
+  const footerBg = '#f3f4f6';
+
+  const thCellLayout = (idx) =>
+    fitParentWidth && truncateHeader
+      ? idx === 0
+        ? 'min-w-0'
+        : 'min-w-0 max-w-0 truncate'
+      : fitParentWidth
+        ? 'min-w-0 break-words'
+        : '';
+
   const thBase = (idx) =>
-    `${cellPad} ${alignClass} ${fitParentWidth ? 'min-w-0 break-words' : ''} ${
-      cellAlign === 'left' && fitParentWidth ? 'align-top' : ''
+    `${cellPad} ${alignClass} ${thCellLayout(idx)} ${
+      cellAlign === 'left' && fitParentWidth && !truncateHeader ? 'align-top' : ''
     } ${headerSticky ? 'sticky top-0 z-[1] shadow-[0_1px_0_0_rgba(226,232,240,1)]' : ''} ${
-      idx === headers.length - 1 ? 'whitespace-nowrap' : ''
+      fitParentWidth && !truncateHeader && idx === headers.length - 1 ? 'whitespace-nowrap' : ''
     }`.trim();
 
   const theadRow = (
@@ -174,7 +202,13 @@ export default function CommonTable({
               borderTopRightRadius: idx === headers.length - 1 ? tableUi.header.borderRadius : undefined,
             }}
           >
-            {header}
+            {truncateHeader && idx !== 0 && typeof header === 'string' && header !== '' ? (
+              <span className="block min-w-0 truncate" title={header}>
+                {header}
+              </span>
+            ) : (
+              header
+            )}
           </th>
         ))}
       </tr>
@@ -193,15 +227,39 @@ export default function CommonTable({
         const extraClassName = isCellObject ? (cell.className ?? '') : '';
         const extraStyle = isCellObject ? (cell.style ?? {}) : {};
         const isLastCol = cellIdx === row.length - 1;
+        const tdLayout =
+          fitParentWidth && truncateBody
+            ? cellIdx === 0
+              ? 'min-w-0'
+              : 'min-w-0 max-w-0 truncate'
+            : fitParentWidth
+              ? 'min-w-0 break-words'
+              : '';
+        const tdNowrap = fitParentWidth && !truncateBody && isLastCol ? 'whitespace-nowrap' : '';
+
+        const renderBodyContent = () => {
+          if (!truncateBody || !fitParentWidth || cellIdx === 0) return content;
+          if (React.isValidElement(content)) return content;
+          if (content == null || content === '') return content;
+          if (typeof content === 'string' || typeof content === 'number') {
+            const full = String(content);
+            return (
+              <span className="block min-w-0 truncate" title={full}>
+                {full}
+              </span>
+            );
+          }
+          return content;
+        };
 
         return (
           <td
             key={`cell-${rowIdx}-${cellIdx}`}
             colSpan={colSpan}
             rowSpan={rowSpan}
-            className={`${cellPad} ${alignClass} ${fitParentWidth ? 'min-w-0 break-words' : ''} ${
-              cellAlign === 'left' && fitParentWidth ? 'align-top' : ''
-            } ${isLastCol ? 'whitespace-nowrap' : ''} ${extraClassName}`.trim()}
+            className={`${cellPad} ${alignClass} ${tdLayout} ${
+              cellAlign === 'left' && fitParentWidth && !truncateBody ? 'align-top' : ''
+            } ${tdNowrap} ${extraClassName}`.trim()}
             style={{
               ...tdBorderStyle(isLastBodyRow),
               fontSize: resolvedBodyFont,
@@ -210,13 +268,55 @@ export default function CommonTable({
               ...extraStyle,
             }}
           >
-            {content}
+            {renderBodyContent()}
           </td>
         );
       })}
     </tr>
     );
   });
+
+  const tfootRow =
+    footerRow && footerRow.length > 0 ? (
+      <tfoot>
+        <tr>
+          {footerRow.map((cell, cellIdx) => {
+            const isCellObject = cell && typeof cell === 'object' && !React.isValidElement(cell);
+            const content = isCellObject ? (cell.content ?? '') : cell;
+            const colSpan = isCellObject ? (cell.colSpan ?? 1) : 1;
+            const rowSpan = isCellObject ? (cell.rowSpan ?? 1) : 1;
+            const extraClassName = isCellObject ? (cell.className ?? '') : '';
+            const extraStyle = isCellObject ? (cell.style ?? {}) : {};
+            return (
+              <td
+                key={`footer-${cellIdx}`}
+                colSpan={colSpan}
+                rowSpan={rowSpan}
+                className={`${cellPad} ${alignClass} min-w-0 ${extraClassName}`.trim()}
+                style={{
+                  ...tdFooterBorderStyle,
+                  fontSize: resolvedBodyFont,
+                  fontWeight: 600,
+                  backgroundColor: footerBg,
+                  color: tableUi.body.color,
+                  ...extraStyle,
+                }}
+              >
+                {content}
+              </td>
+            );
+          })}
+        </tr>
+      </tfoot>
+    ) : null;
+
+  const footerTable =
+    tfootRow && fitParentWidth ? (
+      <table className={tableClass}>
+        <Colgroup colWidthsPct={colWidthsPct} />
+        {tfootRow}
+      </table>
+    ) : null;
 
   /** Tbody-only scroll: exactly maxVisibleRows rows tall, then vertical scroll */
   if (useBodyScroll) {
@@ -235,6 +335,7 @@ export default function CommonTable({
               <tbody>{tbodyRows}</tbody>
             </table>
           </div>
+          {footerTable}
         </div>
       </div>
     );
@@ -247,6 +348,7 @@ export default function CommonTable({
           <Colgroup colWidthsPct={colWidthsPct} />
           {theadRow}
           <tbody>{tbodyRows}</tbody>
+          {tfootRow}
         </table>
       </div>
     </div>
