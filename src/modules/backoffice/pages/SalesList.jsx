@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
+import SalesFilterDrawer from '../../../shared/components/ui/SalesFilterDrawer';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
@@ -11,7 +12,6 @@ import FilterIcon from '../../../shared/assets/icons/filter.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-/** Figma toolbar chevron ~8×8px */
 function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
@@ -40,57 +40,79 @@ const DUMMY_CUSTOMER_NAMES = [
   'Golden Sands Wholesale',
 ];
 
+const PAYMENT_MODES = ['Cash', 'Card', 'Credit', 'Cheque', 'Split'];
+const SALESMEN = ['Ahmed K.', 'Sara M.', 'James R.', 'Priya N.', 'Omar H.'];
+const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
+const TRANSACTION_TYPES = ['Cash sale', 'Credit sale', 'Wholesale', 'Retail', 'Export'];
+
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Deterministic dummy list for filters, sort, and pagination */
-function buildDummyQuotations(count) {
+/** Checkbox + Sl no, Bill no, Counter, Bill date, Time, Payment mode, Local bill no, Customer LP, Customer, TRN, Salesman, Subtotal, Disc, Tax, Round off, Amount, Post status, Counter close, Remarks, STN */
+const SALES_LIST_COL_PCT = [
+  2, 2.5, 5, 3, 5, 4, 5, 5, 4, 12.5, 5, 5, 5, 4, 4, 3, 5, 4, 4, 9, 4,
+];
+
+function buildDummySales(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const seq = 900 - i;
+    const seq = 1200 - i;
     const d = 1 + (i % 28);
     const m = 1 + (i % 4);
     const y = 2026;
-    const quotationDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const refD = Math.max(1, d - (1 + (i % 5)));
-    const custRefDate = `${String(refD).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const h = 8 + (i % 10);
-    const min = (i * 7) % 60;
-    const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-    const baseAmt = 1500 + (i * 173) % 42000 + (i % 3) * 99.5;
-    const disc = (i % 4 === 0 ? 0 : ((i * 41) % 500) + (i % 7) * 12.5).toFixed(2);
-    const amt = baseAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const billDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    const h = 9 + (i % 12);
+    const min = (i * 11) % 60;
+    const billTime = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    const sub = 1800 + (i * 211) % 48000 + (i % 5) * 77.25;
+    const disc = (i % 5 === 0 ? 0 : ((i * 37) % 800) + (i % 9) * 15.5).toFixed(2);
+    const tax = (sub * 0.05 + (i % 3) * 12).toFixed(2);
+    const roundOff = (i % 7 === 0 ? -0.15 : i % 7 === 1 ? 0.2 : 0).toFixed(2);
+    const amountNum = sub - Number(disc) + Number(tax) + Number(roundOff);
+    const amount = amountNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const subStr = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
       id: String(i + 1),
       station: STATIONS[i % STATIONS.length],
-      quotationNo: `QTN-2026-${String(seq).padStart(4, '0')}`,
-      quotationDate,
-      time,
-      custRefNo: `CR-${8000 + (i * 13) % 5000}`,
-      custRefDate,
+      billNo: `BILL-2026-${String(seq).padStart(5, '0')}`,
+      counter: String(1 + (i % 4)),
+      billDate,
+      billTime,
+      paymentMode: PAYMENT_MODES[i % PAYMENT_MODES.length],
+      localBillNo: `LB-${(10000 + i * 17) % 90000}`,
+      customerLpNo: `LP-${7000 + (i * 19) % 4000}`,
       customerName: DUMMY_CUSTOMER_NAMES[i % DUMMY_CUSTOMER_NAMES.length],
-      discountAmount: disc,
-      quotationAmount: amt,
+      trnNo: `100-${(200000000 + i * 100001) % 900000000}`,
+      salesMan: SALESMEN[i % SALESMEN.length],
+      subTotal: subStr,
+      discount: disc,
+      taxAmount: tax,
+      roundOffAdj: roundOff,
+      amount,
+      postStatus: i % 8 === 0 ? 'Draft' : 'Posted',
+      transactionType: TRANSACTION_TYPES[i % TRANSACTION_TYPES.length],
+      counterClose: i % 6 === 0 ? 'Open' : 'Closed',
+      remarks: i % 4 === 0 ? 'Walk-in' : i % 4 === 1 ? 'Urgent delivery' : '—',
     });
   }
   return rows;
 }
 
-const DUMMY_QUOTATIONS = buildDummyQuotations(52);
+const DUMMY_SALES = buildDummySales(48);
 
-/** Figma control bar: 0.5px black outline, 3px radius, h-7 row */
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
 const figmaToolbarBtn =
   `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
 
-/** Compact search (Figma: pl-1.5 pr-44 was frame-relative; here capped width, not full row) */
 const figmaSearchBox =
-  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px] sm:max-w-[520px] sm:pr-3 md:min-w-[280px] md:max-w-[320px]`;
 
-/** Checkbox, Qtn no, Qtn date, Time, Cust ref, Cust ref date, Customer, Disc, Amount — sums to 100 */
-const QUOTATION_LIST_COL_PCT = [3.5, 12, 10, 6, 10, 10, 26, 10, 12.5];
+function parseMoneyValue(s) {
+  const n = Number(String(s ?? '').replace(/,/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
 
-function parseQuotationListDate(ddmmyyyy) {
+function parseBillDate(ddmmyyyy) {
   const parts = String(ddmmyyyy).split('/');
   if (parts.length !== 3) return null;
   const d = Number(parts[0]);
@@ -103,22 +125,20 @@ function parseQuotationListDate(ddmmyyyy) {
   return dt;
 }
 
-function parseMoneyValue(s) {
-  const n = Number(String(s ?? '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
-
-export default function QuotationList() {
+export default function SalesList() {
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [stationFilter, setStationFilter] = useState(null);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [salesFilters, setSalesFilters] = useState({
+    station: null,
+    postStatus: null,
+    transactionType: null,
+  });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
-  const filterWrapRef = useRef(null);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -131,57 +151,61 @@ export default function QuotationList() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortBy, appliedDateRange, stationFilter]);
+  }, [search, sortBy, appliedDateRange, salesFilters]);
 
-  useEffect(() => {
-    if (!filterOpen) return;
-    const onDown = (e) => {
-      if (filterWrapRef.current && !filterWrapRef.current.contains(e.target)) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [filterOpen]);
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (salesFilters.station) n += 1;
+    if (salesFilters.postStatus) n += 1;
+    if (salesFilters.transactionType) n += 1;
+    return n;
+  }, [salesFilters]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = q
-      ? DUMMY_QUOTATIONS.filter(
+      ? DUMMY_SALES.filter(
           (r) =>
-            r.quotationNo.toLowerCase().includes(q) ||
+            r.billNo.toLowerCase().includes(q) ||
             r.customerName.toLowerCase().includes(q) ||
-            r.custRefNo.toLowerCase().includes(q)
+            r.localBillNo.toLowerCase().includes(q) ||
+            r.trnNo.toLowerCase().includes(q) ||
+            r.customerLpNo.toLowerCase().includes(q)
         )
-      : [...DUMMY_QUOTATIONS];
+      : [...DUMMY_SALES];
 
     if (appliedDateRange?.from && appliedDateRange?.to) {
       const rf = appliedDateRange.from.getTime();
       const rt = appliedDateRange.to.getTime();
       list = list.filter((r) => {
-        const rd = parseQuotationListDate(r.quotationDate);
+        const rd = parseBillDate(r.billDate);
         if (!rd) return false;
         const t = rd.getTime();
         return t >= rf && t <= rt;
       });
     }
 
-    if (stationFilter) {
-      list = list.filter((r) => r.station === stationFilter);
+    if (salesFilters.station) {
+      list = list.filter((r) => r.station === salesFilters.station);
+    }
+    if (salesFilters.postStatus) {
+      list = list.filter((r) => r.postStatus === salesFilters.postStatus);
+    }
+    if (salesFilters.transactionType) {
+      list = list.filter((r) => r.transactionType === salesFilters.transactionType);
     }
 
     const sorted = [...list];
     if (sortBy === 'dateDesc') {
-      sorted.sort((a, b) => String(b.quotationDate).localeCompare(String(a.quotationDate)));
+      sorted.sort((a, b) => String(b.billDate).localeCompare(String(a.billDate)));
     } else if (sortBy === 'amountDesc') {
       sorted.sort(
         (a, b) =>
-          Number(String(b.quotationAmount).replace(/,/g, '')) -
-          Number(String(a.quotationAmount).replace(/,/g, ''))
+          Number(String(b.amount).replace(/,/g, '')) - Number(String(a.amount).replace(/,/g, ''))
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, stationFilter]);
+  }, [search, sortBy, appliedDateRange, salesFilters]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -208,18 +232,23 @@ export default function QuotationList() {
     return n;
   }, [filteredIdSet, selectedIds]);
 
-  const quotationColumnTotals = useMemo(() => {
+  const salesColumnTotals = useMemo(() => {
+    let sub = 0;
     let disc = 0;
+    let tax = 0;
     let amt = 0;
     for (const r of filteredRows) {
-      disc += parseMoneyValue(r.discountAmount);
-      amt += parseMoneyValue(r.quotationAmount);
+      sub += parseMoneyValue(r.subTotal);
+      disc += parseMoneyValue(r.discount);
+      tax += parseMoneyValue(r.taxAmount);
+      amt += parseMoneyValue(r.amount);
     }
-    return { disc, amt };
+    return { sub, disc, tax, amt };
   }, [filteredRows]);
 
   const tableRows = useMemo(() => {
-    const dataRows = paginatedRows.map((r) => {
+    const dataRows = paginatedRows.map((r, idx) => {
+      const slNo = (page - 1) * pageSize + idx + 1;
       const checked = selectedIds.has(r.id);
       return [
         <div key={`chk-${r.id}`} className="flex justify-center">
@@ -229,36 +258,56 @@ export default function QuotationList() {
             onChange={() => toggleRowSelected(r.id)}
             className="h-3.5 w-3.5 cursor-pointer sm:h-4 sm:w-4"
             style={{ accentColor: primary }}
-            aria-label={`Select ${r.quotationNo}`}
+            aria-label={`Select ${r.billNo}`}
           />
         </div>,
-        r.quotationNo,
-        r.quotationDate,
-        r.time,
-        r.custRefNo,
-        r.custRefDate,
+        slNo,
+        r.billNo,
+        r.counter,
+        r.billDate,
+        r.billTime,
+        r.paymentMode,
+        r.localBillNo,
+        r.customerLpNo,
         r.customerName,
-        r.discountAmount,
-        r.quotationAmount,
+        r.trnNo,
+        r.salesMan,
+        r.subTotal,
+        r.discount,
+        r.taxAmount,
+        r.roundOffAdj,
+        r.amount,
+        r.postStatus,
+        r.counterClose,
+        r.remarks,
+        r.station,
       ];
     });
 
+    /** Same pattern as Sale.jsx: colSpan through column before Sub total, then amounts in their columns */
     const totalRow = [
       {
         content: (
-          <div key="quotation-list-total" className="text-left font-bold">
+          <div key="sales-list-total" className="text-left font-bold">
             Total
           </div>
         ),
-        colSpan: 7,
+        colSpan: 12,
         className: 'align-middle font-bold',
       },
-      quotationColumnTotals.disc.toFixed(2),
-      quotationColumnTotals.amt.toFixed(2),
+      salesColumnTotals.sub.toFixed(2),
+      salesColumnTotals.disc.toFixed(2),
+      salesColumnTotals.tax.toFixed(2),
+      '',
+      salesColumnTotals.amt.toFixed(2),
+      '',
+      '',
+      '',
+      '',
     ];
 
     return [...dataRows, totalRow];
-  }, [paginatedRows, selectedIds, toggleRowSelected, quotationColumnTotals]);
+  }, [paginatedRows, page, pageSize, selectedIds, toggleRowSelected, salesColumnTotals]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -271,12 +320,11 @@ export default function QuotationList() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
-  /* Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain */
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-          QUOTATION LIST
+          SALES LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -293,7 +341,6 @@ export default function QuotationList() {
         </div>
       </div>
 
-      {/* Figma control row: 1170×28 reference; stacks on small screens */}
       <div className="flex w-full min-w-0 flex-col gap-2 sm:h-7 sm:flex-row sm:items-center sm:justify-between sm:gap-2.5">
         <div className={figmaSearchBox}>
           <img src={SearchIcon} alt="" className="h-3.5 w-3.5 shrink-0 opacity-90" />
@@ -325,7 +372,7 @@ export default function QuotationList() {
 
           <QuotationDateRangeModal
             open={dateModalOpen}
-            title="Quotation Date"
+            title="Bill date"
             initialRange={appliedDateRange}
             onClose={() => setDateModalOpen(false)}
             onApply={(range) => setAppliedDateRange(range)}
@@ -347,87 +394,71 @@ export default function QuotationList() {
             </span>
           </div>
 
-          <div className="relative shrink-0" ref={filterWrapRef}>
-            <button
-              type="button"
-              className={figmaToolbarBtn}
-              aria-expanded={filterOpen}
-              aria-haspopup="listbox"
-              onClick={() => setFilterOpen((o) => !o)}
-            >
-              <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-              <span className="max-w-[5rem] truncate sm:max-w-[6rem]">
-                {stationFilter ? `Station: ${stationFilter}` : 'Filters'}
-              </span>
-              <ToolbarChevron />
-            </button>
-            {filterOpen ? (
-              <div
-                className="absolute right-0 top-full z-50 mt-0.5 min-w-[9.5rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
-                role="listbox"
-                aria-label="Stations"
-              >
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={stationFilter === null}
-                  className="w-full px-2.5 py-1.5 text-left text-[10px] font-semibold text-gray-700 hover:bg-rose-50 sm:px-3 sm:text-[11px]"
-                  onClick={() => {
-                    setStationFilter(null);
-                    setFilterOpen(false);
-                  }}
-                >
-                  All stations
-                </button>
-                <div className="my-0.5 border-t border-gray-100" />
-                {STATIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    role="option"
-                    aria-selected={stationFilter === s}
-                    className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold hover:bg-rose-50 sm:px-3 sm:text-[11px] ${
-                      stationFilter === s ? 'text-[#790728] bg-rose-50/80' : 'text-gray-800'
-                    }`}
-                    onClick={() => {
-                      setStationFilter(s);
-                      setFilterOpen(false);
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          <button
+            type="button"
+            className={figmaToolbarBtn}
+            aria-expanded={filterDrawerOpen}
+            aria-haspopup="dialog"
+            onClick={() => setFilterDrawerOpen(true)}
+          >
+            <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
+            <span className="max-w-[6rem] truncate sm:max-w-[7rem]">
+              {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
+            </span>
+            <ToolbarChevron />
+          </button>
         </div>
       </div>
 
+      <SalesFilterDrawer
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        stations={STATIONS}
+        postStatusOptions={POST_STATUS_OPTIONS}
+        transactionTypeOptions={TRANSACTION_TYPES}
+        applied={salesFilters}
+        onApply={setSalesFilters}
+      />
+
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="quotation-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="sales-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
-          allowHorizontalScroll
-          columnWidthPercents={QUOTATION_LIST_COL_PCT}
-          tableClassName="min-w-[min(100%,640px)] sm:min-w-[760px] lg:min-w-0"
+          allowHorizontalScroll={false}
+          truncateHeader
+          truncateBody
+          columnWidthPercents={SALES_LIST_COL_PCT}
+          tableClassName="min-w-0 w-full"
           hideVerticalCellBorders
           cellAlign="center"
-          headerFontSize="clamp(7px, 0.9vw, 9px)"
+          headerFontSize="clamp(7px, 0.85vw, 10px)"
           headerTextColor="#6b7280"
-          bodyFontSize="clamp(9px, 1.25vw, 12px)"
-          cellPaddingClass="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-2.5 md:py-2.5"
+          bodyFontSize="clamp(8px, 1vw, 10px)"
+          cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={Math.min(pageSize + 1, 24)}
           headers={[
             '',
-            'Quotation no',
-            'Quotation date',
-            'Time',
-            'Cust ref no',
-            'Cust. ref date',
+            'Sl no',
+            'Bill no',
+            'Counter',
+            'Bill date',
+            'Bill time',
+            'Payment mode',
+            'Local bill no',
+            'Customer LP no',
             'Customer name',
-            'Discount amount',
-            'Quotation amount',
+            'TRN no',
+            'Sales man',
+            'Sub total',
+            'Discount',
+            'Tax amount',
+            'Round off adj',
+            'Amount',
+            'Post status',
+            'Counter close',
+            'Remarks',
+            'STN',
           ]}
           rows={tableRows}
         />
