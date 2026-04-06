@@ -11,38 +11,40 @@ import UnpostIcon from '../../../shared/assets/icons/unpost.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
+const VOUCHER_TYPES = ['PCS', 'General', 'Petty cash', 'Travel', 'Utilities', 'Other'];
 
+/** Account Head dropdown (matches EXPENSE VOUCHER ENTRY form spec) */
 const ACCOUNT_HEADS = [
-  '2001 – Trade payables',
-  '2100 – Supplier control',
-  '2200 – GRNI / Accrued purchases',
-  '5100 – Purchase expense',
-  '5200 – Import charges',
-  '5300 – Asset capitalization',
+  'PCS',
+  '2100 – Trade payables',
+  '5100 – Operating expense',
+  '5200 – Admin & office',
+  '5300 – Travel & conveyance',
+  '5400 – Utilities',
+  '5500 – Professional fees',
 ];
 
-const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
+const STATIONS = ['PCS', 'Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Sl no. · Account name · Amount · Action (same weights as purchase voucher lines) */
-const DN_LINE_COL_PCT = [10, 44, 22, 24];
+/** Sl no · Account name · Amount · Action */
+const LINE_COL_PCT = [10, 44, 22, 24];
 
 const SAMPLE_ACCOUNTS = [
-  '5100 – Purchase expense',
-  '4100 – VAT input',
-  '2100 – Supplier control',
-  '5200 – Import charges',
+  '5100 – Operating expense',
+  '5200 – Admin & office',
+  '2100 – Trade payables',
+  '5300 – Travel & conveyance',
 ];
 
-function buildDummyDebitLines(count) {
+function buildDummyExpenseLines(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const base = 120 + (i * 197) % 8900 + (i % 5) * 44.5;
+    const base = 95 + (i * 163) % 7200 + (i % 4) * 38.25;
     const amount = base.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
-      id: `dn-${i + 1}`,
+      id: `ev-${i + 1}`,
       account: SAMPLE_ACCOUNTS[i % SAMPLE_ACCOUNTS.length],
       amount,
     });
@@ -50,7 +52,7 @@ function buildDummyDebitLines(count) {
   return rows;
 }
 
-const DUMMY_DEBIT_LINES = buildDummyDebitLines(24);
+const DUMMY_EXPENSE_LINES = buildDummyExpenseLines(24);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -104,23 +106,23 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-function buildFreshDebitLine() {
+function buildFreshExpenseLine() {
   return {
-    id: `dn-${Date.now()}`,
+    id: `ev-${Date.now()}`,
     account: '',
     amount: '0.00',
   };
 }
 
-export default function DebitNoteEntry() {
-  const [tableData, setTableData] = useState(() => DUMMY_DEBIT_LINES.map((r) => ({ ...r })));
+export default function ExpenseVoucherEntry() {
+  const [tableData, setTableData] = useState(() => DUMMY_EXPENSE_LINES.map((r) => ({ ...r })));
 
   const [voucherType, setVoucherType] = useState('');
   const [voucherNo, setVoucherNo] = useState('');
   const [accountHead, setAccountHead] = useState('');
   const [station, setStation] = useState('');
   const [refNo, setRefNo] = useState('');
-  const [debitNoteDate, setDebitNoteDate] = useState('');
+  const [expenseDate, setExpenseDate] = useState('');
   const [remark, setRemark] = useState('');
 
   const [page, setPage] = useState(1);
@@ -136,7 +138,7 @@ export default function DebitNoteEntry() {
   }, []);
 
   const handleAddLine = useCallback(() => {
-    const id = `dn-${Date.now()}`;
+    const id = `ev-${Date.now()}`;
     const accountLabel = accountHead || ACCOUNT_HEADS[0] || '';
     setTableData((prev) => [
       {
@@ -197,24 +199,24 @@ export default function DebitNoteEntry() {
 
   const handlePost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Post debit note', { voucherType, voucherNo, tableData });
+    console.log('Post expense voucher', { voucherType, voucherNo, tableData });
   }, [voucherType, voucherNo, tableData]);
 
   const handleUnpost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Unpost debit note', { voucherNo });
+    console.log('Unpost expense voucher', { voucherNo });
   }, [voucherNo]);
 
   const handleDeleteDocument = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Delete debit note', { voucherNo });
-    setTableData([buildFreshDebitLine()]);
+    console.log('Delete expense voucher', { voucherNo });
+    setTableData([buildFreshExpenseLine()]);
     setVoucherType('');
     setVoucherNo('');
     setAccountHead('');
     setStation('');
     setRefNo('');
-    setDebitNoteDate('');
+    setExpenseDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -223,26 +225,26 @@ export default function DebitNoteEntry() {
 
   const handleSave = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Save debit note', {
+    console.log('Save expense voucher', {
       voucherType,
       voucherNo,
       accountHead,
       station,
       refNo,
-      debitNoteDate,
+      expenseDate,
       remark,
       lines: tableData,
     });
-  }, [voucherType, voucherNo, accountHead, station, refNo, debitNoteDate, remark, tableData]);
+  }, [voucherType, voucherNo, accountHead, station, refNo, expenseDate, remark, tableData]);
 
-  const handleNewDebitNote = useCallback(() => {
-    setTableData([buildFreshDebitLine()]);
+  const handleNewExpenseVoucher = useCallback(() => {
+    setTableData([buildFreshExpenseLine()]);
     setVoucherType('');
     setVoucherNo('');
     setAccountHead('');
     setStation('');
     setRefNo('');
-    setDebitNoteDate('');
+    setExpenseDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -333,7 +335,7 @@ export default function DebitNoteEntry() {
     () => [
       {
         content: (
-          <div key="dn-line-total" className="text-left font-bold">
+          <div key="ev-line-total" className="text-left font-bold">
             Total
           </div>
         ),
@@ -357,14 +359,15 @@ export default function DebitNoteEntry() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
+  // Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain
   return (
-    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+    <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <h1
           className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          DEBIT NOTE ENTRY
+          EXPENSE VOUCHER ENTRY
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -382,7 +385,7 @@ export default function DebitNoteEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete debit note"
+            aria-label="Delete expense voucher"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -395,11 +398,11 @@ export default function DebitNoteEntry() {
             type="button"
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
-            onClick={handleNewDebitNote}
-            aria-label="New debit note entry"
+            onClick={handleNewExpenseVoucher}
+            aria-label="New expense voucher entry"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden sm:inline">New Debit Note Entry</span>
+            <span className="hidden sm:inline">New Expense Voucher Entry</span>
             <span className="sm:hidden">New</span>
           </button>
         </div>
@@ -408,7 +411,7 @@ export default function DebitNoteEntry() {
       <div className="flex min-w-0 flex-nowrap items-end gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
         <div className="shrink-0">
           <DropdownInput
-            label="Voucher type"
+            label="Voucher Type"
             value={voucherType}
             onChange={setVoucherType}
             options={VOUCHER_TYPES}
@@ -417,7 +420,7 @@ export default function DebitNoteEntry() {
         </div>
         <div className="shrink-0">
           <SubInputField
-            label="Voucher no"
+            label="Voucher No"
             value={voucherNo}
             onChange={(e) => setVoucherNo(e.target.value)}
             placeholder="Auto if empty"
@@ -425,7 +428,7 @@ export default function DebitNoteEntry() {
         </div>
         <div className="shrink-0">
           <DropdownInput
-            label="Account head"
+            label="Account Head"
             value={accountHead}
             onChange={setAccountHead}
             options={ACCOUNT_HEADS}
@@ -443,14 +446,14 @@ export default function DebitNoteEntry() {
         </div>
         <div className="shrink-0">
           <SubInputField
-            label="Ref no"
+            label="Ref No"
             value={refNo}
             onChange={(e) => setRefNo(e.target.value)}
             placeholder="Reference"
           />
         </div>
         <div className="shrink-0">
-          <DateInputField label="Expense Date" value={debitNoteDate} onChange={setDebitNoteDate} />
+          <DateInputField label="Expense Date" value={expenseDate} onChange={setExpenseDate} />
         </div>
         <div className="flex shrink-0 items-end">
           <button
@@ -482,12 +485,12 @@ export default function DebitNoteEntry() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="debit-note-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="expense-voucher-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
           truncateBody={editingRowId == null}
-          columnWidthPercents={DN_LINE_COL_PCT}
+          columnWidthPercents={LINE_COL_PCT}
           tableClassName={isCompactTable ? 'min-w-[36rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
           cellAlign="center"
@@ -497,7 +500,7 @@ export default function DebitNoteEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={['Sl no.', 'Account name', 'Amount', 'Action']}
+          headers={['Sl no', 'Account name', 'Amount', 'Action']}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -590,7 +593,7 @@ export default function DebitNoteEntry() {
           onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="dn-line-detail-title"
+          aria-labelledby="ev-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -607,7 +610,7 @@ export default function DebitNoteEntry() {
               </svg>
             </button>
             <h2
-              id="dn-line-detail-title"
+              id="ev-line-detail-title"
               className="pr-10 text-sm font-bold sm:text-base"
               style={{ color: primary }}
             >

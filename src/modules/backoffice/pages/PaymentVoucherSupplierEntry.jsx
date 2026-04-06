@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { colors } from '../../../shared/constants/theme';
+import { colors, inputField } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import { DropdownInput, InputField, SubInputField, DateInputField } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
@@ -11,46 +11,56 @@ import UnpostIcon from '../../../shared/assets/icons/unpost.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
-
-const ACCOUNT_HEADS = [
-  '2001 – Trade payables',
-  '2100 – Supplier control',
-  '2200 – GRNI / Accrued purchases',
-  '5100 – Purchase expense',
-  '5200 – Import charges',
-  '5300 – Asset capitalization',
-];
-
-const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
+const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South', 'PCS'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Sl no. · Account name · Amount · Action (same weights as purchase voucher lines) */
-const DN_LINE_COL_PCT = [10, 44, 22, 24];
+function normalizePayType(value) {
+  const x = String(value ?? '').toLowerCase();
+  return x === 'cheque' ? 'cheque' : 'cash';
+}
 
-const SAMPLE_ACCOUNTS = [
-  '5100 – Purchase expense',
-  '4100 – VAT input',
-  '2100 – Supplier control',
-  '5200 – Import charges',
-];
+function formatPayTypeLabel(value) {
+  return normalizePayType(value) === 'cheque' ? 'Cheque' : 'Cash';
+}
 
-function buildDummyDebitLines(count) {
+/** Sl no · Voucher no · Paid date · Station · Supplier name · Paid amount · Acc Balance · Pay Type · Balance · Action */
+const LINE_COL_PCT = [5, 7, 8, 8, 12, 9, 9, 8, 9, 25];
+
+function formatDateDisplay(dateValue) {
+  if (!dateValue) return '—';
+  const [year, month, day] = String(dateValue).split('-');
+  if (!year || !month || !day) return dateValue;
+  return `${day}/${month}/${year}`;
+}
+
+function buildDummyPaymentLines(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const base = 120 + (i * 197) % 8900 + (i % 5) * 44.5;
-    const amount = base.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const d = 1 + (i % 28);
+    const m = 1 + (i % 12);
+    const y = 2026;
+    const paymentDate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const paid = 500 + (i * 317) % 12000;
+    const paidStr = paid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const accBal = (15000 - paid * 0.3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const bal = (8000 - paid * 0.15).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
-      id: `dn-${i + 1}`,
-      account: SAMPLE_ACCOUNTS[i % SAMPLE_ACCOUNTS.length],
-      amount,
+      id: `pvs-${i + 1}`,
+      voucherNo: `PV-${String(i + 1).padStart(4, '0')}`,
+      paymentDate,
+      station: STATIONS[i % STATIONS.length],
+      supplierName: i % 3 === 0 ? 'Gulf Supplies LLC' : i % 3 === 1 ? 'Metro Traders' : 'Prime Vendors Co.',
+      paidAmount: paidStr,
+      accBalance: accBal,
+      payType: i % 2 === 0 ? 'cash' : 'cheque',
+      balance: bal,
     });
   }
   return rows;
 }
 
-const DUMMY_DEBIT_LINES = buildDummyDebitLines(24);
+const DUMMY_LINES = buildDummyPaymentLines(20);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -104,30 +114,69 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-function buildFreshDebitLine() {
-  return {
-    id: `dn-${Date.now()}`,
-    account: '',
-    amount: '0.00',
-  };
+function PayTypeRadios({ value, onChange }) {
+  const v = normalizePayType(value);
+  const h = inputField.subBox.height;
+  return (
+    <div className="flex shrink-0 flex-col gap-0.5">
+      <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>
+        Pay Type
+      </label>
+      <div
+        className="flex h-[26px] w-[132px] min-w-[132px] shrink-0 items-center justify-center gap-3 border border-gray-200 bg-white px-2"
+        style={{
+          height: h,
+          minHeight: h,
+          boxSizing: 'border-box',
+          borderRadius: inputField.subBox.borderRadius,
+          background: colors.input?.background ?? '#fff',
+        }}
+      >
+        <label className="flex cursor-pointer items-center gap-1 text-[8px] font-semibold text-black sm:text-[9px]">
+          <input
+            type="radio"
+            name="pvs-pay-type-form"
+            checked={v === 'cash'}
+            onChange={() => onChange('cash')}
+            className="h-3 w-3 accent-[#790728]"
+            style={{ accentColor: primary }}
+          />
+          Cash
+        </label>
+        <label className="flex cursor-pointer items-center gap-1 text-[8px] font-semibold text-black sm:text-[9px]">
+          <input
+            type="radio"
+            name="pvs-pay-type-form"
+            checked={v === 'cheque'}
+            onChange={() => onChange('cheque')}
+            className="h-3 w-3"
+            style={{ accentColor: primary }}
+          />
+          Cheque
+        </label>
+      </div>
+    </div>
+  );
 }
 
-export default function DebitNoteEntry() {
-  const [tableData, setTableData] = useState(() => DUMMY_DEBIT_LINES.map((r) => ({ ...r })));
+export default function PaymentVoucherSupplierEntry() {
+  const [tableData, setTableData] = useState(() => DUMMY_LINES.map((r) => ({ ...r })));
 
-  const [voucherType, setVoucherType] = useState('');
   const [voucherNo, setVoucherNo] = useState('');
-  const [accountHead, setAccountHead] = useState('');
+  const [paidDate, setPaidDate] = useState('');
   const [station, setStation] = useState('');
-  const [refNo, setRefNo] = useState('');
-  const [debitNoteDate, setDebitNoteDate] = useState('');
+  const [supplierName, setSupplierName] = useState('');
+  const [paidAmount, setPaidAmount] = useState('');
+  const [accBalance, setAccBalance] = useState('');
+  const [payType, setPayType] = useState('cash');
+  const [balance, setBalance] = useState('');
   const [remark, setRemark] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editingRowId, setEditingRowId] = useState(null);
   const [detailRowId, setDetailRowId] = useState(null);
-  const isCompactTable = useViewportMaxWidth(1023);
+  const isCompactTable = useViewportMaxWidth(1200);
 
   const filteredRows = tableData;
 
@@ -136,20 +185,28 @@ export default function DebitNoteEntry() {
   }, []);
 
   const handleAddLine = useCallback(() => {
-    const id = `dn-${Date.now()}`;
-    const accountLabel = accountHead || ACCOUNT_HEADS[0] || '';
+    const id = `pvs-${Date.now()}`;
     setTableData((prev) => [
       {
         id,
-        account: accountLabel,
-        amount: '0.00',
+        voucherNo,
+        paymentDate: paidDate,
+        station,
+        supplierName,
+        paidAmount: paidAmount && paidAmount.trim() !== '' ? paidAmount : '0.00',
+        accBalance: accBalance && accBalance.trim() !== '' ? accBalance : '0.00',
+        payType: normalizePayType(payType),
+        balance: balance && balance.trim() !== '' ? balance : '0.00',
       },
       ...prev,
     ]);
     setPage(1);
+    setSupplierName('');
+    setPaidAmount('');
+    setAccBalance('');
+    setBalance('');
     setVoucherNo('');
-    setRefNo('');
-  }, [accountHead]);
+  }, [voucherNo, paidDate, station, supplierName, paidAmount, accBalance, payType, balance]);
 
   const handleViewLine = useCallback((id) => {
     setEditingRowId(null);
@@ -197,24 +254,26 @@ export default function DebitNoteEntry() {
 
   const handlePost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Post debit note', { voucherType, voucherNo, tableData });
-  }, [voucherType, voucherNo, tableData]);
+    console.log('Post payment voucher supplier', { tableData });
+  }, [tableData]);
 
   const handleUnpost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Unpost debit note', { voucherNo });
-  }, [voucherNo]);
+    console.log('Unpost payment voucher supplier');
+  }, []);
 
   const handleDeleteDocument = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Delete debit note', { voucherNo });
-    setTableData([buildFreshDebitLine()]);
-    setVoucherType('');
+    console.log('Delete payment voucher supplier');
+    setTableData([]);
     setVoucherNo('');
-    setAccountHead('');
+    setPaidDate('');
     setStation('');
-    setRefNo('');
-    setDebitNoteDate('');
+    setSupplierName('');
+    setPaidAmount('');
+    setAccBalance('');
+    setPayType('cash');
+    setBalance('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -223,26 +282,22 @@ export default function DebitNoteEntry() {
 
   const handleSave = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Save debit note', {
-      voucherType,
-      voucherNo,
-      accountHead,
-      station,
-      refNo,
-      debitNoteDate,
+    console.log('Save payment voucher supplier', {
       remark,
       lines: tableData,
     });
-  }, [voucherType, voucherNo, accountHead, station, refNo, debitNoteDate, remark, tableData]);
+  }, [remark, tableData]);
 
-  const handleNewDebitNote = useCallback(() => {
-    setTableData([buildFreshDebitLine()]);
-    setVoucherType('');
+  const handleNewDocument = useCallback(() => {
+    setTableData([]);
     setVoucherNo('');
-    setAccountHead('');
+    setPaidDate('');
     setStation('');
-    setRefNo('');
-    setDebitNoteDate('');
+    setSupplierName('');
+    setPaidAmount('');
+    setAccBalance('');
+    setPayType('cash');
+    setBalance('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -264,47 +319,91 @@ export default function DebitNoteEntry() {
   const rangeStart = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
-  const amountTotal = useMemo(() => {
+  const paidAmountTotal = useMemo(() => {
     let amt = 0;
     for (const r of filteredRows) {
-      amt += parseMoneyValue(r.amount);
+      amt += parseMoneyValue(r.paidAmount);
     }
     return amt;
   }, [filteredRows]);
 
   const tableBodyRows = useMemo(() => {
     return paginatedRows.map((r, idx) => {
-      const slNo = (page - 1) * pageSize + idx + 1;
+      const displaySl = (page - 1) * pageSize + idx + 1;
       const rowIsEditing = editingRowId === r.id;
-      const accountCell = rowIsEditing ? (
-        <input
-          key={`acc-${r.id}`}
-          type="text"
-          className={`${tableCellInputClass} text-left`}
-          value={r.account}
-          onChange={(e) => updateLine(r.id, { account: e.target.value })}
-          aria-label="Account name"
-        />
+
+      const textInput = (key, field, aria) =>
+        rowIsEditing ? (
+          <input
+            key={key}
+            type="text"
+            className={`${tableCellInputClass} text-left`}
+            value={r[field]}
+            onChange={(e) => updateLine(r.id, { [field]: e.target.value })}
+            aria-label={aria}
+          />
+        ) : (
+          r[field]
+        );
+
+      const pt = normalizePayType(r.payType);
+      const payTypeCell = rowIsEditing ? (
+        <div
+          key={`pt-${r.id}`}
+          className="flex flex-col items-center justify-center gap-0.5 py-0.5 text-left"
+          role="group"
+          aria-label="Pay Type"
+        >
+          <label className="flex cursor-pointer items-center gap-1 text-[7px] font-semibold text-black sm:text-[8px]">
+            <input
+              type="radio"
+              name={`pvs-pay-type-${r.id}`}
+              checked={pt === 'cash'}
+              onChange={() => updateLine(r.id, { payType: 'cash' })}
+              className="h-2.5 w-2.5 shrink-0"
+              style={{ accentColor: primary }}
+            />
+            Cash
+          </label>
+          <label className="flex cursor-pointer items-center gap-1 text-[7px] font-semibold text-black sm:text-[8px]">
+            <input
+              type="radio"
+              name={`pvs-pay-type-${r.id}`}
+              checked={pt === 'cheque'}
+              onChange={() => updateLine(r.id, { payType: 'cheque' })}
+              className="h-2.5 w-2.5 shrink-0"
+              style={{ accentColor: primary }}
+            />
+            Cheque
+          </label>
+        </div>
       ) : (
-        r.account
+        formatPayTypeLabel(r.payType)
       );
-      const amountCell = rowIsEditing ? (
+
+      const paidDateCell = rowIsEditing ? (
         <input
-          key={`amt-${r.id}`}
-          type="text"
-          inputMode="decimal"
+          key={`pd-${r.id}`}
+          type="date"
           className={tableCellInputClass}
-          value={r.amount}
-          onChange={(e) => updateLine(r.id, { amount: e.target.value })}
-          aria-label="Amount"
+          value={r.paymentDate || ''}
+          onChange={(e) => updateLine(r.id, { paymentDate: e.target.value })}
+          aria-label="Paid date"
         />
       ) : (
-        r.amount
+        formatDateDisplay(r.paymentDate)
       );
+
       return [
-        slNo,
-        accountCell,
-        amountCell,
+        displaySl,
+        textInput(`vn-${r.id}`, 'voucherNo', 'Voucher no'),
+        paidDateCell,
+        textInput(`st-${r.id}`, 'station', 'Station'),
+        textInput(`sn-${r.id}`, 'supplierName', 'Supplier name'),
+        textInput(`pa-${r.id}`, 'paidAmount', 'Paid amount'),
+        textInput(`ab-${r.id}`, 'accBalance', 'Acc Balance'),
+        payTypeCell,
+        textInput(`bl-${r.id}`, 'balance', 'Balance'),
         <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
           <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
             <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -333,17 +432,20 @@ export default function DebitNoteEntry() {
     () => [
       {
         content: (
-          <div key="dn-line-total" className="text-left font-bold">
+          <div key="pvs-total" className="text-left font-bold">
             Total
           </div>
         ),
-        colSpan: 2,
+        colSpan: 5,
         className: 'align-middle font-bold',
       },
-      amountTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      paidAmountTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      '',
+      '',
+      '',
       '',
     ],
-    [amountTotal],
+    [paidAmountTotal],
   );
 
   const pageNumbers = useMemo(() => {
@@ -358,13 +460,13 @@ export default function DebitNoteEntry() {
   }, [page, totalPages]);
 
   return (
-    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+    <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <h1
-          className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
+          className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          DEBIT NOTE ENTRY
+          PAYMENT VOUCHER (SUPPLIER)
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -382,7 +484,7 @@ export default function DebitNoteEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete debit note"
+            aria-label="Delete voucher"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -395,62 +497,69 @@ export default function DebitNoteEntry() {
             type="button"
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
-            onClick={handleNewDebitNote}
-            aria-label="New debit note entry"
+            onClick={handleNewDocument}
+            aria-label="New payment voucher supplier"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden sm:inline">New Debit Note Entry</span>
-            <span className="sm:hidden">New</span>
+            <span className="hidden min-[420px]:inline">New Payment Voucher (Supplier)</span>
+            <span className="min-[420px]:hidden">New</span>
           </button>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-nowrap items-end gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
-        <div className="shrink-0">
-          <DropdownInput
-            label="Voucher type"
-            value={voucherType}
-            onChange={setVoucherType}
-            options={VOUCHER_TYPES}
-            placeholder="Select"
-          />
-        </div>
+      <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
         <div className="shrink-0">
           <SubInputField
             label="Voucher no"
             value={voucherNo}
             onChange={(e) => setVoucherNo(e.target.value)}
-            placeholder="Auto if empty"
+            placeholder="No."
           />
         </div>
         <div className="shrink-0">
-          <DropdownInput
-            label="Account head"
-            value={accountHead}
-            onChange={setAccountHead}
-            options={ACCOUNT_HEADS}
-            placeholder="Select"
-          />
+          <DateInputField label="Paid date" value={paidDate} onChange={setPaidDate} />
         </div>
         <div className="shrink-0">
-          <DropdownInput
-            label="Station"
-            value={station}
-            onChange={setStation}
-            options={STATIONS}
-            placeholder="Select"
+          <DropdownInput label="Station" value={station} onChange={setStation} options={STATIONS} placeholder="Select" />
+        </div>
+        <div className="shrink-0">
+          <InputField
+            label="Supplier name"
+            value={supplierName}
+            onChange={(e) => setSupplierName(e.target.value)}
+            placeholder="Supplier name"
+            widthPx={160}
           />
         </div>
         <div className="shrink-0">
           <SubInputField
-            label="Ref no"
-            value={refNo}
-            onChange={(e) => setRefNo(e.target.value)}
-            placeholder="Reference"
+            label="Paid amount"
+            value={paidAmount}
+            onChange={(e) => setPaidAmount(e.target.value)}
+            placeholder="0.00"
+            inputMode="decimal"
           />
         </div>
         <div className="shrink-0">
-          <DateInputField label="Expense Date" value={debitNoteDate} onChange={setDebitNoteDate} />
+          <SubInputField
+            label="Acc Balance"
+            value={accBalance}
+            onChange={(e) => setAccBalance(e.target.value)}
+            placeholder="0.00"
+            inputMode="decimal"
+          />
+        </div>
+        <div className="shrink-0">
+          <PayTypeRadios value={payType} onChange={setPayType} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField
+            label="Balance"
+            value={balance}
+            onChange={(e) => setBalance(e.target.value)}
+            placeholder="0.00"
+            inputMode="decimal"
+          />
         </div>
         <div className="flex shrink-0 items-end">
           <button
@@ -482,13 +591,13 @@ export default function DebitNoteEntry() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="debit-note-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="payment-voucher-supplier-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
           truncateBody={editingRowId == null}
-          columnWidthPercents={DN_LINE_COL_PCT}
-          tableClassName={isCompactTable ? 'min-w-[36rem] w-full' : 'min-w-0 w-full'}
+          columnWidthPercents={LINE_COL_PCT}
+          tableClassName={isCompactTable ? 'min-w-[64rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.85vw, 10px)"
@@ -497,7 +606,18 @@ export default function DebitNoteEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={['Sl no.', 'Account name', 'Amount', 'Action']}
+          headers={[
+            'Sl no',
+            'Voucher no',
+            'Paid date',
+            'Station',
+            'Supplier name',
+            'Paid amount',
+            'Acc Balance',
+            'Pay Type',
+            'Balance',
+            'Action',
+          ]}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -590,7 +710,7 @@ export default function DebitNoteEntry() {
           onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="dn-line-detail-title"
+          aria-labelledby="pvs-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -607,7 +727,7 @@ export default function DebitNoteEntry() {
               </svg>
             </button>
             <h2
-              id="dn-line-detail-title"
+              id="pvs-line-detail-title"
               className="pr-10 text-sm font-bold sm:text-base"
               style={{ color: primary }}
             >
@@ -615,8 +735,14 @@ export default function DebitNoteEntry() {
             </h2>
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
               <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
-              <InputField label="Account name" fullWidth readOnly value={detailRow.account} />
-              <InputField label="Amount" fullWidth readOnly value={detailRow.amount} />
+              <InputField label="Voucher no" fullWidth readOnly value={detailRow.voucherNo} />
+              <InputField label="Paid date" fullWidth readOnly value={formatDateDisplay(detailRow.paymentDate)} />
+              <InputField label="Station" fullWidth readOnly value={detailRow.station} />
+              <InputField label="Supplier name" fullWidth readOnly value={detailRow.supplierName} />
+              <InputField label="Paid amount" fullWidth readOnly value={detailRow.paidAmount} />
+              <InputField label="Acc Balance" fullWidth readOnly value={detailRow.accBalance} />
+              <InputField label="Pay Type" fullWidth readOnly value={formatPayTypeLabel(detailRow.payType)} />
+              <InputField label="Balance" fullWidth readOnly value={detailRow.balance} />
             </div>
           </div>
         </div>

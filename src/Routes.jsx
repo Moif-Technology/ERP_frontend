@@ -16,6 +16,12 @@ import SalesVoucherEntry from './modules/backoffice/pages/SalesVoucherEntry';
 import SalesVoucherList from './modules/backoffice/pages/SalesVoucherList';
 import DebitNoteEntry from './modules/backoffice/pages/DebitNoteEntry';
 import DebitNoteList from './modules/backoffice/pages/DebitNoteList';
+import CreditNoteEntry from './modules/backoffice/pages/CreditNoteEntry';
+import AccountsPlaceholderPage from './modules/backoffice/pages/AccountsPlaceholderPage';
+import IncomeVoucherEntry from './modules/backoffice/pages/IncomeVoucherEntry';
+import ExpenseVoucherEntry from './modules/backoffice/pages/ExpenseVoucherEntry';
+import PaymentVoucherSupplierEntry from './modules/backoffice/pages/PaymentVoucherSupplierEntry';
+import PaymentVoucherEntry from './modules/backoffice/pages/PaymentVoucherEntry';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
 import SupplierEntry from './modules/backoffice/pages/SupplierEntry';
 import ProductEntry from './modules/backoffice/pages/ProductEntry';
@@ -41,6 +47,13 @@ export default function AppRoutes() {
       <Route path="/sales-voucher-list" element={<SalesVoucherList />} />
       <Route path="/debit-note-entry" element={<DebitNoteEntry />} />
       <Route path="/debit-note-list" element={<DebitNoteList />} />
+      <Route path="/credit-note-entry" element={<CreditNoteEntry />} />
+      <Route path="/income-voucher" element={<IncomeVoucherEntry />} />
+      <Route path="/expense-voucher" element={<ExpenseVoucherEntry />} />
+      <Route path="/income-expense-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/payment-voucher-supplier" element={<PaymentVoucherSupplierEntry />} />
+      <Route path="/payment-voucher" element={<PaymentVoucherEntry />} />
+      <Route path="/payment-voucher-list" element={<AccountsPlaceholderPage />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />

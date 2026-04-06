@@ -1,4 +1,4 @@
-// src/components/layouts/ModuleTabs.jsx
+// src/core/layout/ModuleTabs.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductIcon from '../../shared/assets/icons/ProductIcon.svg';
@@ -17,6 +17,11 @@ import ConfigIcon from '../../shared/assets/icons/edit.svg';
 import PurchaseVoucherIcon from '../../shared/assets/icons/purchase_voucher.svg';
 import SalesVoucherIcon from '../../shared/assets/icons/sales_voucher.svg';
 import DebitNoteIcon from '../../shared/assets/icons/debit_note.svg';
+import CreditNoteIcon from '../../shared/assets/icons/creadit_note.svg';
+import IncomeIcon from '../../shared/assets/icons/Income.svg';
+import ExpenceIcon from '../../shared/assets/icons/expence.svg';
+import PaymentSupplierIcon from '../../shared/assets/icons/payment_supplier.svg';
+import PaymentEntryIcon from '../../shared/assets/icons/payment_entry.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -76,11 +81,35 @@ const moduleGroups = {
     { name: 'Supplier Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
   ],
   accounts: [
-    { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Vouchers', 'List']) },
-    { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Vouchers', 'List']) },
-    { name: 'Debit note', icon: DebitNoteIcon, actions: getActionItems(DebitNoteIcon, ['Debit note', 'List']) },
-    { name: 'Income/Expense voucher', icon: SupplierInvoiceIcon, actions: getActionItems(SupplierInvoiceIcon, ['Vouchers', 'List']) },
-    { name: 'Payment Voucher', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['Vouchers', 'List']) },
+    { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Purchase voucher', 'List']) },
+    { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Sales voucher', 'List']) },
+    {
+      name: 'Debit note',
+      icon: DebitNoteIcon,
+      actions: [
+        { label: 'Debit note', icon: DebitNoteIcon },
+        { label: 'Credit note', icon: CreditNoteIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Income/Expense voucher',
+      icon: IncomeIcon,
+      actions: [
+        { label: 'Income', icon: IncomeIcon },
+        { label: 'Expence', icon: ExpenceIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Payment Voucher',
+      icon: PaymentEntryIcon,
+      actions: [
+        { label: 'Payment Voucher supplier', icon: PaymentSupplierIcon },
+        { label: 'Payment voucher', icon: PaymentEntryIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
     { name: 'Receipt/contra Voucher', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Vouchers', 'List']) },
     { name: 'Journal Voucher', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Journals', 'List']) },
     { name: 'Account details', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Accounts', 'List']) },
@@ -126,13 +155,13 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Sale Return' && (action === 'Returns' || action === 'List')) {
       navigate('/sales-return');
     }
-    if (module === 'Purchase voucher' && action === 'Vouchers') {
+    if (module === 'Purchase voucher' && action === 'Purchase voucher') {
       navigate('/purchase-voucher-entry');
     }
     if (module === 'Purchase voucher' && action === 'List') {
       navigate('/purchase-voucher-list');
     }
-    if (module === 'Sales voucher' && action === 'Vouchers') {
+    if (module === 'Sales voucher' && action === 'Sales voucher') {
       navigate('/sales-voucher-entry');
     }
     if (module === 'Sales voucher' && action === 'List') {
@@ -143,6 +172,27 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     }
     if (module === 'Debit note' && action === 'List') {
       navigate('/debit-note-list');
+    }
+    if (module === 'Debit note' && action === 'Credit note') {
+      navigate('/credit-note-entry');
+    }
+    if (module === 'Income/Expense voucher' && action === 'Income') {
+      navigate('/income-voucher');
+    }
+    if (module === 'Income/Expense voucher' && action === 'Expence') {
+      navigate('/expense-voucher');
+    }
+    if (module === 'Income/Expense voucher' && action === 'List') {
+      navigate('/income-expense-voucher-list');
+    }
+    if (module === 'Payment Voucher' && action === 'Payment Voucher supplier') {
+      navigate('/payment-voucher-supplier');
+    }
+    if (module === 'Payment Voucher' && action === 'Payment voucher') {
+      navigate('/payment-voucher');
+    }
+    if (module === 'Payment Voucher' && action === 'List') {
+      navigate('/payment-voucher-list');
     }
   };
 
@@ -216,7 +266,11 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
             <div
               key={module.name}
               className={`flex-none h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
-                isAccountsTab ? 'w-[162px] sm:w-[172px]' : 'w-[120px]'
+                isAccountsTab
+                  ? module.actions?.length === 3
+                    ? 'w-[198px] sm:w-[210px]'
+                    : 'w-[162px] sm:w-[172px]'
+                  : 'w-[120px]'
               }`}
             >
               <div
@@ -226,19 +280,24 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
               >
                 {module.name}
               </div>
-              <div className="flex flex-wrap gap-0 p-1">
+              <div
+                className={`flex gap-0 p-1 ${module.actions?.length === 3 ? 'flex-nowrap' : 'flex-wrap'}`}
+              >
                 {module.actions.map((action) => {
                   const makeBlack = ['List'].includes(action.label);
                   const isSelected =
                     selectedAction.module === module.name &&
                     selectedAction.action === action.label;
+                  const threeCol = module.actions?.length === 3;
 
                   return (
                     <button
                       key={action.label}
                       type="button"
                       onClick={() => handleActionClick(module.name, action.label)}
-                      className="flex min-w-0 flex-1 basis-[calc(50%-1px)] cursor-pointer flex-col items-center gap-0 p-0"
+                      className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0 p-0 ${
+                        threeCol ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
+                      }`}
                     >
                       <img
                         src={action.icon}
