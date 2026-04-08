@@ -11,18 +11,16 @@ import UnpostIcon from '../../../shared/assets/icons/unpost.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
+const VOUCHER_TYPES = ['Contra', 'Transfer', 'Inter-branch', 'Adjustment', 'Other'];
 
-const PARTY_AC_HEADS = [
-  '2001 – Trade payables',
-  '2100 – Supplier control',
-  '2200 – GRNI / Accrued purchases',
-  '5100 – Purchase expense',
-  '5200 – Import charges',
-  '5300 – Asset capitalization',
+const ACCOUNT_HEADS = [
+  '2100 – Bank – Main',
+  '2110 – Petty cash',
+  '1100 – Cash in hand',
+  '1200 – Bank – Operating',
+  '3100 – General ledger suspense',
+  '5100 – Operating expense',
 ];
-
-const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
@@ -30,19 +28,19 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 const LINE_COL_PCT = [10, 44, 22, 24];
 
 const SAMPLE_ACCOUNTS = [
-  '5100 – Purchase expense',
-  '4100 – VAT input',
-  '2100 – Supplier control',
-  '5200 – Import charges',
+  '2100 – Bank – Main',
+  '1100 – Cash in hand',
+  '3100 – General ledger suspense',
+  '5100 – Operating expense',
 ];
 
-function buildDummyIncomeLines(count) {
+function buildDummyContraLines(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
     const base = 120 + (i * 197) % 8900 + (i % 5) * 44.5;
     const amount = base.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
-      id: `iv-${i + 1}`,
+      id: `cv-${i + 1}`,
       account: SAMPLE_ACCOUNTS[i % SAMPLE_ACCOUNTS.length],
       amount,
     });
@@ -50,7 +48,7 @@ function buildDummyIncomeLines(count) {
   return rows;
 }
 
-const DUMMY_INCOME_LINES = buildDummyIncomeLines(24);
+const DUMMY_CONTRA_LINES = buildDummyContraLines(24);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -104,23 +102,22 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-function buildFreshIncomeLine() {
+function buildFreshContraLine() {
   return {
-    id: `iv-${Date.now()}`,
+    id: `cv-${Date.now()}`,
     account: '',
     amount: '0.00',
   };
 }
 
-export default function IncomeVoucherEntry() {
-  const [tableData, setTableData] = useState(() => DUMMY_INCOME_LINES.map((r) => ({ ...r })));
+export default function ContraVoucherEntry() {
+  const [tableData, setTableData] = useState(() => DUMMY_CONTRA_LINES.map((r) => ({ ...r })));
 
   const [voucherType, setVoucherType] = useState('');
   const [voucherNo, setVoucherNo] = useState('');
-  const [partyAcHead, setPartyAcHead] = useState('');
-  const [station, setStation] = useState('');
+  const [accountHead, setAccountHead] = useState('');
   const [refNo, setRefNo] = useState('');
-  const [incomeDate, setIncomeDate] = useState('');
+  const [expenseDate, setExpenseDate] = useState('');
   const [remark, setRemark] = useState('');
 
   const [page, setPage] = useState(1);
@@ -136,8 +133,8 @@ export default function IncomeVoucherEntry() {
   }, []);
 
   const handleAddLine = useCallback(() => {
-    const id = `iv-${Date.now()}`;
-    const accountLabel = partyAcHead || PARTY_AC_HEADS[0] || '';
+    const id = `cv-${Date.now()}`;
+    const accountLabel = accountHead || ACCOUNT_HEADS[0] || '';
     setTableData((prev) => [
       {
         id,
@@ -149,7 +146,7 @@ export default function IncomeVoucherEntry() {
     setPage(1);
     setVoucherNo('');
     setRefNo('');
-  }, [partyAcHead]);
+  }, [accountHead]);
 
   const handleViewLine = useCallback((id) => {
     setEditingRowId(null);
@@ -197,24 +194,23 @@ export default function IncomeVoucherEntry() {
 
   const handlePost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Post income voucher', { voucherType, voucherNo, tableData });
-  }, [voucherType, voucherNo, tableData]);
+    console.log('Post contra voucher', { voucherType, voucherNo, expenseDate, tableData });
+  }, [voucherType, voucherNo, expenseDate, tableData]);
 
   const handleUnpost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Unpost income voucher', { voucherNo });
+    console.log('Unpost contra voucher', { voucherNo });
   }, [voucherNo]);
 
   const handleDeleteDocument = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Delete income voucher', { voucherNo });
-    setTableData([buildFreshIncomeLine()]);
+    console.log('Delete contra voucher', { voucherNo });
+    setTableData([buildFreshContraLine()]);
     setVoucherType('');
     setVoucherNo('');
-    setPartyAcHead('');
-    setStation('');
+    setAccountHead('');
     setRefNo('');
-    setIncomeDate('');
+    setExpenseDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -223,26 +219,24 @@ export default function IncomeVoucherEntry() {
 
   const handleSave = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Save income voucher', {
+    console.log('Save contra voucher', {
       voucherType,
       voucherNo,
-      partyAcHead,
-      station,
+      accountHead,
       refNo,
-      incomeDate,
+      expenseDate,
       remark,
       lines: tableData,
     });
-  }, [voucherType, voucherNo, partyAcHead, station, refNo, incomeDate, remark, tableData]);
+  }, [voucherType, voucherNo, accountHead, refNo, expenseDate, remark, tableData]);
 
-  const handleNewIncomeVoucher = useCallback(() => {
-    setTableData([buildFreshIncomeLine()]);
+  const handleNewContraVoucher = useCallback(() => {
+    setTableData([buildFreshContraLine()]);
     setVoucherType('');
     setVoucherNo('');
-    setPartyAcHead('');
-    setStation('');
+    setAccountHead('');
     setRefNo('');
-    setIncomeDate('');
+    setExpenseDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -333,7 +327,7 @@ export default function IncomeVoucherEntry() {
     () => [
       {
         content: (
-          <div key="iv-line-total" className="text-left font-bold">
+          <div key="cv-line-total" className="text-left font-bold">
             Total
           </div>
         ),
@@ -357,7 +351,6 @@ export default function IncomeVoucherEntry() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
-  // Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain
   return (
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -365,7 +358,7 @@ export default function IncomeVoucherEntry() {
           className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          INCOME VOUCHER ENTRY
+          CONTRA VOUCHER ENTRY
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -383,7 +376,7 @@ export default function IncomeVoucherEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete income voucher"
+            aria-label="Delete contra voucher"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -396,17 +389,17 @@ export default function IncomeVoucherEntry() {
             type="button"
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
-            onClick={handleNewIncomeVoucher}
-            aria-label="New income voucher entry"
+            onClick={handleNewContraVoucher}
+            aria-label="New contra voucher entry"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden sm:inline">New Income Voucher Entry</span>
+            <span className="hidden sm:inline">New Contra Voucher Entry</span>
             <span className="sm:hidden">New</span>
           </button>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-nowrap items-end gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
+      <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
         <div className="shrink-0">
           <DropdownInput
             label="Voucher Type"
@@ -426,19 +419,10 @@ export default function IncomeVoucherEntry() {
         </div>
         <div className="shrink-0">
           <DropdownInput
-            label="Party A/c Head"
-            value={partyAcHead}
-            onChange={setPartyAcHead}
-            options={PARTY_AC_HEADS}
-            placeholder="Select"
-          />
-        </div>
-        <div className="shrink-0">
-          <DropdownInput
-            label="Station"
-            value={station}
-            onChange={setStation}
-            options={STATIONS}
+            label="Account Head"
+            value={accountHead}
+            onChange={setAccountHead}
+            options={ACCOUNT_HEADS}
             placeholder="Select"
           />
         </div>
@@ -451,7 +435,7 @@ export default function IncomeVoucherEntry() {
           />
         </div>
         <div className="shrink-0">
-          <DateInputField label="Income date" value={incomeDate} onChange={setIncomeDate} />
+          <DateInputField label="Expense Date" value={expenseDate} onChange={setExpenseDate} />
         </div>
         <div className="ml-auto flex shrink-0 items-end">
           <button
@@ -483,7 +467,7 @@ export default function IncomeVoucherEntry() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="income-voucher-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="contra-voucher-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
@@ -591,7 +575,7 @@ export default function IncomeVoucherEntry() {
           onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="iv-line-detail-title"
+          aria-labelledby="cv-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -608,7 +592,7 @@ export default function IncomeVoucherEntry() {
               </svg>
             </button>
             <h2
-              id="iv-line-detail-title"
+              id="cv-line-detail-title"
               className="pr-10 text-sm font-bold sm:text-base"
               style={{ color: primary }}
             >

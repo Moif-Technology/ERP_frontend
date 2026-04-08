@@ -69,6 +69,11 @@ export default function CommonTable({
    * Renders as <tfoot>; aligns with split thead/tbody layout via matching <colgroup>.
    */
   footerRow = null,
+  /**
+   * Optional multiple footer rows (each row same shape as `footerRow`).
+   * When non-empty, takes precedence over `footerRow`.
+   */
+  footerRows = null,
 }) {
   const headerBg = headerBackgroundColor ?? tableUi.header.backgroundColor;
   const useBodyScroll = maxVisibleRows != null && maxVisibleRows > 0;
@@ -276,45 +281,58 @@ export default function CommonTable({
     );
   });
 
-  const tfootRow =
-    footerRow && footerRow.length > 0 ? (
+  const footerRowList = useMemo(() => {
+    if (footerRows != null && Array.isArray(footerRows) && footerRows.length > 0) {
+      return footerRows;
+    }
+    if (footerRow != null && Array.isArray(footerRow) && footerRow.length > 0) {
+      return [footerRow];
+    }
+    return [];
+  }, [footerRow, footerRows]);
+
+  const tfootSection =
+    footerRowList.length > 0 ? (
       <tfoot>
-        <tr>
-          {footerRow.map((cell, cellIdx) => {
-            const isCellObject = cell && typeof cell === 'object' && !React.isValidElement(cell);
-            const content = isCellObject ? (cell.content ?? '') : cell;
-            const colSpan = isCellObject ? (cell.colSpan ?? 1) : 1;
-            const rowSpan = isCellObject ? (cell.rowSpan ?? 1) : 1;
-            const extraClassName = isCellObject ? (cell.className ?? '') : '';
-            const extraStyle = isCellObject ? (cell.style ?? {}) : {};
-            return (
-              <td
-                key={`footer-${cellIdx}`}
-                colSpan={colSpan}
-                rowSpan={rowSpan}
-                className={`${cellPad} ${alignClass} min-w-0 ${extraClassName}`.trim()}
-                style={{
-                  ...tdFooterBorderStyle,
-                  fontSize: resolvedBodyFont,
-                  fontWeight: 600,
-                  backgroundColor: footerBg,
-                  color: tableUi.body.color,
-                  ...extraStyle,
-                }}
-              >
-                {content}
-              </td>
-            );
-          })}
-        </tr>
+        {footerRowList.map((fRow, rowIdx) => (
+          <tr key={`footer-row-${rowIdx}`}>
+            {fRow.map((cell, cellIdx) => {
+              const isCellObject = cell && typeof cell === 'object' && !React.isValidElement(cell);
+              const content = isCellObject ? (cell.content ?? '') : cell;
+              const colSpan = isCellObject ? (cell.colSpan ?? 1) : 1;
+              const rowSpan = isCellObject ? (cell.rowSpan ?? 1) : 1;
+              const extraClassName = isCellObject ? (cell.className ?? '') : '';
+              const extraStyle = isCellObject ? (cell.style ?? {}) : {};
+              return (
+                <td
+                  key={`footer-${rowIdx}-${cellIdx}`}
+                  colSpan={colSpan}
+                  rowSpan={rowSpan}
+                  className={`${cellPad} ${alignClass} min-w-0 ${extraClassName}`.trim()}
+                  style={{
+                    ...tdFooterBorderStyle,
+                    ...(rowIdx > 0 ? { borderTop: tableUi.border } : {}),
+                    fontSize: resolvedBodyFont,
+                    fontWeight: 600,
+                    backgroundColor: footerBg,
+                    color: tableUi.body.color,
+                    ...extraStyle,
+                  }}
+                >
+                  {content}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
       </tfoot>
     ) : null;
 
   const footerTable =
-    tfootRow && fitParentWidth ? (
+    tfootSection && fitParentWidth ? (
       <table className={tableClass}>
         <Colgroup colWidthsPct={colWidthsPct} />
-        {tfootRow}
+        {tfootSection}
       </table>
     ) : null;
 
@@ -348,7 +366,7 @@ export default function CommonTable({
           <Colgroup colWidthsPct={colWidthsPct} />
           {theadRow}
           <tbody>{tbodyRows}</tbody>
-          {tfootRow}
+          {tfootSection}
         </table>
       </div>
     </div>

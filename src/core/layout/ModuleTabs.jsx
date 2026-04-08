@@ -22,6 +22,11 @@ import IncomeIcon from '../../shared/assets/icons/Income.svg';
 import ExpenceIcon from '../../shared/assets/icons/expence.svg';
 import PaymentSupplierIcon from '../../shared/assets/icons/payment_supplier.svg';
 import PaymentEntryIcon from '../../shared/assets/icons/payment_entry.svg';
+import ReceiptCustomerIcon from '../../shared/assets/icons/receipt_cutomer.svg';
+import ReceiptVoucherIcon from '../../shared/assets/icons/Receipt.svg';
+import LedgerModuleIcon from '../../shared/assets/icons/ledger_module.svg';
+import GroupDetailsIcon from '../../shared/assets/icons/group_details.svg';
+import LedgerDetailsIcon from '../../shared/assets/icons/ledger.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -110,10 +115,42 @@ const moduleGroups = {
         { label: 'List', icon: ListIcon },
       ],
     },
-    { name: 'Receipt/contra Voucher', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Vouchers', 'List']) },
-    { name: 'Journal Voucher', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Journals', 'List']) },
-    { name: 'Account details', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Accounts', 'List']) },
-    { name: 'Statement Of Accounts', icon: ListIcon, actions: getActionItems(ListIcon, ['Statements', 'List']) },
+    {
+      name: 'Receipt voucher',
+      icon: ReceiptVoucherIcon,
+      actions: [
+        { label: 'Receipt (customer)', icon: ReceiptCustomerIcon },
+        { label: 'Receipt voucher', icon: ReceiptVoucherIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Contra / Journal',
+      icon: QuotationIcon,
+      actions: [
+        { label: 'Contra voucher', icon: LedgerModuleIcon },
+        { label: 'Journal voucher', icon: QuotationIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Account details',
+      icon: GroupDetailsIcon,
+      actions: [
+        { label: 'Group details', icon: GroupDetailsIcon },
+        { label: 'Ledger details', icon: LedgerDetailsIcon },
+        { label: 'Trial balance', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Statement of accounts',
+      icon: ListIcon,
+      actions: [
+        { label: 'Payable summary', icon: PaymentSupplierIcon },
+        { label: 'Receivable summary', icon: SaleIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
   ],
 };
 
@@ -193,6 +230,42 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     }
     if (module === 'Payment Voucher' && action === 'List') {
       navigate('/payment-voucher-list');
+    }
+    if (module === 'Receipt voucher' && action === 'Receipt (customer)') {
+      navigate('/receipt-voucher-customer');
+    }
+    if (module === 'Receipt voucher' && action === 'Receipt voucher') {
+      navigate('/receipt-voucher-entry');
+    }
+    if (module === 'Receipt voucher' && action === 'List') {
+      navigate('/receipt-voucher-list');
+    }
+    if (module === 'Contra / Journal' && action === 'Contra voucher') {
+      navigate('/contra-voucher-entry');
+    }
+    if (module === 'Contra / Journal' && action === 'Journal voucher') {
+      navigate('/journal-voucher-entry');
+    }
+    if (module === 'Contra / Journal' && action === 'List') {
+      navigate('/contra-journal-voucher-list');
+    }
+    if (module === 'Account details' && action === 'Group details') {
+      navigate('/account-group-details');
+    }
+    if (module === 'Account details' && action === 'Ledger details') {
+      navigate('/account-ledger-details');
+    }
+    if (module === 'Account details' && action === 'Trial balance') {
+      navigate('/trial-balance');
+    }
+    if (module === 'Statement of accounts' && action === 'Payable summary') {
+      navigate('/statement-payable-summary');
+    }
+    if (module === 'Statement of accounts' && action === 'Receivable summary') {
+      navigate('/statement-receivable-summary');
+    }
+    if (module === 'Statement of accounts' && action === 'List') {
+      navigate('/statement-of-accounts-list');
     }
   };
 

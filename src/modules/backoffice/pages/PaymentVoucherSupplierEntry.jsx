@@ -561,7 +561,7 @@ export default function PaymentVoucherSupplierEntry() {
             inputMode="decimal"
           />
         </div>
-        <div className="flex shrink-0 items-end">
+        <div className="ml-auto flex shrink-0 items-end">
           <button
             type="button"
             onClick={handleAddLine}
