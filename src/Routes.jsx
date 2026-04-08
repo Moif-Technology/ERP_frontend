@@ -22,6 +22,12 @@ import IncomeVoucherEntry from './modules/backoffice/pages/IncomeVoucherEntry';
 import ExpenseVoucherEntry from './modules/backoffice/pages/ExpenseVoucherEntry';
 import PaymentVoucherSupplierEntry from './modules/backoffice/pages/PaymentVoucherSupplierEntry';
 import PaymentVoucherEntry from './modules/backoffice/pages/PaymentVoucherEntry';
+import ReceiptVoucherCustomerEntry from './modules/backoffice/pages/ReceiptVoucherCustomerEntry';
+import ReceiptVoucherEntry from './modules/backoffice/pages/ReceiptVoucherEntry';
+import ContraVoucherEntry from './modules/backoffice/pages/ContraVoucherEntry';
+import JournalVoucherEntry from './modules/backoffice/pages/JournalVoucherEntry';
+import AccountGroupDetails from './modules/backoffice/pages/AccountGroupDetails';
+import AccountLedgerDetails from './modules/backoffice/pages/AccountLedgerDetails';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
 import SupplierEntry from './modules/backoffice/pages/SupplierEntry';
 import ProductEntry from './modules/backoffice/pages/ProductEntry';
@@ -54,6 +60,18 @@ export default function AppRoutes() {
       <Route path="/payment-voucher-supplier" element={<PaymentVoucherSupplierEntry />} />
       <Route path="/payment-voucher" element={<PaymentVoucherEntry />} />
       <Route path="/payment-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/receipt-voucher-customer" element={<ReceiptVoucherCustomerEntry />} />
+      <Route path="/receipt-voucher-entry" element={<ReceiptVoucherEntry />} />
+      <Route path="/receipt-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/contra-voucher-entry" element={<ContraVoucherEntry />} />
+      <Route path="/journal-voucher-entry" element={<JournalVoucherEntry />} />
+      <Route path="/contra-journal-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/account-group-details" element={<AccountGroupDetails />} />
+      <Route path="/account-ledger-details" element={<AccountLedgerDetails />} />
+      <Route path="/trial-balance" element={<AccountsPlaceholderPage />} />
+      <Route path="/statement-payable-summary" element={<AccountsPlaceholderPage />} />
+      <Route path="/statement-receivable-summary" element={<AccountsPlaceholderPage />} />
+      <Route path="/statement-of-accounts-list" element={<AccountsPlaceholderPage />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />
