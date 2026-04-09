@@ -27,6 +27,9 @@ import ReceiptVoucherIcon from '../../shared/assets/icons/Receipt.svg';
 import LedgerModuleIcon from '../../shared/assets/icons/ledger_module.svg';
 import GroupDetailsIcon from '../../shared/assets/icons/group_details.svg';
 import LedgerDetailsIcon from '../../shared/assets/icons/ledger.svg';
+import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
+import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
+import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -139,15 +142,15 @@ const moduleGroups = {
       actions: [
         { label: 'Group details', icon: GroupDetailsIcon },
         { label: 'Ledger details', icon: LedgerDetailsIcon },
-        { label: 'Trial balance', icon: ListIcon },
+        { label: 'Trial balance', icon: TrialBalanceIcon },
       ],
     },
     {
       name: 'Statement of accounts',
       icon: ListIcon,
       actions: [
-        { label: 'Payable summary', icon: PaymentSupplierIcon },
-        { label: 'Receivable summary', icon: SaleIcon },
+        { label: 'Payable summary', icon: PayableSummaryIcon },
+        { label: 'Receivable summary', icon: ReceivableSummaryIcon },
         { label: 'List', icon: ListIcon },
       ],
     },

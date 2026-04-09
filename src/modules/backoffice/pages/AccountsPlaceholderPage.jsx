@@ -9,9 +9,6 @@ const TITLES = {
   '/payment-voucher-list': 'PAYMENT VOUCHER LIST',
   '/receipt-voucher-list': 'RECEIPT VOUCHER LIST',
   '/contra-journal-voucher-list': 'CONTRA / JOURNAL VOUCHER LIST',
-  '/trial-balance': 'TRIAL BALANCE',
-  '/statement-payable-summary': 'ACCOUNTS PAYABLE SUMMARY',
-  '/statement-receivable-summary': 'ACCOUNTS RECEIVABLE SUMMARY',
   '/statement-of-accounts-list': 'STATEMENT OF ACCOUNTS — LIST',
 };
 

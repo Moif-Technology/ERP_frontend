@@ -28,6 +28,9 @@ import ContraVoucherEntry from './modules/backoffice/pages/ContraVoucherEntry';
 import JournalVoucherEntry from './modules/backoffice/pages/JournalVoucherEntry';
 import AccountGroupDetails from './modules/backoffice/pages/AccountGroupDetails';
 import AccountLedgerDetails from './modules/backoffice/pages/AccountLedgerDetails';
+import TrialBalance from './modules/backoffice/pages/TrialBalance';
+import PayableSummary from './modules/backoffice/pages/PayableSummary';
+import ReceivableSummary from './modules/backoffice/pages/ReceivableSummary';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
 import SupplierEntry from './modules/backoffice/pages/SupplierEntry';
 import ProductEntry from './modules/backoffice/pages/ProductEntry';
@@ -68,9 +71,9 @@ export default function AppRoutes() {
       <Route path="/contra-journal-voucher-list" element={<AccountsPlaceholderPage />} />
       <Route path="/account-group-details" element={<AccountGroupDetails />} />
       <Route path="/account-ledger-details" element={<AccountLedgerDetails />} />
-      <Route path="/trial-balance" element={<AccountsPlaceholderPage />} />
-      <Route path="/statement-payable-summary" element={<AccountsPlaceholderPage />} />
-      <Route path="/statement-receivable-summary" element={<AccountsPlaceholderPage />} />
+      <Route path="/trial-balance" element={<TrialBalance />} />
+      <Route path="/statement-payable-summary" element={<PayableSummary />} />
+      <Route path="/statement-receivable-summary" element={<ReceivableSummary />} />
       <Route path="/statement-of-accounts-list" element={<AccountsPlaceholderPage />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
