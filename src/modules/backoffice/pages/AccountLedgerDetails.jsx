@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import { DropdownInput, SubInputField, DateInputField } from '../../../shared/components/ui';
+import { DropdownInput, SubInputField, DateInputField, InputField } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
+import ViewIcon from '../../../shared/assets/icons/view.svg';
+import EditIcon from '../../../shared/assets/icons/edit4.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -12,8 +15,14 @@ const VOUCHER_TYPES = ['Journal', 'Payment', 'Receipt', 'Contra', 'Sales', 'Purc
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Sl no · Voucher no · Voucher date · Particular · Voucher type · Debit · Credit · Station */
-const LINE_COL_PCT = [6, 11, 10, 22, 12, 13, 13, 13];
+/** Sl no · Voucher no · Voucher date · Particular · Voucher type · Debit · Credit · Station · Action */
+const LINE_COL_PCT = [5, 10, 8, 18, 10, 11, 11, 11, 16];
+
+const actionIconBtn =
+  'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
+
+const tableCellInputClass =
+  'box-border w-full min-w-0 max-w-full rounded border border-gray-200 bg-white px-0.5 py-0.5 text-center text-[clamp(7px,0.9vw,9px)] outline-none focus:border-gray-400 sm:px-1';
 
 const OPEN_BALANCE_DEBIT = 5000;
 const OPEN_BALANCE_CREDIT = 2000;
@@ -94,6 +103,8 @@ export default function AccountLedgerDetails() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [detailRowId, setDetailRowId] = useState(null);
   const isCompactTable = useViewportMaxWidth(1200);
 
   const filteredRows = tableData;
@@ -103,7 +114,57 @@ export default function AccountLedgerDetails() {
     console.log('Display ledger details', { ledger, station, dateFrom, dateTo });
     setTableData(buildDummyLedgerLines(32).map((r) => ({ ...r })));
     setPage(1);
+    setEditingRowId(null);
+    setDetailRowId(null);
   }, [ledger, station, dateFrom, dateTo]);
+
+  const updateLine = useCallback((id, patch) => {
+    setTableData((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }, []);
+
+  const handleViewLine = useCallback((id) => {
+    setEditingRowId(null);
+    setDetailRowId(id);
+  }, []);
+
+  const handleEditLine = useCallback((id) => {
+    setDetailRowId(null);
+    setEditingRowId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleDeleteLine = useCallback((id) => {
+    setTableData((prev) => prev.filter((r) => r.id !== id));
+    setDetailRowId((cur) => (cur === id ? null : cur));
+    setEditingRowId((cur) => (cur === id ? null : cur));
+  }, []);
+
+  const closeDetailModal = useCallback(() => setDetailRowId(null), []);
+
+  const detailRow = useMemo(
+    () => (detailRowId ? filteredRows.find((r) => r.id === detailRowId) : null),
+    [detailRowId, filteredRows],
+  );
+
+  const detailSlNo = useMemo(() => {
+    if (!detailRowId) return 0;
+    const i = filteredRows.findIndex((r) => r.id === detailRowId);
+    return i >= 0 ? i + 1 : 0;
+  }, [detailRowId, filteredRows]);
+
+  useEffect(() => {
+    if (detailRowId && !filteredRows.some((r) => r.id === detailRowId)) {
+      setDetailRowId(null);
+    }
+  }, [detailRowId, filteredRows]);
+
+  useEffect(() => {
+    if (!detailRowId) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setDetailRowId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [detailRowId]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -147,20 +208,66 @@ export default function AccountLedgerDetails() {
   const tableBodyRows = useMemo(() => {
     return paginatedRows.map((r, idx) => {
       const slNo = (page - 1) * pageSize + idx + 1;
+      const rowIsEditing = editingRowId === r.id;
+      const cell = (field, val, left, inputMode) =>
+        rowIsEditing ? (
+          <input
+            key={`${field}-${r.id}`}
+            type="text"
+            inputMode={inputMode}
+            className={`${tableCellInputClass} ${left ? 'text-left' : ''}`}
+            value={val}
+            onChange={(e) => updateLine(r.id, { [field]: e.target.value })}
+            aria-label={field}
+          />
+        ) : (
+          val
+        );
       return [
         slNo,
-        r.voucherNo,
-        r.voucherDate,
-        <span key={`p-${r.id}`} className="block w-full text-left">
-          {r.particular}
-        </span>,
-        r.voucherType,
-        r.debit,
-        r.credit,
-        r.station,
+        cell('voucherNo', r.voucherNo, false, undefined),
+        cell('voucherDate', r.voucherDate, false, undefined),
+        rowIsEditing ? (
+          <input
+            key={`p-${r.id}`}
+            type="text"
+            className={`${tableCellInputClass} text-left`}
+            value={r.particular}
+            onChange={(e) => updateLine(r.id, { particular: e.target.value })}
+            aria-label="Particular"
+          />
+        ) : (
+          <span key={`p-${r.id}`} className="block w-full text-left">
+            {r.particular}
+          </span>
+        ),
+        cell('voucherType', r.voucherType, false, undefined),
+        cell('debit', r.debit, false, 'decimal'),
+        cell('credit', r.credit, false, 'decimal'),
+        cell('station', r.station, true, undefined),
+        <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+          <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
+            <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </button>
+          <button type="button" className={actionIconBtn} aria-label="Edit line" onClick={() => handleEditLine(r.id)}>
+            <img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </button>
+          <button type="button" className={actionIconBtn} aria-label="Delete line" onClick={() => handleDeleteLine(r.id)}>
+            <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </button>
+        </div>,
       ];
     });
-  }, [paginatedRows, page, pageSize]);
+  }, [
+    paginatedRows,
+    page,
+    pageSize,
+    editingRowId,
+    updateLine,
+    handleViewLine,
+    handleEditLine,
+    handleDeleteLine,
+  ]);
 
   const tableFooterRows = useMemo(() => {
     if (totalFiltered === 0) return [];
@@ -175,17 +282,20 @@ export default function AccountLedgerDetails() {
         formatMoneyDisplay(OPEN_BALANCE_DEBIT),
         formatMoneyDisplay(OPEN_BALANCE_CREDIT),
         '',
+        '',
       ],
       [
         labelCell('Current total'),
         formatMoneyDisplay(totalDebit),
         formatMoneyDisplay(totalCredit),
         '',
+        '',
       ],
       [
         labelCell('Close balance'),
         formatMoneyDisplay(closeDebit),
         formatMoneyDisplay(closeCredit),
+        '',
         '',
       ],
     ];
@@ -262,7 +372,7 @@ export default function AccountLedgerDetails() {
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
-          truncateBody
+          truncateBody={editingRowId == null}
           columnWidthPercents={LINE_COL_PCT}
           tableClassName={isCompactTable ? 'min-w-[56rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
@@ -282,6 +392,7 @@ export default function AccountLedgerDetails() {
             'Debit',
             'Credit',
             'Station',
+            'Action',
           ]}
           rows={tableBodyRows}
           footerRows={tableFooterRows}
@@ -368,6 +479,49 @@ export default function AccountLedgerDetails() {
           </div>
         </div>
       </div>
+
+      {detailRowId && detailRow ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm"
+          onClick={closeDetailModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ald-line-detail-title"
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+              onClick={closeDetailModal}
+              aria-label="Close line detail"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden>
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <h2
+              id="ald-line-detail-title"
+              className="pr-10 text-sm font-bold sm:text-base"
+              style={{ color: primary }}
+            >
+              Voucher detail
+            </h2>
+            <div className="mt-3 flex flex-col gap-3 sm:mt-4">
+              <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
+              <InputField label="Voucher no" fullWidth readOnly value={detailRow.voucherNo} />
+              <InputField label="Voucher date" fullWidth readOnly value={detailRow.voucherDate} />
+              <InputField label="Particular" fullWidth readOnly value={detailRow.particular} />
+              <InputField label="Voucher type" fullWidth readOnly value={detailRow.voucherType} />
+              <InputField label="Debit" fullWidth readOnly value={detailRow.debit} />
+              <InputField label="Credit" fullWidth readOnly value={detailRow.credit} />
+              <InputField label="Station" fullWidth readOnly value={detailRow.station} />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

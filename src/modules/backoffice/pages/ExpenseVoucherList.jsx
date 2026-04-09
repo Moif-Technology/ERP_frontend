@@ -22,47 +22,47 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   );
 }
 
-const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
-const STN_CODES = ['STN-M01', 'STN-N02', 'STN-S03', 'STN-W04', 'STN-EX05'];
+const STATIONS = ['PCS', 'Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
+const STN_CODES = ['STN-PCS', 'STN-HO01', 'STN-WH02', 'STN-BN03', 'STN-BS04'];
 
 const ACCOUNT_HEADS = [
-  '2100 – Supplier control',
-  '2200 – GRNI / Accrued purchases',
-  '5100 – Purchase expense',
+  '5100 – Operating expense',
+  '5200 – Admin & office',
+  '5300 – Travel & conveyance',
+  '5400 – Utilities',
+  '5500 – Professional fees',
+  '2100 – Trade payables',
   '4100 – VAT input',
-  '5200 – Import charges',
-  '2001 – Trade payables',
-  '5300 – Asset capitalization',
 ];
 
 const PARTICULARS = [
-  'Debit note – supplier rate revision',
-  'Additional freight – GRN shortfall',
-  'Price difference – invoice vs PO',
-  'Quality claim – rejected lot',
-  'Service charge – customs handling',
-  'Interest on overdue – supplier terms',
+  'Staff welfare – monthly provisions',
+  'Courier & logistics – outbound',
+  'Software subscription – annual',
+  'Repairs & maintenance – HVAC',
+  'Training & certification fees',
+  'Bank charges – transaction fees',
 ];
 
-const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
-const VOUCHER_GROUPS = ['Supplier debit', 'Purchase return', 'Expense', 'Journal', 'Adjustment'];
+const VOUCHER_TYPES = ['PCS', 'General', 'Petty cash', 'Travel', 'Utilities', 'Other'];
+const VOUCHER_GROUPS = ['Operating expense', 'PCS', 'Petty cash', 'Journal', 'Adjustment'];
 const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
 /** Checkbox + Sl., Vch no, Date, Part., Type, Ref., amounts, Sts., Rmk., STN, TRN */
-const DN_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
+const EV_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
 
-function buildDummyDebitNoteVouchers(count) {
+function buildDummyExpenseVouchers(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const seq = 1800 - i;
+    const seq = 5500 - i;
     const d = 1 + (i % 28);
     const m = 1 + (i % 4);
     const y = 2026;
     const voucherDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const subNum = 680 + (i * 179) % 36000 + (i % 5) * 61.5;
-    const taxNum = subNum * 0.05 + (i % 3) * 11;
+    const subNum = 480 + (i * 173) % 31000 + (i % 4) * 49.75;
+    const taxNum = subNum * 0.05 + (i % 5) * 7;
     const voucherNum = subNum + taxNum;
     const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
@@ -71,23 +71,23 @@ function buildDummyDebitNoteVouchers(count) {
       station: STATIONS[i % STATIONS.length],
       stnCode: STN_CODES[i % STN_CODES.length],
       voucherGroup: VOUCHER_GROUPS[i % VOUCHER_GROUPS.length],
-      voucherNo: `DN-2026-${String(seq).padStart(5, '0')}`,
+      voucherNo: `EV-2026-${String(seq).padStart(5, '0')}`,
       voucherDate,
       particular: PARTICULARS[i % PARTICULARS.length],
       voucherType: VOUCHER_TYPES[i % VOUCHER_TYPES.length],
-      refNo: `DNREF-${(66000 + i * 27) % 99000}`,
+      refNo: `EVREF-${(64000 + i * 35) % 99000}`,
       subTotal: fmt(subNum),
       taxAmount: fmt(taxNum),
       voucherAmount: fmt(voucherNum),
       status: i % 7 === 0 ? 'Draft' : 'Posted',
-      remark: i % 5 === 0 ? 'Approved by AP' : i % 5 === 1 ? 'Pending supplier ack' : '—',
-      trnNo: `150-${(250000000 + i * 100007) % 900000000}`,
+      remark: i % 5 === 0 ? 'Posted to GL' : i % 5 === 1 ? 'Pending cost centre' : '—',
+      trnNo: `270-${(310000000 + i * 100013) % 900000000}`,
     });
   }
   return rows;
 }
 
-const DUMMY_DN = buildDummyDebitNoteVouchers(42);
+const DUMMY_EV = buildDummyExpenseVouchers(42);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -123,14 +123,14 @@ function parseVoucherDate(ddmmyyyy) {
 
 const SEARCH_PLACEHOLDER = 'Search by voucher no, acc head, ref no, post status…';
 
-export default function DebitNoteList() {
-  const [vouchers, setVouchers] = useState(() => DUMMY_DN.map((r) => ({ ...r })));
+export default function ExpenseVoucherList() {
+  const [vouchers, setVouchers] = useState(() => DUMMY_EV.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [dnFilters, setDnFilters] = useState({
+  const [evFilters, setEvFilters] = useState({
     station: null,
     postStatus: null,
     transactionType: null,
@@ -159,7 +159,7 @@ export default function DebitNoteList() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortBy, appliedDateRange, dnFilters]);
+  }, [search, sortBy, appliedDateRange, evFilters]);
 
   useEffect(() => {
     setSelectedIds((prev) => {
@@ -176,10 +176,10 @@ export default function DebitNoteList() {
 
   const activeFilterCount = useMemo(() => {
     let n = 0;
-    if (dnFilters.station) n += 1;
-    if (dnFilters.transactionType) n += 1;
+    if (evFilters.station) n += 1;
+    if (evFilters.transactionType) n += 1;
     return n;
-  }, [dnFilters.station, dnFilters.transactionType]);
+  }, [evFilters.station, evFilters.transactionType]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -209,11 +209,11 @@ export default function DebitNoteList() {
       });
     }
 
-    if (dnFilters.station) {
-      list = list.filter((r) => r.station === dnFilters.station);
+    if (evFilters.station) {
+      list = list.filter((r) => r.station === evFilters.station);
     }
-    if (dnFilters.transactionType) {
-      list = list.filter((r) => r.voucherGroup === dnFilters.transactionType);
+    if (evFilters.transactionType) {
+      list = list.filter((r) => r.voucherGroup === evFilters.transactionType);
     }
 
     const sorted = [...list];
@@ -226,7 +226,7 @@ export default function DebitNoteList() {
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, dnFilters, vouchers]);
+  }, [search, sortBy, appliedDateRange, evFilters, vouchers]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -302,7 +302,7 @@ export default function DebitNoteList() {
     const totalRow = [
       {
         content: (
-          <div key="dn-list-total" className="text-left font-bold">
+          <div key="ev-list-total" className="text-left font-bold">
             Total
           </div>
         ),
@@ -339,15 +339,15 @@ export default function DebitNoteList() {
           className="shrink-0 text-base font-bold sm:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          DEBIT NOTE LIST
+          EXPENSE VOUCHER LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            to="/debit-note-entry"
+            to="/expense-voucher"
             className={primaryLinkBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
           >
-            New debit note
+            New expense voucher
           </Link>
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
@@ -382,7 +382,7 @@ export default function DebitNoteList() {
               className={primaryToolbarBtn}
               style={{ backgroundColor: primary, borderColor: primary }}
               onClick={handleDeleteSelected}
-              aria-label={`Delete ${selectedRowCount} selected ${selectedRowCount === 1 ? 'note' : 'notes'}`}
+              aria-label={`Delete ${selectedRowCount} selected voucher${selectedRowCount === 1 ? '' : 's'}`}
             >
               <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
               Delete
@@ -456,18 +456,18 @@ export default function DebitNoteList() {
         stations={STATIONS}
         postStatusOptions={POST_STATUS_OPTIONS}
         transactionTypeOptions={VOUCHER_GROUPS}
-        applied={dnFilters}
-        onApply={setDnFilters}
+        applied={evFilters}
+        onApply={setEvFilters}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="debit-note-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="expense-voucher-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll
           truncateHeader
           truncateBody
-          columnWidthPercents={DN_LIST_COL_PCT}
+          columnWidthPercents={EV_LIST_COL_PCT}
           tableClassName="min-w-[1020px] w-full"
           hideVerticalCellBorders
           cellAlign="center"
