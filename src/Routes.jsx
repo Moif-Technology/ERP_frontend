@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './modules/backoffice/pages/Dashboard';
 import ProductList from './modules/backoffice/pages/ProductList';
 import Sale from './modules/backoffice/pages/Sale';
@@ -17,9 +17,12 @@ import SalesVoucherList from './modules/backoffice/pages/SalesVoucherList';
 import DebitNoteEntry from './modules/backoffice/pages/DebitNoteEntry';
 import DebitNoteList from './modules/backoffice/pages/DebitNoteList';
 import CreditNoteEntry from './modules/backoffice/pages/CreditNoteEntry';
+import CreditNoteList from './modules/backoffice/pages/CreditNoteList';
 import AccountsPlaceholderPage from './modules/backoffice/pages/AccountsPlaceholderPage';
 import IncomeVoucherEntry from './modules/backoffice/pages/IncomeVoucherEntry';
+import IncomeVoucherList from './modules/backoffice/pages/IncomeVoucherList';
 import ExpenseVoucherEntry from './modules/backoffice/pages/ExpenseVoucherEntry';
+import ExpenseVoucherList from './modules/backoffice/pages/ExpenseVoucherList';
 import PaymentVoucherSupplierEntry from './modules/backoffice/pages/PaymentVoucherSupplierEntry';
 import PaymentVoucherEntry from './modules/backoffice/pages/PaymentVoucherEntry';
 import ReceiptVoucherCustomerEntry from './modules/backoffice/pages/ReceiptVoucherCustomerEntry';
@@ -57,9 +60,12 @@ export default function AppRoutes() {
       <Route path="/debit-note-entry" element={<DebitNoteEntry />} />
       <Route path="/debit-note-list" element={<DebitNoteList />} />
       <Route path="/credit-note-entry" element={<CreditNoteEntry />} />
+      <Route path="/credit-note-list" element={<CreditNoteList />} />
       <Route path="/income-voucher" element={<IncomeVoucherEntry />} />
+      <Route path="/income-voucher-list" element={<IncomeVoucherList />} />
       <Route path="/expense-voucher" element={<ExpenseVoucherEntry />} />
-      <Route path="/income-expense-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/expense-voucher-list" element={<ExpenseVoucherList />} />
+      <Route path="/income-expense-voucher-list" element={<Navigate to="/income-voucher-list" replace />} />
       <Route path="/payment-voucher-supplier" element={<PaymentVoucherSupplierEntry />} />
       <Route path="/payment-voucher" element={<PaymentVoucherEntry />} />
       <Route path="/payment-voucher-list" element={<AccountsPlaceholderPage />} />

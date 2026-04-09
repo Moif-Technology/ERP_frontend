@@ -92,12 +92,13 @@ const moduleGroups = {
     { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Purchase voucher', 'List']) },
     { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Sales voucher', 'List']) },
     {
-      name: 'Debit note',
+      name: 'Debit / Credit notes',
       icon: DebitNoteIcon,
       actions: [
         { label: 'Debit note', icon: DebitNoteIcon },
+        { label: 'Debit list', icon: ListIcon },
         { label: 'Credit note', icon: CreditNoteIcon },
-        { label: 'List', icon: ListIcon },
+        { label: 'Credit list', icon: ListIcon },
       ],
     },
     {
@@ -105,8 +106,9 @@ const moduleGroups = {
       icon: IncomeIcon,
       actions: [
         { label: 'Income', icon: IncomeIcon },
+        { label: 'Income list', icon: ListIcon },
         { label: 'Expence', icon: ExpenceIcon },
-        { label: 'List', icon: ListIcon },
+        { label: 'Expense list', icon: ListIcon },
       ],
     },
     {
@@ -207,23 +209,29 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Sales voucher' && action === 'List') {
       navigate('/sales-voucher-list');
     }
-    if (module === 'Debit note' && action === 'Debit note') {
+    if (module === 'Debit / Credit notes' && action === 'Debit note') {
       navigate('/debit-note-entry');
     }
-    if (module === 'Debit note' && action === 'List') {
+    if (module === 'Debit / Credit notes' && action === 'Debit list') {
       navigate('/debit-note-list');
     }
-    if (module === 'Debit note' && action === 'Credit note') {
+    if (module === 'Debit / Credit notes' && action === 'Credit note') {
       navigate('/credit-note-entry');
+    }
+    if (module === 'Debit / Credit notes' && action === 'Credit list') {
+      navigate('/credit-note-list');
     }
     if (module === 'Income/Expense voucher' && action === 'Income') {
       navigate('/income-voucher');
     }
+    if (module === 'Income/Expense voucher' && action === 'Income list') {
+      navigate('/income-voucher-list');
+    }
     if (module === 'Income/Expense voucher' && action === 'Expence') {
       navigate('/expense-voucher');
     }
-    if (module === 'Income/Expense voucher' && action === 'List') {
-      navigate('/income-expense-voucher-list');
+    if (module === 'Income/Expense voucher' && action === 'Expense list') {
+      navigate('/expense-voucher-list');
     }
     if (module === 'Payment Voucher' && action === 'Payment Voucher supplier') {
       navigate('/payment-voucher-supplier');
@@ -341,12 +349,14 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
           {currentModules.map((module) => (
             <div
               key={module.name}
-              className={`flex-none h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
+              className={`flex-none rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
                 isAccountsTab
-                  ? module.actions?.length === 3
-                    ? 'w-[198px] sm:w-[210px]'
-                    : 'w-[162px] sm:w-[172px]'
-                  : 'w-[120px]'
+                  ? module.actions?.length === 4
+                    ? 'h-[64px] w-[252px] sm:h-[64px] sm:w-[272px]'
+                    : module.actions?.length === 3
+                      ? 'h-[64px] w-[198px] sm:w-[210px]'
+                      : 'h-[64px] w-[162px] sm:w-[172px]'
+                  : 'h-[64px] w-[120px]'
               }`}
             >
               <div
@@ -357,14 +367,19 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                 {module.name}
               </div>
               <div
-                className={`flex gap-0 p-1 ${module.actions?.length === 3 ? 'flex-nowrap' : 'flex-wrap'}`}
+                className={`flex gap-0 p-1 ${
+                  module.actions?.length === 3 || module.actions?.length === 4 ? 'flex-nowrap' : 'flex-wrap'
+                }`}
               >
                 {module.actions.map((action) => {
-                  const makeBlack = ['List'].includes(action.label);
+                  const makeBlack = ['List', 'Debit list', 'Credit list', 'Income list', 'Expense list'].includes(
+                    action.label,
+                  );
                   const isSelected =
                     selectedAction.module === module.name &&
                     selectedAction.action === action.label;
-                  const threeCol = module.actions?.length === 3;
+                  const oneRow =
+                    module.actions?.length === 3 || module.actions?.length === 4;
 
                   return (
                     <button
@@ -372,7 +387,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                       type="button"
                       onClick={() => handleActionClick(module.name, action.label)}
                       className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0 p-0 ${
-                        threeCol ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
+                        oneRow ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
                       }`}
                     >
                       <img
