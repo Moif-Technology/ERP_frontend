@@ -75,7 +75,7 @@ const getActionItems = (moduleIcon, labels) => {
 
 const moduleGroups = {
   customer: [
-    { name: 'Product', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Products', 'List']) },
+    { name: 'Product', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Product entry', 'List']) },
     { name: 'Quotation', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Quotation', 'List']) },
     { name: 'Delivery Order', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Delivery', 'List']) },
     { name: 'Sale', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Sales', 'List']) },
@@ -170,6 +170,12 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
 
   const handleActionClick = (module, action) => {
     setSelectedAction({ module, action });
+    if (module === 'Product' && action === 'Product entry') {
+      navigate('/data-entry/product-entry');
+    }
+    if (module === 'Product' && action === 'List') {
+      navigate('/products');
+    }
     if (module === 'Sale' && action === 'Sales') {
       navigate('/sales');
     }
@@ -356,7 +362,9 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                     : module.actions?.length === 3
                       ? 'h-[64px] w-[198px] sm:w-[210px]'
                       : 'h-[64px] w-[162px] sm:w-[172px]'
-                  : 'h-[64px] w-[120px]'
+                  : module.name === 'Product'
+                    ? 'h-[64px] w-[156px] sm:w-[172px]'
+                    : 'h-[64px] w-[120px]'
               }`}
             >
               <div
@@ -368,7 +376,11 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
               </div>
               <div
                 className={`flex gap-0 p-1 ${
-                  module.actions?.length === 3 || module.actions?.length === 4 ? 'flex-nowrap' : 'flex-wrap'
+                  module.actions?.length === 3 ||
+                  module.actions?.length === 4 ||
+                  module.name === 'Product'
+                    ? 'flex-nowrap'
+                    : 'flex-wrap'
                 }`}
               >
                 {module.actions.map((action) => {
@@ -379,7 +391,9 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                     selectedAction.module === module.name &&
                     selectedAction.action === action.label;
                   const oneRow =
-                    module.actions?.length === 3 || module.actions?.length === 4;
+                    module.actions?.length === 3 ||
+                    module.actions?.length === 4 ||
+                    module.name === 'Product';
 
                   return (
                     <button

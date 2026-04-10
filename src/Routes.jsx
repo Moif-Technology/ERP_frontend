@@ -37,6 +37,11 @@ import ReceivableSummary from './modules/backoffice/pages/ReceivableSummary';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
 import SupplierEntry from './modules/backoffice/pages/SupplierEntry';
 import ProductEntry from './modules/backoffice/pages/ProductEntry';
+import ProductPriceList from './modules/backoffice/pages/ProductPriceList';
+import CustomerList from './modules/backoffice/pages/CustomerList';
+import SupplierList from './modules/backoffice/pages/SupplierList';
+import AgentList from './modules/backoffice/pages/AgentList';
+import ListPlaceholderPage from './modules/backoffice/pages/ListPlaceholderPage';
 
 export default function AppRoutes() {
   return (
@@ -84,6 +89,10 @@ export default function AppRoutes() {
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />
+      <Route path="/lists/product-price-list" element={<ProductPriceList />} />
+      <Route path="/lists/customer-list" element={<CustomerList />} />
+      <Route path="/lists/supplier-list" element={<SupplierList />} />
+      <Route path="/lists/agent-list" element={<AgentList />} />
       <Route
         path="*"
         element={

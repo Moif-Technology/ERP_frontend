@@ -96,124 +96,135 @@ const ENTRY_TABS = [
   { id: 'supplier', label: 'Supplier details' },
 ];
 
-/** Fixed-width inputs in a wrapping row (Basic + Supplier details viewports) */
-const compactFieldsWrap = 'flex min-w-0 flex-wrap items-end gap-x-2 gap-y-1.5';
-
-/** Line entry fields + Add/Update pinned bottom-right on the same row band */
-const lineEntryAddRow = 'flex min-w-0 items-end gap-2';
-
-/** Basic tab: column count follows viewport (fluid min track width) */
-const basicViewportGrid =
-  'grid w-full min-w-0 items-end gap-x-2 gap-y-2 [grid-template-columns:repeat(auto-fill,minmax(min(100%,10.5rem),1fr))]';
+/** Basic tab: same layout rhythm as Supplier Entry (centered max-w-4xl, 3-col grid on sm+) */
+const basicFormSection = 'grid grid-cols-1 gap-3 sm:grid-cols-3';
+const basicSpan3 = 'min-w-0 sm:col-span-3';
+const basicSpan2 = 'min-w-0 sm:col-span-2';
 
 function SupplierDetailFields({ fieldBox, supplier, setSupplier, layout = 'stack' }) {
   if (layout === 'viewportGrid') {
     return (
       <div className={`${fieldBox} min-w-0`}>
-        <div className={compactFieldsWrap}>
-          <SubInputField
-            label="Supplier"
-            widthPx={130}
-            heightPx={18}
-            value={supplier.supplier}
-            onChange={(e) => setSupplier((s) => ({ ...s, supplier: e.target.value }))}
-          />
-          <SubInputField
-            label="Supplier ref No"
-            widthPx={118}
-            heightPx={18}
-            value={supplier.supplierRefNo}
-            onChange={(e) => setSupplier((s) => ({ ...s, supplierRefNo: e.target.value }))}
-          />
-          <SubInputField
-            label="Unit"
-            placeholder="0"
-            widthPx={64}
-            heightPx={18}
-            value={supplier.unit}
-            onChange={(e) => setSupplier((s) => ({ ...s, unit: e.target.value }))}
-          />
-          <DropdownInput
-            label="Product type"
-            options={['Stock', 'Non-stock', 'Service']}
-            value={supplier.productType}
-            onChange={(v) => setSupplier((s) => ({ ...s, productType: v }))}
-            widthPx={118}
-            heightPx={18}
-          />
-          <SubInputField
-            label="Pack Qty"
-            widthPx={76}
-            heightPx={18}
-            value={supplier.packQty}
-            onChange={(e) => setSupplier((s) => ({ ...s, packQty: e.target.value }))}
-          />
-          <DropdownInput
-            label="Stock Type"
-            options={['Normal', 'Batch', 'Serial']}
-            value={supplier.stockType}
-            onChange={(v) => setSupplier((s) => ({ ...s, stockType: v }))}
-            widthPx={108}
-            heightPx={18}
-          />
-          <SubInputField
-            label="packet Details"
-            widthPx={128}
-            heightPx={18}
-            value={supplier.packetDetails}
-            onChange={(e) => setSupplier((s) => ({ ...s, packetDetails: e.target.value }))}
-          />
-          <DropdownInput
-            label="Location"
-            options={['Main', 'Warehouse A', 'Warehouse B']}
-            value={supplier.location}
-            onChange={(v) => setSupplier((s) => ({ ...s, location: v }))}
-            widthPx={128}
-            heightPx={18}
-          />
-          <SubInputField
-            label="Origin"
-            widthPx={110}
-            heightPx={18}
-            value={supplier.origin}
-            onChange={(e) => setSupplier((s) => ({ ...s, origin: e.target.value }))}
-          />
-          <SubInputField
-            label="ReOrder Level"
-            widthPx={96}
-            heightPx={18}
-            value={supplier.reorderLevel}
-            onChange={(e) => setSupplier((s) => ({ ...s, reorderLevel: e.target.value }))}
-          />
-          <SubInputField
-            label="Reorder Qty"
-            widthPx={96}
-            heightPx={18}
-            value={supplier.reorderQty}
-            onChange={(e) => setSupplier((s) => ({ ...s, reorderQty: e.target.value }))}
-          />
-          <InputField
-            label="Remark"
-            widthPx={200}
-            heightPx={18}
-            value={supplier.remark}
-            onChange={(e) => setSupplier((s) => ({ ...s, remark: e.target.value }))}
-          />
-          <SubInputField
-            label="Qty on hand"
-            widthPx={88}
-            heightPx={18}
-            value={supplier.qtyOnHand}
-            onChange={(e) => setSupplier((s) => ({ ...s, qtyOnHand: e.target.value }))}
-          />
-          <DropdownInput
-            label="Productidentity"
-            options={['Yes', 'No']}
-            value={supplier.productIdentity}
-            onChange={(v) => setSupplier((s) => ({ ...s, productIdentity: v }))}
-            widthPx={96}
-            heightPx={18}
-          />
+        <div className="flex justify-center">
+          <div className="w-full max-w-4xl p-3 sm:p-4">
+            <div className={basicFormSection}>
+              <SubInputField
+                label="Supplier"
+                fullWidth
+                value={supplier.supplier}
+                onChange={(e) => setSupplier((s) => ({ ...s, supplier: e.target.value }))}
+              />
+              <SubInputField
+                label="Supplier ref No"
+                fullWidth
+                value={supplier.supplierRefNo}
+                onChange={(e) => setSupplier((s) => ({ ...s, supplierRefNo: e.target.value }))}
+              />
+              <SubInputField
+                label="Unit"
+                placeholder="0"
+                fullWidth
+                value={supplier.unit}
+                onChange={(e) => setSupplier((s) => ({ ...s, unit: e.target.value }))}
+              />
+            </div>
+
+            <div className={`mt-3 ${basicFormSection}`}>
+              <DropdownInput
+                label="Product type"
+                options={['Stock', 'Non-stock', 'Service']}
+                value={supplier.productType}
+                onChange={(v) => setSupplier((s) => ({ ...s, productType: v }))}
+                placeholder="Select"
+                fullWidth
+              />
+              <SubInputField
+                label="Pack Qty"
+                fullWidth
+                value={supplier.packQty}
+                onChange={(e) => setSupplier((s) => ({ ...s, packQty: e.target.value }))}
+              />
+              <DropdownInput
+                label="Stock Type"
+                options={['Normal', 'Batch', 'Serial']}
+                value={supplier.stockType}
+                onChange={(v) => setSupplier((s) => ({ ...s, stockType: v }))}
+                placeholder="Select"
+                fullWidth
+              />
+            </div>
+
+            <div className={`mt-3 ${basicFormSection}`}>
+              <div className={basicSpan2}>
+                <SubInputField
+                  label="packet Details"
+                  fullWidth
+                  value={supplier.packetDetails}
+                  onChange={(e) => setSupplier((s) => ({ ...s, packetDetails: e.target.value }))}
+                />
+              </div>
+              <DropdownInput
+                label="Location"
+                options={['Main', 'Warehouse A', 'Warehouse B']}
+                value={supplier.location}
+                onChange={(v) => setSupplier((s) => ({ ...s, location: v }))}
+                placeholder="Select"
+                fullWidth
+              />
+            </div>
+
+            <div className={`mt-3 ${basicFormSection}`}>
+              <SubInputField
+                label="Origin"
+                fullWidth
+                value={supplier.origin}
+                onChange={(e) => setSupplier((s) => ({ ...s, origin: e.target.value }))}
+              />
+              <SubInputField
+                label="ReOrder Level"
+                fullWidth
+                value={supplier.reorderLevel}
+                onChange={(e) => setSupplier((s) => ({ ...s, reorderLevel: e.target.value }))}
+              />
+              <SubInputField
+                label="Reorder Qty"
+                fullWidth
+                value={supplier.reorderQty}
+                onChange={(e) => setSupplier((s) => ({ ...s, reorderQty: e.target.value }))}
+              />
+            </div>
+
+            <div className={`mt-3 ${basicFormSection}`}>
+              <div className={basicSpan3}>
+                <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]">
+                  Remark
+                </label>
+                <textarea
+                  value={supplier.remark}
+                  onChange={(e) => setSupplier((s) => ({ ...s, remark: e.target.value }))}
+                  rows={3}
+                  className="mt-0.5 min-h-[56px] w-full rounded border border-gray-200 bg-white px-2 py-1 text-[9px] outline-none sm:text-[10px]"
+                />
+              </div>
+            </div>
+
+            <div className={`mt-3 ${basicFormSection}`}>
+              <SubInputField
+                label="Qty on hand"
+                fullWidth
+                value={supplier.qtyOnHand}
+                onChange={(e) => setSupplier((s) => ({ ...s, qtyOnHand: e.target.value }))}
+              />
+              <DropdownInput
+                label="Productidentity"
+                options={['Yes', 'No']}
+                value={supplier.productIdentity}
+                onChange={(v) => setSupplier((s) => ({ ...s, productIdentity: v }))}
+                placeholder="Select"
+                fullWidth
+              />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -342,6 +353,103 @@ function SupplierDetailFields({ fieldBox, supplier, setSupplier, layout = 'stack
   );
 }
 
+/** Line entry: centered max-w-4xl, 3-col grid on sm+, section breaks like Supplier entry */
+function ProductLineEntryGrid({ lineForm, setLineForm, primary, onAdd, addLabel }) {
+  return (
+    <div className="flex justify-center">
+      <div className="w-full max-w-4xl p-3 sm:p-4">
+        <div className={basicFormSection}>
+          <InputField
+            label="Barcode"
+            fullWidth
+            value={lineForm.barcode}
+            onChange={(e) => setLineForm((f) => ({ ...f, barcode: e.target.value }))}
+          />
+          <InputField
+            label="Short Description"
+            fullWidth
+            value={lineForm.shortDescription}
+            onChange={(e) => setLineForm((f) => ({ ...f, shortDescription: e.target.value }))}
+          />
+          <SubInputField
+            label="Unit"
+            fullWidth
+            value={lineForm.unit}
+            onChange={(e) => setLineForm((f) => ({ ...f, unit: e.target.value }))}
+          />
+        </div>
+
+        <div className={`mt-3 ${basicFormSection}`}>
+          <SubInputField
+            label="Pack Qty"
+            fullWidth
+            value={lineForm.packQty}
+            onChange={(e) => setLineForm((f) => ({ ...f, packQty: e.target.value }))}
+          />
+          <SubInputField
+            label="Packet Details"
+            fullWidth
+            value={lineForm.packetDetails}
+            onChange={(e) => setLineForm((f) => ({ ...f, packetDetails: e.target.value }))}
+          />
+          <SubInputField
+            label="Disc.%"
+            fullWidth
+            value={lineForm.discPct}
+            onChange={(e) => setLineForm((f) => ({ ...f, discPct: e.target.value }))}
+          />
+        </div>
+
+        <div className={`mt-3 ${basicFormSection}`}>
+          <SubInputField
+            label="Unit Cost"
+            fullWidth
+            value={lineForm.unitCost}
+            onChange={(e) => setLineForm((f) => ({ ...f, unitCost: e.target.value }))}
+          />
+          <SubInputField
+            label="Avg. cost"
+            fullWidth
+            value={lineForm.avgCost}
+            onChange={(e) => setLineForm((f) => ({ ...f, avgCost: e.target.value }))}
+          />
+          <SubInputField
+            label="Last cost"
+            fullWidth
+            value={lineForm.lastCost}
+            onChange={(e) => setLineForm((f) => ({ ...f, lastCost: e.target.value }))}
+          />
+        </div>
+
+        <div className={`mt-3 ${basicFormSection}`}>
+          <SubInputField
+            label="Margin%"
+            fullWidth
+            value={lineForm.marginPct}
+            onChange={(e) => setLineForm((f) => ({ ...f, marginPct: e.target.value }))}
+          />
+          <SubInputField
+            label="Unit Price"
+            fullWidth
+            value={lineForm.unitPrice}
+            onChange={(e) => setLineForm((f) => ({ ...f, unitPrice: e.target.value }))}
+          />
+          <div className="flex min-h-[40px] min-w-0 items-end justify-end">
+            <button
+              type="button"
+              className="rounded px-4 py-2 text-[11px] font-semibold text-white"
+              style={{ backgroundColor: primary }}
+              onClick={onAdd}
+            >
+              {addLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductEntry() {
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
@@ -359,7 +467,7 @@ export default function ProductEntry() {
   const [substituteRows, setSubstituteRows] = useState(substituteDummyRows);
   /** null | { type: 'line', idx } | { type: 'substitute', idx } */
   const [pendingDelete, setPendingDelete] = useState(null);
-  /** basic | trading | supplier — switches main left panel under PRODUCT ENTRY */
+  /** basic | trading | supplier — switches main left panel under Product entry */
   const [entryTab, setEntryTab] = useState('basic');
   const [additionalInfoOpen, setAdditionalInfoOpen] = useState(false);
 
@@ -557,7 +665,7 @@ export default function ProductEntry() {
           {/* Header + toolbar */}
           <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-              PRODUCT ENTRY 
+              Product entry
             </h1>
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -628,206 +736,175 @@ export default function ProductEntry() {
               {entryTab === 'basic' && (
               <div className={`flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden ${fieldBox}`}>
                 <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-0.5">
-                  <div className={basicViewportGrid}>
-                    <div className="min-w-0">
-                      <InputField
-                        label="Barcode"
-                        fullWidth
-                        heightPx={18}
-                        value={main.barcode}
-                        onChange={(e) => setMain((m) => ({ ...m, barcode: e.target.value }))}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col justify-end gap-0.5">
-                      <span className="text-[9px] leading-tight text-gray-500 sm:text-[10px]">—</span>
-                      <div className="flex min-h-[20.08px] items-center gap-2">
-                        <Switch
-                          size="xs"
-                          checked={main.newBarcode}
-                          onChange={(v) => setMain((m) => ({ ...m, newBarcode: v }))}
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-4xl p-3 sm:p-4">
+                      <div className={basicFormSection}>
+                        <InputField
+                          label="Barcode"
+                          fullWidth
+                          value={main.barcode}
+                          onChange={(e) => setMain((m) => ({ ...m, barcode: e.target.value }))}
                         />
-                        <span className="text-[10px] text-gray-700 sm:text-[11px]">New Barcode</span>
+                        <div className="flex min-w-0 w-full flex-col gap-0.5">
+                          
+                          <div className="flex min-h-[36px] items-center gap-2 sm:min-h-[40px]">
+                            <Switch
+                              size="xs"
+                              checked={main.newBarcode}
+                              onChange={(v) => setMain((m) => ({ ...m, newBarcode: v }))}
+                            />
+                            <span className="text-[10px] text-gray-800 sm:text-[11px]">New Barcode</span>
+                          </div>
+                        </div>
+                        <SubInputField
+                          label="Product Own Ref No."
+                          fullWidth
+                          value={main.productOwnRefNo}
+                          onChange={(e) => setMain((m) => ({ ...m, productOwnRefNo: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className={`mt-3 ${basicFormSection}`}>
+                        <div className={basicSpan3}>
+                          <InputField
+                            label="description"
+                            fullWidth
+                            value={main.description}
+                            onChange={(e) => setMain((m) => ({ ...m, description: e.target.value }))}
+                          />
+                        </div>
+                        <div className={basicSpan3}>
+                          <InputField
+                            label="Short Description"
+                            fullWidth
+                            value={main.shortDescription}
+                            onChange={(e) => setMain((m) => ({ ...m, shortDescription: e.target.value }))}
+                          />
+                        </div>
+                        <div className={basicSpan3}>
+                          <InputField
+                            label="Description Arabic"
+                            fullWidth
+                            value={main.descriptionArabic}
+                            onChange={(e) => setMain((m) => ({ ...m, descriptionArabic: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+
+                      <div className={`mt-3 ${basicFormSection}`}>
+                        <DropdownInput
+                          label="Product Make type"
+                          options={['Standard', 'Assembly', 'Service']}
+                          value={main.makeType}
+                          onChange={(v) => setMain((m) => ({ ...m, makeType: v }))}
+                          placeholder="Select"
+                          fullWidth
+                        />
+                        <SubInputField
+                          label="Last Supplier"
+                          fullWidth
+                          value={main.lastSupplier}
+                          onChange={(e) => setMain((m) => ({ ...m, lastSupplier: e.target.value }))}
+                        />
+                        <InputField
+                          label="Product Brand"
+                          fullWidth
+                          value={main.productBrand}
+                          onChange={(e) => setMain((m) => ({ ...m, productBrand: e.target.value }))}
+                        />
+                        <div className={basicSpan3}>
+                          <SubInputField
+                            label="Specification"
+                            fullWidth
+                            value={main.specification}
+                            onChange={(e) => setMain((m) => ({ ...m, specification: e.target.value }))}
+                          />
+                        </div>
+                        <InputField
+                          label="Group"
+                          fullWidth
+                          value={main.group}
+                          onChange={(e) => setMain((m) => ({ ...m, group: e.target.value }))}
+                        />
+                        <InputField
+                          label="Subgroup"
+                          fullWidth
+                          value={main.subgroup}
+                          onChange={(e) => setMain((m) => ({ ...m, subgroup: e.target.value }))}
+                        />
+                        <InputField
+                          label="SubSubGroup"
+                          fullWidth
+                          value={main.subSubGroup}
+                          onChange={(e) => setMain((m) => ({ ...m, subSubGroup: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className={`mt-3 ${basicFormSection}`}>
+                        <InputField
+                          label="base cost"
+                          fullWidth
+                          value={main.baseCost}
+                          onChange={(e) => setMain((m) => ({ ...m, baseCost: e.target.value }))}
+                        />
+                        <InputField
+                          label="Discount %"
+                          fullWidth
+                          value={main.discountPct}
+                          onChange={(e) => setMain((m) => ({ ...m, discountPct: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="Unit Cost"
+                          fullWidth
+                          value={main.unitCost}
+                          onChange={(e) => setMain((m) => ({ ...m, unitCost: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="VAT IN"
+                          fullWidth
+                          value={main.vatIn}
+                          onChange={(e) => setMain((m) => ({ ...m, vatIn: e.target.value }))}
+                        />
+                        <SubInputField
+                          label="VAT IN %"
+                          suffix="%"
+                          fullWidth
+                          value={main.vatInPct}
+                          onChange={(e) => setMain((m) => ({ ...m, vatInPct: e.target.value }))}
+                        />
+                        <InputField
+                          label="COST WITH VAT"
+                          fullWidth
+                          value={main.costWithVat}
+                          onChange={(e) => setMain((m) => ({ ...m, costWithVat: e.target.value }))}
+                        />
+                      </div>
+
+                      <div className={`mt-3 ${basicFormSection}`}>
+                        <div className={basicSpan3}>
+                          <button
+                            type="button"
+                            className="w-full rounded border bg-white px-3 py-2 text-center text-[10px] font-medium sm:text-[11px]"
+                            style={{ borderColor: primary, color: primary }}
+                            onClick={() => setAdditionalInfoOpen(true)}
+                          >
+                            Additional info
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="button"
+                          className="rounded px-4 py-2 text-[11px] font-semibold text-white"
+                          style={{ backgroundColor: primary }}
+                          onClick={handleSaveBasic}
+                        >
+                          Save
+                        </button>
                       </div>
                     </div>
-                    <div className="min-w-0 col-span-full sm:col-span-2">
-                      <InputField
-                        label="description"
-                        fullWidth
-                        heightPx={18}
-                        value={main.description}
-                        onChange={(e) => setMain((m) => ({ ...m, description: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0 col-span-full sm:col-span-2">
-                      <InputField
-                        label="Short Description"
-                        fullWidth
-                        heightPx={18}
-                        value={main.shortDescription}
-                        onChange={(e) => setMain((m) => ({ ...m, shortDescription: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0 col-span-full sm:col-span-2">
-                      <InputField
-                        label="Description Arabic"
-                        fullWidth
-                        heightPx={18}
-                        value={main.descriptionArabic}
-                        onChange={(e) => setMain((m) => ({ ...m, descriptionArabic: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Product Own Ref No."
-                        fullWidth
-                        heightPx={18}
-                        value={main.productOwnRefNo}
-                        onChange={(e) => setMain((m) => ({ ...m, productOwnRefNo: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <DropdownInput
-                        label="Product Make type"
-                        options={['Standard', 'Assembly', 'Service']}
-                        value={main.makeType}
-                        onChange={(v) => setMain((m) => ({ ...m, makeType: v }))}
-                        fullWidth
-                        heightPx={18}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Last Supplier"
-                        fullWidth
-                        heightPx={18}
-                        value={main.lastSupplier}
-                        onChange={(e) => setMain((m) => ({ ...m, lastSupplier: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0 col-span-full sm:col-span-2 lg:col-span-3">
-                      <SubInputField
-                        label="Specification"
-                        fullWidth
-                        heightPx={18}
-                        value={main.specification}
-                        onChange={(e) => setMain((m) => ({ ...m, specification: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="Product Brand"
-                        fullWidth
-                        heightPx={18}
-                        value={main.productBrand}
-                        onChange={(e) => setMain((m) => ({ ...m, productBrand: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="Group"
-                        fullWidth
-                        heightPx={18}
-                        value={main.group}
-                        onChange={(e) => setMain((m) => ({ ...m, group: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="Subgroup"
-                        fullWidth
-                        heightPx={18}
-                        value={main.subgroup}
-                        onChange={(e) => setMain((m) => ({ ...m, subgroup: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="SubSubGroup"
-                        fullWidth
-                        heightPx={18}
-                        value={main.subSubGroup}
-                        onChange={(e) => setMain((m) => ({ ...m, subSubGroup: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="base cost"
-                        fullWidth
-                        heightPx={18}
-                        value={main.baseCost}
-                        onChange={(e) => setMain((m) => ({ ...m, baseCost: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <InputField
-                        label="Discount %"
-                        fullWidth
-                        heightPx={18}
-                        value={main.discountPct}
-                        onChange={(e) => setMain((m) => ({ ...m, discountPct: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="Unit Cost"
-                        fullWidth
-                        heightPx={18}
-                        value={main.unitCost}
-                        onChange={(e) => setMain((m) => ({ ...m, unitCost: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="VAT IN"
-                        fullWidth
-                        heightPx={18}
-                        value={main.vatIn}
-                        onChange={(e) => setMain((m) => ({ ...m, vatIn: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <SubInputField
-                        label="VAT IN %"
-                        suffix="%"
-                        fullWidth
-                        heightPx={18}
-                        value={main.vatInPct}
-                        onChange={(e) => setMain((m) => ({ ...m, vatInPct: e.target.value }))}
-                      />
-                    </div>
-                    <div className="min-w-0 col-span-full sm:col-span-2">
-                      <InputField
-                        label="COST WITH VAT"
-                        fullWidth
-                        heightPx={18}
-                        value={main.costWithVat}
-                        onChange={(e) => setMain((m) => ({ ...m, costWithVat: e.target.value }))}
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-col justify-end gap-0.5">
-                      <span className="text-[9px] leading-tight text-transparent sm:text-[10px]" aria-hidden>
-                        .
-                      </span>
-                      <button
-                        type="button"
-                        className="flex h-[20.08px] min-h-[20.08px] w-full min-w-0 max-w-full items-center justify-center rounded border bg-white px-2 text-[10px] font-medium leading-none sm:text-[11px]"
-                        style={{ borderColor: primary, color: primary }}
-                        onClick={() => setAdditionalInfoOpen(true)}
-                      >
-                        Additional info
-                      </button>
-                    </div>
                   </div>
-                </div>
-                <div className="mt-2 flex shrink-0 justify-end border-t border-gray-100 pt-2">
-                  <button
-                    type="button"
-                    className="sale-btn-primary rounded border px-4 py-1 text-[10px] font-medium text-white sm:py-1.5 sm:text-[11px]"
-                    style={{ backgroundColor: primary, borderColor: primary }}
-                    onClick={handleSaveBasic}
-                  >
-                    Save
-                  </button>
                 </div>
               </div>
               )}
@@ -846,130 +923,56 @@ export default function ProductEntry() {
                     layout="viewportGrid"
                   />
 
-                  <div className="rounded border border-gray-200 bg-white p-2 sm:p-3">
-                    <div className={lineEntryAddRow}>
-                      <div className={`min-w-0 flex-1 ${compactFieldsWrap}`}>
-                        <InputField
-                          label="Barcode"
-                          widthPx={108}
-                          heightPx={18}
-                          value={lineForm.barcode}
-                          onChange={(e) => setLineForm((f) => ({ ...f, barcode: e.target.value }))}
-                        />
-                        <InputField
-                          label="Short Description"
-                          widthPx={168}
-                          heightPx={18}
-                          value={lineForm.shortDescription}
-                          onChange={(e) => setLineForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit"
-                          widthPx={64}
-                          heightPx={18}
-                          value={lineForm.unit}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unit: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Pack Qty"
-                          widthPx={76}
-                          heightPx={18}
-                          value={lineForm.packQty}
-                          onChange={(e) => setLineForm((f) => ({ ...f, packQty: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Packet Details"
-                          widthPx={118}
-                          heightPx={18}
-                          value={lineForm.packetDetails}
-                          onChange={(e) => setLineForm((f) => ({ ...f, packetDetails: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Disc.%"
-                          widthPx={64}
-                          heightPx={18}
-                          value={lineForm.discPct}
-                          onChange={(e) => setLineForm((f) => ({ ...f, discPct: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit Cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.unitCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unitCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Avg. cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.avgCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, avgCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Last cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.lastCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, lastCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Margin%"
-                          widthPx={72}
-                          heightPx={18}
-                          value={lineForm.marginPct}
-                          onChange={(e) => setLineForm((f) => ({ ...f, marginPct: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit Price"
-                          widthPx={86}
-                          heightPx={18}
-                          value={lineForm.unitPrice}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unitPrice: e.target.value }))}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="flex h-[20.08px] min-h-[20.08px] shrink-0 items-center justify-center rounded px-3 text-[8px] font-medium text-white sm:text-[9px]"
-                        style={{ backgroundColor: primary }}
-                        onClick={handleLineAdd}
-                      >
-                        Add
-                      </button>
-                    </div>
+                  <div className="overflow-hidden rounded border border-gray-200 bg-white">
+                    <ProductLineEntryGrid
+                      lineForm={lineForm}
+                      setLineForm={setLineForm}
+                      primary={primary}
+                      onAdd={handleLineAdd}
+                      addLabel="Add"
+                    />
                   </div>
 
-                  <div className={`flex min-h-0 min-w-0 flex-col gap-2 rounded border border-gray-200 bg-white p-2 sm:gap-3 sm:p-3`}>
-                    <h2
-                      className="text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]"
-                      style={{ color: primary }}
-                    >
-                      Substitute product entry
-                    </h2>
-                    <div className={compactFieldsWrap}>
-                      <InputField
-                        label="Product name"
-                        widthPx={168}
-                        heightPx={18}
-                        value={searchName}
-                        onChange={(e) => setSearchName(e.target.value)}
-                      />
-                      <SubInputField
-                        label="Product code"
-                        widthPx={118}
-                        heightPx={18}
-                        value={searchCode}
-                        onChange={(e) => setSearchCode(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        className="flex h-[20.08px] min-h-[20.08px] shrink-0 items-center justify-center rounded px-3 text-[8px] font-medium text-white sm:text-[9px]"
-                        style={{ backgroundColor: primary }}
-                        onClick={handleAddSubstitute}
-                      >
-                        Add
-                      </button>
+                  <div className="flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden rounded border border-gray-200 bg-white sm:gap-3">
+                    <div className="flex justify-center border-b border-gray-100 px-3 pb-2 pt-3 sm:px-4">
+                      <div className="w-full max-w-4xl">
+                        <h2
+                          className="text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]"
+                          style={{ color: primary }}
+                        >
+                          Substitute product entry
+                        </h2>
+                      </div>
                     </div>
-                    <div className="min-h-0 w-full min-w-0 max-h-[14rem] sm:max-h-[16rem]">
+                    <div className="flex justify-center px-3 pb-3 sm:px-4">
+                      <div className="w-full max-w-4xl">
+                        <div className={basicFormSection}>
+                          <InputField
+                            label="Product name"
+                            fullWidth
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                          />
+                          <SubInputField
+                            label="Product code"
+                            fullWidth
+                            value={searchCode}
+                            onChange={(e) => setSearchCode(e.target.value)}
+                          />
+                          <div className="flex min-h-[40px] min-w-0 items-end justify-end">
+                            <button
+                              type="button"
+                              className="rounded px-4 py-2 text-[11px] font-semibold text-white"
+                              style={{ backgroundColor: primary }}
+                              onClick={handleAddSubstitute}
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="min-h-0 w-full min-w-0 max-h-[14rem] px-2 pb-2 sm:max-h-[16rem] sm:px-3 sm:pb-3">
                       <CommonTable
                         fitParentWidth
                         equalColumnWidth
@@ -990,96 +993,14 @@ export default function ProductEntry() {
                 style={{ maxHeight: 'min(100%, calc(100dvh - 11rem))' }}
               >
                 <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-0.5">
-                  <div className="rounded border border-gray-200 bg-white p-2 sm:p-3">
-                    <div className={lineEntryAddRow}>
-                      <div className={`min-w-0 flex-1 ${compactFieldsWrap}`}>
-                        <InputField
-                          label="Barcode"
-                          widthPx={108}
-                          heightPx={18}
-                          value={lineForm.barcode}
-                          onChange={(e) => setLineForm((f) => ({ ...f, barcode: e.target.value }))}
-                        />
-                        <InputField
-                          label="Short Description"
-                          widthPx={168}
-                          heightPx={18}
-                          value={lineForm.shortDescription}
-                          onChange={(e) => setLineForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit"
-                          widthPx={64}
-                          heightPx={18}
-                          value={lineForm.unit}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unit: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Pack Qty"
-                          widthPx={76}
-                          heightPx={18}
-                          value={lineForm.packQty}
-                          onChange={(e) => setLineForm((f) => ({ ...f, packQty: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Packet Details"
-                          widthPx={118}
-                          heightPx={18}
-                          value={lineForm.packetDetails}
-                          onChange={(e) => setLineForm((f) => ({ ...f, packetDetails: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Disc.%"
-                          widthPx={64}
-                          heightPx={18}
-                          value={lineForm.discPct}
-                          onChange={(e) => setLineForm((f) => ({ ...f, discPct: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit Cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.unitCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unitCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Avg. cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.avgCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, avgCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Last cost"
-                          widthPx={82}
-                          heightPx={18}
-                          value={lineForm.lastCost}
-                          onChange={(e) => setLineForm((f) => ({ ...f, lastCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Margin%"
-                          widthPx={72}
-                          heightPx={18}
-                          value={lineForm.marginPct}
-                          onChange={(e) => setLineForm((f) => ({ ...f, marginPct: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit Price"
-                          widthPx={86}
-                          heightPx={18}
-                          value={lineForm.unitPrice}
-                          onChange={(e) => setLineForm((f) => ({ ...f, unitPrice: e.target.value }))}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="flex h-[20.08px] min-h-[20.08px] shrink-0 items-center justify-center rounded px-3 text-[8px] font-medium text-white sm:text-[9px]"
-                        style={{ backgroundColor: primary }}
-                        onClick={handleLineAdd}
-                      >
-                        {editingIdx !== null ? 'Update' : 'Add'}
-                      </button>
-                    </div>
+                  <div className="overflow-hidden rounded border border-gray-200 bg-white">
+                    <ProductLineEntryGrid
+                      lineForm={lineForm}
+                      setLineForm={setLineForm}
+                      primary={primary}
+                      onAdd={handleLineAdd}
+                      addLabel={editingIdx !== null ? 'Update' : 'Add'}
+                    />
                   </div>
 
                   <div className="w-full min-w-0 min-h-0 flex-1 rounded border border-gray-200 bg-white p-2 sm:p-3">

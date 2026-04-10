@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { colors } from '../../shared/constants/theme';
 
 import DashboardIcon from '../../shared/assets/icons/dashboard.svg';
@@ -20,6 +20,11 @@ import ManagementIcon from '../../shared/assets/icons/management.svg';
 import ConfigIcon from '../../shared/assets/icons/config.svg';
 import VendorIcon from '../../shared/assets/icons/vendor.svg';
 import ProductEntryIcon from '../../shared/assets/icons/stock-hub.svg';
+import ProductListIcon from '../../shared/assets/icons/ProductIcon.svg';
+import ProductPriceListIcon from '../../shared/assets/icons/pricing.svg';
+import CustomerListIcon from '../../shared/assets/icons/receipt_cutomer.svg';
+import SupplierListIcon from '../../shared/assets/icons/invoice.svg';
+import AgentListIcon from '../../shared/assets/icons/proforma.svg';
 import ChevronDown from '../../shared/assets/chevron-down.svg';
 import SearchIcon from '../../shared/assets/iconsax-search.svg';
 
@@ -37,7 +42,17 @@ const menuItems = [
       { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon },
     ],
   },
-  { label: 'List', to: '/data-entry/list', icon: ListIcon },
+  {
+    label: 'List',
+    icon: ListIcon,
+    subItems: [
+      { label: 'Product list', to: '/products', icon: ProductListIcon },
+      { label: 'Product price list', to: '/lists/product-price-list', icon: ProductPriceListIcon },
+      { label: 'Customer list', to: '/lists/customer-list', icon: CustomerListIcon },
+      { label: 'Supplier list', to: '/lists/supplier-list', icon: SupplierListIcon },
+      { label: 'Agent list', to: '/lists/agent-list', icon: AgentListIcon },
+    ],
+  },
   { label: 'Stock Hub', to: '/stock-hub', icon: StockIcon },
   { label: 'Exchange Hub', to: '/exchange-hub', icon: ExchangeIcon },
   { label: 'Sales Activities', to: '/delivery-order', icon: SalesIcon },
@@ -54,7 +69,20 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
-  const [openMenus, setOpenMenus] = useState({});
+  const location = useLocation();
+  /** List expanded by default; also open when a list sub-route is active */
+  const [openMenus, setOpenMenus] = useState({ List: true });
+
+  useEffect(() => {
+    const onListSection =
+      location.pathname === '/products' || location.pathname.startsWith('/lists/');
+    if (onListSection) {
+      setOpenMenus((prev) => ({ ...prev, List: true }));
+    }
+    if (location.pathname.startsWith('/data-entry/')) {
+      setOpenMenus((prev) => ({ ...prev, 'Data Entry': true }));
+    }
+  }, [location.pathname]);
 
   const toggleMenu = (label) =>
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -144,7 +172,9 @@ export default function Sidebar() {
                         src={sub.icon}
                         alt=""
                         className={`w-4 h-4 ${
-                          sub.label === 'Supplier entry' || sub.label === 'Product entry'
+                          sub.label === 'Supplier entry' ||
+                          sub.label === 'Product entry' ||
+                          item.label === 'List'
                             ? 'filter brightness-0 invert'
                             : ''
                         }`.trim()}

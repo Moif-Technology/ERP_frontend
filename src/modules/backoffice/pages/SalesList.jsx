@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { colors } from '../../../shared/constants/theme';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
 import SalesFilterDrawer from '../../../shared/components/ui/SalesFilterDrawer';
@@ -9,6 +9,7 @@ import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
 import FilterIcon from '../../../shared/assets/icons/filter.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -107,6 +108,9 @@ const figmaToolbarBtn =
 const figmaSearchBox =
   `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px] sm:max-w-[520px] sm:pr-3 md:min-w-[280px] md:max-w-[320px]`;
 
+const primaryToolbarBtn =
+  'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
+
 function parseMoneyValue(s) {
   const n = Number(String(s ?? '').replace(/,/g, ''));
   return Number.isFinite(n) ? n : 0;
@@ -126,6 +130,7 @@ function parseBillDate(ddmmyyyy) {
 }
 
 export default function SalesList() {
+  const [sales, setSales] = useState(() => DUMMY_SALES.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
@@ -139,6 +144,8 @@ export default function SalesList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -149,9 +156,29 @@ export default function SalesList() {
     });
   }, []);
 
+  const handleDeleteSelected = useCallback(() => {
+    const ids = selectedIdsRef.current;
+    if (ids.size === 0) return;
+    setSales((prev) => prev.filter((row) => !ids.has(String(row.id))));
+    setSelectedIds(new Set());
+  }, []);
+
   useEffect(() => {
     setPage(1);
   }, [search, sortBy, appliedDateRange, salesFilters]);
+
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const ids = new Set(sales.map((r) => r.id));
+      let changed = false;
+      const next = new Set();
+      prev.forEach((id) => {
+        if (ids.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed || next.size !== prev.size ? next : prev;
+    });
+  }, [sales]);
 
   const activeFilterCount = useMemo(() => {
     let n = 0;
@@ -164,7 +191,7 @@ export default function SalesList() {
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = q
-      ? DUMMY_SALES.filter(
+      ? sales.filter(
           (r) =>
             r.billNo.toLowerCase().includes(q) ||
             r.customerName.toLowerCase().includes(q) ||
@@ -172,7 +199,7 @@ export default function SalesList() {
             r.trnNo.toLowerCase().includes(q) ||
             r.customerLpNo.toLowerCase().includes(q)
         )
-      : [...DUMMY_SALES];
+      : [...sales];
 
     if (appliedDateRange?.from && appliedDateRange?.to) {
       const rf = appliedDateRange.from.getTime();
@@ -205,7 +232,7 @@ export default function SalesList() {
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, salesFilters]);
+  }, [search, sortBy, appliedDateRange, salesFilters, sales]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -251,12 +278,17 @@ export default function SalesList() {
       const slNo = (page - 1) * pageSize + idx + 1;
       const checked = selectedIds.has(r.id);
       return [
-        <div key={`chk-${r.id}`} className="flex justify-center">
+        <div
+          key={`chk-${r.id}`}
+          className="flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
           <input
             type="checkbox"
             checked={checked}
             onChange={() => toggleRowSelected(r.id)}
-            className="h-3.5 w-3.5 cursor-pointer sm:h-4 sm:w-4"
+            className={listTableCheckboxClass}
             style={{ accentColor: primary }}
             aria-label={`Select ${r.billNo}`}
           />
@@ -354,6 +386,19 @@ export default function SalesList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
+          {selectedRowCount >= 1 ? (
+            <button
+              type="button"
+              className={primaryToolbarBtn}
+              style={{ backgroundColor: primary, borderColor: primary }}
+              onClick={handleDeleteSelected}
+              aria-label={`Delete ${selectedRowCount} selected sale${selectedRowCount === 1 ? '' : 's'}`}
+            >
+              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
+              Delete
+            </button>
+          ) : null}
+
           <button
             type="button"
             className={figmaToolbarBtn}
