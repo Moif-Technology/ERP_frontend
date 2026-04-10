@@ -74,6 +74,10 @@ export default function CommonTable({
    * When non-empty, takes precedence over `footerRow`.
    */
   footerRows = null,
+  /** When set, body rows are clickable (cursor + hover). Index is 0-based within current `rows`. */
+  onBodyRowClick,
+  /** Highlight row at this index when using `onBodyRowClick`. */
+  selectedBodyRowIndex = null,
 }) {
   const headerBg = headerBackgroundColor ?? tableUi.header.backgroundColor;
   const useBodyScroll = maxVisibleRows != null && maxVisibleRows > 0;
@@ -220,10 +224,31 @@ export default function CommonTable({
     </thead>
   );
 
+  const rowInteractive = typeof onBodyRowClick === 'function';
+  const bodyRowTrClass = rowInteractive
+    ? 'cursor-pointer transition-colors hover:bg-rose-50/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-900/25'
+    : '';
+
   const tbodyRows = rows.map((row, rowIdx) => {
     const isLastBodyRow = rowIdx === rows.length - 1;
+    const selected = selectedBodyRowIndex === rowIdx;
     return (
-    <tr key={`row-${rowIdx}`}>
+    <tr
+      key={`row-${rowIdx}`}
+      className={`${bodyRowTrClass} ${selected ? 'bg-rose-100/45' : ''}`.trim()}
+      onClick={rowInteractive ? () => onBodyRowClick(rowIdx) : undefined}
+      tabIndex={rowInteractive ? 0 : undefined}
+      onKeyDown={
+        rowInteractive
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onBodyRowClick(rowIdx);
+              }
+            }
+          : undefined
+      }
+    >
       {row.map((cell, cellIdx) => {
         const isCellObject = cell && typeof cell === 'object' && !React.isValidElement(cell);
         const content = isCellObject ? (cell.content ?? '') : cell;

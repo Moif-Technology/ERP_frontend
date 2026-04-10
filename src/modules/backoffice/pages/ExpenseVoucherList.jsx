@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { colors } from '../../../shared/constants/theme';
+import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
 import SalesFilterDrawer from '../../../shared/components/ui/SalesFilterDrawer';
@@ -270,12 +270,12 @@ export default function ExpenseVoucherList() {
       const slNo = (page - 1) * pageSize + idx + 1;
       const checked = selectedIds.has(r.id);
       return [
-        <div key={`chk-${r.id}`} className="flex justify-center">
+        <div key={`chk-${r.id}`} className="flex justify-center" onClick={(e) => e.stopPropagation()} role="presentation">
           <input
             type="checkbox"
             checked={checked}
             onChange={() => toggleRowSelected(r.id)}
-            className="h-3.5 w-3.5 cursor-pointer sm:h-4 sm:w-4"
+            className={listTableCheckboxClass}
             style={{ accentColor: primary }}
             aria-label={`Select ${r.voucherNo}`}
           />

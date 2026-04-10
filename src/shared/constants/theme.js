@@ -174,4 +174,8 @@ const theme = {
   tableUi,
 };
 
+/** Compact list-table row checkbox (use with style={{ accentColor: primary }}) */
+export const listTableCheckboxClass =
+  'h-2.5 w-2.5 min-h-2.5 min-w-2.5 shrink-0 cursor-pointer sm:h-3 sm:w-3';
+
 export default theme;

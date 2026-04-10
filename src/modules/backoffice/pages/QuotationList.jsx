@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { colors } from '../../../shared/constants/theme';
+import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
@@ -8,6 +8,7 @@ import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
 import FilterIcon from '../../../shared/assets/icons/filter.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -87,8 +88,11 @@ const figmaToolbarBtn =
 const figmaSearchBox =
   `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
 
+const primaryToolbarBtn =
+  'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
+
 /** Checkbox, Qtn no, Qtn date, Time, Cust ref, Cust ref date, Customer, Disc, Amount — sums to 100 */
-const QUOTATION_LIST_COL_PCT = [3.5, 12, 10, 6, 10, 10, 26, 10, 12.5];
+const QUOTATION_LIST_COL_PCT = [2, 12, 10, 6, 10, 10, 26, 10, 14];
 
 function parseQuotationListDate(ddmmyyyy) {
   const parts = String(ddmmyyyy).split('/');
@@ -109,6 +113,7 @@ function parseMoneyValue(s) {
 }
 
 export default function QuotationList() {
+  const [quotations, setQuotations] = useState(() => DUMMY_QUOTATIONS.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
@@ -118,6 +123,8 @@ export default function QuotationList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const selectedIdsRef = useRef(selectedIds);
+  selectedIdsRef.current = selectedIds;
   const filterWrapRef = useRef(null);
 
   const toggleRowSelected = useCallback((id) => {
@@ -129,9 +136,29 @@ export default function QuotationList() {
     });
   }, []);
 
+  const handleDeleteSelected = useCallback(() => {
+    const ids = selectedIdsRef.current;
+    if (ids.size === 0) return;
+    setQuotations((prev) => prev.filter((row) => !ids.has(String(row.id))));
+    setSelectedIds(new Set());
+  }, []);
+
   useEffect(() => {
     setPage(1);
   }, [search, sortBy, appliedDateRange, stationFilter]);
+
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const ids = new Set(quotations.map((r) => r.id));
+      let changed = false;
+      const next = new Set();
+      prev.forEach((id) => {
+        if (ids.has(id)) next.add(id);
+        else changed = true;
+      });
+      return changed || next.size !== prev.size ? next : prev;
+    });
+  }, [quotations]);
 
   useEffect(() => {
     if (!filterOpen) return;
@@ -147,13 +174,13 @@ export default function QuotationList() {
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = q
-      ? DUMMY_QUOTATIONS.filter(
+      ? quotations.filter(
           (r) =>
             r.quotationNo.toLowerCase().includes(q) ||
             r.customerName.toLowerCase().includes(q) ||
             r.custRefNo.toLowerCase().includes(q)
         )
-      : [...DUMMY_QUOTATIONS];
+      : [...quotations];
 
     if (appliedDateRange?.from && appliedDateRange?.to) {
       const rf = appliedDateRange.from.getTime();
@@ -181,7 +208,7 @@ export default function QuotationList() {
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, stationFilter]);
+  }, [search, sortBy, appliedDateRange, stationFilter, quotations]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -222,12 +249,17 @@ export default function QuotationList() {
     const dataRows = paginatedRows.map((r) => {
       const checked = selectedIds.has(r.id);
       return [
-        <div key={`chk-${r.id}`} className="flex justify-center">
+        <div
+          key={`chk-${r.id}`}
+          className="flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
           <input
             type="checkbox"
             checked={checked}
             onChange={() => toggleRowSelected(r.id)}
-            className="h-3.5 w-3.5 cursor-pointer sm:h-4 sm:w-4"
+            className={listTableCheckboxClass}
             style={{ accentColor: primary }}
             aria-label={`Select ${r.quotationNo}`}
           />
@@ -307,6 +339,19 @@ export default function QuotationList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
+          {selectedRowCount >= 1 ? (
+            <button
+              type="button"
+              className={primaryToolbarBtn}
+              style={{ backgroundColor: primary, borderColor: primary }}
+              onClick={handleDeleteSelected}
+              aria-label={`Delete ${selectedRowCount} selected quotation${selectedRowCount === 1 ? '' : 's'}`}
+            >
+              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
+              Delete
+            </button>
+          ) : null}
+
           <button
             type="button"
             className={figmaToolbarBtn}
