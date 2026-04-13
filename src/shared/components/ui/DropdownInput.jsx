@@ -6,7 +6,19 @@ import DropdownIcon from '../../assets/icons/dropdown.svg';
  * Dropdown input with label above, arrow icon on the right.
  * Same styling as inputField.box, with dropdown.svg on the right.
  */
-export default function DropdownInput({ label, value, onChange, options = [], placeholder, widthPx, heightPx, fullWidth = false, className, ...props }) {
+export default function DropdownInput({
+  label,
+  value,
+  onChange,
+  options = [],
+  placeholder,
+  widthPx,
+  heightPx,
+  fullWidth = false,
+  className,
+  labelClassName,
+  ...props
+}) {
   const boxWidth = fullWidth ? '100%' : (widthPx != null ? `${widthPx}px` : inputField.dropdown.width);
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dropdown.height;
   return (
@@ -15,10 +27,12 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
       style={{ width: boxWidth }}
     >
       {label && (
-        <label style={inputField.label}>{label}</label>
+        <label style={inputField.label} className={labelClassName}>
+          {label}
+        </label>
       )}
       <div
-        className="relative flex w-full items-center bg-white text-[8px] outline-none sm:text-[9px]"
+        className="relative flex w-full items-center bg-white text-sm leading-normal text-gray-900 outline-none"
         style={{
           width: '100%',
           height: boxHeight,
@@ -32,7 +46,7 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
         <select
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-0 text-[8px] outline-none sm:pl-2 sm:text-[9px] ${className ?? ''}`.trim()}
+          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-2 pr-6 py-0 text-sm leading-normal text-gray-900 outline-none sm:pl-2.5 ${className ?? ''}`.trim()}
           style={{
             height: '100%',
             boxSizing: 'border-box',

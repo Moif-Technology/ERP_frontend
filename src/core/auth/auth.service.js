@@ -1,79 +1,82 @@
-import httpClient from '../../services/http/httpClient.js';
+import * as authApi from './auth.api.js';
 
 /**
- * POST /api/auth/login
+ * Persists tokens and session from POST /api/auth/login (same credentials for every tenant:
+ * login_name or email + password from registration).
  *
- * On success, stores the full session in sessionStorage:
- *   - access_token   : JWT for API calls
- *   - refresh_token  : JWT for refreshing access
- *   - session_user   : user info (staffId, staffName, role, stationId …)
- *   - session_company: company/station info (stationName, address …)
- *   - session_params : system parameters (heading1, softwareType …)
- *
- * sessionStorage clears automatically when the tab or browser is closed — safer for ERP.
- *
- * Returns the full session object { user, company, parameters }.
+ * sessionStorage clears when the tab closes.
  */
 export async function login(username, password) {
-  const { data } = await httpClient.post('/api/auth/login', { username, password });
+  const { data } = await authApi.requestLogin(username, password);
 
-  sessionStorage.setItem('access_token',    data.accessToken);
-  sessionStorage.setItem('refresh_token',   data.refreshToken);
-  sessionStorage.setItem('session_user',    JSON.stringify(data.session.user));
+  sessionStorage.setItem('access_token', data.accessToken);
+  sessionStorage.setItem('refresh_token', data.refreshToken);
+  sessionStorage.setItem('session_user', JSON.stringify(data.session.user));
   sessionStorage.setItem('session_company', JSON.stringify(data.session.company));
-  sessionStorage.setItem('session_params',  JSON.stringify(data.session.parameters));
+  if (data.session.welcome != null) {
+    sessionStorage.setItem('session_welcome', JSON.stringify(data.session.welcome));
+  } else {
+    sessionStorage.removeItem('session_welcome');
+  }
 
   return data.session;
 }
 
-/**
- * POST /api/auth/logout
- * Clears all tokens and session data from sessionStorage.
- */
 export async function logout() {
   try {
-    await httpClient.post('/api/auth/logout');
+    await authApi.requestLogout();
   } finally {
     sessionStorage.clear();
   }
 }
 
 /**
- * GET /api/auth/me
- * Returns the current authenticated user from the backend.
+ * Calls POST /api/auth/logout, clears session storage, then navigates to login (if `navigate` is passed).
  */
+export async function signOut(navigate) {
+  await logout();
+  if (typeof navigate === 'function') {
+    navigate('/login', { replace: true });
+  }
+}
+
 export async function getMe() {
-  const { data } = await httpClient.get('/api/auth/me');
+  const { data } = await authApi.requestMe();
   return data.user;
 }
 
-/**
- * Returns the saved user object from sessionStorage (no network call).
- */
 export function getSessionUser() {
   const raw = sessionStorage.getItem('session_user');
   return raw ? JSON.parse(raw) : null;
 }
 
-/**
- * Returns the saved company/station object from sessionStorage (no network call).
- */
 export function getSessionCompany() {
   const raw = sessionStorage.getItem('session_company');
   return raw ? JSON.parse(raw) : null;
 }
 
-/**
- * Returns the saved system parameters from sessionStorage (no network call).
- */
-export function getSessionParameters() {
-  const raw = sessionStorage.getItem('session_params');
-  return raw ? JSON.parse(raw) : null;
+/** First-login welcome payload from login/register; `show: true` until skipped/completed. */
+export function getWelcomeState() {
+  const raw = sessionStorage.getItem('session_welcome');
+  if (!raw) return { show: false };
+  try {
+    const w = JSON.parse(raw);
+    if (w && typeof w === 'object' && typeof w.show === 'boolean') return w;
+  } catch {
+    /* ignore */
+  }
+  return { show: false };
 }
 
-/**
- * Returns true if a valid access token exists in sessionStorage.
- */
+export function dismissWelcomeLocally() {
+  sessionStorage.setItem('session_welcome', JSON.stringify({ show: false }));
+}
+
+export async function completeWelcomeOnServer() {
+  await authApi.requestWelcomeComplete();
+  dismissWelcomeLocally();
+}
+
 export function isLoggedIn() {
   return !!sessionStorage.getItem('access_token');
 }

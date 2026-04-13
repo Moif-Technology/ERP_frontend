@@ -23,7 +23,7 @@ httpClient.interceptors.response.use(
       const refreshToken = sessionStorage.getItem('refresh_token');
       if (!refreshToken) {
         sessionStorage.clear();
-        window.location.href = '/';
+        window.location.href = '/login';
         return Promise.reject(error);
       }
 
@@ -37,7 +37,7 @@ httpClient.interceptors.response.use(
         return httpClient(original);
       } catch {
         sessionStorage.clear();
-        window.location.href = '/';
+        window.location.href = '/login';
         return Promise.reject(error);
       }
     }

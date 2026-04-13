@@ -46,22 +46,16 @@ code {
     monospace;
 }
 
-/* Sidebar scrollbar (subtle, modern) */
+/* Sidebar: keep scroll, hide visible scrollbar (Firefox / WebKit / legacy Edge) */
 .sidebar-scroll {
-  scrollbar-width: none; /* Firefox - hide */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: transparent;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Switch - From Uiverse.io by namecho */

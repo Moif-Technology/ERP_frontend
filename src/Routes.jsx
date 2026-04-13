@@ -25,6 +25,10 @@ import PaymentVoucherEntry from './modules/backoffice/pages/PaymentVoucherEntry'
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
 import SupplierEntry from './modules/backoffice/pages/SupplierEntry';
 import ProductEntry from './modules/backoffice/pages/ProductEntry';
+import StaffEntry from './modules/backoffice/pages/StaffEntry';
+import GroupEntry from './modules/backoffice/pages/GroupEntry';
+import SubGroupEntry from './modules/backoffice/pages/SubGroupEntry';
+import AreaEntry from './modules/backoffice/pages/AreaEntry';
 
 export default function AppRoutes() {
   return (
@@ -57,6 +61,10 @@ export default function AppRoutes() {
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />
+      <Route path="/data-entry/staff-entry" element={<StaffEntry />} />
+      <Route path="/data-entry/group-entry" element={<GroupEntry />} />
+      <Route path="/data-entry/sub-group-entry" element={<SubGroupEntry />} />
+      <Route path="/data-entry/area-entry" element={<AreaEntry />} />
       <Route
         path="*"
         element={

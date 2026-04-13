@@ -5,7 +5,7 @@ import { login } from '../../../core/auth/auth.service.js';
 
 function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +14,9 @@ function Login() {
 
   const validate = () => {
     const newErrors = {};
-    if (!username.trim()) newErrors.username = 'User name is required';
+    if (!emailOrUsername.trim()) {
+      newErrors.emailOrUsername = 'Email or username is required';
+    }
     if (!password) newErrors.password = 'Password is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -28,25 +30,16 @@ function Login() {
     setErrors({});
 
     try {
-      await login(username, password);
-      navigate('/dashboard', { replace: true });
+      const session = await login(emailOrUsername.trim(), password);
+      const toWelcome = session?.welcome?.show === true;
+      navigate(toWelcome ? '/welcome' : '/dashboard', { replace: true });
     } catch (err) {
       const message =
         err.response?.data?.message || 'Something went wrong. Please try again.';
-      setErrors({ username: message });
+      setErrors({ form: message });
     } finally {
       setIsLoading(false);
     }
-   
-    setTimeout(() => {
-      if (username === '123' && password === '123') {
-        // Dummy success login; navigate to dashboard
-        navigate('/dashboard', { replace: true });
-      } else {
-        setErrors({ username: 'Invalid username or password' });
-      }
-      setIsLoading(false);
-    }, 800);
   };
 
   return (
@@ -101,16 +94,21 @@ function Login() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Username */}
+              {errors.form && (
+                <p className="rounded-md bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-700">
+                  {errors.form}
+                </p>
+              )}
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-gray-700">
-                  User name
+                  Email or username
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter user name"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  placeholder="Email or username"
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -118,14 +116,14 @@ function Login() {
                     }
                   }}
                   className={`w-full rounded-md border px-3 py-2 text-sm outline-none ${
-                    errors.username
+                    errors.emailOrUsername
                       ? 'border-red-400 focus:border-red-500'
                       : 'border-gray-300 focus:border-[#800000]'
                   }`}
                 />
-                {errors.username && (
+                {errors.emailOrUsername && (
                   <span className="text-[11px] text-red-500">
-                    {errors.username}
+                    {errors.emailOrUsername}
                   </span>
                 )}
               </div>
@@ -139,6 +137,7 @@ function Login() {
                   <input
                     ref={passwordRef}
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

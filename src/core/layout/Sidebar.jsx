@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { signOut } from '../auth/auth.service.js';
 import { colors } from '../../shared/constants/theme';
 
 import DashboardIcon from '../../shared/assets/icons/dashboard.svg';
@@ -35,6 +36,10 @@ const menuItems = [
       { label: 'Customer entry', to: '/data-entry/customer-entry', icon: ManagementIcon },
       { label: 'Supplier entry', to: '/data-entry/supplier-entry', icon: VendorIcon },
       { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon },
+      { label: 'Staff entry', to: '/data-entry/staff-entry', icon: ToolsIcon },
+      { label: 'Group entry', to: '/data-entry/group-entry', icon: ProductEntryIcon },
+      { label: 'Sub group entry', to: '/data-entry/sub-group-entry', icon: ProductEntryIcon },
+      { label: 'Area entry', to: '/data-entry/area-entry', icon: LogisticsIcon },
     ],
   },
   { label: 'List', to: '/data-entry/list', icon: ListIcon },
@@ -54,6 +59,7 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = (label) =>
@@ -61,7 +67,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed flex flex-col overflow-y-auto overflow-x-hidden pt-4 font-sans"
+      className="fixed flex min-h-0 flex-col overflow-x-hidden overflow-y-hidden pt-4 font-sans"
       style={{
         top: HEADER_HEIGHT,
         left: 0,
@@ -71,7 +77,7 @@ export default function Sidebar() {
         color: 'white',
       }}
     >
-      <div className="px-4 pb-4">
+      <div className="shrink-0 px-4 pb-4">
         <div className="flex items-center w-40 h-8 border border-white bg-transparent rounded-[10px] px-2">
           <img
             src={SearchIcon}
@@ -85,7 +91,7 @@ export default function Sidebar() {
           />
         </div>
       </div>
-      <nav className="flex-1">
+      <nav className="min-h-0 flex-1 overflow-y-auto sidebar-scroll">
         {menuItems.map((item) => {
           const isOpen = openMenus[item.label] || false;
           const hasSub = !!item.subItems;
@@ -158,6 +164,16 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      <div className="mt-auto shrink-0 border-t border-white/15 px-2 py-3">
+        <button
+          type="button"
+          onClick={() => signOut(navigate)}
+          className="mx-1 w-[calc(100%-8px)] rounded-[10px] p-2 text-left text-sm font-light text-white/90 transition hover:bg-white/10"
+        >
+          Log out
+        </button>
+      </div>
     </aside>
   );
 }
