@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from '../auth/auth.service.js';
 import { colors } from '../../shared/constants/theme';
 
@@ -75,7 +75,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const [openMenus, setOpenMenus] = useState({});
+
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
   const [openMenus, setOpenMenus] = useState({ List: true });
