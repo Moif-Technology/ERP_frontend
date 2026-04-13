@@ -357,8 +357,9 @@ export default function DebitNoteEntry() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
+  // Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain
   return (
-    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-1 flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+    <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <h1
           className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
@@ -452,7 +453,7 @@ export default function DebitNoteEntry() {
         <div className="shrink-0">
           <DateInputField label="Expense Date" value={debitNoteDate} onChange={setDebitNoteDate} />
         </div>
-        <div className="flex shrink-0 items-end">
+        <div className="ml-auto flex shrink-0 items-end">
           <button
             type="button"
             onClick={handleAddLine}

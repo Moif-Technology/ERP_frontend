@@ -26,45 +26,43 @@ const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
 const STN_CODES = ['STN-M01', 'STN-N02', 'STN-S03', 'STN-W04', 'STN-EX05'];
 
 const ACCOUNT_HEADS = [
-  'Sales – domestic',
-  'Sales – export',
-  'Trade debtors',
-  'GST output',
-  'Cash sales',
-  'Credit sales – retail',
-  'Service income',
-  'Other operating income',
+  '1200 – Trade debtors',
+  '1100 – Cash / bank',
+  '4000 – Sales revenue',
+  '4100 – GST output',
+  '4200 – Sales returns',
+  '1300 – Customer deposits',
+  '4300 – Discount allowed',
 ];
 
 const PARTICULARS = [
-  'Sales invoice – retail counter',
-  'Credit sale – distributor network',
-  'Export shipment – FOB terms',
-  'Service billing – AMC renewal',
-  'Debit note – rate difference',
-  'Cash memo – walk-in customer',
-  'Inter-branch transfer – billing',
+  'Credit note – sales return (damaged goods)',
+  'Price adjustment – agreed with customer',
+  'Volume rebate – quarterly scheme',
+  'Service credit – SLA breach',
+  'Promotional discount – campaign Q1',
+  'Billing error correction – duplicate line',
 ];
 
-const VOUCHER_TYPES = ['Sales invoice', 'Credit note', 'Cash memo', 'Export invoice', 'Service bill'];
-const VOUCHER_GROUPS = ['Sales', 'Credit note', 'Journal', 'Debit note', 'Adjustment'];
+const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
+const VOUCHER_GROUPS = ['Customer credit', 'Sales return', 'Discount', 'Journal', 'Adjustment'];
 const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Checkbox + Sl no, Voucher no/date, Particulars (wide), Voucher type, Ref no, amounts, Status, Remark, STN, TRN */
-const SV_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
+/** Checkbox + Sl., Vch no, Date, Part., Type, Ref., amounts, Sts., Rmk., STN, TRN */
+const CN_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
 
-function buildDummySalesVouchers(count) {
+function buildDummyCreditNoteVouchers(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const seq = 5100 - i;
+    const seq = 3200 - i;
     const d = 1 + (i % 28);
     const m = 1 + (i % 4);
     const y = 2026;
     const voucherDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const subNum = 820 + (i * 191) % 38000 + (i % 6) * 72.25;
-    const taxNum = subNum * 0.05 + (i % 4) * 15;
+    const subNum = 590 + (i * 181) % 34000 + (i % 6) * 58.25;
+    const taxNum = subNum * 0.05 + (i % 4) * 9;
     const voucherNum = subNum + taxNum;
     const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     rows.push({
@@ -73,23 +71,23 @@ function buildDummySalesVouchers(count) {
       station: STATIONS[i % STATIONS.length],
       stnCode: STN_CODES[i % STN_CODES.length],
       voucherGroup: VOUCHER_GROUPS[i % VOUCHER_GROUPS.length],
-      voucherNo: `SV-2026-${String(seq).padStart(5, '0')}`,
+      voucherNo: `CN-2026-${String(seq).padStart(5, '0')}`,
       voucherDate,
       particular: PARTICULARS[i % PARTICULARS.length],
       voucherType: VOUCHER_TYPES[i % VOUCHER_TYPES.length],
-      refNo: `SREF-${(77000 + i * 29) % 99000}`,
+      refNo: `CNREF-${(72000 + i * 31) % 99000}`,
       subTotal: fmt(subNum),
       taxAmount: fmt(taxNum),
       voucherAmount: fmt(voucherNum),
       status: i % 8 === 0 ? 'Draft' : 'Posted',
-      remark: i % 5 === 0 ? 'Posted to GL' : i % 5 === 1 ? 'Awaiting approval' : '—',
-      trnNo: `200-${(300000000 + i * 100003) % 900000000}`,
+      remark: i % 5 === 0 ? 'Posted to AR' : i % 5 === 1 ? 'Awaiting customer sign-off' : '—',
+      trnNo: `250-${(280000000 + i * 100009) % 900000000}`,
     });
   }
   return rows;
 }
 
-const DUMMY_SV = buildDummySalesVouchers(42);
+const DUMMY_CN = buildDummyCreditNoteVouchers(42);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -123,16 +121,16 @@ function parseVoucherDate(ddmmyyyy) {
   return dt;
 }
 
-const SEARCH_PLACEHOLDER = 'Search by voucher no, acc head, ref no…';
+const SEARCH_PLACEHOLDER = 'Search by voucher no, acc head, ref no, post status…';
 
-export default function SalesVoucherList() {
-  const [vouchers, setVouchers] = useState(() => DUMMY_SV.map((r) => ({ ...r })));
+export default function CreditNoteList() {
+  const [vouchers, setVouchers] = useState(() => DUMMY_CN.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [svFilters, setSvFilters] = useState({
+  const [cnFilters, setCnFilters] = useState({
     station: null,
     postStatus: null,
     transactionType: null,
@@ -161,7 +159,7 @@ export default function SalesVoucherList() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortBy, appliedDateRange, svFilters]);
+  }, [search, sortBy, appliedDateRange, cnFilters]);
 
   useEffect(() => {
     setSelectedIds((prev) => {
@@ -178,11 +176,10 @@ export default function SalesVoucherList() {
 
   const activeFilterCount = useMemo(() => {
     let n = 0;
-    if (svFilters.station) n += 1;
-    if (svFilters.postStatus) n += 1;
-    if (svFilters.transactionType) n += 1;
+    if (cnFilters.station) n += 1;
+    if (cnFilters.transactionType) n += 1;
     return n;
-  }, [svFilters]);
+  }, [cnFilters.station, cnFilters.transactionType]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -192,6 +189,7 @@ export default function SalesVoucherList() {
             r.voucherNo.toLowerCase().includes(q) ||
             r.accHead.toLowerCase().includes(q) ||
             r.refNo.toLowerCase().includes(q) ||
+            r.status.toLowerCase().includes(q) ||
             r.particular.toLowerCase().includes(q) ||
             r.remark.toLowerCase().includes(q) ||
             r.stnCode.toLowerCase().includes(q) ||
@@ -211,14 +209,11 @@ export default function SalesVoucherList() {
       });
     }
 
-    if (svFilters.station) {
-      list = list.filter((r) => r.station === svFilters.station);
+    if (cnFilters.station) {
+      list = list.filter((r) => r.station === cnFilters.station);
     }
-    if (svFilters.postStatus) {
-      list = list.filter((r) => r.status === svFilters.postStatus);
-    }
-    if (svFilters.transactionType) {
-      list = list.filter((r) => r.voucherGroup === svFilters.transactionType);
+    if (cnFilters.transactionType) {
+      list = list.filter((r) => r.voucherGroup === cnFilters.transactionType);
     }
 
     const sorted = [...list];
@@ -231,7 +226,7 @@ export default function SalesVoucherList() {
       );
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, svFilters, vouchers]);
+  }, [search, sortBy, appliedDateRange, cnFilters, vouchers]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -307,7 +302,7 @@ export default function SalesVoucherList() {
     const totalRow = [
       {
         content: (
-          <div key="sv-list-total" className="text-left font-bold">
+          <div key="cn-list-total" className="text-left font-bold">
             Total
           </div>
         ),
@@ -344,15 +339,15 @@ export default function SalesVoucherList() {
           className="shrink-0 text-base font-bold sm:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          SALES VOUCHER LIST
+          CREDIT NOTE LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            to="/sales-voucher-entry"
+            to="/credit-note-entry"
             className={primaryLinkBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
           >
-            New sales voucher
+            New credit note
           </Link>
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
@@ -387,7 +382,7 @@ export default function SalesVoucherList() {
               className={primaryToolbarBtn}
               style={{ backgroundColor: primary, borderColor: primary }}
               onClick={handleDeleteSelected}
-              aria-label={`Delete ${selectedRowCount} selected voucher${selectedRowCount === 1 ? '' : 's'}`}
+              aria-label={`Delete ${selectedRowCount} selected ${selectedRowCount === 1 ? 'note' : 'notes'}`}
             >
               <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
               Delete
@@ -453,27 +448,26 @@ export default function SalesVoucherList() {
       <SalesFilterDrawer
         open={filterDrawerOpen}
         onClose={() => setFilterDrawerOpen(false)}
-        fieldOrder={['postStatus', 'transactionType', 'station']}
+        fieldOrder={['station', 'transactionType']}
         filterLabels={{
-          postStatus: 'Post status',
-          transactionType: 'Voucher group',
           station: 'Station',
+          transactionType: 'Voucher group',
         }}
         stations={STATIONS}
         postStatusOptions={POST_STATUS_OPTIONS}
         transactionTypeOptions={VOUCHER_GROUPS}
-        applied={svFilters}
-        onApply={setSvFilters}
+        applied={cnFilters}
+        onApply={setCnFilters}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="sales-voucher-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="credit-note-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll
           truncateHeader
           truncateBody
-          columnWidthPercents={SV_LIST_COL_PCT}
+          columnWidthPercents={CN_LIST_COL_PCT}
           tableClassName="min-w-[1020px] w-full"
           hideVerticalCellBorders
           cellAlign="center"

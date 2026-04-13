@@ -11,46 +11,41 @@ import UnpostIcon from '../../../shared/assets/icons/unpost.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-const VOUCHER_TYPES = ['Goods', 'Services', 'Asset', 'Import', 'Local'];
-
-const PARTY_AC_HEADS = [
-  '2001 – Trade payables',
-  '2100 – Supplier control',
-  '2200 – GRNI / Accrued purchases',
-  '5100 – Purchase expense',
-  '5200 – Import charges',
-  '5300 – Asset capitalization',
-];
+const VOUCHER_TYPES = ['Journal', 'Adjustment', 'Opening', 'Reversal', 'Other'];
 
 const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Sl no · Account name · Amount · Action */
-const LINE_COL_PCT = [10, 44, 22, 24];
+/** Sl no · Account name · Debit · Credit · Action */
+const LINE_COL_PCT = [8, 34, 18, 18, 22];
 
 const SAMPLE_ACCOUNTS = [
-  '5100 – Purchase expense',
-  '4100 – VAT input',
-  '2100 – Supplier control',
-  '5200 – Import charges',
+  '4100 – General expense',
+  '1200 – Bank – Operating',
+  '3100 – General ledger suspense',
+  '5100 – Operating expense',
+  '1100 – Cash in hand',
 ];
 
-function buildDummyIncomeLines(count) {
+function buildDummyJournalLines(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
     const base = 120 + (i * 197) % 8900 + (i % 5) * 44.5;
-    const amount = base.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const debit = i % 2 === 0 ? fmt(base) : '0.00';
+    const credit = i % 2 === 1 ? fmt(base) : '0.00';
     rows.push({
-      id: `iv-${i + 1}`,
+      id: `jv-${i + 1}`,
       account: SAMPLE_ACCOUNTS[i % SAMPLE_ACCOUNTS.length],
-      amount,
+      debit,
+      credit,
     });
   }
   return rows;
 }
 
-const DUMMY_INCOME_LINES = buildDummyIncomeLines(24);
+const DUMMY_JOURNAL_LINES = buildDummyJournalLines(24);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -89,6 +84,10 @@ function parseMoneyValue(s) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function formatMoneyDisplay(n) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function useViewportMaxWidth(maxPx) {
   const query = `(max-width: ${maxPx}px)`;
   const [matches, setMatches] = useState(() =>
@@ -104,23 +103,23 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-function buildFreshIncomeLine() {
+function buildFreshJournalLine() {
   return {
-    id: `iv-${Date.now()}`,
+    id: `jv-${Date.now()}`,
     account: '',
-    amount: '0.00',
+    debit: '0.00',
+    credit: '0.00',
   };
 }
 
-export default function IncomeVoucherEntry() {
-  const [tableData, setTableData] = useState(() => DUMMY_INCOME_LINES.map((r) => ({ ...r })));
+export default function JournalVoucherEntry() {
+  const [tableData, setTableData] = useState(() => DUMMY_JOURNAL_LINES.map((r) => ({ ...r })));
 
   const [voucherType, setVoucherType] = useState('');
   const [voucherNo, setVoucherNo] = useState('');
-  const [partyAcHead, setPartyAcHead] = useState('');
-  const [station, setStation] = useState('');
   const [refNo, setRefNo] = useState('');
-  const [incomeDate, setIncomeDate] = useState('');
+  const [station, setStation] = useState('');
+  const [journalDate, setJournalDate] = useState('');
   const [remark, setRemark] = useState('');
 
   const [page, setPage] = useState(1);
@@ -136,20 +135,20 @@ export default function IncomeVoucherEntry() {
   }, []);
 
   const handleAddLine = useCallback(() => {
-    const id = `iv-${Date.now()}`;
-    const accountLabel = partyAcHead || PARTY_AC_HEADS[0] || '';
+    const id = `jv-${Date.now()}`;
     setTableData((prev) => [
       {
         id,
-        account: accountLabel,
-        amount: '0.00',
+        account: '',
+        debit: '0.00',
+        credit: '0.00',
       },
       ...prev,
     ]);
     setPage(1);
     setVoucherNo('');
     setRefNo('');
-  }, [partyAcHead]);
+  }, []);
 
   const handleViewLine = useCallback((id) => {
     setEditingRowId(null);
@@ -197,24 +196,23 @@ export default function IncomeVoucherEntry() {
 
   const handlePost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Post income voucher', { voucherType, voucherNo, tableData });
-  }, [voucherType, voucherNo, tableData]);
+    console.log('Post journal voucher', { voucherType, voucherNo, refNo, station, journalDate, tableData });
+  }, [voucherType, voucherNo, refNo, station, journalDate, tableData]);
 
   const handleUnpost = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Unpost income voucher', { voucherNo });
+    console.log('Unpost journal voucher', { voucherNo });
   }, [voucherNo]);
 
   const handleDeleteDocument = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Delete income voucher', { voucherNo });
-    setTableData([buildFreshIncomeLine()]);
+    console.log('Delete journal voucher', { voucherNo });
+    setTableData([buildFreshJournalLine()]);
     setVoucherType('');
     setVoucherNo('');
-    setPartyAcHead('');
-    setStation('');
     setRefNo('');
-    setIncomeDate('');
+    setStation('');
+    setJournalDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -223,26 +221,24 @@ export default function IncomeVoucherEntry() {
 
   const handleSave = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Save income voucher', {
+    console.log('Save journal voucher', {
       voucherType,
       voucherNo,
-      partyAcHead,
-      station,
       refNo,
-      incomeDate,
+      station,
+      journalDate,
       remark,
       lines: tableData,
     });
-  }, [voucherType, voucherNo, partyAcHead, station, refNo, incomeDate, remark, tableData]);
+  }, [voucherType, voucherNo, refNo, station, journalDate, remark, tableData]);
 
-  const handleNewIncomeVoucher = useCallback(() => {
-    setTableData([buildFreshIncomeLine()]);
+  const handleNewJournalVoucher = useCallback(() => {
+    setTableData([buildFreshJournalLine()]);
     setVoucherType('');
     setVoucherNo('');
-    setPartyAcHead('');
-    setStation('');
     setRefNo('');
-    setIncomeDate('');
+    setStation('');
+    setJournalDate('');
     setRemark('');
     setPage(1);
     setEditingRowId(null);
@@ -264,12 +260,20 @@ export default function IncomeVoucherEntry() {
   const rangeStart = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
   const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
-  const amountTotal = useMemo(() => {
-    let amt = 0;
+  const totalDebit = useMemo(() => {
+    let sum = 0;
     for (const r of filteredRows) {
-      amt += parseMoneyValue(r.amount);
+      sum += parseMoneyValue(r.debit);
     }
-    return amt;
+    return sum;
+  }, [filteredRows]);
+
+  const totalCredit = useMemo(() => {
+    let sum = 0;
+    for (const r of filteredRows) {
+      sum += parseMoneyValue(r.credit);
+    }
+    return sum;
   }, [filteredRows]);
 
   const tableBodyRows = useMemo(() => {
@@ -288,23 +292,37 @@ export default function IncomeVoucherEntry() {
       ) : (
         r.account
       );
-      const amountCell = rowIsEditing ? (
+      const debitCell = rowIsEditing ? (
         <input
-          key={`amt-${r.id}`}
+          key={`dr-${r.id}`}
           type="text"
           inputMode="decimal"
           className={tableCellInputClass}
-          value={r.amount}
-          onChange={(e) => updateLine(r.id, { amount: e.target.value })}
-          aria-label="Amount"
+          value={r.debit}
+          onChange={(e) => updateLine(r.id, { debit: e.target.value })}
+          aria-label="Debit"
         />
       ) : (
-        r.amount
+        r.debit
+      );
+      const creditCell = rowIsEditing ? (
+        <input
+          key={`cr-${r.id}`}
+          type="text"
+          inputMode="decimal"
+          className={tableCellInputClass}
+          value={r.credit}
+          onChange={(e) => updateLine(r.id, { credit: e.target.value })}
+          aria-label="Credit"
+        />
+      ) : (
+        r.credit
       );
       return [
         slNo,
         accountCell,
-        amountCell,
+        debitCell,
+        creditCell,
         <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
           <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
             <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -333,17 +351,22 @@ export default function IncomeVoucherEntry() {
     () => [
       {
         content: (
-          <div key="iv-line-total" className="text-left font-bold">
+          <div key="jv-line-total" className="text-left font-bold">
             Total
           </div>
         ),
         colSpan: 2,
         className: 'align-middle font-bold',
       },
-      amountTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      <span key="jv-dr" className="font-bold" title="Total Dr">
+        Dr {formatMoneyDisplay(totalDebit)}
+      </span>,
+      <span key="jv-cr" className="font-bold" title="Total Cr">
+        Cr {formatMoneyDisplay(totalCredit)}
+      </span>,
       '',
     ],
-    [amountTotal],
+    [totalDebit, totalCredit],
   );
 
   const pageNumbers = useMemo(() => {
@@ -357,7 +380,6 @@ export default function IncomeVoucherEntry() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
-  // Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain
   return (
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -365,7 +387,7 @@ export default function IncomeVoucherEntry() {
           className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          INCOME VOUCHER ENTRY
+          JOURNAL VOUCHER ENTRY
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -383,7 +405,7 @@ export default function IncomeVoucherEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete income voucher"
+            aria-label="Delete journal voucher"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -396,17 +418,17 @@ export default function IncomeVoucherEntry() {
             type="button"
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
-            onClick={handleNewIncomeVoucher}
-            aria-label="New income voucher entry"
+            onClick={handleNewJournalVoucher}
+            aria-label="New journal voucher entry"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden sm:inline">New Income Voucher Entry</span>
+            <span className="hidden sm:inline">New Journal Voucher Entry</span>
             <span className="sm:hidden">New</span>
           </button>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-nowrap items-end gap-2 overflow-x-auto rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
+      <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
         <div className="shrink-0">
           <DropdownInput
             label="Voucher Type"
@@ -425,12 +447,11 @@ export default function IncomeVoucherEntry() {
           />
         </div>
         <div className="shrink-0">
-          <DropdownInput
-            label="Party A/c Head"
-            value={partyAcHead}
-            onChange={setPartyAcHead}
-            options={PARTY_AC_HEADS}
-            placeholder="Select"
+          <SubInputField
+            label="Ref No"
+            value={refNo}
+            onChange={(e) => setRefNo(e.target.value)}
+            placeholder="Reference"
           />
         </div>
         <div className="shrink-0">
@@ -443,15 +464,7 @@ export default function IncomeVoucherEntry() {
           />
         </div>
         <div className="shrink-0">
-          <SubInputField
-            label="Ref No"
-            value={refNo}
-            onChange={(e) => setRefNo(e.target.value)}
-            placeholder="Reference"
-          />
-        </div>
-        <div className="shrink-0">
-          <DateInputField label="Income date" value={incomeDate} onChange={setIncomeDate} />
+          <DateInputField label="Journal Date" value={journalDate} onChange={setJournalDate} />
         </div>
         <div className="ml-auto flex shrink-0 items-end">
           <button
@@ -483,13 +496,13 @@ export default function IncomeVoucherEntry() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="income-voucher-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="journal-voucher-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
           truncateBody={editingRowId == null}
           columnWidthPercents={LINE_COL_PCT}
-          tableClassName={isCompactTable ? 'min-w-[36rem] w-full' : 'min-w-0 w-full'}
+          tableClassName={isCompactTable ? 'min-w-[42rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.85vw, 10px)"
@@ -498,7 +511,7 @@ export default function IncomeVoucherEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={['Sl no', 'Account name', 'Amount', 'Action']}
+          headers={['Sl no', 'Account name', 'Debit', 'Credit', 'Action']}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -591,7 +604,7 @@ export default function IncomeVoucherEntry() {
           onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="iv-line-detail-title"
+          aria-labelledby="jv-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -608,7 +621,7 @@ export default function IncomeVoucherEntry() {
               </svg>
             </button>
             <h2
-              id="iv-line-detail-title"
+              id="jv-line-detail-title"
               className="pr-10 text-sm font-bold sm:text-base"
               style={{ color: primary }}
             >
@@ -617,7 +630,8 @@ export default function IncomeVoucherEntry() {
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
               <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
               <InputField label="Account name" fullWidth readOnly value={detailRow.account} />
-              <InputField label="Amount" fullWidth readOnly value={detailRow.amount} />
+              <InputField label="Debit" fullWidth readOnly value={detailRow.debit} />
+              <InputField label="Credit" fullWidth readOnly value={detailRow.credit} />
             </div>
           </div>
         </div>

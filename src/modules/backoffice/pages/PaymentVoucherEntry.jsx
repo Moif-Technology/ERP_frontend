@@ -452,7 +452,7 @@ export default function PaymentVoucherEntry() {
         <div className="shrink-0">
           <DateInputField label="Payment Date" value={paymentDate} onChange={setPaymentDate} />
         </div>
-        <div className="flex shrink-0 items-end">
+        <div className="ml-auto flex shrink-0 items-end">
           <button
             type="button"
             onClick={handleAddLine}

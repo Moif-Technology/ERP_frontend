@@ -453,7 +453,7 @@ export default function CreditNoteEntry() {
         <div className="shrink-0">
           <DateInputField label="Credit note date" value={creditNoteDate} onChange={setCreditNoteDate} />
         </div>
-        <div className="flex shrink-0 items-end">
+        <div className="ml-auto flex shrink-0 items-end">
           <button
             type="button"
             onClick={handleAddLine}

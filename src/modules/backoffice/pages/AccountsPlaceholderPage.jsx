@@ -5,8 +5,10 @@ import { colors } from '../../../shared/constants/theme';
 const primary = colors.primary?.main || '#790728';
 
 const TITLES = {
-  '/income-expense-voucher-list': 'INCOME / EXPENSE VOUCHER LIST',
   '/payment-voucher-list': 'PAYMENT VOUCHER LIST',
+  '/receipt-voucher-list': 'RECEIPT VOUCHER LIST',
+  '/contra-journal-voucher-list': 'CONTRA / JOURNAL VOUCHER LIST',
+  '/statement-of-accounts-list': 'STATEMENT OF ACCOUNTS — LIST',
 };
 
 /**

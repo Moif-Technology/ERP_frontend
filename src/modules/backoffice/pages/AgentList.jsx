@@ -2,14 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import SalesFilterDrawer from '../../../shared/components/ui/SalesFilterDrawer';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
-import FilterIcon from '../../../shared/assets/icons/filter.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
 const primary = colors.primary?.main || '#790728';
@@ -22,74 +18,34 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   );
 }
 
-const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
-const STN_CODES = ['STN-M01', 'STN-N02', 'STN-S03', 'STN-W04', 'STN-EX05'];
-
-const ACCOUNT_HEADS = [
-  'Sales – domestic',
-  'Sales – export',
-  'Trade debtors',
-  'GST output',
-  'Cash sales',
-  'Credit sales – retail',
-  'Service income',
-  'Other operating income',
-];
-
-const PARTICULARS = [
-  'Sales invoice – retail counter',
-  'Credit sale – distributor network',
-  'Export shipment – FOB terms',
-  'Service billing – AMC renewal',
-  'Debit note – rate difference',
-  'Cash memo – walk-in customer',
-  'Inter-branch transfer – billing',
-];
-
-const VOUCHER_TYPES = ['Sales invoice', 'Credit note', 'Cash memo', 'Export invoice', 'Service bill'];
-const VOUCHER_GROUPS = ['Sales', 'Credit note', 'Journal', 'Debit note', 'Adjustment'];
-const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
-
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Checkbox + Sl no, Voucher no/date, Particulars (wide), Voucher type, Ref no, amounts, Status, Remark, STN, TRN */
-const SV_LIST_COL_PCT = [2, 2, 5, 6, 26, 6, 6, 6, 6, 6, 5, 5, 6, 13];
+/** Checkbox + 5 columns — widths sum to 100 */
+const AG_COL_PCT = [2, 14, 28, 22, 16, 18];
 
-function buildDummySalesVouchers(count) {
+const FIRST = ['Khalid', 'Ananya', 'Yousef', 'Meera', 'Samir', 'Lina', 'Raj', 'Huda'];
+const LAST = ['Al-Zaabi', 'Nair', 'Hakim', 'Iyer', 'Fernandes', 'Khoury', 'Menon', 'Salem'];
+
+function buildDummyAgents(count) {
   const rows = [];
   for (let i = 0; i < count; i += 1) {
-    const seq = 5100 - i;
-    const d = 1 + (i % 28);
-    const m = 1 + (i % 4);
-    const y = 2026;
-    const voucherDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const subNum = 820 + (i * 191) % 38000 + (i % 6) * 72.25;
-    const taxNum = subNum * 0.05 + (i % 4) * 15;
-    const voucherNum = subNum + taxNum;
-    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fn = FIRST[i % FIRST.length];
+    const ln = LAST[i % LAST.length];
+    const pct = 2.5 + (i * 7) % 18 + (i % 3) * 0.25;
     rows.push({
       id: String(i + 1),
-      accHead: ACCOUNT_HEADS[i % ACCOUNT_HEADS.length],
-      station: STATIONS[i % STATIONS.length],
-      stnCode: STN_CODES[i % STN_CODES.length],
-      voucherGroup: VOUCHER_GROUPS[i % VOUCHER_GROUPS.length],
-      voucherNo: `SV-2026-${String(seq).padStart(5, '0')}`,
-      voucherDate,
-      particular: PARTICULARS[i % PARTICULARS.length],
-      voucherType: VOUCHER_TYPES[i % VOUCHER_TYPES.length],
-      refNo: `SREF-${(77000 + i * 29) % 99000}`,
-      subTotal: fmt(subNum),
-      taxAmount: fmt(taxNum),
-      voucherAmount: fmt(voucherNum),
-      status: i % 8 === 0 ? 'Draft' : 'Posted',
-      remark: i % 5 === 0 ? 'Posted to GL' : i % 5 === 1 ? 'Awaiting approval' : '—',
-      trnNo: `200-${(300000000 + i * 100003) % 900000000}`,
+      agentCode: `AG-${String(100 + i * 13).padStart(4, '0')}`,
+      agentName: `${fn} ${ln}`,
+      mobile: `+971 50 ${1000000 + (i * 173) % 8999999}`,
+      commissionPct: pct,
+      commissionLabel: `${pct.toFixed(2)}%`,
+      activeStatus: i % 9 === 0 ? 'Inactive' : 'Active',
     });
   }
   return rows;
 }
 
-const DUMMY_SV = buildDummySalesVouchers(42);
+const DUMMY_AGENTS = buildDummyAgents(36);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -105,38 +61,12 @@ const primaryToolbarBtn =
 const primaryLinkBtn =
   'inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-white no-underline shadow-sm transition-opacity hover:opacity-95';
 
-function parseMoneyValue(s) {
-  const n = Number(String(s ?? '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
+const SEARCH_PLACEHOLDER = 'Search…';
 
-function parseVoucherDate(ddmmyyyy) {
-  const parts = String(ddmmyyyy).split('/');
-  if (parts.length !== 3) return null;
-  const d = Number(parts[0]);
-  const m = Number(parts[1]);
-  const y = Number(parts[2]);
-  if (!y || !m || !d) return null;
-  const dt = new Date(y, m - 1, d);
-  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
-  dt.setHours(0, 0, 0, 0);
-  return dt;
-}
-
-const SEARCH_PLACEHOLDER = 'Search by voucher no, acc head, ref no…';
-
-export default function SalesVoucherList() {
-  const [vouchers, setVouchers] = useState(() => DUMMY_SV.map((r) => ({ ...r })));
+export default function AgentList() {
+  const [agents, setAgents] = useState(() => DUMMY_AGENTS.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
-  const [dateModalOpen, setDateModalOpen] = useState(false);
-  const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [svFilters, setSvFilters] = useState({
-    station: null,
-    postStatus: null,
-    transactionType: null,
-  });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
@@ -155,17 +85,21 @@ export default function SalesVoucherList() {
   const handleDeleteSelected = useCallback(() => {
     const ids = selectedIdsRef.current;
     if (ids.size === 0) return;
-    setVouchers((prev) => prev.filter((row) => !ids.has(String(row.id))));
+    setAgents((prev) => prev.filter((row) => !ids.has(String(row.id))));
     setSelectedIds(new Set());
+  }, []);
+
+  const handlePost = useCallback(() => {
+    // TODO: connect posting API
   }, []);
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortBy, appliedDateRange, svFilters]);
+  }, [search, sortBy]);
 
   useEffect(() => {
     setSelectedIds((prev) => {
-      const ids = new Set(vouchers.map((r) => r.id));
+      const ids = new Set(agents.map((r) => r.id));
       let changed = false;
       const next = new Set();
       prev.forEach((id) => {
@@ -174,64 +108,37 @@ export default function SalesVoucherList() {
       });
       return changed || next.size !== prev.size ? next : prev;
     });
-  }, [vouchers]);
-
-  const activeFilterCount = useMemo(() => {
-    let n = 0;
-    if (svFilters.station) n += 1;
-    if (svFilters.postStatus) n += 1;
-    if (svFilters.transactionType) n += 1;
-    return n;
-  }, [svFilters]);
+  }, [agents]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = q
-      ? vouchers.filter(
-          (r) =>
-            r.voucherNo.toLowerCase().includes(q) ||
-            r.accHead.toLowerCase().includes(q) ||
-            r.refNo.toLowerCase().includes(q) ||
-            r.particular.toLowerCase().includes(q) ||
-            r.remark.toLowerCase().includes(q) ||
-            r.stnCode.toLowerCase().includes(q) ||
-            r.station.toLowerCase().includes(q) ||
-            r.trnNo.toLowerCase().includes(q)
-        )
-      : [...vouchers];
-
-    if (appliedDateRange?.from && appliedDateRange?.to) {
-      const rf = appliedDateRange.from.getTime();
-      const rt = appliedDateRange.to.getTime();
-      list = list.filter((r) => {
-        const rd = parseVoucherDate(r.voucherDate);
-        if (!rd) return false;
-        const t = rd.getTime();
-        return t >= rf && t <= rt;
+    let list = agents;
+    if (q) {
+      list = agents.filter((r) => {
+        const blob = [
+          r.agentCode,
+          r.agentName,
+          r.mobile,
+          r.commissionLabel,
+          r.activeStatus,
+        ]
+          .map((x) => String(x ?? '').toLowerCase())
+          .join(' ');
+        return blob.includes(q);
       });
     }
-
-    if (svFilters.station) {
-      list = list.filter((r) => r.station === svFilters.station);
-    }
-    if (svFilters.postStatus) {
-      list = list.filter((r) => r.status === svFilters.postStatus);
-    }
-    if (svFilters.transactionType) {
-      list = list.filter((r) => r.voucherGroup === svFilters.transactionType);
-    }
-
     const sorted = [...list];
-    if (sortBy === 'dateDesc') {
-      sorted.sort((a, b) => String(b.voucherDate).localeCompare(String(a.voucherDate)));
-    } else if (sortBy === 'amountDesc') {
-      sorted.sort(
-        (a, b) =>
-          parseMoneyValue(b.voucherAmount) - parseMoneyValue(a.voucherAmount)
-      );
+    if (sortBy === 'code') {
+      sorted.sort((a, b) => String(a.agentCode).localeCompare(String(b.agentCode)));
+    } else if (sortBy === 'name') {
+      sorted.sort((a, b) => String(a.agentName).localeCompare(String(b.agentName)));
+    } else if (sortBy === 'commissionHigh') {
+      sorted.sort((a, b) => b.commissionPct - a.commissionPct);
+    } else if (sortBy === 'status') {
+      sorted.sort((a, b) => String(a.activeStatus).localeCompare(String(b.activeStatus)));
     }
     return sorted;
-  }, [search, sortBy, appliedDateRange, svFilters, vouchers]);
+  }, [search, sortBy, agents]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -258,21 +165,8 @@ export default function SalesVoucherList() {
     return n;
   }, [filteredIdSet, selectedIds]);
 
-  const columnTotals = useMemo(() => {
-    let sub = 0;
-    let tax = 0;
-    let voucher = 0;
-    for (const r of filteredRows) {
-      sub += parseMoneyValue(r.subTotal);
-      tax += parseMoneyValue(r.taxAmount);
-      voucher += parseMoneyValue(r.voucherAmount);
-    }
-    return { sub, tax, voucher };
-  }, [filteredRows]);
-
   const tableRows = useMemo(() => {
-    const dataRows = paginatedRows.map((r, idx) => {
-      const slNo = (page - 1) * pageSize + idx + 1;
+    return paginatedRows.map((r) => {
       const checked = selectedIds.has(r.id);
       return [
         <div key={`chk-${r.id}`} className="flex justify-center" onClick={(e) => e.stopPropagation()} role="presentation">
@@ -282,49 +176,19 @@ export default function SalesVoucherList() {
             onChange={() => toggleRowSelected(r.id)}
             className={listTableCheckboxClass}
             style={{ accentColor: primary }}
-            aria-label={`Select ${r.voucherNo}`}
+            aria-label={`Select ${r.agentCode}`}
           />
         </div>,
-        slNo,
-        r.voucherNo,
-        r.voucherDate,
-        <span key={`p-${r.id}`} className="block w-full text-left">
-          {r.particular}
-        </span>,
-        r.voucherType,
-        r.refNo,
-        r.subTotal,
-        r.taxAmount,
-        r.voucherAmount,
-        r.status,
-        r.remark,
-        r.stnCode,
-        r.trnNo,
+        r.agentCode,
+      <span key={`nm-${r.id}`} className="block w-full text-left">
+        {r.agentName}
+      </span>,
+      r.mobile,
+      r.commissionLabel,
+        r.activeStatus,
       ];
     });
-
-    const fmtTot = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const totalRow = [
-      {
-        content: (
-          <div key="sv-list-total" className="text-left font-bold">
-            Total
-          </div>
-        ),
-        colSpan: 7,
-        className: 'align-middle font-bold',
-      },
-      fmtTot(columnTotals.sub),
-      fmtTot(columnTotals.tax),
-      fmtTot(columnTotals.voucher),
-      '',
-      '',
-      '',
-      '',
-    ];
-
-    return [...dataRows, totalRow];
-  }, [paginatedRows, page, pageSize, selectedIds, toggleRowSelected, columnTotals]);
+  }, [paginatedRows, selectedIds, toggleRowSelected]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -344,16 +208,25 @@ export default function SalesVoucherList() {
           className="shrink-0 text-base font-bold sm:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          SALES VOUCHER LIST
+          AGENT LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
-            to="/sales-voucher-entry"
+            to="/data-entry/agent-entry"
             className={primaryLinkBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
           >
-            New sales voucher
+            New agent
           </Link>
+          <button
+            type="button"
+            className={primaryToolbarBtn}
+            style={{ backgroundColor: primary, borderColor: primary }}
+            onClick={handlePost}
+            aria-label="Post"
+          >
+            Post
+          </button>
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
           </button>
@@ -387,94 +260,42 @@ export default function SalesVoucherList() {
               className={primaryToolbarBtn}
               style={{ backgroundColor: primary, borderColor: primary }}
               onClick={handleDeleteSelected}
-              aria-label={`Delete ${selectedRowCount} selected voucher${selectedRowCount === 1 ? '' : 's'}`}
+              aria-label={`Delete ${selectedRowCount} selected agent${selectedRowCount === 1 ? '' : 's'}`}
             >
               <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
               Delete
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className={figmaToolbarBtn}
-            onClick={() => setDateModalOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={dateModalOpen}
-          >
-            <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-            <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
-              {appliedDateRange
-                ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
-                : 'Select Date'}
-            </span>
-            <ToolbarChevron />
-          </button>
-
-          <QuotationDateRangeModal
-            open={dateModalOpen}
-            title="Voucher date"
-            initialRange={appliedDateRange}
-            onClose={() => setDateModalOpen(false)}
-            onApply={(range) => setAppliedDateRange(range)}
-          />
-
           <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              className="h-7 min-w-[6.5rem] max-w-[12rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
-              <option value="dateDesc">Sort: Date (newest)</option>
-              <option value="amountDesc">Sort: Amount (high)</option>
+              <option value="code">Sort: Agent code</option>
+              <option value="name">Sort: Agent name</option>
+              <option value="commissionHigh">Sort: Commission % (high)</option>
+              <option value="status">Sort: Active status</option>
             </select>
             <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
               <ToolbarChevron />
             </span>
           </div>
-
-          <button
-            type="button"
-            className={figmaToolbarBtn}
-            aria-expanded={filterDrawerOpen}
-            aria-haspopup="dialog"
-            onClick={() => setFilterDrawerOpen(true)}
-          >
-            <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-            <span className="max-w-[6rem] truncate sm:max-w-[7rem]">
-              {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
-            </span>
-            <ToolbarChevron />
-          </button>
         </div>
       </div>
 
-      <SalesFilterDrawer
-        open={filterDrawerOpen}
-        onClose={() => setFilterDrawerOpen(false)}
-        fieldOrder={['postStatus', 'transactionType', 'station']}
-        filterLabels={{
-          postStatus: 'Post status',
-          transactionType: 'Voucher group',
-          station: 'Station',
-        }}
-        stations={STATIONS}
-        postStatusOptions={POST_STATUS_OPTIONS}
-        transactionTypeOptions={VOUCHER_GROUPS}
-        applied={svFilters}
-        onApply={setSvFilters}
-      />
-
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="sales-voucher-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="agent-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll
           truncateHeader
           truncateBody
-          columnWidthPercents={SV_LIST_COL_PCT}
-          tableClassName="min-w-[1020px] w-full"
+          columnWidthPercents={AG_COL_PCT}
+          tableClassName="min-w-[640px] w-full"
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.85vw, 10px)"
@@ -482,22 +303,14 @@ export default function SalesVoucherList() {
           bodyFontSize="clamp(8px, 1vw, 10px)"
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
-          maxVisibleRows={Math.min(pageSize + 1, 24)}
+          maxVisibleRows={Math.min(pageSize, 24)}
           headers={[
             '',
-            'Sl.',
-            'Vch no',
-            'Date',
-            'Part.',
-            'Type',
-            'Ref.',
-            'Sub tot.',
-            'Tax amt.',
-            'Vch amt.',
-            'Sts.',
-            'Rmk.',
-            'STN',
-            'TRN',
+            'Agent code',
+            'Agent name',
+            'Mobile no',
+            'Commission %',
+            'Active status',
           ]}
           rows={tableRows}
         />

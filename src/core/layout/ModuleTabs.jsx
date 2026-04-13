@@ -22,6 +22,14 @@ import IncomeIcon from '../../shared/assets/icons/Income.svg';
 import ExpenceIcon from '../../shared/assets/icons/expence.svg';
 import PaymentSupplierIcon from '../../shared/assets/icons/payment_supplier.svg';
 import PaymentEntryIcon from '../../shared/assets/icons/payment_entry.svg';
+import ReceiptCustomerIcon from '../../shared/assets/icons/receipt_cutomer.svg';
+import ReceiptVoucherIcon from '../../shared/assets/icons/Receipt.svg';
+import LedgerModuleIcon from '../../shared/assets/icons/ledger_module.svg';
+import GroupDetailsIcon from '../../shared/assets/icons/group_details.svg';
+import LedgerDetailsIcon from '../../shared/assets/icons/ledger.svg';
+import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
+import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
+import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -67,7 +75,7 @@ const getActionItems = (moduleIcon, labels) => {
 
 const moduleGroups = {
   customer: [
-    { name: 'Product', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Products', 'List']) },
+    { name: 'Product', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Product entry', 'List']) },
     { name: 'Quotation', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Quotation', 'List']) },
     { name: 'Delivery Order', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Delivery', 'List']) },
     { name: 'Sale', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Sales', 'List']) },
@@ -84,12 +92,13 @@ const moduleGroups = {
     { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Purchase voucher', 'List']) },
     { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Sales voucher', 'List']) },
     {
-      name: 'Debit note',
+      name: 'Debit / Credit notes',
       icon: DebitNoteIcon,
       actions: [
         { label: 'Debit note', icon: DebitNoteIcon },
+        { label: 'Debit list', icon: ListIcon },
         { label: 'Credit note', icon: CreditNoteIcon },
-        { label: 'List', icon: ListIcon },
+        { label: 'Credit list', icon: ListIcon },
       ],
     },
     {
@@ -97,8 +106,9 @@ const moduleGroups = {
       icon: IncomeIcon,
       actions: [
         { label: 'Income', icon: IncomeIcon },
+        { label: 'Income list', icon: ListIcon },
         { label: 'Expence', icon: ExpenceIcon },
-        { label: 'List', icon: ListIcon },
+        { label: 'Expense list', icon: ListIcon },
       ],
     },
     {
@@ -110,10 +120,42 @@ const moduleGroups = {
         { label: 'List', icon: ListIcon },
       ],
     },
-    { name: 'Receipt/contra Voucher', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Vouchers', 'List']) },
-    { name: 'Journal Voucher', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Journals', 'List']) },
-    { name: 'Account details', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Accounts', 'List']) },
-    { name: 'Statement Of Accounts', icon: ListIcon, actions: getActionItems(ListIcon, ['Statements', 'List']) },
+    {
+      name: 'Receipt voucher',
+      icon: ReceiptVoucherIcon,
+      actions: [
+        { label: 'Receipt (customer)', icon: ReceiptCustomerIcon },
+        { label: 'Receipt voucher', icon: ReceiptVoucherIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Contra / Journal',
+      icon: QuotationIcon,
+      actions: [
+        { label: 'Contra voucher', icon: LedgerModuleIcon },
+        { label: 'Journal voucher', icon: QuotationIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
+    {
+      name: 'Account details',
+      icon: GroupDetailsIcon,
+      actions: [
+        { label: 'Group details', icon: GroupDetailsIcon },
+        { label: 'Ledger details', icon: LedgerDetailsIcon },
+        { label: 'Trial balance', icon: TrialBalanceIcon },
+      ],
+    },
+    {
+      name: 'Statement of accounts',
+      icon: ListIcon,
+      actions: [
+        { label: 'Payable summary', icon: PayableSummaryIcon },
+        { label: 'Receivable summary', icon: ReceivableSummaryIcon },
+        { label: 'List', icon: ListIcon },
+      ],
+    },
   ],
 };
 
@@ -128,6 +170,12 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
 
   const handleActionClick = (module, action) => {
     setSelectedAction({ module, action });
+    if (module === 'Product' && action === 'Product entry') {
+      navigate('/data-entry/product-entry');
+    }
+    if (module === 'Product' && action === 'List') {
+      navigate('/products');
+    }
     if (module === 'Sale' && action === 'Sales') {
       navigate('/sales');
     }
@@ -167,23 +215,29 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Sales voucher' && action === 'List') {
       navigate('/sales-voucher-list');
     }
-    if (module === 'Debit note' && action === 'Debit note') {
+    if (module === 'Debit / Credit notes' && action === 'Debit note') {
       navigate('/debit-note-entry');
     }
-    if (module === 'Debit note' && action === 'List') {
+    if (module === 'Debit / Credit notes' && action === 'Debit list') {
       navigate('/debit-note-list');
     }
-    if (module === 'Debit note' && action === 'Credit note') {
+    if (module === 'Debit / Credit notes' && action === 'Credit note') {
       navigate('/credit-note-entry');
+    }
+    if (module === 'Debit / Credit notes' && action === 'Credit list') {
+      navigate('/credit-note-list');
     }
     if (module === 'Income/Expense voucher' && action === 'Income') {
       navigate('/income-voucher');
     }
+    if (module === 'Income/Expense voucher' && action === 'Income list') {
+      navigate('/income-voucher-list');
+    }
     if (module === 'Income/Expense voucher' && action === 'Expence') {
       navigate('/expense-voucher');
     }
-    if (module === 'Income/Expense voucher' && action === 'List') {
-      navigate('/income-expense-voucher-list');
+    if (module === 'Income/Expense voucher' && action === 'Expense list') {
+      navigate('/expense-voucher-list');
     }
     if (module === 'Payment Voucher' && action === 'Payment Voucher supplier') {
       navigate('/payment-voucher-supplier');
@@ -193,6 +247,42 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     }
     if (module === 'Payment Voucher' && action === 'List') {
       navigate('/payment-voucher-list');
+    }
+    if (module === 'Receipt voucher' && action === 'Receipt (customer)') {
+      navigate('/receipt-voucher-customer');
+    }
+    if (module === 'Receipt voucher' && action === 'Receipt voucher') {
+      navigate('/receipt-voucher-entry');
+    }
+    if (module === 'Receipt voucher' && action === 'List') {
+      navigate('/receipt-voucher-list');
+    }
+    if (module === 'Contra / Journal' && action === 'Contra voucher') {
+      navigate('/contra-voucher-entry');
+    }
+    if (module === 'Contra / Journal' && action === 'Journal voucher') {
+      navigate('/journal-voucher-entry');
+    }
+    if (module === 'Contra / Journal' && action === 'List') {
+      navigate('/contra-journal-voucher-list');
+    }
+    if (module === 'Account details' && action === 'Group details') {
+      navigate('/account-group-details');
+    }
+    if (module === 'Account details' && action === 'Ledger details') {
+      navigate('/account-ledger-details');
+    }
+    if (module === 'Account details' && action === 'Trial balance') {
+      navigate('/trial-balance');
+    }
+    if (module === 'Statement of accounts' && action === 'Payable summary') {
+      navigate('/statement-payable-summary');
+    }
+    if (module === 'Statement of accounts' && action === 'Receivable summary') {
+      navigate('/statement-receivable-summary');
+    }
+    if (module === 'Statement of accounts' && action === 'List') {
+      navigate('/statement-of-accounts-list');
     }
   };
 
@@ -265,12 +355,16 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
           {currentModules.map((module) => (
             <div
               key={module.name}
-              className={`flex-none h-[64px] rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
+              className={`flex-none rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
                 isAccountsTab
-                  ? module.actions?.length === 3
-                    ? 'w-[198px] sm:w-[210px]'
-                    : 'w-[162px] sm:w-[172px]'
-                  : 'w-[120px]'
+                  ? module.actions?.length === 4
+                    ? 'h-[64px] w-[252px] sm:h-[64px] sm:w-[272px]'
+                    : module.actions?.length === 3
+                      ? 'h-[64px] w-[198px] sm:w-[210px]'
+                      : 'h-[64px] w-[162px] sm:w-[172px]'
+                  : module.name === 'Product'
+                    ? 'h-[64px] w-[156px] sm:w-[172px]'
+                    : 'h-[64px] w-[120px]'
               }`}
             >
               <div
@@ -281,14 +375,25 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                 {module.name}
               </div>
               <div
-                className={`flex gap-0 p-1 ${module.actions?.length === 3 ? 'flex-nowrap' : 'flex-wrap'}`}
+                className={`flex gap-0 p-1 ${
+                  module.actions?.length === 3 ||
+                  module.actions?.length === 4 ||
+                  module.name === 'Product'
+                    ? 'flex-nowrap'
+                    : 'flex-wrap'
+                }`}
               >
                 {module.actions.map((action) => {
-                  const makeBlack = ['List'].includes(action.label);
+                  const makeBlack = ['List', 'Debit list', 'Credit list', 'Income list', 'Expense list'].includes(
+                    action.label,
+                  );
                   const isSelected =
                     selectedAction.module === module.name &&
                     selectedAction.action === action.label;
-                  const threeCol = module.actions?.length === 3;
+                  const oneRow =
+                    module.actions?.length === 3 ||
+                    module.actions?.length === 4 ||
+                    module.name === 'Product';
 
                   return (
                     <button
@@ -296,7 +401,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                       type="button"
                       onClick={() => handleActionClick(module.name, action.label)}
                       className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0 p-0 ${
-                        threeCol ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
+                        oneRow ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
                       }`}
                     >
                       <img

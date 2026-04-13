@@ -489,7 +489,7 @@ export default function PurchaseVoucherEntry() {
         <div className="shrink-0">
           <DateInputField label="Expense date" value={expenseDate} onChange={setExpenseDate} />
         </div>
-        <div className="flex shrink-0 items-end">
+        <div className="ml-auto flex shrink-0 items-end">
           <button
             type="button"
             onClick={handleAdd}
