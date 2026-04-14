@@ -11,7 +11,9 @@ export default function Switch({ checked, onChange, description, disabled, id, s
 
   return (
     <label
-      className={`inline-flex cursor-pointer select-none items-center ${isSm || isXs ? 'gap-1.5' : 'gap-2'}`}
+      className={`inline-flex cursor-pointer select-none items-center outline-none focus-within:outline-none ${
+        isXs ? 'gap-1' : isSm ? 'gap-1.5' : 'gap-2'
+      }`}
       htmlFor={inputId}
       style={{ opacity: disabled ? 0.6 : 1 }}
     >

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { colors } from '../../shared/constants/theme';
 
 import DashboardIcon from '../../shared/assets/icons/dashboard.svg';
+import HomeIcon from '../../shared/assets/icons/home.svg';
 import DataEntryIcon from '../../shared/assets/icons/data-entry (2) 2.svg';
 import ListIcon from '../../shared/assets/icons/list.svg';
 import StockIcon from '../../shared/assets/icons/stock-hub.svg';
@@ -22,6 +23,10 @@ import VendorIcon from '../../shared/assets/icons/vendor.svg';
 import ProductEntryIcon from '../../shared/assets/icons/stock-hub.svg';
 import ProductListIcon from '../../shared/assets/icons/ProductIcon.svg';
 import ProductPriceListIcon from '../../shared/assets/icons/pricing.svg';
+import StockAdjustmentIcon from '../../shared/assets/icons/refresh.svg';
+import DamageEntryIcon from '../../shared/assets/icons/cancel.svg';
+import AdditionalStockIcon from '../../shared/assets/icons/post.svg';
+import ProductMovementIcon from '../../shared/assets/icons/product-movement.svg';
 import CustomerListIcon from '../../shared/assets/icons/receipt_cutomer.svg';
 import SupplierListIcon from '../../shared/assets/icons/invoice.svg';
 import AgentListIcon from '../../shared/assets/icons/proforma.svg';
@@ -33,6 +38,7 @@ const SIDEBAR_WIDTH = 200;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true },
+  { label: 'Home', icon: HomeIcon, to: '/home', exact: true },
   {
     label: 'Data Entry',
     icon: DataEntryIcon,
@@ -53,7 +59,16 @@ const menuItems = [
       { label: 'Agent list', to: '/lists/agent-list', icon: AgentListIcon },
     ],
   },
-  { label: 'Stock Hub', to: '/stock-hub', icon: StockIcon },
+  {
+    label: 'Stock Hub',
+    icon: StockIcon,
+    subItems: [
+      { label: 'Stock Adjustment', to: '/stock-hub/stock-adjustment', icon: StockAdjustmentIcon },
+      { label: 'Damage entry', to: '/stock-hub/damage-entry', icon: DamageEntryIcon },
+      { label: 'Additional stock entry', to: '/stock-hub/additional-stock-entry', icon: AdditionalStockIcon },
+      { label: 'Product movement', to: '/stock-hub/product-movement', icon: ProductMovementIcon },
+    ],
+  },
   { label: 'Exchange Hub', to: '/exchange-hub', icon: ExchangeIcon },
   { label: 'Sales Activities', to: '/delivery-order', icon: SalesIcon },
   { label: 'Procurement', to: '/procurement', icon: ProcurementIcon },
@@ -71,7 +86,7 @@ const menuItems = [
 export default function Sidebar() {
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({ List: true });
+  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false });
 
   useEffect(() => {
     const onListSection =
@@ -81,6 +96,9 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/data-entry/')) {
       setOpenMenus((prev) => ({ ...prev, 'Data Entry': true }));
+    }
+    if (location.pathname.startsWith('/stock-hub')) {
+      setOpenMenus((prev) => ({ ...prev, 'Stock Hub': true }));
     }
   }, [location.pathname]);
 
@@ -149,7 +167,11 @@ export default function Sidebar() {
                     }`
                   }
                 >
-                  <img src={item.icon} alt="" className="w-4 h-4" />
+                  <img
+                    src={item.icon}
+                    alt=""
+                    className={`w-4 h-4 ${item.label === 'Home' ? 'filter brightness-0 invert' : ''}`.trim()}
+                  />
                   <span>{item.label}</span>
                 </NavLink>
               )}
@@ -174,7 +196,8 @@ export default function Sidebar() {
                         className={`w-4 h-4 ${
                           sub.label === 'Supplier entry' ||
                           sub.label === 'Product entry' ||
-                          item.label === 'List'
+                          item.label === 'List' ||
+                          item.label === 'Stock Hub'
                             ? 'filter brightness-0 invert'
                             : ''
                         }`.trim()}

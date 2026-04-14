@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './modules/backoffice/pages/Dashboard';
+import Home from './modules/backoffice/pages/Home';
 import ProductList from './modules/backoffice/pages/ProductList';
 import Sale from './modules/backoffice/pages/Sale';
 import SalesList from './modules/backoffice/pages/SalesList';
@@ -42,12 +43,17 @@ import CustomerList from './modules/backoffice/pages/CustomerList';
 import SupplierList from './modules/backoffice/pages/SupplierList';
 import AgentList from './modules/backoffice/pages/AgentList';
 import ListPlaceholderPage from './modules/backoffice/pages/ListPlaceholderPage';
+import DamageEntry from './modules/backoffice/pages/DamageEntry';
+import ProductMovement from './modules/backoffice/pages/ProductMovement';
+import AdditionalStockEntry from './modules/backoffice/pages/AdditionalStockEntry';
+import StockAdjustment from './modules/backoffice/pages/StockAdjustment';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/products" element={<ProductList />} />
       <Route path="/sales" element={<Sale />} />
       <Route path="/sales-list" element={<SalesList />} />
@@ -93,6 +99,11 @@ export default function AppRoutes() {
       <Route path="/lists/customer-list" element={<CustomerList />} />
       <Route path="/lists/supplier-list" element={<SupplierList />} />
       <Route path="/lists/agent-list" element={<AgentList />} />
+      <Route path="/stock-hub" element={<Navigate to="/stock-hub/stock-adjustment" replace />} />
+      <Route path="/stock-hub/stock-adjustment" element={<StockAdjustment />} />
+      <Route path="/stock-hub/damage-entry" element={<DamageEntry />} />
+      <Route path="/stock-hub/additional-stock-entry" element={<AdditionalStockEntry />} />
+      <Route path="/stock-hub/product-movement" element={<ProductMovement />} />
       <Route
         path="*"
         element={
