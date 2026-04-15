@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <!-- Price tag + pen stroke -->
+  <path d="M15 3.5 20.5 9 10.5 19 4.5 13a2.5 2.5 0 0 1 0-3.54l5-5A2.5 2.5 0 0 1 15 3.5Z" stroke="#262626" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="11.5" cy="8.5" r="1.4" fill="#262626"/>
+  <circle cx="9.5" cy="10.2" r="1" stroke="#262626" stroke-width="1.15" fill="none"/>
+  <circle cx="12.5" cy="12.8" r="1" stroke="#262626" stroke-width="1.15" fill="none"/>
+  <path d="M10.2 11.6 11.8 10" stroke="#262626" stroke-width="1.15" stroke-linecap="round"/>
+  <path d="M16 14.5l3.5 3.5M18 16.5l2-2" stroke="#262626" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

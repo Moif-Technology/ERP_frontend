@@ -24,6 +24,16 @@ import ProductEntryIcon from '../../shared/assets/icons/stock-hub.svg';
 import ProductListIcon from '../../shared/assets/icons/ProductIcon.svg';
 import ProductPriceListIcon from '../../shared/assets/icons/pricing.svg';
 import StockAdjustmentIcon from '../../shared/assets/icons/refresh.svg';
+import StockAdjustmentListIcon from '../../shared/assets/icons/stock-adjustment-list.svg';
+import ReorderListIcon from '../../shared/assets/icons/reorder-list.svg';
+import DiscountEntryIcon from '../../shared/assets/icons/deals-discount-entry.svg';
+import DiscountViewerIcon from '../../shared/assets/icons/deals-discount-viewer.svg';
+import GiftVoucherSettingsIcon from '../../shared/assets/icons/deals-gift-voucher-settings.svg';
+import GiftVoucherViewerIcon from '../../shared/assets/icons/deals-gift-voucher-viewer.svg';
+import OfferPacketCreationIcon from '../../shared/assets/icons/deals-offer-packet-creation.svg';
+import OfferPackingEntryIcon from '../../shared/assets/icons/deals-offer-packing-entry.svg';
+import OfferUnpackingEntryIcon from '../../shared/assets/icons/deals-offer-unpacking-entry.svg';
+import OfferPacketListIcon from '../../shared/assets/icons/deals-offer-packet-list.svg';
 import DamageEntryIcon from '../../shared/assets/icons/cancel.svg';
 import AdditionalStockIcon from '../../shared/assets/icons/post.svg';
 import ProductMovementIcon from '../../shared/assets/icons/product-movement.svg';
@@ -63,6 +73,8 @@ const menuItems = [
     label: 'Stock Hub',
     icon: StockIcon,
     subItems: [
+      { label: 'Stock Adjustment list', to: '/stock-hub/stock-adjustment-list', icon: StockAdjustmentListIcon },
+      { label: 'Reorder list', to: '/stock-hub/reorder-list', icon: ReorderListIcon },
       { label: 'Stock Adjustment', to: '/stock-hub/stock-adjustment', icon: StockAdjustmentIcon },
       { label: 'Damage entry', to: '/stock-hub/damage-entry', icon: DamageEntryIcon },
       { label: 'Additional stock entry', to: '/stock-hub/additional-stock-entry', icon: AdditionalStockIcon },
@@ -74,7 +86,20 @@ const menuItems = [
   { label: 'Procurement', to: '/procurement', icon: ProcurementIcon },
   { label: 'Financials', to: '/financials', icon: FinancialsIcon },
   { label: 'Manufacturing', to: '/manufacturing', icon: ManufacturingIcon },
-  { label: 'Deals & Offers', to: '/deals-offers', icon: DealsIcon },
+  {
+    label: 'Deals & Offers',
+    icon: DealsIcon,
+    subItems: [
+      { label: 'Discount entry', to: '/deals-offers/discount-entry', icon: DiscountEntryIcon },
+      { label: 'Discount viewer', to: '/deals-offers/discount-viewer', icon: DiscountViewerIcon },
+      { label: 'Gift Voucher Settings', to: '/deals-offers/gift-voucher-settings', icon: GiftVoucherSettingsIcon },
+      { label: 'Gift Voucher Viewer', to: '/deals-offers/gift-voucher-viewer', icon: GiftVoucherViewerIcon },
+      { label: 'Offer Packet Creation', to: '/deals-offers/offer-packet-creation', icon: OfferPacketCreationIcon },
+      { label: 'Offer Packing Entry', to: '/deals-offers/offer-packing-entry', icon: OfferPackingEntryIcon },
+      { label: 'Offer Unpacking Entry', to: '/deals-offers/offer-unpacking-entry', icon: OfferUnpackingEntryIcon },
+      { label: 'Offer Packet List', to: '/deals-offers/offer-packet-list', icon: OfferPacketListIcon },
+    ],
+  },
   { label: 'Logistics', to: '/logistics', icon: LogisticsIcon },
   { label: 'Point of Sale', to: '/point-of-sale', icon: POSIcon },
   { label: 'Reports', to: '/reports', icon: ReportsIcon },
@@ -86,7 +111,7 @@ const menuItems = [
 export default function Sidebar() {
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false });
+  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false });
 
   useEffect(() => {
     const onListSection =
@@ -99,6 +124,9 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/stock-hub')) {
       setOpenMenus((prev) => ({ ...prev, 'Stock Hub': true }));
+    }
+    if (location.pathname.startsWith('/deals-offers')) {
+      setOpenMenus((prev) => ({ ...prev, 'Deals & Offers': true }));
     }
   }, [location.pathname]);
 
@@ -197,7 +225,8 @@ export default function Sidebar() {
                           sub.label === 'Supplier entry' ||
                           sub.label === 'Product entry' ||
                           item.label === 'List' ||
-                          item.label === 'Stock Hub'
+                          item.label === 'Stock Hub' ||
+                          item.label === 'Deals & Offers'
                             ? 'filter brightness-0 invert'
                             : ''
                         }`.trim()}
