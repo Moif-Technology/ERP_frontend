@@ -21,18 +21,18 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 /** Sl No · Barcode · Short Description · Packet Description · Present Qty · Sell Price · Date From · Date. To · Action */
 const LINE_COL_PCT = [5, 11, 14, 13, 8, 11, 12, 12, 14];
 
-const discountEntryTableHeaders = [
-  <span key="de-h-sl" className="inline-block w-full leading-[1.15]">
+const giftVoucherTableHeaders = [
+  <span key="gv-h-sl" className="inline-block w-full leading-[1.15]">
     <span className="block">Sl</span>
     <span className="block">No</span>
   </span>,
   'Barcode',
   'Short Description',
-  <span key="de-h-pkt" className="inline-block w-full leading-[1.15]">
+  <span key="gv-h-pkt" className="inline-block w-full leading-[1.15]">
     <span className="block">Packet</span>
     <span className="block">Description</span>
   </span>,
-  <span key="de-h-qty" className="inline-block w-full leading-[1.15]">
+  <span key="gv-h-qty" className="inline-block w-full leading-[1.15]">
     <span className="block">Present</span>
     <span className="block">Qty</span>
   </span>,
@@ -56,13 +56,13 @@ function addDaysIsoDate(ymd, days) {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 }
 
-function buildDummyDiscountLines(count) {
+function buildDummyGiftVoucherLines(count) {
   const items = [
-    ['8901234500012', 'Mango juice 1L'],
-    ['8901234500023', 'Mineral water 500ml'],
-    ['8901234500034', 'Snack mix 200g'],
-    ['8901234500045', 'Cooking oil 2L'],
-    ['8901234500056', 'Rice 5kg'],
+    ['GV-2026-001', 'Retail gift card 50'],
+    ['GV-2026-002', 'Promo voucher 25'],
+    ['GV-2026-003', 'Birthday bundle 100'],
+    ['GV-2026-004', 'Corporate pack 500'],
+    ['GV-2026-005', 'Loyalty reward 15'],
   ];
   const rows = [];
   for (let i = 0; i < count; i += 1) {
@@ -78,7 +78,7 @@ function buildDummyDiscountLines(count) {
     const disSell = (Number(sell) - Number(disP)).toFixed(2);
     const pct = 5 + (i * 7) % 25;
     rows.push({
-      id: `de-${i + 1}`,
+      id: `gv-${i + 1}`,
       barcode: bc,
       shortDescription: desc,
       packetDescription: `${pkt} / ${i % 2 === 0 ? 'Carton' : 'Pack'}`,
@@ -94,7 +94,7 @@ function buildDummyDiscountLines(count) {
   return rows;
 }
 
-const DUMMY_LINES = buildDummyDiscountLines(20);
+const DUMMY_LINES = buildDummyGiftVoucherLines(20);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -153,7 +153,7 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-export default function DiscountEntry() {
+export default function GiftVoucherSettings() {
   const [tableData, setTableData] = useState(() => DUMMY_LINES.map((r) => ({ ...r })));
 
   const [supplier, setSupplier] = useState('');
@@ -194,7 +194,7 @@ export default function DiscountEntry() {
     const packetDescription =
       [pktQty, pktDetails].filter((x) => String(x ?? '').trim() !== '').join(' / ') || '—';
     const sellVal = sellingPrice.trim() !== '' ? sellingPrice.trim() : '0.00';
-    const id = `de-${Date.now()}`;
+    const id = `gv-${Date.now()}`;
     setTableData((prev) => [
       {
         id,
@@ -297,7 +297,7 @@ export default function DiscountEntry() {
 
   const handleDeleteDocument = useCallback(() => {
     // eslint-disable-next-line no-console
-    console.log('Delete discount entry');
+    console.log('Delete gift voucher settings');
     setTableData([]);
     setSupplier('');
     setProductBrand('');
@@ -425,7 +425,7 @@ export default function DiscountEntry() {
     () => [
       {
         content: (
-          <div key="de-total" className="text-left font-bold">
+          <div key="gv-total" className="text-left font-bold">
             Total
           </div>
         ),
@@ -459,7 +459,7 @@ export default function DiscountEntry() {
           className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          DISCOUNT ENTRY
+          GIFT VOUCHER SETTINGS
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -469,7 +469,7 @@ export default function DiscountEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete discount document"
+            aria-label="Delete gift voucher settings document"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -479,10 +479,10 @@ export default function DiscountEntry() {
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
             onClick={handleNewDocument}
-            aria-label="New discount entry"
+            aria-label="New gift voucher settings"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden min-[420px]:inline">New Discount Entry</span>
+            <span className="hidden min-[420px]:inline">New Gift Voucher Settings</span>
             <span className="min-[420px]:hidden">New</span>
           </button>
         </div>
@@ -524,7 +524,7 @@ export default function DiscountEntry() {
             </button>
             <QuotationDateRangeModal
               open={dateModalOpen}
-              title="Discount date"
+              title="Gift voucher validity"
               initialRange={appliedDiscountDateRange}
               onClose={() => setDateModalOpen(false)}
               onApply={(range) => setAppliedDiscountDateRange(range)}
@@ -588,7 +588,7 @@ export default function DiscountEntry() {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="discount-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="gift-voucher-settings-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
@@ -603,7 +603,7 @@ export default function DiscountEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={discountEntryTableHeaders}
+          headers={giftVoucherTableHeaders}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -696,7 +696,7 @@ export default function DiscountEntry() {
           onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="de-line-detail-title"
+          aria-labelledby="gv-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -712,8 +712,8 @@ export default function DiscountEntry() {
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
-            <h2 id="de-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>
-              Line detail
+            <h2 id="gv-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>
+              Gift voucher line
             </h2>
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
               <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />

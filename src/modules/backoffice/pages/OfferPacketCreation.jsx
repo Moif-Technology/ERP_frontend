@@ -1,53 +1,35 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import { DropdownInput, InputField, SubInputField } from '../../../shared/components/ui';
+import { InputField, SubInputField } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
 const primary = colors.primary?.main || '#790728';
 
-const SUPPLIERS = ['Gulf Supplies LLC', 'Metro Traders', 'Prime Vendors Co.', 'Alpha Dist.', 'Walk-in vendor'];
-const PRODUCT_BRANDS = ['Nova', 'Vertex', 'Apex', 'Pulse', 'Zenith'];
-const GROUPS = ['Grocery', 'Beverages', 'Household', 'Electronics', 'Personal care'];
-const SUB_GROUPS = ['Chilled', 'Ambient', 'Frozen', 'Snacks', 'Beverages cold', 'Core range'];
-
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Sl No · Barcode · Short Description · Packet Description · Present Qty · Sell Price · Date From · Date. To · Action */
-const LINE_COL_PCT = [5, 11, 14, 13, 8, 11, 12, 12, 14];
+/** Sl. no · Barcode · Short description · Unit · Unit cost · Unit price · Qty · Packet qty · Total cost · Toatal price · Action */
+const LINE_COL_PCT = [5, 10, 15, 8, 8, 8, 7, 8, 10, 10, 11];
 
-const discountEntryTableHeaders = [
-  <span key="de-h-sl" className="inline-block w-full leading-[1.15]">
-    <span className="block">Sl</span>
-    <span className="block">No</span>
-  </span>,
+const offerPacketCreationTableHeaders = [
+  'Sl. no',
   'Barcode',
-  'Short Description',
-  <span key="de-h-pkt" className="inline-block w-full leading-[1.15]">
-    <span className="block">Packet</span>
-    <span className="block">Description</span>
-  </span>,
-  <span key="de-h-qty" className="inline-block w-full leading-[1.15]">
-    <span className="block">Present</span>
-    <span className="block">Qty</span>
-  </span>,
-  'Sell Price',
-  'Date From',
-  'Date. To',
+  'Short description',
+  'Unit',
+  'Unit cost',
+  'Unit price',
+  'Qty',
+  'Packet qty',
+  'Total cost',
+  'Toatal price',
   'Action',
 ];
 
-function formatDateDisplay(dateValue) {
-  if (!dateValue) return '—';
-  const [year, month, day] = String(dateValue).split('-');
-  if (!year || !month || !day) return dateValue;
-  return `${day}/${month}/${year}`;
-}
+const actionIconBtn =
+  'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
 
 function addDaysIsoDate(ymd, days) {
   if (!ymd || String(ymd).split('-').length !== 3) return '';
@@ -56,7 +38,7 @@ function addDaysIsoDate(ymd, days) {
   return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 }
 
-function buildDummyDiscountLines(count) {
+function buildDummyOfferPacketLines(count) {
   const items = [
     ['8901234500012', 'Mango juice 1L'],
     ['8901234500023', 'Mineral water 500ml'],
@@ -77,16 +59,33 @@ function buildDummyDiscountLines(count) {
     const disP = (2.5 + ((i * 3) % 15)).toFixed(2);
     const disSell = (Number(sell) - Number(disP)).toFixed(2);
     const pct = 5 + (i * 7) % 25;
+    const qty = String(12 + (i * 11) % 180);
+    const unit = i % 2 === 0 ? 'Carton' : 'Each';
+    const uc = (2.5 + (i % 5)).toFixed(2);
+    const up = (Number(sell) / (Number(qty) || 1)).toFixed(2);
     rows.push({
-      id: `de-${i + 1}`,
+      id: `opc-${i + 1}`,
       barcode: bc,
+      description: `${desc} — full line text`,
       shortDescription: desc,
-      packetDescription: `${pkt} / ${i % 2 === 0 ? 'Carton' : 'Pack'}`,
-      presentQty: String(12 + (i * 11) % 180),
+      supplierName: 'Gulf Supplies LLC',
+      productBrand: 'Nova',
+      group: 'Grocery',
+      unit,
+      unitCost: uc,
+      unitPrice: up,
+      qty,
+      packetQty: String(pkt),
+      totalCost: (Number(uc) * Number(qty)).toFixed(2),
+      totalPrice: sell,
+      packetDescription: `${unit} / pkt ${pkt}`,
+      presentQty: qty,
       sellPrice: sell,
       disPrice: disP,
       disSellPrice: disSell,
       discPct: String(pct),
+      profitPct: String(pct),
+      remark: i % 3 === 0 ? 'Promo bundle' : '',
       discFrom,
       discTo,
     });
@@ -94,27 +93,12 @@ function buildDummyDiscountLines(count) {
   return rows;
 }
 
-const DUMMY_LINES = buildDummyDiscountLines(20);
+const DUMMY_LINES = buildDummyOfferPacketLines(20);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
 const figmaToolbarBtn =
   `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
-
-function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function dateToIsoYMD(d) {
-  if (!d) return '';
-  const dt = d instanceof Date ? d : new Date(d);
-  if (Number.isNaN(dt.getTime())) return '';
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-}
 
 const primaryToolbarBtn =
   'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
@@ -126,9 +110,6 @@ function PlusIcon({ className }) {
     </svg>
   );
 }
-
-const actionIconBtn =
-  'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
 
 const tableCellInputClass =
   'box-border w-full min-w-0 max-w-full rounded border border-gray-200 bg-white px-1 py-0.5 text-center text-[clamp(8px,1vw,10px)] outline-none focus:border-gray-400 sm:px-1.5';
@@ -153,22 +134,27 @@ function useViewportMaxWidth(maxPx) {
   return matches;
 }
 
-export default function DiscountEntry() {
+export default function OfferPacketCreation() {
   const [tableData, setTableData] = useState(() => DUMMY_LINES.map((r) => ({ ...r })));
 
-  const [supplier, setSupplier] = useState('');
+  /** First strip — copy into Offer packet details on APPLY */
+  const [headerBarcode, setHeaderBarcode] = useState('');
+  const [headerDescription, setHeaderDescription] = useState('');
+  const [headerShortDescription, setHeaderShortDescription] = useState('');
+  const [headerSupplierName, setHeaderSupplierName] = useState('');
+  const [headerProductBrand, setHeaderProductBrand] = useState('');
+
+  /** Offer packet details strip + table APPLY */
+  const [barcode, setBarcode] = useState('');
+  const [description, setDescription] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
+  const [supplierName, setSupplierName] = useState('');
   const [productBrand, setProductBrand] = useState('');
   const [group, setGroup] = useState('');
-  const [subGroup, setSubGroup] = useState('');
-  const [dateModalOpen, setDateModalOpen] = useState(false);
-  const [appliedDiscountDateRange, setAppliedDiscountDateRange] = useState(null);
-
-  const [barcode, setBarcode] = useState('');
-  const [shortDescription, setShortDescription] = useState('');
-  const [pktQty, setPktQty] = useState('');
-  const [pktDetails, setPktDetails] = useState('');
-  const [sellingPrice, setSellingPrice] = useState('');
-  const [productLines, setProductLines] = useState([]);
+  const [unitCost, setUnitCost] = useState('');
+  const [unitPrice, setUnitPrice] = useState('');
+  const [profitPct, setProfitPct] = useState('');
+  const [remark, setRemark] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -182,74 +168,114 @@ export default function DiscountEntry() {
     setTableData((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }, []);
 
-  const clearProductLineForm = useCallback(() => {
+  const clearOfferPacketDetailsForm = useCallback(() => {
     setBarcode('');
+    setDescription('');
     setShortDescription('');
-    setPktQty('');
-    setPktDetails('');
-    setSellingPrice('');
+    setSupplierName('');
+    setProductBrand('');
+    setGroup('');
+    setUnitCost('');
+    setUnitPrice('');
+    setProfitPct('');
+    setRemark('');
   }, []);
 
+  const clearHeaderStripForm = useCallback(() => {
+    setHeaderBarcode('');
+    setHeaderDescription('');
+    setHeaderShortDescription('');
+    setHeaderSupplierName('');
+    setHeaderProductBrand('');
+  }, []);
+
+  /** Prefill Offer packet details from the first strip */
+  const handleHeaderApply = useCallback(() => {
+    setBarcode(headerBarcode.trim());
+    setDescription(headerDescription.trim());
+    setShortDescription(headerShortDescription.trim());
+    setSupplierName(headerSupplierName.trim());
+    setProductBrand(headerProductBrand.trim());
+    clearHeaderStripForm();
+  }, [
+    headerBarcode,
+    headerDescription,
+    headerShortDescription,
+    headerSupplierName,
+    headerProductBrand,
+    clearHeaderStripForm,
+  ]);
+
   const handleApplyLine = useCallback(() => {
-    const packetDescription =
-      [pktQty, pktDetails].filter((x) => String(x ?? '').trim() !== '').join(' / ') || '—';
-    const sellVal = sellingPrice.trim() !== '' ? sellingPrice.trim() : '0.00';
-    const id = `de-${Date.now()}`;
+    const qtyVal = '1';
+    const pq = '0';
+    const ucNum = parseAmount(unitCost);
+    const upNum = parseAmount(unitPrice);
+    const q = Number.parseInt(qtyVal, 10) || 1;
+    const totalCostVal = (ucNum * q).toFixed(2);
+    const totalPriceVal = (upNum * q).toFixed(2);
+    const packetDescription = '—';
+    const id = `opc-${Date.now()}`;
     setTableData((prev) => [
       {
         id,
         barcode: barcode.trim(),
+        description: description.trim(),
         shortDescription: shortDescription.trim(),
+        supplierName: supplierName.trim(),
+        productBrand: productBrand.trim(),
+        group: group.trim(),
+        unit: '',
+        unitCost: unitCost.trim(),
+        unitPrice: unitPrice.trim(),
+        profitPct: profitPct.trim(),
+        remark: remark.trim(),
+        qty: qtyVal,
+        packetQty: pq,
+        totalCost: totalCostVal,
+        totalPrice: totalPriceVal,
         packetDescription,
-        presentQty: pktQty.trim() !== '' ? pktQty : '0',
-        sellPrice: sellVal,
+        presentQty: qtyVal,
+        sellPrice: totalPriceVal,
         disPrice: '0.00',
-        disSellPrice: sellVal,
-        discPct: '0',
-        discFrom: appliedDiscountDateRange ? dateToIsoYMD(appliedDiscountDateRange.from) : '',
-        discTo: appliedDiscountDateRange ? dateToIsoYMD(appliedDiscountDateRange.to) : '',
+        disSellPrice: totalPriceVal,
+        discPct: profitPct.trim() !== '' ? profitPct.trim() : '0',
+        discFrom: '',
+        discTo: '',
       },
       ...prev,
     ]);
     setPage(1);
-    setSupplier('');
-    setProductBrand('');
-    setGroup('');
-    setSubGroup('');
-    setAppliedDiscountDateRange(null);
-    clearProductLineForm();
+    clearOfferPacketDetailsForm();
   }, [
-    appliedDiscountDateRange,
     barcode,
+    description,
     shortDescription,
-    pktQty,
-    pktDetails,
-    sellingPrice,
-    clearProductLineForm,
+    supplierName,
+    productBrand,
+    group,
+    unitCost,
+    unitPrice,
+    profitPct,
+    remark,
+    clearOfferPacketDetailsForm,
   ]);
 
-  const handleAddProductLine = useCallback(() => {
-    const id = `pl-${Date.now()}`;
-    setProductLines((prev) => [
-      {
-        id,
-        barcode,
-        shortDescription,
-        pktQty: pktQty.trim() !== '' ? pktQty : '0',
-        pktDetails,
-        sellingPrice: sellingPrice.trim() !== '' ? sellingPrice : '0.00',
-      },
-      ...prev,
-    ]);
-    clearProductLineForm();
-  }, [
-    barcode,
-    shortDescription,
-    pktQty,
-    pktDetails,
-    sellingPrice,
-    clearProductLineForm,
-  ]);
+  const handleDeleteDocument = useCallback(() => {
+    // eslint-disable-next-line no-console
+    console.log('Delete offer packet creation');
+    setTableData([]);
+    clearHeaderStripForm();
+    clearOfferPacketDetailsForm();
+    setPage(1);
+  }, [clearHeaderStripForm, clearOfferPacketDetailsForm]);
+
+  const handleNewDocument = useCallback(() => {
+    setTableData([]);
+    clearHeaderStripForm();
+    clearOfferPacketDetailsForm();
+    setPage(1);
+  }, [clearHeaderStripForm, clearOfferPacketDetailsForm]);
 
   const handleViewLine = useCallback((id) => {
     setEditingRowId(null);
@@ -267,7 +293,20 @@ export default function DiscountEntry() {
     setEditingRowId((cur) => (cur === id ? null : cur));
   }, []);
 
-  const closeDetailModal = useCallback(() => setDetailRowId(null), []);
+  const totalFiltered = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
+
+  useEffect(() => {
+    setPage((p) => Math.min(Math.max(1, p), totalPages));
+  }, [totalPages]);
+
+  const paginatedRows = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, page, pageSize]);
+
+  const rangeStart = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
   const detailRow = useMemo(
     () => (detailRowId ? filteredRows.find((r) => r.id === detailRowId) : null),
@@ -295,61 +334,18 @@ export default function DiscountEntry() {
     return () => window.removeEventListener('keydown', onKey);
   }, [detailRowId]);
 
-  const handleDeleteDocument = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('Delete discount entry');
-    setTableData([]);
-    setSupplier('');
-    setProductBrand('');
-    setGroup('');
-    setSubGroup('');
-    setAppliedDiscountDateRange(null);
-    setDateModalOpen(false);
-    setProductLines([]);
-    clearProductLineForm();
-    setPage(1);
-    setEditingRowId(null);
-    setDetailRowId(null);
-  }, [clearProductLineForm]);
-
-  const handleNewDocument = useCallback(() => {
-    setTableData([]);
-    setSupplier('');
-    setProductBrand('');
-    setGroup('');
-    setSubGroup('');
-    setAppliedDiscountDateRange(null);
-    setDateModalOpen(false);
-    setProductLines([]);
-    clearProductLineForm();
-    setPage(1);
-    setEditingRowId(null);
-    setDetailRowId(null);
-  }, [clearProductLineForm]);
-
-  const totalFiltered = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
-
-  useEffect(() => {
-    setPage((p) => Math.min(Math.max(1, p), totalPages));
-  }, [totalPages]);
-
-  const paginatedRows = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredRows.slice(start, start + pageSize);
-  }, [filteredRows, page, pageSize]);
-
-  const rangeStart = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeEnd = Math.min(page * pageSize, totalFiltered);
-
   const tableTotals = useMemo(() => {
-    let presentQty = 0;
-    let sellPrice = 0;
+    let qtySum = 0;
+    let packetQtySum = 0;
+    let totalCostSum = 0;
+    let totalPriceSum = 0;
     for (const r of filteredRows) {
-      presentQty += Number.parseInt(String(r.presentQty ?? '0'), 10) || 0;
-      sellPrice += parseAmount(r.sellPrice);
+      qtySum += parseAmount(r.qty ?? r.presentQty);
+      packetQtySum += parseAmount(r.packetQty);
+      totalCostSum += parseAmount(r.totalCost);
+      totalPriceSum += parseAmount(r.totalPrice ?? r.sellPrice);
     }
-    return { presentQty, sellPrice };
+    return { qtySum, packetQtySum, totalCostSum, totalPriceSum };
   }, [filteredRows]);
 
   const tableBodyRows = useMemo(() => {
@@ -357,7 +353,7 @@ export default function DiscountEntry() {
       const displaySl = (page - 1) * pageSize + idx + 1;
       const rowIsEditing = editingRowId === r.id;
 
-      const textInput = (key, field, aria) =>
+      const cellInput = (key, field, aria) =>
         rowIsEditing ? (
           <input
             key={key}
@@ -371,49 +367,65 @@ export default function DiscountEntry() {
           r[field] ?? ''
         );
 
-      const dateCellFrom = rowIsEditing ? (
-        <input
-          key={`df-${r.id}`}
-          type="date"
-          className={tableCellInputClass}
-          value={r.discFrom || ''}
-          onChange={(e) => updateLine(r.id, { discFrom: e.target.value })}
-          aria-label="Date from"
-        />
-      ) : (
-        formatDateDisplay(r.discFrom)
-      );
-
-      const dateCellTo = rowIsEditing ? (
-        <input
-          key={`dt-${r.id}`}
-          type="date"
-          className={tableCellInputClass}
-          value={r.discTo || ''}
-          onChange={(e) => updateLine(r.id, { discTo: e.target.value })}
-          aria-label="Date to"
-        />
-      ) : (
-        formatDateDisplay(r.discTo)
-      );
+      const qtyVal = String(r.qty ?? r.presentQty ?? '');
+      const totalPriceVal = String(r.totalPrice ?? r.sellPrice ?? '');
 
       return [
         displaySl,
-        textInput(`bc-${r.id}`, 'barcode', 'Barcode'),
-        textInput(`sd-${r.id}`, 'shortDescription', 'Short description'),
-        textInput(`pd-${r.id}`, 'packetDescription', 'Packet description'),
-        textInput(`pq-${r.id}`, 'presentQty', 'Present quantity'),
-        textInput(`sp-${r.id}`, 'sellPrice', 'Sell price'),
-        dateCellFrom,
-        dateCellTo,
+        cellInput(`bc-${r.id}`, 'barcode', 'Barcode'),
+        cellInput(`sd-${r.id}`, 'shortDescription', 'Short description'),
+        cellInput(`un-${r.id}`, 'unit', 'Unit'),
+        cellInput(`uc-${r.id}`, 'unitCost', 'Unit cost'),
+        cellInput(`up-${r.id}`, 'unitPrice', 'Unit price'),
+        rowIsEditing ? (
+          <input
+            key={`qy-${r.id}`}
+            type="text"
+            className={`${tableCellInputClass} text-left`}
+            value={qtyVal}
+            onChange={(e) => updateLine(r.id, { qty: e.target.value, presentQty: e.target.value })}
+            aria-label="Qty"
+          />
+        ) : (
+          qtyVal
+        ),
+        cellInput(`pkq-${r.id}`, 'packetQty', 'Packet qty'),
+        cellInput(`tc-${r.id}`, 'totalCost', 'Total cost'),
+        rowIsEditing ? (
+          <input
+            key={`tp-${r.id}`}
+            type="text"
+            className={`${tableCellInputClass} text-left`}
+            value={totalPriceVal}
+            onChange={(e) => updateLine(r.id, { totalPrice: e.target.value, sellPrice: e.target.value })}
+            aria-label="Total price"
+          />
+        ) : (
+          totalPriceVal
+        ),
         <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-          <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
+          <button
+            type="button"
+            className={actionIconBtn}
+            aria-label="View line"
+            onClick={() => handleViewLine(r.id)}
+          >
             <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
-          <button type="button" className={actionIconBtn} aria-label="Edit line" onClick={() => handleEditLine(r.id)}>
+          <button
+            type="button"
+            className={actionIconBtn}
+            aria-label="Edit line"
+            onClick={() => handleEditLine(r.id)}
+          >
             <img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
-          <button type="button" className={actionIconBtn} aria-label="Delete line" onClick={() => handleDeleteLine(r.id)}>
+          <button
+            type="button"
+            className={actionIconBtn}
+            aria-label="Delete line"
+            onClick={() => handleDeleteLine(r.id)}
+          >
             <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>,
@@ -425,17 +437,20 @@ export default function DiscountEntry() {
     () => [
       {
         content: (
-          <div key="de-total" className="text-left font-bold">
+          <div key="opc-total" className="text-left font-bold">
             Total
           </div>
         ),
-        colSpan: 4,
+        colSpan: 3,
         className: 'align-middle font-bold',
       },
-      tableTotals.presentQty.toLocaleString('en-US'),
-      tableTotals.sellPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      '—',
-      '—',
+      '',
+      '',
+      '',
+      tableTotals.qtySum.toLocaleString('en-US'),
+      tableTotals.packetQtySum.toLocaleString('en-US'),
+      tableTotals.totalCostSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      tableTotals.totalPriceSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       '',
     ],
     [tableTotals],
@@ -459,7 +474,7 @@ export default function DiscountEntry() {
           className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
           style={{ color: primary }}
         >
-          DISCOUNT ENTRY
+          OFFER PACKET CREATION
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -469,7 +484,7 @@ export default function DiscountEntry() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete discount document"
+            aria-label="Delete offer packet creation document"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
             Delete
@@ -479,10 +494,10 @@ export default function DiscountEntry() {
             className={primaryToolbarBtn}
             style={{ backgroundColor: primary, borderColor: primary }}
             onClick={handleNewDocument}
-            aria-label="New discount entry"
+            aria-label="New offer packet creation"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden min-[420px]:inline">New Discount Entry</span>
+            <span className="hidden min-[420px]:inline">New Offer Packet Creation</span>
             <span className="min-[420px]:hidden">New</span>
           </button>
         </div>
@@ -490,111 +505,157 @@ export default function DiscountEntry() {
 
       <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
         <div className="shrink-0">
-          <DropdownInput label="Supplier" value={supplier} onChange={setSupplier} options={SUPPLIERS} placeholder=" " />
+          <SubInputField label="barcode" value={headerBarcode} onChange={(e) => setHeaderBarcode(e.target.value)} placeholder="" />
+        </div>
+        <div className="shrink-0 min-w-0 sm:min-w-[8rem] sm:max-w-[14rem]">
+          <InputField
+            label="description"
+            value={headerDescription}
+            onChange={(e) => setHeaderDescription(e.target.value)}
+            placeholder=""
+            fullWidth
+          />
         </div>
         <div className="shrink-0">
-          <DropdownInput label="Product Brand" value={productBrand} onChange={setProductBrand} options={PRODUCT_BRANDS} placeholder=" " />
+          <InputField
+            label="short description"
+            value={headerShortDescription}
+            onChange={(e) => setHeaderShortDescription(e.target.value)}
+            placeholder=""
+            widthPx={120}
+          />
         </div>
-        <div className="shrink-0">
-          <DropdownInput label="Group" value={group} onChange={setGroup} options={GROUPS} placeholder=" " />
+        <div className="shrink-0 min-w-0 sm:min-w-[7rem] sm:max-w-[11rem]">
+          <InputField
+            label="supplier name"
+            value={headerSupplierName}
+            onChange={(e) => setHeaderSupplierName(e.target.value)}
+            placeholder=""
+            fullWidth
+          />
         </div>
-        <div className="shrink-0">
-          <DropdownInput label="Sub Group" value={subGroup} onChange={setSubGroup} options={SUB_GROUPS} placeholder=" " />
+        <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[10rem]">
+          <InputField
+            label="product brand"
+            value={headerProductBrand}
+            onChange={(e) => setHeaderProductBrand(e.target.value)}
+            placeholder=""
+            fullWidth
+          />
         </div>
-        <div className="shrink-0 min-w-[10.5rem] max-w-[15rem] sm:min-w-[11.5rem] sm:max-w-[16rem]">
-          <div className="relative flex min-w-0 w-full max-w-full flex-col gap-0.5">
-            <span className="text-[9px] font-semibold sm:text-[11px]" style={{ color: '#374151' }}>
-              Selected date
-            </span>
-            <button
-              type="button"
-              className={`${figmaToolbarBtn} box-border h-[26px] min-h-[26px] w-full`}
-              onClick={() => setDateModalOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={dateModalOpen}
-              aria-label="Selected date"
-            >
-              <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-left">
-                {appliedDiscountDateRange
-                  ? `${formatDDMMYYYY(appliedDiscountDateRange.from)} – ${formatDDMMYYYY(appliedDiscountDateRange.to)}`
-                  : 'Select Date'}
-              </span>
-              <ToolbarChevron />
-            </button>
-            <QuotationDateRangeModal
-              open={dateModalOpen}
-              title="Discount date"
-              initialRange={appliedDiscountDateRange}
-              onClose={() => setDateModalOpen(false)}
-              onApply={(range) => setAppliedDiscountDateRange(range)}
+        <button
+          type="button"
+          onClick={handleHeaderApply}
+          className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
+          style={{ backgroundColor: primary, borderColor: primary }}
+          aria-label="Apply header fields to offer packet details"
+        >
+          APPLY
+        </button>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-wide text-gray-700 sm:text-[11px]">Offer packet details</h3>
+        <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3">
+          <div className="shrink-0">
+            <SubInputField label="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="" />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[8rem] sm:max-w-[14rem]">
+            <InputField label="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="" fullWidth />
+          </div>
+          <div className="shrink-0">
+            <InputField
+              label="short description"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+              placeholder=""
+              widthPx={120}
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[7rem] sm:max-w-[11rem]">
+            <InputField
+              label="supplier name"
+              value={supplierName}
+              onChange={(e) => setSupplierName(e.target.value)}
+              placeholder=""
+              fullWidth
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[10rem]">
+            <InputField
+              label="product brand"
+              value={productBrand}
+              onChange={(e) => setProductBrand(e.target.value)}
+              placeholder=""
+              fullWidth
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[9rem]">
+            <InputField label="group" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="" fullWidth />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="unit cost"
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="unit price"
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="profit %"
+              value={profitPct}
+              onChange={(e) => setProfitPct(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
             />
           </div>
         </div>
-        <div className="ml-auto flex shrink-0 items-end">
+        <div className="flex min-w-0 w-full max-w-full flex-col gap-0.5 sm:w-[20rem] sm:max-w-[20rem]">
+          <label className="text-[9px] font-semibold leading-tight text-black sm:text-[11px]" style={{ color: '#374151' }}>
+            remark
+          </label>
+          <textarea
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            rows={3}
+            className="box-border min-h-[4.5rem] w-full max-w-full resize-y rounded border border-gray-200 bg-white px-2 py-1.5 text-[9px] outline-none focus:border-gray-400 sm:text-[10px]"
+            style={{ borderColor: '#e2e8f0' }}
+            placeholder=""
+          />
+        </div>
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={handleApplyLine}
             className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
             style={{ backgroundColor: primary, borderColor: primary }}
+            aria-label="Apply offer packet line to table"
           >
             APPLY
           </button>
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
-        <div className="shrink-0">
-          <SubInputField label="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="" />
-        </div>
-        <div className="shrink-0">
-          <InputField
-            label="short description"
-            value={shortDescription}
-            onChange={(e) => setShortDescription(e.target.value)}
-            placeholder=""
-            widthPx={140}
-          />
-        </div>
-        <div className="shrink-0">
-          <SubInputField label="pkt qty" value={pktQty} onChange={(e) => setPktQty(e.target.value)} placeholder="" inputMode="decimal" />
-        </div>
-        <div className="shrink-0">
-          <SubInputField
-            label="pkt. details"
-            value={pktDetails}
-            onChange={(e) => setPktDetails(e.target.value)}
-            placeholder=""
-          />
-        </div>
-        <div className="shrink-0">
-          <SubInputField
-            label="Selling price"
-            value={sellingPrice}
-            onChange={(e) => setSellingPrice(e.target.value)}
-            placeholder=""
-            inputMode="decimal"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleAddProductLine}
-          className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
-          style={{ backgroundColor: primary, borderColor: primary }}
-        >
-          Add
-        </button>
-      </div>
-
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
-          className="discount-entry-table flex min-h-0 min-w-0 flex-1 flex-col"
+          className="offer-packet-creation-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
           allowHorizontalScroll={isCompactTable}
           truncateHeader
-          truncateBody={editingRowId == null}
+          truncateBody={false}
           columnWidthPercents={LINE_COL_PCT}
-          tableClassName={isCompactTable ? 'min-w-[52rem] w-full' : 'min-w-0 w-full'}
+          tableClassName={isCompactTable ? 'min-w-[58rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.85vw, 10px)"
@@ -603,7 +664,7 @@ export default function DiscountEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={discountEntryTableHeaders}
+          headers={offerPacketCreationTableHeaders}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -693,10 +754,10 @@ export default function DiscountEntry() {
       {detailRowId && detailRow ? (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm"
-          onClick={closeDetailModal}
+          onClick={() => setDetailRowId(null)}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="de-line-detail-title"
+          aria-labelledby="opc-line-detail-title"
         >
           <div
             className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
@@ -705,29 +766,39 @@ export default function DiscountEntry() {
             <button
               type="button"
               className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              onClick={closeDetailModal}
+              onClick={() => setDetailRowId(null)}
               aria-label="Close line detail"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden>
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
-            <h2 id="de-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>
+
+            <h2 id="opc-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>
               Line detail
             </h2>
+
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
               <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
               <InputField label="Barcode" fullWidth readOnly value={detailRow.barcode ?? ''} />
+              <InputField label="Description" fullWidth readOnly value={detailRow.description ?? ''} />
               <InputField label="Short description" fullWidth readOnly value={detailRow.shortDescription ?? ''} />
-              <InputField label="Packet description" fullWidth readOnly value={detailRow.packetDescription ?? ''} />
-              <InputField label="Present qty" fullWidth readOnly value={detailRow.presentQty ?? ''} />
-              <InputField label="Sell price" fullWidth readOnly value={detailRow.sellPrice ?? ''} />
-              <InputField label="Date From" fullWidth readOnly value={formatDateDisplay(detailRow.discFrom)} />
-              <InputField label="Date. To" fullWidth readOnly value={formatDateDisplay(detailRow.discTo)} />
+              <InputField label="Supplier name" fullWidth readOnly value={detailRow.supplierName ?? ''} />
+              <InputField label="Product brand" fullWidth readOnly value={detailRow.productBrand ?? ''} />
+              <InputField label="Group" fullWidth readOnly value={detailRow.group ?? ''} />
+              <InputField label="Unit" fullWidth readOnly value={detailRow.unit ?? ''} />
+              <InputField label="Unit cost" fullWidth readOnly value={detailRow.unitCost ?? ''} />
+              <InputField label="Unit price" fullWidth readOnly value={detailRow.unitPrice ?? ''} />
+              <InputField label="Qty" fullWidth readOnly value={detailRow.qty ?? detailRow.presentQty ?? ''} />
+              <InputField label="Packet qty" fullWidth readOnly value={detailRow.packetQty ?? ''} />
+              <InputField label="Total cost" fullWidth readOnly value={detailRow.totalCost ?? ''} />
+              <InputField label="Total price" fullWidth readOnly value={detailRow.totalPrice ?? detailRow.sellPrice ?? ''} />
+              <InputField label="Remark" fullWidth readOnly value={detailRow.remark ?? ''} />
             </div>
           </div>
         </div>
       ) : null}
+
     </div>
   );
 }

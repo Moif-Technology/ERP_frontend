@@ -199,7 +199,7 @@ export default function CommonTable({
       <tr>
         {headers.map((header, idx) => (
           <th
-            key={`${header}-${idx}`}
+            key={`th-${idx}`}
             className={thBase(idx)}
             style={{
               ...thBorderStyle,
