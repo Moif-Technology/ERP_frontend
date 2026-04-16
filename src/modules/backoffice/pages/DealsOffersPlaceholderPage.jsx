@@ -5,10 +5,6 @@ import { colors } from '../../../shared/constants/theme';
 const primary = colors.primary?.main || '#790728';
 
 const TITLES = {
-  '/deals-offers/discount-viewer': 'DISCOUNT VIEWER',
-  '/deals-offers/gift-voucher-settings': 'GIFT VOUCHER SETTINGS',
-  '/deals-offers/gift-voucher-viewer': 'GIFT VOUCHER VIEWER',
-  '/deals-offers/offer-packet-creation': 'OFFER PACKET CREATION',
   '/deals-offers/offer-packing-entry': 'OFFER PACKING ENTRY',
   '/deals-offers/offer-unpacking-entry': 'OFFER UNPACKING ENTRY',
   '/deals-offers/offer-packet-list': 'OFFER PACKET LIST',

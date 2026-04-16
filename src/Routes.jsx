@@ -51,6 +51,12 @@ import StockAdjustmentList from './modules/backoffice/pages/StockAdjustmentList'
 import ReorderList from './modules/backoffice/pages/ReorderList';
 import DealsOffersPlaceholderPage from './modules/backoffice/pages/DealsOffersPlaceholderPage';
 import DiscountEntry from './modules/backoffice/pages/DiscountEntry';
+import DiscountViewer from './modules/backoffice/pages/DiscountViewer';
+import GiftVoucherSettings from './modules/backoffice/pages/GiftVoucherSettings';
+import GiftVoucherViewer from './modules/backoffice/pages/GiftVoucherViewer';
+import OfferPacketCreation from './modules/backoffice/pages/OfferPacketCreation';
+import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
+import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
 export default function AppRoutes() {
   return (
@@ -112,12 +118,12 @@ export default function AppRoutes() {
       <Route path="/stock-hub/product-movement" element={<ProductMovement />} />
       <Route path="/deals-offers" element={<Navigate to="/deals-offers/discount-entry" replace />} />
       <Route path="/deals-offers/discount-entry" element={<DiscountEntry />} />
-      <Route path="/deals-offers/discount-viewer" element={<DealsOffersPlaceholderPage />} />
-      <Route path="/deals-offers/gift-voucher-settings" element={<DealsOffersPlaceholderPage />} />
-      <Route path="/deals-offers/gift-voucher-viewer" element={<DealsOffersPlaceholderPage />} />
-      <Route path="/deals-offers/offer-packet-creation" element={<DealsOffersPlaceholderPage />} />
-      <Route path="/deals-offers/offer-packing-entry" element={<DealsOffersPlaceholderPage />} />
-      <Route path="/deals-offers/offer-unpacking-entry" element={<DealsOffersPlaceholderPage />} />
+      <Route path="/deals-offers/discount-viewer" element={<DiscountViewer />} />
+      <Route path="/deals-offers/gift-voucher-settings" element={<GiftVoucherSettings />} />
+      <Route path="/deals-offers/gift-voucher-viewer" element={<GiftVoucherViewer />} />
+      <Route path="/deals-offers/offer-packet-creation" element={<OfferPacketCreation />} />
+      <Route path="/deals-offers/offer-packing-entry" element={<OfferPackingEntry />} />
+      <Route path="/deals-offers/offer-unpacking-entry" element={<OfferUnpackingEntry />} />
       <Route path="/deals-offers/offer-packet-list" element={<DealsOffersPlaceholderPage />} />
       <Route
         path="*"
