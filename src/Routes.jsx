@@ -55,6 +55,7 @@ import DiscountViewer from './modules/backoffice/pages/DiscountViewer';
 import GiftVoucherSettings from './modules/backoffice/pages/GiftVoucherSettings';
 import GiftVoucherViewer from './modules/backoffice/pages/GiftVoucherViewer';
 import OfferPacketCreation from './modules/backoffice/pages/OfferPacketCreation';
+import OfferPacketList from './modules/backoffice/pages/OfferPacketList';
 import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
 import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
@@ -124,7 +125,7 @@ export default function AppRoutes() {
       <Route path="/deals-offers/offer-packet-creation" element={<OfferPacketCreation />} />
       <Route path="/deals-offers/offer-packing-entry" element={<OfferPackingEntry />} />
       <Route path="/deals-offers/offer-unpacking-entry" element={<OfferUnpackingEntry />} />
-      <Route path="/deals-offers/offer-packet-list" element={<DealsOffersPlaceholderPage />} />
+      <Route path="/deals-offers/offer-packet-list" element={<OfferPacketList />} />
       <Route
         path="*"
         element={

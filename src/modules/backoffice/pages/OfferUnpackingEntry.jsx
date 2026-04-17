@@ -3,7 +3,6 @@ import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import { InputField, SubInputField } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
-import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
@@ -15,7 +14,7 @@ const GROUPS = ['Grocery', 'Beverages', 'Household', 'Electronics', 'Personal ca
 const SUB_GROUPS = ['Chilled', 'Ambient', 'Frozen', 'Snacks', 'Beverages cold', 'Core range'];
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-const LINE_COL_PCT = [8, 12, 18, 8, 12, 10, 8, 8, 8, 8];
+const LINE_COL_PCT = [8, 12, 18, 14, 9, 10, 10, 8, 11];
 
 function buildDummyOfferLines(count) {
   const items = [
@@ -59,13 +58,8 @@ const figmaOutline =
 const figmaToolbarBtn =
   `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
 
-const figmaSearchBox =
-  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[200px] sm:max-w-[420px] sm:pr-3 md:min-w-[240px] md:max-w-[360px]`;
-
 const primaryToolbarBtn =
   'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
-
-const SEARCH_PLACEHOLDER = 'Search by barcode, description…';
 
 const actionIconBtn =
   'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
@@ -117,39 +111,18 @@ export default function OfferUnpackingEntry() {
 
   const [barcode, setBarcode] = useState('');
   const [shortDescription, setShortDescription] = useState('');
-  const [pktQty, setPktQty] = useState('');
-  const [pktDetails, setPktDetails] = useState('');
-  const [unpackQty, setUnpackQty] = useState('');
-  const [looseQty, setLooseQty] = useState('');
-  const [rate, setRate] = useState('');
+  const [packingDetails, setPackingDetails] = useState('');
+  const [unitPrice, setUnitPrice] = useState('');
+  const [qtyOnHand, setQtyOnHand] = useState('');
+  const [newQty, setNewQty] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editingRowId, setEditingRowId] = useState(null);
   const [detailRowId, setDetailRowId] = useState(null);
-  const [search, setSearch] = useState('');
-  const isCompactTable = useViewportMaxWidth(1400);
+  const isCompactTable = useViewportMaxWidth(1180);
 
-  const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const hay = (v) => String(v ?? '').toLowerCase().includes(q);
-
-    return tableData.filter((r) => {
-      if (!q) return true;
-      return (
-        hay(r.productBrand) ||
-        hay(r.group) ||
-        hay(r.subGroup) ||
-        hay(r.barcode) ||
-        hay(r.shortDescription) ||
-        hay(r.pktDetails)
-      );
-    });
-  }, [tableData, search]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+  const filteredRows = tableData;
 
   const updateLine = useCallback((id, patch) => {
     setTableData((prev) =>
@@ -168,20 +141,18 @@ export default function OfferUnpackingEntry() {
   const clearForm = useCallback(() => {
     setBarcode('');
     setShortDescription('');
-    setPktQty('');
-    setPktDetails('');
-    setUnpackQty('');
-    setLooseQty('');
-    setRate('');
+    setPackingDetails('');
+    setUnitPrice('');
+    setQtyOnHand('');
+    setNewQty('');
   }, []);
 
   const handleAddLine = useCallback(() => {
     const id = `oue-${Date.now()}`;
-    const safePktQty = pktQty.trim() || '0';
-    const safeUnpackQty = unpackQty.trim() || '0';
-    const safeLooseQty = looseQty.trim() || '0';
-    const safeRate = rate.trim() || '0.00';
-    const amount = (parseAmount(safeLooseQty) * parseAmount(safeRate)).toFixed(2);
+    const safeQtyOnHand = qtyOnHand.trim() || '0';
+    const safeNewQty = newQty.trim() || '0';
+    const safeUnitPrice = unitPrice.trim() || '0.00';
+    const amount = (parseAmount(safeNewQty) * parseAmount(safeUnitPrice)).toFixed(2);
 
     setTableData((prev) => [
       {
@@ -191,11 +162,11 @@ export default function OfferUnpackingEntry() {
         subGroup: '',
         barcode: barcode.trim(),
         shortDescription: shortDescription.trim(),
-        pktQty: safePktQty,
-        pktDetails: pktDetails.trim(),
-        unpackQty: safeUnpackQty,
-        looseQty: safeLooseQty,
-        rate: safeRate,
+        pktQty: safeQtyOnHand,
+        pktDetails: packingDetails.trim(),
+        unpackQty: '0',
+        looseQty: safeNewQty,
+        rate: safeUnitPrice,
         amount,
       },
       ...prev,
@@ -203,7 +174,7 @@ export default function OfferUnpackingEntry() {
 
     setPage(1);
     clearForm();
-  }, [barcode, shortDescription, pktQty, pktDetails, unpackQty, looseQty, rate, clearForm]);
+  }, [barcode, shortDescription, packingDetails, unitPrice, qtyOnHand, newQty, clearForm]);
 
   const handleViewLine = useCallback((id) => {
     setEditingRowId(null);
@@ -252,7 +223,6 @@ export default function OfferUnpackingEntry() {
   const handleDeleteDocument = useCallback(() => {
     setTableData([]);
     clearForm();
-    setSearch('');
     setPage(1);
     setEditingRowId(null);
     setDetailRowId(null);
@@ -261,7 +231,6 @@ export default function OfferUnpackingEntry() {
   const handleNewDocument = useCallback(() => {
     setTableData([]);
     clearForm();
-    setSearch('');
     setPage(1);
     setEditingRowId(null);
     setDetailRowId(null);
@@ -283,15 +252,17 @@ export default function OfferUnpackingEntry() {
   const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
   const tableTotals = useMemo(() => {
-    let totalLooseQty = 0;
-    let totalAmount = 0;
+    let totalQtyPrice = 0;
+    let totalQtyOnHand = 0;
+    let totalAddQty = 0;
 
     for (const r of filteredRows) {
-      totalLooseQty += parseAmount(r.looseQty);
-      totalAmount += parseAmount(r.amount);
+      totalQtyPrice += parseAmount(r.amount);
+      totalQtyOnHand += parseAmount(r.pktQty);
+      totalAddQty += parseAmount(r.looseQty);
     }
 
-    return { totalLooseQty, totalAmount };
+    return { totalQtyPrice, totalQtyOnHand, totalAddQty };
   }, [filteredRows]);
 
   const tableBodyRows = useMemo(() => {
@@ -317,23 +288,22 @@ export default function OfferUnpackingEntry() {
         displaySl,
         textInput(`bc-${r.id}`, 'barcode', 'Barcode'),
         textInput(`sd-${r.id}`, 'shortDescription', 'Short description'),
-        textInput(`pq-${r.id}`, 'pktQty', 'Packet quantity', 'text-center'),
         textInput(`pd-${r.id}`, 'pktDetails', 'Packet details'),
-        textInput(`uq-${r.id}`, 'unpackQty', 'Unpack quantity', 'text-center'),
-        textInput(`lq-${r.id}`, 'looseQty', 'Loose quantity', 'text-center'),
-        textInput(`rt-${r.id}`, 'rate', 'Rate', 'text-center'),
+        textInput(`rt-${r.id}`, 'rate', 'Unit price', 'text-center'),
         rowIsEditing ? (
           <input
-            key={`amt-${r.id}`}
+            key={`qp-${r.id}`}
             type="text"
             className={`${tableCellInputClass} text-center bg-gray-50`}
             value={r.amount ?? ''}
             readOnly
-            aria-label="Amount"
+            aria-label="Qty price"
           />
         ) : (
           r.amount ?? ''
         ),
+        textInput(`qoh-${r.id}`, 'pktQty', 'Qty on hand', 'text-center'),
+        textInput(`aq-${r.id}`, 'looseQty', 'Add quantity', 'text-center'),
         <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
           <button
             type="button"
@@ -372,16 +342,19 @@ export default function OfferUnpackingEntry() {
             Total
           </div>
         ),
-        colSpan: 6,
+        colSpan: 5,
         className: 'align-middle font-bold',
       },
-      tableTotals.totalLooseQty.toLocaleString('en-US', {
+      tableTotals.totalQtyPrice.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      tableTotals.totalQtyOnHand.toLocaleString('en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }),
-      '',
-      tableTotals.totalAmount.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
+      tableTotals.totalAddQty.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }),
       '',
@@ -411,46 +384,32 @@ export default function OfferUnpackingEntry() {
             OFFER UNPACKING ENTRY
           </h1>
 
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:h-7 sm:max-w-none sm:flex-1 sm:flex-row sm:items-center sm:justify-end sm:gap-2.5">
-            <div className={figmaSearchBox}>
-              <img src={SearchIcon} alt="" className="h-3.5 w-3.5 shrink-0 opacity-90" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={SEARCH_PLACEHOLDER}
-                className="min-w-0 flex-1 border-0 bg-transparent font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none placeholder:text-neutral-400 placeholder:font-semibold"
-                aria-label="Search table"
-              />
-            </div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:h-7 sm:flex-nowrap sm:gap-2">
+            <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
+              <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
+            </button>
 
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:h-7 sm:flex-nowrap sm:gap-2">
-              <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
-                <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
-              </button>
+            <button
+              type="button"
+              className={`${figmaToolbarBtn} font-semibold text-black`}
+              onClick={handleDeleteDocument}
+              aria-label="Delete offer unpacking entry document"
+            >
+              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
+              Delete
+            </button>
 
-              <button
-                type="button"
-                className={`${figmaToolbarBtn} font-semibold text-black`}
-                onClick={handleDeleteDocument}
-                aria-label="Delete offer unpacking entry document"
-              >
-                <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
-                Delete
-              </button>
-
-              <button
-                type="button"
-                className={primaryToolbarBtn}
-                style={{ backgroundColor: primary, borderColor: primary }}
-                onClick={handleNewDocument}
-                aria-label="New offer unpacking entry"
-              >
-                <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-                <span className="hidden min-[420px]:inline">New Offer Unpacking</span>
-                <span className="min-[420px]:hidden">New</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              className={primaryToolbarBtn}
+              style={{ backgroundColor: primary, borderColor: primary }}
+              onClick={handleNewDocument}
+              aria-label="New offer unpacking entry"
+            >
+              <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
+              <span className="hidden min-[420px]:inline">New Offer Unpacking</span>
+              <span className="min-[420px]:hidden">New</span>
+            </button>
           </div>
         </div>
       </div>
@@ -477,9 +436,18 @@ export default function OfferUnpackingEntry() {
 
         <div className="shrink-0">
           <SubInputField
-            label="pkt qty"
-            value={pktQty}
-            onChange={(e) => setPktQty(e.target.value)}
+            label="Pcking details"
+            value={packingDetails}
+            onChange={(e) => setPackingDetails(e.target.value)}
+            placeholder=""
+          />
+        </div>
+
+        <div className="shrink-0">
+          <SubInputField
+            label="unit price"
+            value={unitPrice}
+            onChange={(e) => setUnitPrice(e.target.value)}
             placeholder=""
             inputMode="decimal"
           />
@@ -487,18 +455,9 @@ export default function OfferUnpackingEntry() {
 
         <div className="shrink-0">
           <SubInputField
-            label="pkt. details"
-            value={pktDetails}
-            onChange={(e) => setPktDetails(e.target.value)}
-            placeholder=""
-          />
-        </div>
-
-        <div className="shrink-0">
-          <SubInputField
-            label="unpack qty"
-            value={unpackQty}
-            onChange={(e) => setUnpackQty(e.target.value)}
+            label="qty on hand"
+            value={qtyOnHand}
+            onChange={(e) => setQtyOnHand(e.target.value)}
             placeholder=""
             inputMode="decimal"
           />
@@ -506,19 +465,9 @@ export default function OfferUnpackingEntry() {
 
         <div className="shrink-0">
           <SubInputField
-            label="loose qty"
-            value={looseQty}
-            onChange={(e) => setLooseQty(e.target.value)}
-            placeholder=""
-            inputMode="decimal"
-          />
-        </div>
-
-        <div className="shrink-0">
-          <SubInputField
-            label="rate"
-            value={rate}
-            onChange={(e) => setRate(e.target.value)}
+            label="new qty"
+            value={newQty}
+            onChange={(e) => setNewQty(e.target.value)}
             placeholder=""
             inputMode="decimal"
           />
@@ -542,7 +491,7 @@ export default function OfferUnpackingEntry() {
           truncateHeader
           truncateBody={editingRowId == null}
           columnWidthPercents={LINE_COL_PCT}
-          tableClassName={isCompactTable ? 'min-w-[82rem] w-full' : 'min-w-0 w-full'}
+          tableClassName={isCompactTable ? 'min-w-[64rem] w-full' : 'min-w-0 w-full'}
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.85vw, 10px)"
@@ -552,16 +501,15 @@ export default function OfferUnpackingEntry() {
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
           headers={[
-            'Sl no',
+            'Trans no',
             'Barcode',
-            'Short description',
-            'Pkt qty',
-            'Pkt. details',
-            'Unpack qty',
-            'Loose qty',
-            'Rate',
-            'Amount',
-            'Action',
+            'Short descriotion',
+            'Pkd .details',
+            'Unit price',
+            'Qty price',
+            'Qty on hand',
+            'AddQty',
+            'Actions',
           ]}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
