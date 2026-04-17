@@ -143,18 +143,22 @@ export default function OfferPacketCreation() {
   const [headerShortDescription, setHeaderShortDescription] = useState('');
   const [headerSupplierName, setHeaderSupplierName] = useState('');
   const [headerProductBrand, setHeaderProductBrand] = useState('');
+  const [headerGroup, setHeaderGroup] = useState('');
+  const [headerUnitCost, setHeaderUnitCost] = useState('');
+  const [headerUnitPrice, setHeaderUnitPrice] = useState('');
+  const [headerProfitPct, setHeaderProfitPct] = useState('');
+  const [headerRemark, setHeaderRemark] = useState('');
 
-  /** Offer packet details strip + table APPLY */
+  /** Product details strip + table add */
   const [barcode, setBarcode] = useState('');
-  const [description, setDescription] = useState('');
   const [shortDescription, setShortDescription] = useState('');
-  const [supplierName, setSupplierName] = useState('');
-  const [productBrand, setProductBrand] = useState('');
-  const [group, setGroup] = useState('');
+  const [unit, setUnit] = useState('');
   const [unitCost, setUnitCost] = useState('');
   const [unitPrice, setUnitPrice] = useState('');
-  const [profitPct, setProfitPct] = useState('');
-  const [remark, setRemark] = useState('');
+  const [qty, setQty] = useState('');
+  const [packetQty, setPacketQty] = useState('');
+  const [totalCost, setTotalCost] = useState('');
+  const [totalPrice, setTotalPrice] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -170,15 +174,14 @@ export default function OfferPacketCreation() {
 
   const clearOfferPacketDetailsForm = useCallback(() => {
     setBarcode('');
-    setDescription('');
     setShortDescription('');
-    setSupplierName('');
-    setProductBrand('');
-    setGroup('');
+    setUnit('');
     setUnitCost('');
     setUnitPrice('');
-    setProfitPct('');
-    setRemark('');
+    setQty('');
+    setPacketQty('');
+    setTotalCost('');
+    setTotalPrice('');
   }, []);
 
   const clearHeaderStripForm = useCallback(() => {
@@ -187,51 +190,55 @@ export default function OfferPacketCreation() {
     setHeaderShortDescription('');
     setHeaderSupplierName('');
     setHeaderProductBrand('');
+    setHeaderGroup('');
+    setHeaderUnitCost('');
+    setHeaderUnitPrice('');
+    setHeaderProfitPct('');
+    setHeaderRemark('');
   }, []);
 
   /** Prefill Offer packet details from the first strip */
   const handleHeaderApply = useCallback(() => {
     setBarcode(headerBarcode.trim());
-    setDescription(headerDescription.trim());
-    setShortDescription(headerShortDescription.trim());
-    setSupplierName(headerSupplierName.trim());
-    setProductBrand(headerProductBrand.trim());
+    setShortDescription(headerShortDescription.trim() || headerDescription.trim());
+    setUnitCost(headerUnitCost.trim());
+    setUnitPrice(headerUnitPrice.trim());
     clearHeaderStripForm();
   }, [
     headerBarcode,
     headerDescription,
     headerShortDescription,
-    headerSupplierName,
-    headerProductBrand,
+    headerUnitCost,
+    headerUnitPrice,
     clearHeaderStripForm,
   ]);
 
   const handleApplyLine = useCallback(() => {
-    const qtyVal = '1';
-    const pq = '0';
+    const qtyVal = qty.trim() || '0';
+    const packetQtyVal = packetQty.trim() || '0';
     const ucNum = parseAmount(unitCost);
     const upNum = parseAmount(unitPrice);
-    const q = Number.parseInt(qtyVal, 10) || 1;
-    const totalCostVal = (ucNum * q).toFixed(2);
-    const totalPriceVal = (upNum * q).toFixed(2);
-    const packetDescription = '—';
+    const q = parseAmount(qtyVal);
+    const totalCostVal = totalCost.trim() || (ucNum * q).toFixed(2);
+    const totalPriceVal = totalPrice.trim() || (upNum * q).toFixed(2);
+    const packetDescription = unit.trim() || '—';
     const id = `opc-${Date.now()}`;
     setTableData((prev) => [
       {
         id,
         barcode: barcode.trim(),
-        description: description.trim(),
+        description: shortDescription.trim(),
         shortDescription: shortDescription.trim(),
-        supplierName: supplierName.trim(),
-        productBrand: productBrand.trim(),
-        group: group.trim(),
-        unit: '',
+        supplierName: '',
+        productBrand: '',
+        group: '',
+        unit: unit.trim(),
         unitCost: unitCost.trim(),
         unitPrice: unitPrice.trim(),
-        profitPct: profitPct.trim(),
-        remark: remark.trim(),
+        profitPct: '',
+        remark: '',
         qty: qtyVal,
-        packetQty: pq,
+        packetQty: packetQtyVal,
         totalCost: totalCostVal,
         totalPrice: totalPriceVal,
         packetDescription,
@@ -239,7 +246,7 @@ export default function OfferPacketCreation() {
         sellPrice: totalPriceVal,
         disPrice: '0.00',
         disSellPrice: totalPriceVal,
-        discPct: profitPct.trim() !== '' ? profitPct.trim() : '0',
+        discPct: '0',
         discFrom: '',
         discTo: '',
       },
@@ -249,15 +256,14 @@ export default function OfferPacketCreation() {
     clearOfferPacketDetailsForm();
   }, [
     barcode,
-    description,
     shortDescription,
-    supplierName,
-    productBrand,
-    group,
+    unit,
     unitCost,
     unitPrice,
-    profitPct,
-    remark,
+    qty,
+    packetQty,
+    totalCost,
+    totalPrice,
     clearOfferPacketDetailsForm,
   ]);
 
@@ -503,65 +509,110 @@ export default function OfferPacketCreation() {
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
-        <div className="shrink-0">
-          <SubInputField label="barcode" value={headerBarcode} onChange={(e) => setHeaderBarcode(e.target.value)} placeholder="" />
-        </div>
-        <div className="shrink-0 min-w-0 sm:min-w-[8rem] sm:max-w-[14rem]">
-          <InputField
-            label="description"
-            value={headerDescription}
-            onChange={(e) => setHeaderDescription(e.target.value)}
-            placeholder=""
-            fullWidth
-          />
-        </div>
-        <div className="shrink-0">
-          <InputField
-            label="short description"
-            value={headerShortDescription}
-            onChange={(e) => setHeaderShortDescription(e.target.value)}
-            placeholder=""
-            widthPx={120}
-          />
-        </div>
-        <div className="shrink-0 min-w-0 sm:min-w-[7rem] sm:max-w-[11rem]">
-          <InputField
-            label="supplier name"
-            value={headerSupplierName}
-            onChange={(e) => setHeaderSupplierName(e.target.value)}
-            placeholder=""
-            fullWidth
-          />
-        </div>
-        <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[10rem]">
-          <InputField
-            label="product brand"
-            value={headerProductBrand}
-            onChange={(e) => setHeaderProductBrand(e.target.value)}
-            placeholder=""
-            fullWidth
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleHeaderApply}
-          className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
-          style={{ backgroundColor: primary, borderColor: primary }}
-          aria-label="Apply header fields to offer packet details"
-        >
-          APPLY
-        </button>
-      </div>
-
       <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
         <h3 className="text-[10px] font-bold uppercase tracking-wide text-gray-700 sm:text-[11px]">Offer packet details</h3>
         <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3">
           <div className="shrink-0">
-            <SubInputField label="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="" />
+            <SubInputField label="barcode" value={headerBarcode} onChange={(e) => setHeaderBarcode(e.target.value)} placeholder="" />
           </div>
           <div className="shrink-0 min-w-0 sm:min-w-[8rem] sm:max-w-[14rem]">
-            <InputField label="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="" fullWidth />
+            <InputField
+              label="description"
+              value={headerDescription}
+              onChange={(e) => setHeaderDescription(e.target.value)}
+              placeholder=""
+              fullWidth
+            />
+          </div>
+          <div className="shrink-0">
+            <InputField
+              label="short descrption"
+              value={headerShortDescription}
+              onChange={(e) => setHeaderShortDescription(e.target.value)}
+              placeholder=""
+              widthPx={120}
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[7rem] sm:max-w-[11rem]">
+            <InputField
+              label="supplier name"
+              value={headerSupplierName}
+              onChange={(e) => setHeaderSupplierName(e.target.value)}
+              placeholder=""
+              fullWidth
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[10rem]">
+            <InputField
+              label="product brand"
+              value={headerProductBrand}
+              onChange={(e) => setHeaderProductBrand(e.target.value)}
+              placeholder=""
+              fullWidth
+            />
+          </div>
+          <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[9rem]">
+            <InputField label="group" value={headerGroup} onChange={(e) => setHeaderGroup(e.target.value)} placeholder="" fullWidth />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="unit cost"
+              value={headerUnitCost}
+              onChange={(e) => setHeaderUnitCost(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="unit price"
+              value={headerUnitPrice}
+              onChange={(e) => setHeaderUnitPrice(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="profit %"
+              value={headerProfitPct}
+              onChange={(e) => setHeaderProfitPct(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="flex min-w-0 w-full max-w-full flex-col gap-0.5 sm:w-[20rem] sm:max-w-[20rem]">
+            <label className="text-[9px] font-semibold leading-tight text-black sm:text-[11px]" style={{ color: '#374151' }}>
+              remark
+            </label>
+            <textarea
+              value={headerRemark}
+              onChange={(e) => setHeaderRemark(e.target.value)}
+              rows={3}
+              className="box-border min-h-[4.5rem] w-full max-w-full resize-y rounded border border-gray-200 bg-white px-2 py-1.5 text-[9px] outline-none focus:border-gray-400 sm:text-[10px]"
+              style={{ borderColor: '#e2e8f0' }}
+              placeholder=""
+            />
+          </div>
+          <div className="ml-auto flex shrink-0 self-end">
+            <button
+              type="button"
+              onClick={handleHeaderApply}
+              className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}
+              aria-label="Apply header fields to offer packet details"
+            >
+              APPLY
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-3 sm:p-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-wide text-gray-700 sm:text-[11px]">Product details</h3>
+        <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3">
+          <div className="shrink-0">
+            <SubInputField label="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="" />
           </div>
           <div className="shrink-0">
             <InputField
@@ -572,26 +623,8 @@ export default function OfferPacketCreation() {
               widthPx={120}
             />
           </div>
-          <div className="shrink-0 min-w-0 sm:min-w-[7rem] sm:max-w-[11rem]">
-            <InputField
-              label="supplier name"
-              value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
-              placeholder=""
-              fullWidth
-            />
-          </div>
-          <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[10rem]">
-            <InputField
-              label="product brand"
-              value={productBrand}
-              onChange={(e) => setProductBrand(e.target.value)}
-              placeholder=""
-              fullWidth
-            />
-          </div>
           <div className="shrink-0 min-w-0 sm:min-w-[6rem] sm:max-w-[9rem]">
-            <InputField label="group" value={group} onChange={(e) => setGroup(e.target.value)} placeholder="" fullWidth />
+            <InputField label="unit" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="" fullWidth />
           </div>
           <div className="shrink-0">
             <SubInputField
@@ -613,37 +646,51 @@ export default function OfferPacketCreation() {
           </div>
           <div className="shrink-0">
             <SubInputField
-              label="profit %"
-              value={profitPct}
-              onChange={(e) => setProfitPct(e.target.value)}
+              label="qty"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
               placeholder=""
               inputMode="decimal"
             />
           </div>
-        </div>
-        <div className="flex min-w-0 w-full max-w-full flex-col gap-0.5 sm:w-[20rem] sm:max-w-[20rem]">
-          <label className="text-[9px] font-semibold leading-tight text-black sm:text-[11px]" style={{ color: '#374151' }}>
-            remark
-          </label>
-          <textarea
-            value={remark}
-            onChange={(e) => setRemark(e.target.value)}
-            rows={3}
-            className="box-border min-h-[4.5rem] w-full max-w-full resize-y rounded border border-gray-200 bg-white px-2 py-1.5 text-[9px] outline-none focus:border-gray-400 sm:text-[10px]"
-            style={{ borderColor: '#e2e8f0' }}
-            placeholder=""
-          />
-        </div>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={handleApplyLine}
-            className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
-            style={{ backgroundColor: primary, borderColor: primary }}
-            aria-label="Apply offer packet line to table"
-          >
-            APPLY
-          </button>
+          <div className="shrink-0">
+            <SubInputField
+              label="packet qty"
+              value={packetQty}
+              onChange={(e) => setPacketQty(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="toatl cost"
+              value={totalCost}
+              onChange={(e) => setTotalCost(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="shrink-0">
+            <SubInputField
+              label="total price"
+              value={totalPrice}
+              onChange={(e) => setTotalPrice(e.target.value)}
+              placeholder=""
+              inputMode="decimal"
+            />
+          </div>
+          <div className="ml-auto flex shrink-0 self-end">
+            <button
+              type="button"
+              onClick={handleApplyLine}
+              className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}
+              aria-label="Add product details line to table"
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
 
