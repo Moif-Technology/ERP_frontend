@@ -1,10 +1,14 @@
 /**
  * Quotation screen – Modern, readable layout. Effective space use.
  */
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { colors, inputField } from '../../../shared/constants/theme';
-import { InputField, SubInputField, CommonTable, Switch, ConfirmDialog } from '../../../shared/components/ui';
+import React, { useState, useEffect, useMemo } from 'react';
+import { colors } from '../../../shared/constants/theme';
+import { InputField, SubInputField, CommonTable, Switch, ConfirmDialog, DropdownInput } from '../../../shared/components/ui';
+import { getSessionUser } from '../../../core/auth/auth.service.js';
+import * as staffEntryApi from '../../../services/staffEntry.api.js';
+import * as customerEntryApi from '../../../services/customerEntry.api.js';
+import * as productEntryApi from '../../../services/productEntry.api.js';
+import * as quotationEntryApi from '../../../services/quotationEntry.api.js';
 import ProformaIcon from '../../../shared/assets/icons/proforma.svg';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
@@ -20,80 +24,35 @@ const primaryHover = colors.primary?.[50] || '#F2E6EA';
 const iconFilterPrimary =
   'invert(13%) sepia(88%) saturate(3223%) hue-rotate(350deg) brightness(92%) contrast(105%)';
 
-const MOCK_CUSTOMERS = [
-  { value: 1, label: 'Customer A' },
-  { value: 2, label: 'Customer B' },
-  { value: 3, label: 'Customer C' },
-];
-
-const MOCK_PRODUCTS = [
-  { productId: 1, shortDescription: 'Product 1', unitPrice: 100, barCode: 'P001', unit: 'PCS' },
-  { productId: 2, shortDescription: 'Product 2', unitPrice: 250, barCode: 'P002', unit: 'PCS' },
-  { productId: 3, shortDescription: 'Product 3', unitPrice: 75, barCode: 'P003', unit: 'KG' },
-];
-
-const DUMMY_ITEMS = [
-  {
-    ownRefNo: 'P001',
-    productCode: 'P001',
-    shortDescription: 'Product 1',
-    location: 'LOC-01',
-    unit: 'PCS',
-    qty: 2,
-    unitPrice: 100,
-    discPct: 0,
-    discAmt: 0,
-    subTotal: 200,
-    taxPct: 5,
-    taxAmount: 10,
-    lineTotal: 210,
-    origin: 'Local',
-    stockStatus: '0',
-  },
-  {
-    ownRefNo: 'P002',
-    productCode: 'P002',
-    shortDescription: 'Product 2',
-    location: 'LOC-02',
-    unit: 'PCS',
-    qty: 1,
-    unitPrice: 250,
-    discPct: 0,
-    discAmt: 0,
-    subTotal: 250,
-    taxPct: 5,
-    taxAmount: 12.5,
-    lineTotal: 262.5,
-    origin: 'Local',
-    stockStatus: '0',
-  },
-  {
-    ownRefNo: 'P003',
-    productCode: 'P003',
-    shortDescription: 'Product 3',
-    location: 'LOC-03',
-    unit: 'KG',
-    qty: 3,
-    unitPrice: 75,
-    discPct: 0,
-    discAmt: 0,
-    subTotal: 225,
-    taxPct: 5,
-    taxAmount: 11.25,
-    lineTotal: 236.25,
-    origin: 'Local',
-    stockStatus: '0',
-  },
-];
+function mapApiProductToPicker(p) {
+  const inv = p.inventory || {};
+  return {
+    productId: p.productId,
+    shortDescription: (p.shortName || p.productName || '').trim() || '—',
+    unitPrice: inv.unitPrice != null ? Number(inv.unitPrice) : 0,
+    barCode: p.barcode || p.productCode || '',
+    unit: p.unitName || '',
+    locationCode: inv.locationCode || '',
+    qtyOnHand: inv.qtyOnHand,
+  };
+}
 
 export default function Quotation() {
-  const navigate = useNavigate();
+  const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState([]);
+  const [customersRows, setCustomersRows] = useState([]);
+  const [productsCatalog, setProductsCatalog] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [saveError, setSaveError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loadingRefs, setLoadingRefs] = useState(true);
 
   const [quotationNo, setQuotationNo] = useState('');
   const [quotationDate, setQuotationDate] = useState(new Date().toISOString().slice(0, 10));
   const [custRefNo, setCustRefNo] = useState('');
   const [custRefDate, setCustRefDate] = useState(new Date().toISOString().slice(0, 10));
-  const [customerId, setCustomerId] = useState(0);
+  const [customerId, setCustomerId] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [contactPerson, setContactPerson] = useState('');
 
@@ -109,9 +68,7 @@ export default function Quotation() {
   const [unitPrice, setUnitPrice] = useState(0);
   const [discPct, setDiscPct] = useState(0);
   const [discAmt, setDiscAmt] = useState(0);
-  const [taxPct, setTaxPct] = useState(5);
-
-  const [items, setItems] = useState(() => DUMMY_ITEMS.map((it, i) => ({ ...it, slNo: i + 1 })));
+  const [items, setItems] = useState([]);
   const [subTotal, setSubTotal] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -130,12 +87,72 @@ export default function Quotation() {
   const [lineItemDetail, setLineItemDetail] = useState(null);
   const [pendingRemoveIndex, setPendingRemoveIndex] = useState(null);
 
+  const branchOptions = useMemo(
+    () =>
+      branches.map((b) => ({
+        value: String(b.branchId),
+        label: `${b.branchCode} - ${b.branchName}`,
+      })),
+    [branches],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingRefs(true);
+      try {
+        const sess = getSessionUser();
+        const defaultBr = sess?.stationId != null ? String(sess.stationId) : '';
+        const [{ data: brData }, { data: custData }] = await Promise.all([
+          staffEntryApi.fetchStaffBranches(),
+          customerEntryApi.listCustomers({ limit: 1000 }),
+        ]);
+        if (cancelled) return;
+        setBranches(brData?.branches || []);
+        setCustomersRows(custData?.customers || []);
+        setBranchId((prev) => prev || defaultBr || (brData?.branches?.[0] ? String(brData.branches[0].branchId) : ''));
+      } catch {
+        if (!cancelled) {
+          setBranches([]);
+          setCustomersRows([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingRefs(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!branchId) {
+      setProductsCatalog([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await productEntryApi.fetchProducts(Number(branchId));
+        if (cancelled) return;
+        const list = (data?.products || []).map(mapApiProductToPicker);
+        setProductsCatalog(list);
+      } catch {
+        if (!cancelled) setProductsCatalog([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId]);
+
   const orDash = (v) => (v != null && v !== '' ? String(v) : '—');
 
   const getFilteredProducts = (query) => {
+    if (!branchId) return [];
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return MOCK_PRODUCTS.filter((p) => {
+    return productsCatalog.filter((p) => {
       const shortDesc = String(p.shortDescription ?? '').toLowerCase();
       const code = String(p.barCode ?? '').toLowerCase();
       const unit = String(p.unit ?? '').toLowerCase();
@@ -151,23 +168,33 @@ export default function Quotation() {
   };
 
   const selectProduct = (p) => {
+    setSelectedProductId(p.productId);
     setOwnRefNo(p.barCode ?? '');
     setProductCode(p.barCode ?? '');
     setShortDescription(p.shortDescription ?? '');
     setUnit(p.unit ?? '');
     setUnitPrice(Number(p.unitPrice ?? 0));
-    setProductInfo({ lastCost: '', origin: '', minPrice: '', stock: '0', loc: '' });
+    setLocation(p.locationCode || '');
+    const stock = p.qtyOnHand != null ? String(p.qtyOnHand) : '';
+    setProductInfo({
+      lastCost: '',
+      origin: '',
+      minPrice: '',
+      stock,
+      loc: p.locationCode || '',
+    });
     setProductResults([]);
     setShowSearchDropdown(false);
     setProductSearch('');
   };
 
   const addItem = () => {
-    if (!shortDescription || qty <= 0) return;
-    const sub = qty * unitPrice - discAmt;
-    const tax = Math.round(sub * (taxPct / 100) * 100) / 100;
-    const lineTotal = sub + tax;
+    if (!selectedProductId || !shortDescription || qty <= 0) return;
+    const sub = Math.round((qty * unitPrice - discAmt) * 100) / 100;
+    const tax = 0;
+    const lineTotal = sub;
     const newItem = {
+      productId: selectedProductId,
       ownRefNo,
       productCode,
       shortDescription,
@@ -178,7 +205,7 @@ export default function Quotation() {
       discPct,
       discAmt,
       subTotal: sub,
-      taxPct,
+      taxPct: 0,
       taxAmount: tax,
       lineTotal,
       origin: productInfo.origin,
@@ -194,10 +221,71 @@ export default function Quotation() {
     setUnitPrice(0);
     setDiscPct(0);
     setDiscAmt(0);
+    setSelectedProductId(null);
   };
 
   const removeItem = (idx) => {
     setItems((prev) => prev.filter((_, i) => i !== idx).map((r, i) => ({ ...r, slNo: i + 1 })));
+  };
+
+  const handleSaveQuotation = async () => {
+    setSaveError('');
+    setSuccessMsg('');
+    if (!branchId) {
+      setSaveError('Select a branch.');
+      return;
+    }
+    if (items.length === 0) {
+      setSaveError('Add at least one line item.');
+      return;
+    }
+    const missingPid = items.some((r) => !r.productId);
+    if (missingPid) {
+      setSaveError('Each line must have a product (use search to pick a product).');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        branchId: Number(branchId),
+        quotationDate,
+        customerRefNo: custRefNo.trim() || undefined,
+        customerRefDate: custRefDate || undefined,
+        customerId: customerId ? Number(customerId) : undefined,
+        customerAddress: customerAddress.trim() || undefined,
+        contactPerson: contactPerson.trim() || undefined,
+        discountAmount,
+        roundOff: Number(roundOff) || 0,
+        quotationTerms: quotationTerms.trim() || undefined,
+        lines: items.map((r) => ({
+          productId: r.productId,
+          barcode: r.ownRefNo || r.productCode || undefined,
+          description: r.shortDescription,
+          unitName: r.unit || undefined,
+          qty: r.qty,
+          unitPrice: r.unitPrice,
+          itemDiscount: r.discAmt ?? 0,
+          locationCode: r.location || undefined,
+          originName: r.origin || undefined,
+          stockStatus: r.stockStatus || undefined,
+        })),
+      };
+      const { data } = await quotationEntryApi.createQuotation(payload);
+      const q = data.quotation;
+      setQuotationNo(q.quotationNo || '');
+      setSuccessMsg(`Saved quotation ${q.quotationNo} (id ${q.quotationId}).`);
+      setLineItemDetail(null);
+      setItems([]);
+      setDiscountAmount(0);
+      setRoundOff(0);
+      setCustRefNo('');
+      setCustRefDate(new Date().toISOString().slice(0, 10));
+      setSelectedProductId(null);
+    } catch (err) {
+      setSaveError(err.response?.data?.message || 'Could not save quotation.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddQuotation = () => {
@@ -206,7 +294,7 @@ export default function Quotation() {
     setQuotationDate(new Date().toISOString().slice(0, 10));
     setCustRefNo('');
     setCustRefDate(new Date().toISOString().slice(0, 10));
-    setCustomerId(0);
+    setCustomerId('');
     setCustomerAddress('');
     setContactPerson('');
     setProductSearch('');
@@ -221,7 +309,6 @@ export default function Quotation() {
     setUnitPrice(0);
     setDiscPct(0);
     setDiscAmt(0);
-    setTaxPct(5);
     setItems([]);
     setDiscountAmount(0);
     setRoundOff(0);
@@ -232,6 +319,9 @@ export default function Quotation() {
     setPrintOtherFormat(false);
     setProductInfo({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
     setAttachments(false);
+    setSelectedProductId(null);
+    setSaveError('');
+    setSuccessMsg('');
   };
 
   useEffect(() => {
@@ -284,9 +374,11 @@ export default function Quotation() {
             </button>
             <button
               type="button"
-              className="qtn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-medium transition-colors sm:px-2 sm:py-1 sm:text-[11px]"
+              onClick={handleSaveQuotation}
+              disabled={saving || loadingRefs}
+              className="qtn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-medium transition-colors enabled:hover:bg-gray-50 disabled:opacity-50 sm:px-2 sm:py-1 sm:text-[11px]"
             >
-              Save
+              {saving ? 'Saving…' : 'Save'}
             </button>
             <button
               type="button"
@@ -310,6 +402,12 @@ export default function Quotation() {
             {/* <button type="button" onClick={() => navigate(-1)} className="qtn-outline flex h-9 items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium transition-colors">Close</button> */}
           </div>
         </header>
+        {(saveError || successMsg) && (
+          <div className="px-0.5 text-[10px] sm:text-[11px]">
+            {saveError && <p className="text-red-600">{saveError}</p>}
+            {successMsg && <p className="text-green-700">{successMsg}</p>}
+          </div>
+        )}
 
         {/* Main */}
         <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
@@ -322,13 +420,25 @@ export default function Quotation() {
                   Quote Details
                 </h2>
                 <div className="flex w-full min-w-0 flex-col gap-2">
+                  <DropdownInput
+                    label="Branch"
+                    placeholder={loadingRefs ? 'Loading…' : 'Select branch'}
+                    options={branchOptions}
+                    value={branchId}
+                    onChange={(v) => setBranchId(v)}
+                    fullWidth
+                    heightPx={28}
+                    disabled={loadingRefs || !branchOptions.length}
+                  />
                   <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
                     <SubInputField
                       fullWidth
                       label="Quotation No"
                       heightPx={28}
                       value={quotationNo}
-                      onChange={(e) => setQuotationNo(e.target.value)}
+                      onChange={() => {}}
+                      placeholder="Auto on save"
+                      readOnly
                     />
                     <InputField
                       fullWidth
@@ -366,15 +476,26 @@ export default function Quotation() {
                   <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
                     <label className={quoteDetailRowLabel}>Customer Name</label>
                     <select
-                      value={customerId}
-                      onChange={(e) => setCustomerId(Number(e.target.value))}
+                      value={customerId === '' ? '' : String(customerId)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCustomerId(v);
+                        const row = customersRows.find((c) => String(c.customerId) === v);
+                        if (row) {
+                          setCustomerAddress(row.address || '');
+                          setContactPerson(row.contactPerson || '');
+                        } else {
+                          setCustomerAddress('');
+                          setContactPerson('');
+                        }
+                      }}
                       className={`${detailRowInput} cursor-pointer`}
                       style={{ accentColor: primary }}
                     >
-                      <option value={0}>— Select Customer —</option>
-                      {MOCK_CUSTOMERS.map((c) => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
+                      <option value="">— Select Customer —</option>
+                      {customersRows.map((c) => (
+                        <option key={c.customerId} value={String(c.customerId)}>
+                          {c.customerName}
                         </option>
                       ))}
                     </select>
@@ -410,7 +531,8 @@ export default function Quotation() {
                 <div className="relative w-full max-w-[300px] min-w-[220px]">
                   <input
                     type="text"
-                    placeholder="Search product..."
+                    placeholder={branchId ? 'Search product…' : 'Select branch first'}
+                    disabled={!branchId}
                     value={productSearch}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -493,7 +615,7 @@ export default function Quotation() {
                   }}
                 />
                 <SubInputField label="Disc" type="number" value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} />
-                <SubInputField label="Tax%" type="number" value={taxPct} onChange={(e) => setTaxPct(Number(e.target.value))} />
+                <SubInputField label="Tax%" type="number" value={0} readOnly title="Tax not configured" />
                 <div className="ml-auto flex shrink-0 items-end">
                   <button
                     type="button"
@@ -645,7 +767,7 @@ export default function Quotation() {
                   <span className="shrink-0 font-semibold tabular-nums">{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Tax 5%</span>
+                  <span className="text-gray-600">Tax</span>
                   <span className="shrink-0 tabular-nums">{taxAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">

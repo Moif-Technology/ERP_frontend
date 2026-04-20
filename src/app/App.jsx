@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from '../core/layout/Layout';
 import AppRoutes from './router/AppRoutes';
 import Login from '../modules/backoffice/pages/Login';
+import ForgotPassword from '../modules/backoffice/pages/ForgotPassword';
 import WelcomeSetup from '../modules/backoffice/pages/WelcomeSetup';
 import ProtectedRoute from './router/ProtectedRoute';
 import PublicRoute from './router/PublicRoute';
@@ -15,6 +16,14 @@ function App() {
         element={
           <PublicRoute>
             <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
           </PublicRoute>
         }
       />

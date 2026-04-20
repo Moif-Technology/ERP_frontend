@@ -19,6 +19,7 @@ import DebitNoteList from './modules/backoffice/pages/DebitNoteList';
 import CreditNoteEntry from './modules/backoffice/pages/CreditNoteEntry';
 import CreditNoteList from './modules/backoffice/pages/CreditNoteList';
 import AccountsPlaceholderPage from './modules/backoffice/pages/AccountsPlaceholderPage';
+import VoucherListPage from './modules/backoffice/pages/VoucherListPage';
 import IncomeVoucherEntry from './modules/backoffice/pages/IncomeVoucherEntry';
 import IncomeVoucherList from './modules/backoffice/pages/IncomeVoucherList';
 import ExpenseVoucherEntry from './modules/backoffice/pages/ExpenseVoucherEntry';
@@ -42,6 +43,11 @@ import CustomerList from './modules/backoffice/pages/CustomerList';
 import SupplierList from './modules/backoffice/pages/SupplierList';
 import AgentList from './modules/backoffice/pages/AgentList';
 import ListPlaceholderPage from './modules/backoffice/pages/ListPlaceholderPage';
+import StaffEntry from './modules/backoffice/pages/StaffEntry';
+import GroupEntry from './modules/backoffice/pages/GroupEntry';
+import SubGroupEntry from './modules/backoffice/pages/SubGroupEntry';
+import AreaEntry from './modules/backoffice/pages/AreaEntry';
+import TableEntry from './modules/backoffice/pages/TableEntry';
 
 export default function AppRoutes() {
   return (
@@ -73,19 +79,19 @@ export default function AppRoutes() {
       <Route path="/income-expense-voucher-list" element={<Navigate to="/income-voucher-list" replace />} />
       <Route path="/payment-voucher-supplier" element={<PaymentVoucherSupplierEntry />} />
       <Route path="/payment-voucher" element={<PaymentVoucherEntry />} />
-      <Route path="/payment-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/payment-voucher-list" element={<VoucherListPage title="PAYMENT VOUCHER LIST" filterVoucherTypeId={4} />} />
       <Route path="/receipt-voucher-customer" element={<ReceiptVoucherCustomerEntry />} />
       <Route path="/receipt-voucher-entry" element={<ReceiptVoucherEntry />} />
-      <Route path="/receipt-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/receipt-voucher-list" element={<VoucherListPage title="RECEIPT VOUCHER LIST" filterVoucherTypeId={2} />} />
       <Route path="/contra-voucher-entry" element={<ContraVoucherEntry />} />
       <Route path="/journal-voucher-entry" element={<JournalVoucherEntry />} />
-      <Route path="/contra-journal-voucher-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/contra-journal-voucher-list" element={<VoucherListPage title="CONTRA / JOURNAL VOUCHER LIST" />} />
       <Route path="/account-group-details" element={<AccountGroupDetails />} />
       <Route path="/account-ledger-details" element={<AccountLedgerDetails />} />
       <Route path="/trial-balance" element={<TrialBalance />} />
       <Route path="/statement-payable-summary" element={<PayableSummary />} />
       <Route path="/statement-receivable-summary" element={<ReceivableSummary />} />
-      <Route path="/statement-of-accounts-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/statement-of-accounts-list" element={<VoucherListPage title="STATEMENT OF ACCOUNTS" />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />
@@ -93,6 +99,7 @@ export default function AppRoutes() {
       <Route path="/data-entry/group-entry" element={<GroupEntry />} />
       <Route path="/data-entry/sub-group-entry" element={<SubGroupEntry />} />
       <Route path="/data-entry/area-entry" element={<AreaEntry />} />
+      <Route path="/data-entry/table-entry" element={<TableEntry />} />
       <Route path="/lists/product-price-list" element={<ProductPriceList />} />
       <Route path="/lists/customer-list" element={<CustomerList />} />
       <Route path="/lists/supplier-list" element={<SupplierList />} />

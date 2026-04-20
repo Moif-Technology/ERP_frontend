@@ -45,6 +45,7 @@ const menuItems = [
       { label: 'Group entry', to: '/data-entry/group-entry', icon: ProductEntryIcon },
       { label: 'Sub group entry', to: '/data-entry/sub-group-entry', icon: ProductEntryIcon },
       { label: 'Area entry', to: '/data-entry/area-entry', icon: LogisticsIcon },
+      { label: 'Table entry', to: '/data-entry/table-entry', icon: LogisticsIcon },
     ],
   },
   {

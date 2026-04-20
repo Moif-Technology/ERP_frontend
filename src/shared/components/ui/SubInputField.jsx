@@ -4,7 +4,10 @@ import { inputField, colors } from '../../constants/theme';
 /**
  * Sub input field — fixed width/height; parent gap controls spacing.
  */
-export default function SubInputField({ label, suffix, type = 'text', widthPx, heightPx, className, fullWidth, ...props }) {
+const SubInputField = React.forwardRef(function SubInputField(
+  { label, suffix, type = 'text', widthPx, heightPx, className, fullWidth, ...props },
+  ref,
+) {
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.subBox.width;
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.subBox.height;
   return (
@@ -17,6 +20,7 @@ export default function SubInputField({ label, suffix, type = 'text', widthPx, h
       )}
       <div className="relative w-full">
         <input
+          ref={ref}
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
           className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none sm:px-2 sm:text-[9px] ${className ?? ''}`.trim()}
@@ -40,4 +44,6 @@ export default function SubInputField({ label, suffix, type = 'text', widthPx, h
       </div>
     </div>
   );
-}
+});
+
+export default SubInputField;

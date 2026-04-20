@@ -4,78 +4,28 @@ import CommonTable from '../../../shared/components/ui/CommonTable';
 import { DropdownInput, SubInputField, DateInputField, InputField } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
-import EditIcon from '../../../shared/assets/icons/edit4.svg';
-import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import * as accountsApi from '../../../services/accounts.api';
 
 const primary = colors.primary?.main || '#790728';
-
-const STATIONS = ['Head office', 'Warehouse', 'Branch – North', 'Branch – South'];
-
-const VOUCHER_TYPES = ['Journal', 'Payment', 'Receipt', 'Contra', 'Sales', 'Purchase'];
-
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
-
-/** Sl no · Voucher no · Voucher date · Particular · Voucher type · Debit · Credit · Station · Action */
-const LINE_COL_PCT = [5, 10, 8, 18, 10, 11, 11, 11, 16];
+const LINE_COL_PCT = [5, 10, 8, 22, 10, 12, 12, 21];
 
 const actionIconBtn =
   'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
 
-const tableCellInputClass =
-  'box-border w-full min-w-0 max-w-full rounded border border-gray-200 bg-white px-0.5 py-0.5 text-center text-[clamp(7px,0.9vw,9px)] outline-none focus:border-gray-400 sm:px-1';
-
-const OPEN_BALANCE_DEBIT = 5000;
-const OPEN_BALANCE_CREDIT = 2000;
-
-const SAMPLE_PARTICULARS = [
-  'Cash receipt – customer INV-1042',
-  'Bank transfer – operating',
-  'Vendor payment – utilities',
-  'Sales invoice – retail',
-  'Journal adjustment – rounding',
-  'Petty cash reimbursement',
-];
-
-function buildDummyLedgerLines(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const base = 150 + (i * 173) % 9500 + (i % 5) * 41.2;
-    const fmt = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const debit = i % 3 !== 1 ? fmt(base) : '0.00';
-    const credit = i % 3 === 1 ? fmt(base) : i % 5 === 0 ? fmt(base * 0.15) : '0.00';
-    const d = 1 + (i % 28);
-    const m = 1 + (i % 12);
-    rows.push({
-      id: `ald-${i + 1}`,
-      voucherNo: `${['JV', 'PV', 'RV', 'CN'][i % 4]}-2026-${String(1000 + i).slice(-4)}`,
-      voucherDate: `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/2026`,
-      particular: SAMPLE_PARTICULARS[i % SAMPLE_PARTICULARS.length],
-      voucherType: VOUCHER_TYPES[i % VOUCHER_TYPES.length],
-      debit,
-      credit,
-      station: STATIONS[i % STATIONS.length],
-    });
-  }
-  return rows;
-}
-
-const DUMMY_LEDGER_LINES = buildDummyLedgerLines(32);
-
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
-
-const figmaToolbarBtn =
-  `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
-
+const figmaToolbarBtn = `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
 const primaryToolbarBtn =
   'inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
 
-function parseMoneyValue(s) {
-  const n = Number(String(s ?? '').replace(/,/g, ''));
-  return Number.isFinite(n) ? n : 0;
+function formatMoney(n) {
+  return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function formatMoneyDisplay(n) {
-  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}/${dt.getFullYear()}`;
 }
 
 function useViewportMaxWidth(maxPx) {
@@ -94,218 +44,106 @@ function useViewportMaxWidth(maxPx) {
 }
 
 export default function AccountLedgerDetails() {
-  const [tableData, setTableData] = useState(() => DUMMY_LEDGER_LINES.map((r) => ({ ...r })));
-
-  const [ledger, setLedger] = useState('');
-  const [station, setStation] = useState('');
+  const [accountOptions, setAccountOptions] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [rows, setRows] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [openDebit, setOpenDebit] = useState(0);
+  const [openCredit, setOpenCredit] = useState(0);
+  const [accountInfo, setAccountInfo] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [editingRowId, setEditingRowId] = useState(null);
+  const [pageSize, setPageSize] = useState(15);
   const [detailRowId, setDetailRowId] = useState(null);
   const isCompactTable = useViewportMaxWidth(1200);
 
-  const filteredRows = tableData;
-
-  const handleDisplay = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('Display ledger details', { ledger, station, dateFrom, dateTo });
-    setTableData(buildDummyLedgerLines(32).map((r) => ({ ...r })));
-    setPage(1);
-    setEditingRowId(null);
-    setDetailRowId(null);
-  }, [ledger, station, dateFrom, dateTo]);
-
-  const updateLine = useCallback((id, patch) => {
-    setTableData((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  useEffect(() => {
+    accountsApi.listAccountHeads({ postingOnly: true }).then((res) => {
+      const heads = res.data?.accountHeads || [];
+      setAccountOptions(heads);
+    }).catch(() => {});
   }, []);
 
-  const handleViewLine = useCallback((id) => {
-    setEditingRowId(null);
-    setDetailRowId(id);
-  }, []);
-
-  const handleEditLine = useCallback((id) => {
-    setDetailRowId(null);
-    setEditingRowId((prev) => (prev === id ? null : id));
-  }, []);
-
-  const handleDeleteLine = useCallback((id) => {
-    setTableData((prev) => prev.filter((r) => r.id !== id));
-    setDetailRowId((cur) => (cur === id ? null : cur));
-    setEditingRowId((cur) => (cur === id ? null : cur));
-  }, []);
-
-  const closeDetailModal = useCallback(() => setDetailRowId(null), []);
-
-  const detailRow = useMemo(
-    () => (detailRowId ? filteredRows.find((r) => r.id === detailRowId) : null),
-    [detailRowId, filteredRows],
-  );
-
-  const detailSlNo = useMemo(() => {
-    if (!detailRowId) return 0;
-    const i = filteredRows.findIndex((r) => r.id === detailRowId);
-    return i >= 0 ? i + 1 : 0;
-  }, [detailRowId, filteredRows]);
+  const handleDisplay = useCallback(async () => {
+    if (!selectedAccountId) return;
+    setLoading(true);
+    try {
+      const params = { page, pageSize };
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+      const res = await accountsApi.getLedgerTransactions(selectedAccountId, params);
+      const d = res.data;
+      setRows(d.rows || []);
+      setTotal(d.total || 0);
+      setOpenDebit(d.openDebit || 0);
+      setOpenCredit(d.openCredit || 0);
+      setAccountInfo(d.account || null);
+    } catch (e) {
+      console.error('Failed to load ledger', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedAccountId, dateFrom, dateTo, page, pageSize]);
 
   useEffect(() => {
-    if (detailRowId && !filteredRows.some((r) => r.id === detailRowId)) {
-      setDetailRowId(null);
-    }
-  }, [detailRowId, filteredRows]);
+    if (selectedAccountId) handleDisplay();
+  }, [page, pageSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!detailRowId) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') setDetailRowId(null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [detailRowId]);
+  const totalDebit = useMemo(() => rows.reduce((s, r) => s + Number(r.debit_amount || 0), 0), [rows]);
+  const totalCredit = useMemo(() => rows.reduce((s, r) => s + Number(r.credit_amount || 0), 0), [rows]);
 
-  const totalFiltered = filteredRows.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
+  const closeDebit = useMemo(() => {
+    const net = openDebit - openCredit + totalDebit - totalCredit;
+    return net >= 0 ? net : 0;
+  }, [openDebit, openCredit, totalDebit, totalCredit]);
 
-  useEffect(() => {
-    setPage((p) => Math.min(Math.max(1, p), totalPages));
-  }, [totalPages]);
-
-  const paginatedRows = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredRows.slice(start, start + pageSize);
-  }, [filteredRows, page, pageSize]);
-
-  const rangeStart = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
-  const rangeEnd = Math.min(page * pageSize, totalFiltered);
-
-  const totalDebit = useMemo(() => {
-    let sum = 0;
-    for (const r of filteredRows) {
-      sum += parseMoneyValue(r.debit);
-    }
-    return sum;
-  }, [filteredRows]);
-
-  const totalCredit = useMemo(() => {
-    let sum = 0;
-    for (const r of filteredRows) {
-      sum += parseMoneyValue(r.credit);
-    }
-    return sum;
-  }, [filteredRows]);
-
-  const { closeDebit, closeCredit } = useMemo(() => {
-    const net = OPEN_BALANCE_DEBIT - OPEN_BALANCE_CREDIT + totalDebit - totalCredit;
-    if (net >= 0) {
-      return { closeDebit: net, closeCredit: 0 };
-    }
-    return { closeDebit: 0, closeCredit: -net };
-  }, [totalDebit, totalCredit]);
+  const closeCredit = useMemo(() => {
+    const net = openDebit - openCredit + totalDebit - totalCredit;
+    return net < 0 ? -net : 0;
+  }, [openDebit, openCredit, totalDebit, totalCredit]);
 
   const tableBodyRows = useMemo(() => {
-    return paginatedRows.map((r, idx) => {
-      const slNo = (page - 1) * pageSize + idx + 1;
-      const rowIsEditing = editingRowId === r.id;
-      const cell = (field, val, left, inputMode) =>
-        rowIsEditing ? (
-          <input
-            key={`${field}-${r.id}`}
-            type="text"
-            inputMode={inputMode}
-            className={`${tableCellInputClass} ${left ? 'text-left' : ''}`}
-            value={val}
-            onChange={(e) => updateLine(r.id, { [field]: e.target.value })}
-            aria-label={field}
-          />
-        ) : (
-          val
-        );
+    return rows.map((r, idx) => {
+      const slNo = idx + 1;
       return [
         slNo,
-        cell('voucherNo', r.voucherNo, false, undefined),
-        cell('voucherDate', r.voucherDate, false, undefined),
-        rowIsEditing ? (
-          <input
-            key={`p-${r.id}`}
-            type="text"
-            className={`${tableCellInputClass} text-left`}
-            value={r.particular}
-            onChange={(e) => updateLine(r.id, { particular: e.target.value })}
-            aria-label="Particular"
-          />
-        ) : (
-          <span key={`p-${r.id}`} className="block w-full text-left">
-            {r.particular}
-          </span>
-        ),
-        cell('voucherType', r.voucherType, false, undefined),
-        cell('debit', r.debit, false, 'decimal'),
-        cell('credit', r.credit, false, 'decimal'),
-        cell('station', r.station, true, undefined),
-        <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-          <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
+        `${r.voucher_prefix || ''}${r.auto_voucher_no || ''}`,
+        formatDate(r.voucher_date),
+        <span key={`p-${r.voucher_detail_id}`} className="block w-full text-left">{r.narration || r.voucher_type_code || '—'}</span>,
+        r.voucher_type_code || '',
+        formatMoney(r.debit_amount),
+        formatMoney(r.credit_amount),
+        <div key={`act-${r.voucher_detail_id}`} className="flex items-center justify-center">
+          <button type="button" className={actionIconBtn} onClick={() => setDetailRowId(r.voucher_detail_id)}>
             <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </button>
-          <button type="button" className={actionIconBtn} aria-label="Edit line" onClick={() => handleEditLine(r.id)}>
-            <img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </button>
-          <button type="button" className={actionIconBtn} aria-label="Delete line" onClick={() => handleDeleteLine(r.id)}>
-            <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>,
       ];
     });
-  }, [
-    paginatedRows,
-    page,
-    pageSize,
-    editingRowId,
-    updateLine,
-    handleViewLine,
-    handleEditLine,
-    handleDeleteLine,
-  ]);
+  }, [rows]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const tableFooterRows = useMemo(() => {
-    if (totalFiltered === 0) return [];
-    const labelCell = (text) => ({
-      content: <span className="font-bold">{text}</span>,
-      colSpan: 5,
-      className: 'text-left align-middle',
-    });
+    if (rows.length === 0) return [];
+    const labelCell = (text) => ({ content: <span className="font-bold">{text}</span>, colSpan: 5, className: 'text-left align-middle' });
     return [
-      [
-        labelCell('Open balance'),
-        formatMoneyDisplay(OPEN_BALANCE_DEBIT),
-        formatMoneyDisplay(OPEN_BALANCE_CREDIT),
-        '',
-        '',
-      ],
-      [
-        labelCell('Current total'),
-        formatMoneyDisplay(totalDebit),
-        formatMoneyDisplay(totalCredit),
-        '',
-        '',
-      ],
-      [
-        labelCell('Close balance'),
-        formatMoneyDisplay(closeDebit),
-        formatMoneyDisplay(closeCredit),
-        '',
-        '',
-      ],
+      [labelCell('Open balance'), formatMoney(openDebit), formatMoney(openCredit), ''],
+      [labelCell('Current total'), formatMoney(totalDebit), formatMoney(totalCredit), ''],
+      [labelCell('Close balance'), formatMoney(closeDebit), formatMoney(closeCredit), ''],
     ];
-  }, [totalFiltered, totalDebit, totalCredit, closeDebit, closeCredit]);
+  }, [rows, openDebit, openCredit, totalDebit, totalCredit, closeDebit, closeCredit]);
+
+  const detailRow = useMemo(() => rows.find((r) => r.voucher_detail_id === detailRowId) || null, [detailRowId, rows]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
-    if (totalPages <= maxBtns) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
+    if (totalPages <= maxBtns) return Array.from({ length: totalPages }, (_, i) => i + 1);
     let start = Math.max(1, page - 1);
     let end = Math.min(totalPages, start + maxBtns - 1);
     start = Math.max(1, end - maxBtns + 1);
@@ -315,11 +153,8 @@ export default function AccountLedgerDetails() {
   return (
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <h1
-          className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
-          style={{ color: primary }}
-        >
-          LEDGER DETAILS
+        <h1 className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl" style={{ color: primary }}>
+          LEDGER DETAILS {accountInfo ? `— ${accountInfo.accountHead}` : ''}
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
@@ -330,21 +165,16 @@ export default function AccountLedgerDetails() {
 
       <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:gap-x-3 sm:gap-y-3 sm:p-3">
         <div className="min-w-[16rem] w-full max-w-full shrink-0 sm:min-w-[22rem] sm:w-[22rem]">
-          <SubInputField
-            label="Ledger"
-            fullWidth
-            value={ledger}
-            onChange={(e) => setLedger(e.target.value)}
-            placeholder="Ledger name or code"
-          />
-        </div>
-        <div className="shrink-0">
           <DropdownInput
-            label="Station"
-            value={station}
-            onChange={setStation}
-            options={STATIONS}
-            placeholder="Select"
+            label="Ledger"
+            value={selectedAccount}
+            onChange={(val) => {
+              setSelectedAccount(val);
+              const match = accountOptions.find(a => `${a.accountNo} – ${a.accountHead}` === val);
+              setSelectedAccountId(match ? match.accountId : null);
+            }}
+            options={accountOptions.map(a => `${a.accountNo} – ${a.accountHead}`)}
+            placeholder="Select account"
           />
         </div>
         <div className="shrink-0">
@@ -354,170 +184,86 @@ export default function AccountLedgerDetails() {
           <DateInputField label="Date To" value={dateTo} onChange={setDateTo} />
         </div>
         <div className="ml-auto flex shrink-0 items-end">
-          <button
-            type="button"
-            onClick={handleDisplay}
-            className={`${primaryToolbarBtn} h-[26px] min-h-[26px]`}
-            style={{ backgroundColor: primary, borderColor: primary }}
-            aria-label="Display"
-          >
-            Display
+          <button type="button" onClick={() => { setPage(1); handleDisplay(); }}
+            className={`${primaryToolbarBtn} h-[26px] min-h-[26px]`} style={{ backgroundColor: primary, borderColor: primary }}
+            disabled={!selectedAccountId || loading}>
+            {loading ? 'Loading…' : 'Display'}
           </button>
         </div>
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <CommonTable
-          className="account-ledger-details-table flex min-h-0 min-w-0 flex-1 flex-col"
-          fitParentWidth
-          allowHorizontalScroll={isCompactTable}
-          truncateHeader
-          truncateBody={editingRowId == null}
-          columnWidthPercents={LINE_COL_PCT}
-          tableClassName={isCompactTable ? 'min-w-[56rem] w-full' : 'min-w-0 w-full'}
-          hideVerticalCellBorders
-          cellAlign="center"
-          headerFontSize="clamp(7px, 0.85vw, 10px)"
-          headerTextColor="#6b7280"
-          bodyFontSize="clamp(8px, 1vw, 10px)"
-          cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
-          bodyRowHeightRem={2.35}
-          maxVisibleRows={pageSize}
-          headers={[
-            'Sl no',
-            'Voucher no',
-            'Voucher date',
-            'Particular',
-            'Voucher type',
-            'Debit',
-            'Credit',
-            'Station',
-            'Action',
-          ]}
-          rows={tableBodyRows}
-          footerRows={tableFooterRows}
-        />
-
-        <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center justify-items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:justify-items-stretch sm:gap-x-2 sm:gap-y-0">
-          <div className="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
-            <p className="text-center font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700 sm:text-left">
-              Showing{' '}
-              <span className="text-black">{rangeStart}</span>
-              {'–'}
-              <span className="text-black">{rangeEnd}</span> of{' '}
-              <span className="text-black">{totalFiltered}</span>
-            </p>
-            <label className="flex items-center gap-1 font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
-              Rows
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPage(1);
-                }}
-                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300"
-                aria-label="Rows per page"
-              >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
+        {rows.length === 0 && !loading ? (
+          <div className="flex flex-1 items-center justify-center text-sm text-gray-500">
+            {selectedAccountId ? 'No transactions found' : 'Select an account and click Display'}
           </div>
+        ) : (
+          <CommonTable
+            className="account-ledger-details-table flex min-h-0 min-w-0 flex-1 flex-col"
+            fitParentWidth allowHorizontalScroll={isCompactTable} truncateHeader truncateBody
+            columnWidthPercents={LINE_COL_PCT}
+            tableClassName={isCompactTable ? 'min-w-[56rem] w-full' : 'min-w-0 w-full'}
+            hideVerticalCellBorders cellAlign="center"
+            headerFontSize="clamp(7px, 0.85vw, 10px)" headerTextColor="#6b7280"
+            bodyFontSize="clamp(8px, 1vw, 10px)"
+            cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
+            bodyRowHeightRem={2.35} maxVisibleRows={pageSize}
+            headers={['Sl', 'Voucher No', 'Date', 'Particular', 'Type', 'Debit', 'Credit', 'Action']}
+            rows={tableBodyRows}
+            footerRows={tableFooterRows}
+          />
+        )}
 
-          <span className="hidden sm:block" aria-hidden />
-
-          <div
-            className="inline-flex h-7 w-max max-w-full shrink-0 items-stretch justify-self-center overflow-hidden rounded-[3px] border border-gray-200 bg-white sm:justify-self-end"
-            role="navigation"
-            aria-label="Pagination"
-          >
-            <button
-              type="button"
-              className="inline-flex w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              aria-label="Previous page"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <div className="flex items-stretch border-l border-gray-200">
-              {pageNumbers.map((n) => {
-                const active = n === page;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${
-                      active ? 'text-white' : 'text-gray-700 hover:bg-gray-50'
-                    } ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`}
-                    style={active ? { backgroundColor: primary } : undefined}
-                    onClick={() => setPage(n)}
-                    aria-label={`Page ${n}`}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
+        {total > 0 && (
+          <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center justify-items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:justify-items-stretch sm:gap-x-2 sm:gap-y-0">
+            <div className="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
+              <p className="text-center font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700 sm:text-left">
+                Page <span className="text-black">{page}</span> of <span className="text-black">{totalPages}</span> ({total} entries)
+              </p>
+              <label className="flex items-center gap-1 font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
+                Rows
+                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                  className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300">
+                  {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </label>
             </div>
-            <button
-              type="button"
-              className="inline-flex w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              aria-label="Next page"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <span className="hidden sm:block" aria-hidden />
+            <div className="inline-flex h-7 w-max max-w-full shrink-0 items-stretch justify-self-center overflow-hidden rounded-[3px] border border-gray-200 bg-white sm:justify-self-end" role="navigation">
+              <button type="button" className="inline-flex w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25"><path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <div className="flex items-stretch border-l border-gray-200">
+                {pageNumbers.map((n) => (
+                  <button key={n} type="button"
+                    className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${n === page ? 'text-white' : 'text-gray-700 hover:bg-gray-50'} ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`}
+                    style={n === page ? { backgroundColor: primary } : undefined}
+                    onClick={() => setPage(n)}>{n}</button>
+                ))}
+              </div>
+              <button type="button" className="inline-flex w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25"><path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {detailRowId && detailRow ? (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm"
-          onClick={closeDetailModal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="ald-line-detail-title"
-        >
-          <div
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              onClick={closeDetailModal}
-              aria-label="Close line detail"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden>
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm" onClick={() => setDetailRowId(null)} role="dialog" aria-modal="true">
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800" onClick={() => setDetailRowId(null)}>
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
-            <h2
-              id="ald-line-detail-title"
-              className="pr-10 text-sm font-bold sm:text-base"
-              style={{ color: primary }}
-            >
-              Voucher detail
-            </h2>
+            <h2 className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>Voucher Detail</h2>
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
-              <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
-              <InputField label="Voucher no" fullWidth readOnly value={detailRow.voucherNo} />
-              <InputField label="Voucher date" fullWidth readOnly value={detailRow.voucherDate} />
-              <InputField label="Particular" fullWidth readOnly value={detailRow.particular} />
-              <InputField label="Voucher type" fullWidth readOnly value={detailRow.voucherType} />
-              <InputField label="Debit" fullWidth readOnly value={detailRow.debit} />
-              <InputField label="Credit" fullWidth readOnly value={detailRow.credit} />
-              <InputField label="Station" fullWidth readOnly value={detailRow.station} />
+              <InputField label="Voucher No" fullWidth readOnly value={`${detailRow.voucher_prefix || ''}${detailRow.auto_voucher_no || ''}`} />
+              <InputField label="Date" fullWidth readOnly value={formatDate(detailRow.voucher_date)} />
+              <InputField label="Type" fullWidth readOnly value={detailRow.voucher_name || detailRow.voucher_type_code || ''} />
+              <InputField label="Narration" fullWidth readOnly value={detailRow.narration || '—'} />
+              <InputField label="Debit" fullWidth readOnly value={formatMoney(detailRow.debit_amount)} />
+              <InputField label="Credit" fullWidth readOnly value={formatMoney(detailRow.credit_amount)} />
+              <InputField label="Status" fullWidth readOnly value={detailRow.post_status || ''} />
             </div>
           </div>
         </div>

@@ -18,3 +18,11 @@ export function requestMe() {
 export function requestWelcomeComplete() {
   return httpClient.post('/api/auth/welcome/complete');
 }
+
+export function requestForgotPasswordOtp(usernameOrEmail) {
+  return httpClient.post('/api/auth/forgot-password', { usernameOrEmail });
+}
+
+export function requestResetPassword({ usernameOrEmail, otp, newPassword }) {
+  return httpClient.post('/api/auth/reset-password', { usernameOrEmail, otp, newPassword });
+}

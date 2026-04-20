@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
 import { login } from '../../../core/auth/auth.service.js';
 
@@ -188,6 +188,14 @@ function Login() {
                     {errors.password}
                   </span>
                 )}
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-[11px] font-medium text-[#800000] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               {/* Submit button */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
@@ -14,8 +14,14 @@ import {
   Switch,
   ConfirmDialog,
 } from '../../../shared/components/ui';
+import { getSessionCompany, getSessionUser } from '../../../core/auth/auth.service.js';
+import * as staffEntryApi from '../../../services/staffEntry.api.js';
+import * as groupEntryApi from '../../../services/groupEntry.api.js';
+import * as subGroupEntryApi from '../../../services/subGroupEntry.api.js';
+import * as productEntryApi from '../../../services/productEntry.api.js';
 
 const mainInitial = {
+  productCode: '',
   barcode: '',
   description: '',
   shortDescription: '',
@@ -25,9 +31,9 @@ const mainInitial = {
   lastSupplier: '',
   specification: '',
   productBrand: '',
-  group: '',
+  groupId: '',
   newBarcode: false,
-  subgroup: '',
+  subGroupId: '',
   subSubGroup: '',
   averageCost: '',
   lastPurchCost: '',
@@ -78,372 +84,308 @@ const lineFormInitial = {
 };
 
 /** Row: shortDesc, hsCode, qty, sellPrice, discPct, discAmt, subTot, taxPct, taxAmt, lineTot */
-const sampleRows = [
-  ['gfghvghvghg', 'HS-001', 1, 120.0, 5, 6.0, 114.0, 18, 20.52, 134.52],
-  ['Alternate A', 'HS-882', 2, 55.0, 0, 0.0, 110.0, 5, 5.5, 115.5],
-  ['Spare part B', 'HS-200', 4, 12.5, 10, 5.0, 45.0, 18, 8.1, 53.1],
-];
+const sampleRows = [];
 
-const substituteDummyRows = [
-  { productCode: 'PRD-1001', productName: 'Widget bolt M8', unitPrice: '-' },
-  { productCode: 'PRD-2044', productName: 'Rubber gasket set', unitPrice: '-' },
-  { productCode: 'PRD-3300', productName: 'Steel bracket 120mm', unitPrice: '-' },
-];
+const substituteDummyRows = [];
 
 const ENTRY_TABS = [
-  { id: 'basic', label: 'Basic' },
-  { id: 'trading', label: 'Trading product' },
-  { id: 'supplier', label: 'Supplier details' },
+  { id: 'general', label: 'General' },
+  { id: 'pricing', label: 'Pricing & VAT' },
+  { id: 'inventory', label: 'Stock & supplier' },
+  { id: 'trading', label: 'Trading & substitutes' },
 ];
 
-/** Basic tab: same layout rhythm as Supplier Entry (centered max-w-4xl, 3-col grid on sm+) */
-const basicFormSection = 'grid grid-cols-1 gap-3 sm:grid-cols-3';
-const basicSpan3 = 'min-w-0 sm:col-span-3';
-const basicSpan2 = 'min-w-0 sm:col-span-2';
+/** Consistent field grid: 1 col mobile, 2 tablet, 3 desktop */
+const TAB_GRID = 'grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2 xl:grid-cols-3';
+const TAB_PANEL = 'mx-auto w-full max-w-6xl space-y-6 px-2 py-4 sm:px-4 sm:py-6';
+const SPAN_FULL = 'min-w-0 sm:col-span-2 xl:col-span-3';
+const fieldBox =
+  'flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white';
 
-function SupplierDetailFields({ fieldBox, supplier, setSupplier, layout = 'stack' }) {
-  if (layout === 'viewportGrid') {
-    return (
-      <div className={`${fieldBox} min-w-0`}>
-        <div className="flex justify-center">
-          <div className="w-full max-w-4xl p-3 sm:p-4">
-            <div className={basicFormSection}>
-              <SubInputField
-                label="Supplier"
-                fullWidth
-                value={supplier.supplier}
-                onChange={(e) => setSupplier((s) => ({ ...s, supplier: e.target.value }))}
-              />
-              <SubInputField
-                label="Supplier ref No"
-                fullWidth
-                value={supplier.supplierRefNo}
-                onChange={(e) => setSupplier((s) => ({ ...s, supplierRefNo: e.target.value }))}
-              />
-              <SubInputField
-                label="Unit"
-                placeholder="0"
-                fullWidth
-                value={supplier.unit}
-                onChange={(e) => setSupplier((s) => ({ ...s, unit: e.target.value }))}
-              />
-            </div>
-
-            <div className={`mt-3 ${basicFormSection}`}>
-              <DropdownInput
-                label="Product type"
-                options={['Stock', 'Non-stock', 'Service']}
-                value={supplier.productType}
-                onChange={(v) => setSupplier((s) => ({ ...s, productType: v }))}
-                placeholder="Select"
-                fullWidth
-              />
-              <SubInputField
-                label="Pack Qty"
-                fullWidth
-                value={supplier.packQty}
-                onChange={(e) => setSupplier((s) => ({ ...s, packQty: e.target.value }))}
-              />
-              <DropdownInput
-                label="Stock Type"
-                options={['Normal', 'Batch', 'Serial']}
-                value={supplier.stockType}
-                onChange={(v) => setSupplier((s) => ({ ...s, stockType: v }))}
-                placeholder="Select"
-                fullWidth
-              />
-            </div>
-
-            <div className={`mt-3 ${basicFormSection}`}>
-              <div className={basicSpan2}>
-                <SubInputField
-                  label="packet Details"
-                  fullWidth
-                  value={supplier.packetDetails}
-                  onChange={(e) => setSupplier((s) => ({ ...s, packetDetails: e.target.value }))}
-                />
-              </div>
-              <DropdownInput
-                label="Location"
-                options={['Main', 'Warehouse A', 'Warehouse B']}
-                value={supplier.location}
-                onChange={(v) => setSupplier((s) => ({ ...s, location: v }))}
-                placeholder="Select"
-                fullWidth
-              />
-            </div>
-
-            <div className={`mt-3 ${basicFormSection}`}>
-              <SubInputField
-                label="Origin"
-                fullWidth
-                value={supplier.origin}
-                onChange={(e) => setSupplier((s) => ({ ...s, origin: e.target.value }))}
-              />
-              <SubInputField
-                label="ReOrder Level"
-                fullWidth
-                value={supplier.reorderLevel}
-                onChange={(e) => setSupplier((s) => ({ ...s, reorderLevel: e.target.value }))}
-              />
-              <SubInputField
-                label="Reorder Qty"
-                fullWidth
-                value={supplier.reorderQty}
-                onChange={(e) => setSupplier((s) => ({ ...s, reorderQty: e.target.value }))}
-              />
-            </div>
-
-            <div className={`mt-3 ${basicFormSection}`}>
-              <div className={basicSpan3}>
-                <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]">
-                  Remark
-                </label>
-                <textarea
-                  value={supplier.remark}
-                  onChange={(e) => setSupplier((s) => ({ ...s, remark: e.target.value }))}
-                  rows={3}
-                  className="mt-0.5 min-h-[56px] w-full rounded border border-gray-200 bg-white px-2 py-1 text-[9px] outline-none sm:text-[10px]"
-                />
-              </div>
-            </div>
-
-            <div className={`mt-3 ${basicFormSection}`}>
-              <SubInputField
-                label="Qty on hand"
-                fullWidth
-                value={supplier.qtyOnHand}
-                onChange={(e) => setSupplier((s) => ({ ...s, qtyOnHand: e.target.value }))}
-              />
-              <DropdownInput
-                label="Productidentity"
-                options={['Yes', 'No']}
-                value={supplier.productIdentity}
-                onChange={(v) => setSupplier((s) => ({ ...s, productIdentity: v }))}
-                placeholder="Select"
-                fullWidth
-              />
-            </div>
-          </div>
+function FormSection({ title, hint, children, className = '' }) {
+  const accent = colors.primary?.main || '#790728';
+  return (
+    <section
+      className={`rounded-xl border border-gray-200/90 bg-gradient-to-br from-white via-white to-[#faf8f9] p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-5 ${className}`}
+    >
+      <header className="mb-4 flex flex-col gap-1 border-b border-gray-100/90 pb-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="h-7 w-1 shrink-0 rounded-full" style={{ backgroundColor: accent }} aria-hidden />
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-800 sm:text-xs">{title}</h2>
         </div>
-      </div>
-    );
-  }
+        {hint ? <p className="max-w-md text-[10px] leading-snug text-gray-500 sm:text-[11px]">{hint}</p> : null}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function ProductImageUpload({ previews, onPreviewsChange, primary }) {
+  const inputRef = React.useRef(null);
+  const [drag, setDrag] = React.useState(false);
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  const acc = primary || '#790728';
+
+  const readFiles = (files) => {
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        onPreviewsChange((prev) => [...prev, e.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeAt = (e, idx) => {
+    e.stopPropagation();
+    onPreviewsChange((prev) => prev.filter((_, i) => i !== idx));
+    setActiveIdx((prev) => Math.max(0, prev >= idx ? prev - 1 : prev));
+  };
+
+  const mainImg = previews[activeIdx] || null;
 
   return (
-    <div className={`${fieldBox} flex flex-col gap-2`}>
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:gap-2">
-        <div className="min-w-0 w-full sm:flex-1 sm:min-w-0">
-          <SubInputField
-            label="Supplier"
-            fullWidth
-            value={supplier.supplier}
-            onChange={(e) => setSupplier((s) => ({ ...s, supplier: e.target.value }))}
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[34%] sm:min-w-[5.5rem] sm:max-w-[10rem] sm:flex-none">
-          <SubInputField
-            label="Supplier ref No"
-            fullWidth
-            value={supplier.supplierRefNo}
-            onChange={(e) => setSupplier((s) => ({ ...s, supplierRefNo: e.target.value }))}
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[3.75rem] sm:flex-none sm:shrink-0">
-          <SubInputField
-            label="Unit"
-            placeholder="0"
-            fullWidth
-            value={supplier.unit}
-            onChange={(e) => setSupplier((s) => ({ ...s, unit: e.target.value }))}
-          />
-        </div>
+    <div style={{ display:'flex', flexDirection:'column', gap:'8px', height:'100%' }}>
+      {/* Main large drop area */}
+      <div
+        style={{
+          flex:1, minHeight:'220px',
+          border: drag ? `1.5px dashed ${acc}` : '1.5px dashed #CBD5E1',
+          borderRadius:'10px',
+          background: drag ? 'rgba(121,7,40,.03)' : '#F8FAFC',
+          cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+          overflow:'hidden', position:'relative', transition:'border-color .18s, background .18s',
+        }}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); readFiles(e.dataTransfer.files); }}
+      >
+        {mainImg ? (
+          <>
+            <img src={mainImg} alt="Product" style={{ width:'100%', height:'100%', objectFit:'contain', padding:'10px' }} />
+            <button
+              type="button"
+              onClick={(e) => removeAt(e, activeIdx)}
+              style={{ position:'absolute', top:6, right:6, width:22, height:22, borderRadius:'50%', background:'rgba(0,0,0,.5)', border:'none', color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+              aria-label="Remove image"
+            >×</button>
+          </>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', padding:'20px', textAlign:'center', pointerEvents:'none' }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C8C4BE" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span style={{ fontSize:'13px', fontWeight:600, color:'#94A3B8' }}>Drop images here</span>
+            <span style={{ fontSize:'12px', color:'#B8B4AF' }}>or click to browse</span>
+            <span style={{ fontSize:'11px', color:'#CBD5E1', marginTop:'2px' }}>PNG &middot; JPG &middot; WEBP &mdash; max 5 MB</span>
+          </div>
+        )}
       </div>
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:gap-2">
-        <div className="min-w-0 w-full sm:flex-1 sm:min-w-0">
-          <DropdownInput
-            label="Product type"
-            options={['Stock', 'Non-stock', 'Service']}
-            value={supplier.productType}
-            onChange={(v) => setSupplier((s) => ({ ...s, productType: v }))}
-            fullWidth
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[4.25rem] sm:flex-none sm:shrink-0">
-          <SubInputField
-            label="Pack Qty"
-            fullWidth
-            value={supplier.packQty}
-            onChange={(e) => setSupplier((s) => ({ ...s, packQty: e.target.value }))}
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[6.75rem] sm:flex-none sm:shrink-0">
-          <DropdownInput
-            label="Stock Type"
-            options={['Normal', 'Batch', 'Serial']}
-            value={supplier.stockType}
-            onChange={(v) => setSupplier((s) => ({ ...s, stockType: v }))}
-            fullWidth
-          />
-        </div>
+
+      {/* Thumbnail strip */}
+      <div style={{ display:'flex', gap:'6px', overflowX:'auto', padding:'2px 0', alignItems:'center', minHeight:'58px' }}>
+        {previews.map((p, i) => (
+          <div
+            key={i}
+            onClick={() => setActiveIdx(i)}
+            style={{
+              width:'52px', height:'52px', borderRadius:'7px', flexShrink:0,
+              cursor:'pointer', overflow:'hidden',
+              border: i === activeIdx ? `2px solid ${acc}` : '1.5px solid #E2E8F0',
+              position:'relative', transition:'border-color .15s',
+            }}
+          >
+            <img src={p} alt={`img ${i + 1}`} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            <button
+              type="button"
+              onClick={(e) => removeAt(e, i)}
+              style={{ position:'absolute', top:1, right:1, width:14, height:14, borderRadius:'50%', background:'rgba(0,0,0,.55)', border:'none', color:'#fff', fontSize:9, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}
+              aria-label="Remove"
+            >×</button>
+          </div>
+        ))}
+        <div
+          onClick={() => inputRef.current?.click()}
+          style={{ width:'52px', height:'52px', borderRadius:'7px', flexShrink:0, cursor:'pointer', border:'1.5px dashed #CBD5E1', background:'#F8FAFC', display:'flex', alignItems:'center', justifyContent:'center', color:'#94A3B8', fontSize:'22px', fontWeight:300, transition:'border-color .15s, color .15s' }}
+          title="Add more images"
+        >+</div>
       </div>
-      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
-        <SubInputField
-          label="packet Details"
-          fullWidth
-          value={supplier.packetDetails}
-          onChange={(e) => setSupplier((s) => ({ ...s, packetDetails: e.target.value }))}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display:'none' }}
+        onChange={(e) => readFiles(e.target.files)}
+      />
+    </div>
+  );
+}
+
+function SupplierStockForm({ supplier, setSupplier }) {
+  return (
+    <div style={{ display:'grid', gap:'12px', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))' }}>
+      <SubInputField
+        label="Supplier"
+        fullWidth
+        value={supplier.supplier}
+        onChange={(e) => setSupplier((s) => ({ ...s, supplier: e.target.value }))}
+      />
+      <SubInputField
+        label="Supplier ref No"
+        fullWidth
+        value={supplier.supplierRefNo}
+        onChange={(e) => setSupplier((s) => ({ ...s, supplierRefNo: e.target.value }))}
+      />
+      <SubInputField
+        label="Unit"
+        placeholder="0"
+        fullWidth
+        value={supplier.unit}
+        onChange={(e) => setSupplier((s) => ({ ...s, unit: e.target.value }))}
+      />
+      <DropdownInput
+        label="Product type"
+        options={['Stock', 'Non-stock', 'Service']}
+        value={supplier.productType}
+        onChange={(v) => setSupplier((s) => ({ ...s, productType: v }))}
+        placeholder="Select"
+        fullWidth
+      />
+      <SubInputField
+        label="Pack Qty"
+        fullWidth
+        value={supplier.packQty}
+        onChange={(e) => setSupplier((s) => ({ ...s, packQty: e.target.value }))}
+      />
+      <DropdownInput
+        label="Stock type"
+        options={['Normal', 'Batch', 'Serial']}
+        value={supplier.stockType}
+        onChange={(v) => setSupplier((s) => ({ ...s, stockType: v }))}
+        placeholder="Select"
+        fullWidth
+      />
+      <SubInputField
+        label="Packet details"
+        fullWidth
+        value={supplier.packetDetails}
+        onChange={(e) => setSupplier((s) => ({ ...s, packetDetails: e.target.value }))}
+      />
+      <DropdownInput
+        label="Location"
+        options={['Main', 'Warehouse A', 'Warehouse B']}
+        value={supplier.location}
+        onChange={(v) => setSupplier((s) => ({ ...s, location: v }))}
+        placeholder="Select"
+        fullWidth
+      />
+      <SubInputField
+        label="Origin"
+        fullWidth
+        value={supplier.origin}
+        onChange={(e) => setSupplier((s) => ({ ...s, origin: e.target.value }))}
+      />
+      <SubInputField
+        label="Reorder level"
+        fullWidth
+        value={supplier.reorderLevel}
+        onChange={(e) => setSupplier((s) => ({ ...s, reorderLevel: e.target.value }))}
+      />
+      <SubInputField
+        label="Reorder qty"
+        fullWidth
+        value={supplier.reorderQty}
+        onChange={(e) => setSupplier((s) => ({ ...s, reorderQty: e.target.value }))}
+      />
+      <SubInputField
+        label="Qty on hand"
+        fullWidth
+        value={supplier.qtyOnHand}
+        onChange={(e) => setSupplier((s) => ({ ...s, qtyOnHand: e.target.value }))}
+      />
+      <DropdownInput
+        label="Product identity"
+        options={['Yes', 'No']}
+        value={supplier.productIdentity}
+        onChange={(v) => setSupplier((s) => ({ ...s, productIdentity: v }))}
+        placeholder="Select"
+        fullWidth
+      />
+      <div style={{ gridColumn:'1/-1' }}>
+        <label style={{ fontSize:'12px', fontWeight:500, color:'#64748B', display:'block', marginBottom:'5px' }}>Remark</label>
+        <textarea
+          value={supplier.remark}
+          onChange={(e) => setSupplier((s) => ({ ...s, remark: e.target.value }))}
+          rows={2}
+          style={{ width:'100%', borderRadius:'8px', border:'1px solid #E2E8F0', padding:'7px 10px', fontSize:'13px', color:'#1E293B', resize:'vertical', fontFamily:'inherit', background:'#fff', outline:'none' }}
         />
-        <DropdownInput
-          label="Location"
-          options={['Main', 'Warehouse A', 'Warehouse B']}
-          value={supplier.location}
-          onChange={(v) => setSupplier((s) => ({ ...s, location: v }))}
-          fullWidth
-        />
-      </div>
-      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
-        <SubInputField
-          label="Origin"
-          fullWidth
-          value={supplier.origin}
-          onChange={(e) => setSupplier((s) => ({ ...s, origin: e.target.value }))}
-        />
-        <SubInputField
-          label="ReOrder Level"
-          fullWidth
-          value={supplier.reorderLevel}
-          onChange={(e) => setSupplier((s) => ({ ...s, reorderLevel: e.target.value }))}
-        />
-        <SubInputField
-          label="Reorder Qty"
-          fullWidth
-          value={supplier.reorderQty}
-          onChange={(e) => setSupplier((s) => ({ ...s, reorderQty: e.target.value }))}
-        />
-      </div>
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:gap-2">
-        <div className="min-w-0 w-full sm:min-w-0 sm:flex-1">
-          <InputField
-            label="Remark"
-            fullWidth
-            value={supplier.remark}
-            onChange={(e) => setSupplier((s) => ({ ...s, remark: e.target.value }))}
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[5.5rem] sm:flex-none sm:shrink-0">
-          <SubInputField
-            label="Qty on hand"
-            fullWidth
-            value={supplier.qtyOnHand}
-            onChange={(e) => setSupplier((s) => ({ ...s, qtyOnHand: e.target.value }))}
-          />
-        </div>
-        <div className="min-w-0 w-full sm:w-[7.5rem] sm:flex-none sm:shrink-0">
-          <DropdownInput
-            label="Productidentity"
-            options={['Yes', 'No']}
-            value={supplier.productIdentity}
-            onChange={(v) => setSupplier((s) => ({ ...s, productIdentity: v }))}
-            fullWidth
-          />
-        </div>
       </div>
     </div>
   );
 }
 
-/** Line entry: centered max-w-4xl, 3-col grid on sm+, section breaks like Supplier entry */
-function ProductLineEntryGrid({ lineForm, setLineForm, primary, onAdd, addLabel }) {
+function ProductLineEntryForm({ lineForm, setLineForm, primary, onAdd, addLabel }) {
+  const fields = [
+    { label: 'Barcode',       key: 'barcode',           w: '110px' },
+    { label: 'Short Desc.',   key: 'shortDescription',  w: '160px' },
+    { label: 'Unit',          key: 'unit',              w: '70px'  },
+    { label: 'Pack Qty',      key: 'packQty',           w: '72px'  },
+    { label: 'Pkt Details',   key: 'packetDetails',     w: '90px'  },
+    { label: 'Disc %',        key: 'discPct',           w: '68px'  },
+    { label: 'Unit Cost',     key: 'unitCost',          w: '80px'  },
+    { label: 'Avg. Cost',     key: 'avgCost',           w: '80px'  },
+    { label: 'Last Cost',     key: 'lastCost',          w: '80px'  },
+    { label: 'Margin %',      key: 'marginPct',         w: '72px'  },
+    { label: 'Unit Price',    key: 'unitPrice',         w: '82px'  },
+  ];
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-4xl p-3 sm:p-4">
-        <div className={basicFormSection}>
-          <InputField
-            label="Barcode"
-            fullWidth
-            value={lineForm.barcode}
-            onChange={(e) => setLineForm((f) => ({ ...f, barcode: e.target.value }))}
-          />
-          <InputField
-            label="Short Description"
-            fullWidth
-            value={lineForm.shortDescription}
-            onChange={(e) => setLineForm((f) => ({ ...f, shortDescription: e.target.value }))}
-          />
-          <SubInputField
-            label="Unit"
-            fullWidth
-            value={lineForm.unit}
-            onChange={(e) => setLineForm((f) => ({ ...f, unit: e.target.value }))}
-          />
-        </div>
-
-        <div className={`mt-3 ${basicFormSection}`}>
-          <SubInputField
-            label="Pack Qty"
-            fullWidth
-            value={lineForm.packQty}
-            onChange={(e) => setLineForm((f) => ({ ...f, packQty: e.target.value }))}
-          />
-          <SubInputField
-            label="Packet Details"
-            fullWidth
-            value={lineForm.packetDetails}
-            onChange={(e) => setLineForm((f) => ({ ...f, packetDetails: e.target.value }))}
-          />
-          <SubInputField
-            label="Disc.%"
-            fullWidth
-            value={lineForm.discPct}
-            onChange={(e) => setLineForm((f) => ({ ...f, discPct: e.target.value }))}
-          />
-        </div>
-
-        <div className={`mt-3 ${basicFormSection}`}>
-          <SubInputField
-            label="Unit Cost"
-            fullWidth
-            value={lineForm.unitCost}
-            onChange={(e) => setLineForm((f) => ({ ...f, unitCost: e.target.value }))}
-          />
-          <SubInputField
-            label="Avg. cost"
-            fullWidth
-            value={lineForm.avgCost}
-            onChange={(e) => setLineForm((f) => ({ ...f, avgCost: e.target.value }))}
-          />
-          <SubInputField
-            label="Last cost"
-            fullWidth
-            value={lineForm.lastCost}
-            onChange={(e) => setLineForm((f) => ({ ...f, lastCost: e.target.value }))}
-          />
-        </div>
-
-        <div className={`mt-3 ${basicFormSection}`}>
-          <SubInputField
-            label="Margin%"
-            fullWidth
-            value={lineForm.marginPct}
-            onChange={(e) => setLineForm((f) => ({ ...f, marginPct: e.target.value }))}
-          />
-          <SubInputField
-            label="Unit Price"
-            fullWidth
-            value={lineForm.unitPrice}
-            onChange={(e) => setLineForm((f) => ({ ...f, unitPrice: e.target.value }))}
-          />
-          <div className="flex min-h-[40px] min-w-0 items-end justify-end">
-            <button
-              type="button"
-              className="rounded px-4 py-2 text-[11px] font-semibold text-white"
-              style={{ backgroundColor: primary }}
-              onClick={onAdd}
-            >
-              {addLabel}
-            </button>
+    <div style={{ overflowX:'auto' }}>
+      <div style={{ display:'flex', alignItems:'flex-end', gap:'8px', minWidth:'max-content', padding:'2px 0 4px' }}>
+        {fields.map((f) => (
+          <div key={f.key} style={{ display:'flex', flexDirection:'column', gap:'4px', width:f.w }}>
+            <label style={{ fontSize:'11px', fontWeight:500, color:'#64748B', whiteSpace:'nowrap' }}>{f.label}</label>
+            <input
+              type="text"
+              value={lineForm[f.key]}
+              onChange={(e) => setLineForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
+              style={{
+                height:'34px', width:'100%', padding:'0 8px', fontSize:'13px',
+                border:'1px solid #E2E8F0', borderRadius:'7px', background:'#fff',
+                color:'#1E293B', outline:'none', transition:'border-color .15s',
+              }}
+              onFocus={(e) => { e.target.style.borderColor = primary; }}
+              onBlur={(e) => { e.target.style.borderColor = '#E2E8F0'; }}
+              onKeyDown={(e) => { if (e.key === 'Enter') onAdd(); }}
+            />
           </div>
+        ))}
+        <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+          <label style={{ fontSize:'11px', color:'transparent', userSelect:'none' }}>x</label>
+          <button
+            type="button"
+            onClick={onAdd}
+            title="Add to table (Enter)"
+            style={{
+              height:'34px', minWidth:'72px', padding:'0 14px',
+              background:`linear-gradient(135deg,${primary} 0%,#a01035 100%)`,
+              color:'#fff', border:'none', borderRadius:'7px',
+              fontSize:'13px', fontWeight:700, cursor:'pointer',
+              boxShadow:`0 2px 6px ${primary}45`,
+              display:'flex', alignItems:'center', gap:'5px',
+              transition:'filter .15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            {addLabel === 'Add' ? 'Add' : 'Update'}
+          </button>
         </div>
       </div>
     </div>
@@ -454,6 +396,32 @@ export default function ProductEntry() {
   const primary = colors.primary?.main || '#790728';
   const primaryHover = colors.primary?.[50] || '#F2E6EA';
   const primaryActive = colors.primary?.[100] || '#E4CDD3';
+  const surfaceTint = colors.primary?.[50] || '#F2E6EA';
+  const user = getSessionUser();
+  const company = getSessionCompany();
+
+  // Derive software type from the company session.
+  // company.softwareType comes from core.software_type_master.software_code
+  // (populated by the login API after migration 014).
+  // Falls back to 'RESTAURANT' if not yet set (all existing companies are Restaurant ERP).
+  const softwareType = (company?.softwareType || company?.software_type || 'RESTAURANT').toUpperCase();
+
+  // Product Code is a user-defined part/stock code — critical for Garage (OEM part codes)
+  // but unnecessary in Restaurant / POS where it is auto-generated on save.
+  const showProductCode = !['RESTAURANT', 'POS'].includes(softwareType);
+
+  const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [subGroups, setSubGroups] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [loadBranchesError, setLoadBranchesError] = useState('');
+  const [mastersError, setMastersError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const [main, setMain] = useState(mainInitial);
   const [supplier, setSupplier] = useState(supplierInitial);
@@ -467,18 +435,242 @@ export default function ProductEntry() {
   const [substituteRows, setSubstituteRows] = useState(substituteDummyRows);
   /** null | { type: 'line', idx } | { type: 'substitute', idx } */
   const [pendingDelete, setPendingDelete] = useState(null);
-  /** basic | trading | supplier — switches main left panel under Product entry */
-  const [entryTab, setEntryTab] = useState('basic');
-  const [additionalInfoOpen, setAdditionalInfoOpen] = useState(false);
+  const [entryTab, setEntryTab] = useState('general');
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
-    if (!additionalInfoOpen) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') setAdditionalInfoOpen(false);
+    let cancelled = false;
+    (async () => {
+      setLoadingBranches(true);
+      setLoadBranchesError('');
+      try {
+        const { data } = await staffEntryApi.fetchStaffBranches();
+        if (cancelled) return;
+        const list = data.branches || [];
+        setBranches(list);
+        const station = user?.stationId != null ? String(user.stationId) : '';
+        const stationInList = list.some((b) => String(b.branchId) === station);
+        if (list.length === 1) {
+          setBranchId(String(list[0].branchId));
+        } else if (stationInList) {
+          setBranchId(station);
+        }
+      } catch {
+        if (!cancelled) setLoadBranchesError('Could not load branches.');
+      } finally {
+        if (!cancelled) setLoadingBranches(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [additionalInfoOpen]);
+  }, [user?.stationId]);
+
+  useEffect(() => {
+    if (!branchId) {
+      setGroups([]);
+      setMain((m) => ({ ...m, groupId: '', subGroupId: '' }));
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setMastersError('');
+      try {
+        const { data } = await groupEntryApi.fetchGroups(Number(branchId));
+        if (cancelled) return;
+        setGroups(data.groups || []);
+        setMain((m) => ({ ...m, groupId: '', subGroupId: '' }));
+      } catch {
+        if (!cancelled) {
+          setGroups([]);
+          setMastersError('Could not load groups for this branch.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId]);
+
+  useEffect(() => {
+    if (!branchId || !main.groupId) {
+      setSubGroups([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await subGroupEntryApi.fetchSubGroups(Number(branchId), Number(main.groupId));
+        if (cancelled) return;
+        setSubGroups(data.subGroups || []);
+      } catch {
+        if (!cancelled) setSubGroups([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, main.groupId]);
+
+  useEffect(() => {
+    if (!branchId) {
+      setProducts([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingProducts(true);
+      try {
+        const { data } = await productEntryApi.fetchProducts(Number(branchId));
+        if (cancelled) return;
+        setProducts(data.products || []);
+      } catch {
+        if (!cancelled) setProducts([]);
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId]);
+
+  const branchOptions = useMemo(
+    () =>
+      branches.map((b) => ({
+        value: String(b.branchId),
+        label: `${b.branchCode} - ${b.branchName}`,
+      })),
+    [branches]
+  );
+
+  const groupOptions = useMemo(
+    () =>
+      groups.map((g) => ({
+        value: String(g.groupId),
+        label: `${g.groupCode} - ${g.groupDescription || g.groupCode}`,
+      })),
+    [groups]
+  );
+
+  const subGroupOptions = useMemo(
+    () =>
+      subGroups.map((s) => ({
+        value: String(s.subGroupId),
+        label: `${s.subGroupCode} - ${s.subGroupDescription || s.subGroupCode}`,
+      })),
+    [subGroups]
+  );
+
+  const productListRows = useMemo(
+    () =>
+      products.map((p) => [
+        p.productCode,
+        p.productName,
+        p.shortName || '-',
+        p.inventory?.unitPrice != null ? Number(p.inventory.unitPrice).toFixed(2) : '-',
+      ]),
+    [products]
+  );
+
+  const buildProductPayload = () => {
+    const gid = main.groupId ? Number(main.groupId) : undefined;
+    const sgid = main.subGroupId ? Number(main.subGroupId) : undefined;
+    const subSub = main.subSubGroup?.trim();
+    // For RESTAURANT / POS, product code is auto-generated from description if not set.
+    const autoCode = showProductCode
+      ? main.productCode.trim()
+      : (main.productCode.trim() || main.description.trim().toUpperCase().replace(/\s+/g, '-').slice(0, 20));
+    return {
+      branchId: Number(branchId),
+      productCode: autoCode,
+      barcode: main.barcode.trim() || undefined,
+      description: main.description.trim(),
+      shortDescription: main.shortDescription.trim() || undefined,
+      descriptionArabic: main.descriptionArabic.trim() || undefined,
+      productOwnRefNo: main.productOwnRefNo.trim() || undefined,
+      makeType: main.makeType,
+      lastSupplier: main.lastSupplier.trim() || undefined,
+      productBrand: main.productBrand.trim() || undefined,
+      specification: main.specification.trim() || undefined,
+      groupId: gid,
+      subGroupId: sgid,
+      subSubGroupId: subSub ? Number(subSub) : undefined,
+      newBarcode: main.newBarcode,
+      baseCost: main.baseCost,
+      discountPct: main.discountPct,
+      unitCost: main.unitCost,
+      vatIn: main.vatIn,
+      vatInPct: main.vatInPct,
+      costWithVat: main.costWithVat,
+      averageCost: main.averageCost,
+      lastPurchCost: main.lastPurchCost,
+      marginPct: main.marginPct,
+      minUnitPrice: main.minUnitPrice,
+      unitPrice: main.unitPrice,
+      vatOut: main.vatOut,
+      vatOutPct: main.vatOutPct,
+      priceWithVat: main.priceWithVat,
+      priceLevel1: main.priceLevel1,
+      productType: supplier.productType,
+      stockType: supplier.stockType,
+      unit: supplier.unit.trim() || undefined,
+      packQty: supplier.packQty,
+      packetDetails: supplier.packetDetails,
+      location: supplier.location,
+      reorderLevel: supplier.reorderLevel,
+      reorderQty: supplier.reorderQty,
+      qtyOnHand: supplier.qtyOnHand,
+      remark: supplier.remark,
+    };
+  };
+
+  const refreshProducts = async () => {
+    if (!branchId) return;
+    try {
+      const { data } = await productEntryApi.fetchProducts(Number(branchId));
+      setProducts(data.products || []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleSaveProduct = async () => {
+    setSaveError('');
+    setSuccessMsg('');
+    if (!branchId) {
+      setSaveError('Select a branch.');
+      return;
+    }
+    if (showProductCode && !main.productCode.trim()) {
+      setSaveError('Enter a product code.');
+      return;
+    }
+    if (!main.description.trim()) {
+      setSaveError('Enter a description (product name).');
+      return;
+    }
+    const subSub = main.subSubGroup?.trim();
+    if (subSub && !Number.isFinite(Number(subSub))) {
+      setSaveError('Sub-sub group must be a number or left empty.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data } = await productEntryApi.createProduct(buildProductPayload());
+      setSuccessMsg(`Saved product ${data.productCode} (id ${data.productId}).`);
+      setMain((prev) => ({
+        ...mainInitial,
+        groupId: prev.groupId,
+        subGroupId: prev.subGroupId,
+      }));
+      await refreshProducts();
+    } catch (err) {
+      setSaveError(err.response?.data?.message || 'Could not save product.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const toggleSelect = (idx) => {
     setSelectedRows((prev) => {
@@ -562,15 +754,6 @@ export default function ProductEntry() {
     setSubstituteRows((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSaveBasic = () => {
-    // Wire to API when available; payload: main (basic fields)
-  };
-
-  const handleSaveAdditionalInfo = () => {
-    // Wire to API when available; additional main fields already in state
-    setAdditionalInfoOpen(false);
-  };
-
   const totalDiscAmt = lineRows.reduce((s, r) => s + Number(r[5] ?? 0), 0);
   const totalSub = lineRows.reduce((s, r) => s + Number(r[6] ?? 0), 0);
   const totalTaxPct = lineRows.reduce((s, r) => s + Number(r[7] ?? 0), 0);
@@ -637,521 +820,434 @@ export default function ProductEntry() {
     ],
   ];
 
-  const fieldBox = 'rounded border border-gray-200 bg-white p-2 sm:p-3';
-
   return (
-    <div className="sale-page">
+    <div
+      className="pe-root flex min-h-0 flex-1 flex-col overflow-hidden"
+      style={{ margin: '-24px -28px -32px' }}
+    >
       <style>{`
-        .sale-btn-outline:hover {
-          border-color: ${primary} !important;
-          background: ${primaryHover} !important;
-          color: ${primary} !important;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+        .pe-root, .pe-root * { font-family: 'DM Sans', sans-serif !important; }
+
+        .pe-root input:not([type=checkbox]):not([type=radio]):not([type=file]),
+        .pe-root select {
+          height:36px !important; min-height:36px !important;
+          padding:0 10px !important; font-size:13px !important;
+          border-radius:8px !important; border:1px solid #E2E8F0 !important;
+          background:#fff !important; color:#1E293B !important;
+          transition:border-color .15s, box-shadow .15s;
         }
-        .sale-btn-outline:active {
-          background: ${primaryActive} !important;
+        .pe-root input:focus, .pe-root select:focus {
+          outline:none !important; border-color:${primary} !important;
+          box-shadow:0 0 0 3px rgba(121,7,40,0.1) !important;
         }
-        .sale-btn-primary:hover {
-          background: ${primaryHover} !important;
-          color: ${primary} !important;
-          border-color: ${primary} !important;
+        .pe-root textarea {
+          font-size:13px !important; border-radius:8px !important;
+          border:1px solid #E2E8F0 !important; padding:8px 10px !important;
+          resize:vertical; min-height:72px; color:#1E293B;
         }
-        .sale-btn-primary:active {
-          background: ${primaryActive} !important;
+        .pe-root textarea:focus {
+          outline:none !important; border-color:${primary} !important;
+          box-shadow:0 0 0 3px rgba(121,7,40,0.1) !important;
+        }
+        .pe-root label, .pe-root [class*="label"] {
+          font-size:12px !important; font-weight:500 !important;
+          color:#64748B !important; margin-bottom:5px !important;
+          display:block !important; letter-spacing:0 !important;
+          text-transform:none !important;
+        }
+        .pe-section-title {
+          font-size:15px; font-weight:700; color:#111827; margin:0 0 16px 0;
+        }
+        .pe-tab { position:relative; transition:color .15s; cursor:pointer; }
+        .pe-tab::after {
+          content:''; position:absolute; bottom:-1px; left:0; right:0;
+          height:2px; border-radius:99px; background:${primary};
+          transform:scaleX(0); transform-origin:center;
+          transition:transform .2s cubic-bezier(.4,0,.2,1);
+        }
+        .pe-tab[data-active="true"]::after { transform:scaleX(1); }
+        .pe-tab[data-active="true"] { color:${primary} !important; font-weight:600 !important; }
+        .pe-tab:not([data-active="true"]):hover { color:#374151 !important; background:rgba(0,0,0,.03); }
+        .pe-action:hover { border-color:${primary} !important; color:${primary} !important; background:rgba(121,7,40,.04) !important; }
+        .pe-action:hover img { opacity:1 !important; }
+        .pe-save:hover { filter:brightness(1.1); }
+        .pe-save:active { transform:scale(.97); }
+        .pe-card {
+          background:#fff; border:1px solid #E9EEF3;
+          border-radius:12px; overflow:hidden;
+          box-shadow:0 1px 3px rgba(0,0,0,.05);
+        }
+        .pe-card-body { padding:20px; }
+        .pe-grid { display:grid; gap:14px; grid-template-columns:1fr; }
+        @media(min-width:640px) { .pe-grid { grid-template-columns:repeat(2,1fr); } }
+        @media(min-width:1024px) { .pe-grid { grid-template-columns:repeat(3,1fr); } }
+        .pe-col-full { grid-column:1/-1; }
+        .pe-col2 { grid-column:span 2; }
+        .pe-imgdrop {
+          border:1.5px dashed #CBD5E1; border-radius:10px;
+          background:#F8FAFC; cursor:pointer;
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          transition:border-color .18s, background .18s;
+          overflow:hidden; position:relative;
+          width:100%; min-height:220px;
+        }
+        .pe-imgdrop:hover, .pe-imgdrop.drag { border-color:${primary}; background:rgba(121,7,40,.03); }
+        .pe-imgdrop img { width:100%; height:100%; object-fit:contain; padding:10px; }
+        .pe-imgdrop .pe-img-remove {
+          position:absolute; top:6px; right:6px; width:22px; height:22px;
+          border-radius:50%; background:rgba(0,0,0,.5); border:none; color:#fff;
+          font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+          opacity:0; transition:opacity .15s;
+        }
+        .pe-imgdrop:hover .pe-img-remove { opacity:1; }
+        .pe-new-barcode-row {
+          display:flex; align-items:center; gap:8px; height:36px;
+          border:1px solid #E2E8F0; border-radius:8px; background:#F8FAFC;
+          padding:0 10px; font-size:13px; font-weight:500; color:#475569;
         }
       `}</style>
 
-      <div className="my-2 flex flex-1 min-h-0 flex-col overflow-hidden sm:my-[15px]">
-        <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
-          {/* Header + toolbar */}
-          <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-              Product entry
-            </h1>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className="sale-btn-outline flex h-7 w-7 items-center justify-center rounded border border-gray-300 bg-white sm:h-8 sm:w-8"
-              >
-                <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </button>
-              {[
-                { icon: CancelIcon, label: 'Cancel' },
-                { icon: PostIcon, label: 'Post' },
-                { icon: UnpostIcon, label: 'UnPost' },
-              ].map((btn) => (
-                <button
-                  key={btn.label}
-                  type="button"
-                  className="sale-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
-                >
-                  <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                  {btn.label}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="sale-btn-primary rounded border px-2 py-0.5 text-[9px] font-medium text-white sm:px-3 sm:py-1 sm:text-[11px]"
-                style={{ backgroundColor: primary, borderColor: primary }}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-
-          {/* Segmented tabs: Basic | Trading product | Supplier details (compact) */}
-          <div
-            className="inline-flex max-w-full shrink-0 items-stretch gap-px self-start rounded-md px-0.5 py-0.5"
-            style={{ backgroundColor: '#EDEDED' }}
-            role="tablist"
-            aria-label="Product entry sections"
+      {/* Top bar */}
+      <div className="flex shrink-0 items-center gap-3 border-b border-[#E9EEF3] bg-white px-5 py-3">
+        <button type="button" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:border-gray-300 hover:text-gray-700" aria-label="Back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-gray-400">Data Entry &rsaquo; Products</p>
+          <p className="text-[15px] font-bold leading-tight text-gray-900">Add New Product</p>
+        </div>
+        <div className="mx-2 h-8 w-px bg-gray-100" aria-hidden />
+        <div style={{ width:'200px' }}>
+          <DropdownInput
+            placeholder={loadingBranches ? 'Loading...' : 'Select branch'}
+            options={branchOptions}
+            value={branchId}
+            onChange={(v) => { setBranchId(v); setSaveError(''); setSuccessMsg(''); }}
+            fullWidth
+            disabled={loadingBranches}
+          />
+        </div>
+        <div className="flex flex-1 items-center justify-end gap-2">
+          <button type="button" className="pe-action flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white transition" aria-label="Print">
+            <img src={PrinterIcon} alt="" className="h-3.5 w-3.5 opacity-40" />
+          </button>
+          {[{ icon: CancelIcon, label: 'Cancel' }, { icon: PostIcon, label: 'Post' }, { icon: UnpostIcon, label: 'Unpost' }].map((b) => (
+            <button key={b.label} type="button" className="pe-action hidden items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition sm:flex">
+              <img src={b.icon} alt="" className="h-3.5 w-3.5 opacity-40" />{b.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50"
           >
-            {ENTRY_TABS.map((t) => {
-              const active = entryTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setEntryTab(t.id)}
-                  className="min-h-[22px] whitespace-nowrap rounded px-2 py-0.5 text-center text-[8px] font-medium leading-tight transition-colors sm:min-h-[24px] sm:px-2.5 sm:text-[9px]"
-                  style={
-                    active
-                      ? { backgroundColor: primary, color: '#fff' }
-                      : { backgroundColor: 'transparent', color: '#111827' }
-                  }
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden xl:flex-row">
-            {/* Main column: Basic | Supplier details | Trading product (full width) */}
-            <div
-              className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 xl:w-full xl:max-w-full xl:shrink-0"
-            >
-              {/* Basic: compact grid to fit viewport; subset of main fields + Save */}
-              {entryTab === 'basic' && (
-              <div className={`flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden ${fieldBox}`}>
-                <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-0.5">
-                  <div className="flex justify-center">
-                    <div className="w-full max-w-4xl p-3 sm:p-4">
-                      <div className={basicFormSection}>
-                        <InputField
-                          label="Barcode"
-                          fullWidth
-                          value={main.barcode}
-                          onChange={(e) => setMain((m) => ({ ...m, barcode: e.target.value }))}
-                        />
-                        <div className="flex min-w-0 w-full flex-col gap-0.5">
-                          
-                          <div className="flex min-h-[36px] items-center gap-2 sm:min-h-[40px]">
-                            <Switch
-                              size="xs"
-                              checked={main.newBarcode}
-                              onChange={(v) => setMain((m) => ({ ...m, newBarcode: v }))}
-                            />
-                            <span className="text-[10px] text-gray-800 sm:text-[11px]">New Barcode</span>
-                          </div>
-                        </div>
-                        <SubInputField
-                          label="Product Own Ref No."
-                          fullWidth
-                          value={main.productOwnRefNo}
-                          onChange={(e) => setMain((m) => ({ ...m, productOwnRefNo: e.target.value }))}
-                        />
-                      </div>
-
-                      <div className={`mt-3 ${basicFormSection}`}>
-                        <div className={basicSpan3}>
-                          <InputField
-                            label="description"
-                            fullWidth
-                            value={main.description}
-                            onChange={(e) => setMain((m) => ({ ...m, description: e.target.value }))}
-                          />
-                        </div>
-                        <div className={basicSpan3}>
-                          <InputField
-                            label="Short Description"
-                            fullWidth
-                            value={main.shortDescription}
-                            onChange={(e) => setMain((m) => ({ ...m, shortDescription: e.target.value }))}
-                          />
-                        </div>
-                        <div className={basicSpan3}>
-                          <InputField
-                            label="Description Arabic"
-                            fullWidth
-                            value={main.descriptionArabic}
-                            onChange={(e) => setMain((m) => ({ ...m, descriptionArabic: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-
-                      <div className={`mt-3 ${basicFormSection}`}>
-                        <DropdownInput
-                          label="Product Make type"
-                          options={['Standard', 'Assembly', 'Service']}
-                          value={main.makeType}
-                          onChange={(v) => setMain((m) => ({ ...m, makeType: v }))}
-                          placeholder="Select"
-                          fullWidth
-                        />
-                        <SubInputField
-                          label="Last Supplier"
-                          fullWidth
-                          value={main.lastSupplier}
-                          onChange={(e) => setMain((m) => ({ ...m, lastSupplier: e.target.value }))}
-                        />
-                        <InputField
-                          label="Product Brand"
-                          fullWidth
-                          value={main.productBrand}
-                          onChange={(e) => setMain((m) => ({ ...m, productBrand: e.target.value }))}
-                        />
-                        <div className={basicSpan3}>
-                          <SubInputField
-                            label="Specification"
-                            fullWidth
-                            value={main.specification}
-                            onChange={(e) => setMain((m) => ({ ...m, specification: e.target.value }))}
-                          />
-                        </div>
-                        <InputField
-                          label="Group"
-                          fullWidth
-                          value={main.group}
-                          onChange={(e) => setMain((m) => ({ ...m, group: e.target.value }))}
-                        />
-                        <InputField
-                          label="Subgroup"
-                          fullWidth
-                          value={main.subgroup}
-                          onChange={(e) => setMain((m) => ({ ...m, subgroup: e.target.value }))}
-                        />
-                        <InputField
-                          label="SubSubGroup"
-                          fullWidth
-                          value={main.subSubGroup}
-                          onChange={(e) => setMain((m) => ({ ...m, subSubGroup: e.target.value }))}
-                        />
-                      </div>
-
-                      <div className={`mt-3 ${basicFormSection}`}>
-                        <InputField
-                          label="base cost"
-                          fullWidth
-                          value={main.baseCost}
-                          onChange={(e) => setMain((m) => ({ ...m, baseCost: e.target.value }))}
-                        />
-                        <InputField
-                          label="Discount %"
-                          fullWidth
-                          value={main.discountPct}
-                          onChange={(e) => setMain((m) => ({ ...m, discountPct: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="Unit Cost"
-                          fullWidth
-                          value={main.unitCost}
-                          onChange={(e) => setMain((m) => ({ ...m, unitCost: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="VAT IN"
-                          fullWidth
-                          value={main.vatIn}
-                          onChange={(e) => setMain((m) => ({ ...m, vatIn: e.target.value }))}
-                        />
-                        <SubInputField
-                          label="VAT IN %"
-                          suffix="%"
-                          fullWidth
-                          value={main.vatInPct}
-                          onChange={(e) => setMain((m) => ({ ...m, vatInPct: e.target.value }))}
-                        />
-                        <InputField
-                          label="COST WITH VAT"
-                          fullWidth
-                          value={main.costWithVat}
-                          onChange={(e) => setMain((m) => ({ ...m, costWithVat: e.target.value }))}
-                        />
-                      </div>
-
-                      <div className={`mt-3 ${basicFormSection}`}>
-                        <div className={basicSpan3}>
-                          <button
-                            type="button"
-                            className="w-full rounded border bg-white px-3 py-2 text-center text-[10px] font-medium sm:text-[11px]"
-                            style={{ borderColor: primary, color: primary }}
-                            onClick={() => setAdditionalInfoOpen(true)}
-                          >
-                            Additional info
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex justify-end">
-                        <button
-                          type="button"
-                          className="rounded px-4 py-2 text-[11px] font-semibold text-white"
-                          style={{ backgroundColor: primary }}
-                          onClick={handleSaveBasic}
-                        >
-                          Save
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              )}
-
-              {/* Supplier details: full-width viewport — supplier grid, line entry grid, substitute (no side rail) */}
-              {entryTab === 'supplier' && (
-              <div
-                className={`flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden ${fieldBox}`}
-                style={{ maxHeight: 'min(100%, calc(100dvh - 11rem))' }}
-              >
-                <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-0.5">
-                  <SupplierDetailFields
-                    fieldBox="rounded border border-gray-200 bg-white p-2 sm:p-3"
-                    supplier={supplier}
-                    setSupplier={setSupplier}
-                    layout="viewportGrid"
-                  />
-
-                  <div className="overflow-hidden rounded border border-gray-200 bg-white">
-                    <ProductLineEntryGrid
-                      lineForm={lineForm}
-                      setLineForm={setLineForm}
-                      primary={primary}
-                      onAdd={handleLineAdd}
-                      addLabel="Add"
-                    />
-                  </div>
-
-                  <div className="flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden rounded border border-gray-200 bg-white sm:gap-3">
-                    <div className="flex justify-center border-b border-gray-100 px-3 pb-2 pt-3 sm:px-4">
-                      <div className="w-full max-w-4xl">
-                        <h2
-                          className="text-[10px] font-semibold uppercase tracking-wide sm:text-[11px]"
-                          style={{ color: primary }}
-                        >
-                          Substitute product entry
-                        </h2>
-                      </div>
-                    </div>
-                    <div className="flex justify-center px-3 pb-3 sm:px-4">
-                      <div className="w-full max-w-4xl">
-                        <div className={basicFormSection}>
-                          <InputField
-                            label="Product name"
-                            fullWidth
-                            value={searchName}
-                            onChange={(e) => setSearchName(e.target.value)}
-                          />
-                          <SubInputField
-                            label="Product code"
-                            fullWidth
-                            value={searchCode}
-                            onChange={(e) => setSearchCode(e.target.value)}
-                          />
-                          <div className="flex min-h-[40px] min-w-0 items-end justify-end">
-                            <button
-                              type="button"
-                              className="rounded px-4 py-2 text-[11px] font-semibold text-white"
-                              style={{ backgroundColor: primary }}
-                              onClick={handleAddSubstitute}
-                            >
-                              Add
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="min-h-0 w-full min-w-0 max-h-[14rem] px-2 pb-2 sm:max-h-[16rem] sm:px-3 sm:pb-3">
-                      <CommonTable
-                        fitParentWidth
-                        equalColumnWidth
-                        maxVisibleRows={6}
-                        headers={['Product name', 'Product code', 'Unit Price', 'Action']}
-                        rows={substituteTableRows}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              )}
-
-              {/* Trading product: line entry (wraps, no horizontal scroll) + line items table */}
-              {entryTab === 'trading' && (
-              <div
-                className={`flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden ${fieldBox}`}
-                style={{ maxHeight: 'min(100%, calc(100dvh - 11rem))' }}
-              >
-                <div className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-0.5">
-                  <div className="overflow-hidden rounded border border-gray-200 bg-white">
-                    <ProductLineEntryGrid
-                      lineForm={lineForm}
-                      setLineForm={setLineForm}
-                      primary={primary}
-                      onAdd={handleLineAdd}
-                      addLabel={editingIdx !== null ? 'Update' : 'Add'}
-                    />
-                  </div>
-
-                  <div className="w-full min-w-0 min-h-0 flex-1 rounded border border-gray-200 bg-white p-2 sm:p-3">
-                    <CommonTable
-                      fitParentWidth
-                      equalColumnWidth
-                      maxVisibleRows={11}
-                      headers={[
-                        '',
-                        'Short Description',
-                        'HS Code/Wt',
-                        'Qty',
-                        'Selling Price',
-                        'Disc%',
-                        'Disc Amt',
-                        'Sub Total',
-                        'Tax%',
-                        'Tax.Amt',
-                        'Line Total',
-                        'Action',
-                      ]}
-                      rows={lineItemsTableRows}
-                    />
-                  </div>
-                </div>
-              </div>
-              )}
-            </div>
-          </div>
+            Save Draft
+          </button>
+          <button
+            type="button"
+            className="pe-save rounded-lg px-5 py-2 text-xs font-bold text-white transition disabled:opacity-50"
+            style={{ background: `linear-gradient(135deg,${primary} 0%,#a01035 100%)`, boxShadow: `0 2px 8px ${primary}45` }}
+            disabled={saving}
+            onClick={handleSaveProduct}
+          >
+            {saving ? 'Saving...' : 'Save Product'}
+          </button>
         </div>
       </div>
 
-      {additionalInfoOpen ? (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 backdrop-blur-sm"
-          onClick={() => setAdditionalInfoOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="additional-info-title"
-        >
-          <div
-            className="flex max-h-[min(90dvh,32rem)] w-full max-w-lg flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex shrink-0 items-start justify-between gap-2 border-b border-gray-100 pb-2">
-              <h2
-                id="additional-info-title"
-                className="min-w-0 flex-1 pr-1 text-sm font-bold sm:text-base"
-                style={{ color: primary }}
-              >
-                Additional info
-              </h2>
-              <button
-                type="button"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xl leading-none text-gray-600 hover:bg-gray-100"
-                aria-label="Close"
-                onClick={() => setAdditionalInfoOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto py-3">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <SubInputField
-                label="Average Cost"
-                fullWidth
-                heightPx={18}
-                value={main.averageCost}
-                onChange={(e) => setMain((m) => ({ ...m, averageCost: e.target.value }))}
-              />
-              <SubInputField
-                label="Last Purch. Cost"
-                fullWidth
-                heightPx={18}
-                value={main.lastPurchCost}
-                onChange={(e) => setMain((m) => ({ ...m, lastPurchCost: e.target.value }))}
-              />
-              <InputField
-                label="Margin%"
-                fullWidth
-                heightPx={18}
-                value={main.marginPct}
-                onChange={(e) => setMain((m) => ({ ...m, marginPct: e.target.value }))}
-              />
-              <InputField
-                label="Min UNIT Price"
-                fullWidth
-                heightPx={18}
-                value={main.minUnitPrice}
-                onChange={(e) => setMain((m) => ({ ...m, minUnitPrice: e.target.value }))}
-              />
-              <InputField
-                label="Unit Price"
-                fullWidth
-                heightPx={18}
-                value={main.unitPrice}
-                onChange={(e) => setMain((m) => ({ ...m, unitPrice: e.target.value }))}
-              />
-              <SubInputField
-                label="VAT OUT"
-                fullWidth
-                heightPx={18}
-                value={main.vatOut}
-                onChange={(e) => setMain((m) => ({ ...m, vatOut: e.target.value }))}
-              />
-              <SubInputField
-                label="VAT OUT %"
-                suffix="%"
-                fullWidth
-                heightPx={18}
-                value={main.vatOutPct}
-                onChange={(e) => setMain((m) => ({ ...m, vatOutPct: e.target.value }))}
-              />
-              <InputField
-                label="PRICE WITH VAT"
-                fullWidth
-                heightPx={18}
-                value={main.priceWithVat}
-                onChange={(e) => setMain((m) => ({ ...m, priceWithVat: e.target.value }))}
-              />
-              <SubInputField
-                label="Price level 1"
-                fullWidth
-                heightPx={18}
-                value={main.priceLevel1}
-                onChange={(e) => setMain((m) => ({ ...m, priceLevel1: e.target.value }))}
-              />
-            </div>
-            </div>
-            <div className="flex shrink-0 justify-end border-t border-gray-100 pt-3">
-              <button
-                type="button"
-                className="sale-btn-primary rounded border px-4 py-1.5 text-[11px] font-medium text-white sm:text-xs"
-                style={{ backgroundColor: primary, borderColor: primary }}
-                onClick={handleSaveAdditionalInfo}
-              >
-                Save
-              </button>
-            </div>
-          </div>
+      {/* Alert strip */}
+      {(loadBranchesError || mastersError || saveError || successMsg) && (
+        <div className="shrink-0 border-b border-[#E9EEF3] bg-white px-5 py-2 space-y-1">
+          {loadBranchesError && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{loadBranchesError}</p>}
+          {mastersError && <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">{mastersError}</p>}
+          {saveError && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{saveError}</p>}
+          {successMsg && <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">{successMsg}</p>}
         </div>
-      ) : null}
+      )}
+
+      {/* Tab nav */}
+      <div className="shrink-0 border-b border-[#E9EEF3] bg-white px-5" role="tablist" aria-label="Product entry sections">
+        <div className="flex">
+          {ENTRY_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              data-active={entryTab === t.id ? 'true' : 'false'}
+              aria-selected={entryTab === t.id}
+              onClick={() => setEntryTab(t.id)}
+              className="pe-tab px-4 py-3 text-[13px] font-medium text-gray-500"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="min-h-0 flex-1 overflow-y-auto" style={{ background:'#F5F7FA' }}>
+        <div style={{ padding:'16px 20px' }}>
+
+          {/* GENERAL */}
+          {entryTab === 'general' && (
+            <div style={{ display:'flex', gap:'20px', alignItems:'flex-start' }}>
+
+              {/* Left column */}
+              <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'16px' }}>
+
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">General Information</h3>
+                    <div className="pe-grid">
+                      {/* Product Code: shown only for Garage / modules where stock codes matter */}
+                      {showProductCode && (
+                        <InputField label="Product Code *" fullWidth value={main.productCode} onChange={(e) => setMain((m) => ({ ...m, productCode: e.target.value }))} />
+                      )}
+
+                      {/* Barcode with inline New Barcode toggle */}
+                      <div>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'5px' }}>
+                          <label style={{ fontSize:'12px', fontWeight:500, color:'#64748B' }}>Barcode</label>
+                          <button
+                            type="button"
+                            title="Toggle auto-generate next barcode from database"
+                            onClick={() => setMain((m) => ({ ...m, newBarcode: !m.newBarcode }))}
+                            style={{
+                              display:'flex', alignItems:'center', gap:'4px', padding:'2px 8px',
+                              borderRadius:'5px', border:'1px solid',
+                              borderColor: main.newBarcode ? primary : '#E2E8F0',
+                              background: main.newBarcode ? primary : '#F8FAFC',
+                              color: main.newBarcode ? '#fff' : '#64748B',
+                              fontSize:'10px', fontWeight:600, cursor:'pointer',
+                              transition:'all .15s', lineHeight:1.4,
+                            }}
+                          >
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h2v18H3zm4 0h1v18H7zm3 0h2v18h-2zm4 0h1v18h-1zm3 0h1v18h-1zm3 0h2v18h-2z"/></svg>
+                            {main.newBarcode ? '✓ Auto' : 'New Barcode'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={main.barcode}
+                          onChange={(e) => setMain((m) => ({ ...m, barcode: e.target.value }))}
+                          placeholder={main.newBarcode ? 'Will auto-generate on save...' : ''}
+                          disabled={main.newBarcode}
+                          style={{
+                            height:'36px', width:'100%', padding:'0 10px', fontSize:'13px',
+                            border:'1px solid #E2E8F0', borderRadius:'8px',
+                            background: main.newBarcode ? '#F1F5F9' : '#fff',
+                            color: main.newBarcode ? '#94A3B8' : '#1E293B',
+                            outline:'none', transition:'background .15s',
+                          }}
+                        />
+                      </div>
+
+                      <SubInputField label="Own Ref No." fullWidth value={main.productOwnRefNo} onChange={(e) => setMain((m) => ({ ...m, productOwnRefNo: e.target.value }))} />
+                      <div className="pe-col-full">
+                        <InputField label="Product Name *" fullWidth value={main.description} onChange={(e) => setMain((m) => ({ ...m, description: e.target.value }))} />
+                      </div>
+                      <div className="pe-col-full">
+                        <InputField label="Short Description" fullWidth value={main.shortDescription} onChange={(e) => setMain((m) => ({ ...m, shortDescription: e.target.value }))} />
+                      </div>
+                      <div className="pe-col-full">
+                        <InputField label="Description in Arabic" fullWidth value={main.descriptionArabic} onChange={(e) => setMain((m) => ({ ...m, descriptionArabic: e.target.value }))} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Classification moved to left column */}
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">Classification</h3>
+                    <div className="pe-grid">
+                      <DropdownInput label="Make Type" options={['Standard', 'Assembly', 'Service']} value={main.makeType} onChange={(v) => setMain((m) => ({ ...m, makeType: v }))} placeholder="Select" fullWidth />
+                      <DropdownInput label="Group" placeholder={!branchId ? 'Select branch first' : 'Optional'} options={groupOptions} value={main.groupId} onChange={(v) => setMain((m) => ({ ...m, groupId: v, subGroupId: '' }))} fullWidth disabled={!branchId || !groupOptions.length} />
+                      <DropdownInput label="Subgroup" placeholder={!main.groupId ? 'Select group first' : 'Optional'} options={subGroupOptions} value={main.subGroupId} onChange={(v) => setMain((m) => ({ ...m, subGroupId: v }))} fullWidth disabled={!branchId || !main.groupId} />
+                      <SubInputField label="Sub-subgroup ID" fullWidth value={main.subSubGroup} onChange={(e) => setMain((m) => ({ ...m, subSubGroup: e.target.value }))} placeholder="Numeric or empty" />
+                      <SubInputField label="Last Supplier" fullWidth value={main.lastSupplier} onChange={(e) => setMain((m) => ({ ...m, lastSupplier: e.target.value }))} />
+                      <InputField label="Brand" fullWidth value={main.productBrand} onChange={(e) => setMain((m) => ({ ...m, productBrand: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">Specification</h3>
+                    <label style={{ fontSize:'12px', fontWeight:500, color:'#64748B', display:'block', marginBottom:'5px' }}>Specification Details</label>
+                    <textarea
+                      value={main.specification}
+                      onChange={(e) => setMain((m) => ({ ...m, specification: e.target.value }))}
+                      rows={4}
+                      placeholder="Enter product specification..."
+                      style={{ width:'100%', borderRadius:'8px', border:'1px solid #E2E8F0', padding:'8px 10px', fontSize:'13px', color:'#1E293B', resize:'vertical', fontFamily:'inherit', background:'#fff', outline:'none' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                  <button
+                    type="button"
+                    className="pe-save rounded-xl px-8 py-3 text-sm font-bold text-white transition disabled:opacity-50"
+                    style={{ background: `linear-gradient(135deg,${primary} 0%,#a01035 100%)`, boxShadow: `0 3px 12px ${primary}45` }}
+                    disabled={saving}
+                    onClick={handleSaveProduct}
+                  >
+                    {saving ? 'Saving...' : 'Save Product'}
+                  </button>
+                </div>
+
+              </div>
+
+              {/* Right column — sticky, full viewport height, product images */}
+              <div style={{ width:'300px', flexShrink:0, position:'sticky', top:'16px', height:'calc(100vh - 145px)' }}>
+                <div className="pe-card" style={{ height:'100%', display:'flex', flexDirection:'column' }}>
+                  <div className="pe-card-body" style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
+                    <h3 className="pe-section-title">Product Images</h3>
+                    <ProductImageUpload
+                      previews={imagePreviews}
+                      onPreviewsChange={setImagePreviews}
+                      primary={primary}
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* PRICING & VAT */}
+          {entryTab === 'pricing' && (
+            <div style={{ display:'flex', gap:'20px', alignItems:'flex-start' }}>
+
+              <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:'16px' }}>
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">Cost &amp; Purchase</h3>
+                    <div className="pe-grid">
+                      <InputField label="Base Cost" fullWidth value={main.baseCost} onChange={(e) => setMain((m) => ({ ...m, baseCost: e.target.value }))} />
+                      <InputField label="Discount %" fullWidth value={main.discountPct} onChange={(e) => setMain((m) => ({ ...m, discountPct: e.target.value }))} />
+                      <SubInputField label="Unit Cost" fullWidth value={main.unitCost} onChange={(e) => setMain((m) => ({ ...m, unitCost: e.target.value }))} />
+                      <SubInputField label="Average Cost" fullWidth value={main.averageCost} onChange={(e) => setMain((m) => ({ ...m, averageCost: e.target.value }))} />
+                      <SubInputField label="Last Purchase Cost" fullWidth value={main.lastPurchCost} onChange={(e) => setMain((m) => ({ ...m, lastPurchCost: e.target.value }))} />
+                      <SubInputField label="Margin %" fullWidth value={main.marginPct} onChange={(e) => setMain((m) => ({ ...m, marginPct: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">VAT</h3>
+                    <div className="pe-grid">
+                      <SubInputField label="VAT In" fullWidth value={main.vatIn} onChange={(e) => setMain((m) => ({ ...m, vatIn: e.target.value }))} />
+                      <SubInputField label="VAT In %" fullWidth value={main.vatInPct} onChange={(e) => setMain((m) => ({ ...m, vatInPct: e.target.value }))} />
+                      <InputField label="Cost With VAT" fullWidth value={main.costWithVat} onChange={(e) => setMain((m) => ({ ...m, costWithVat: e.target.value }))} />
+                      <SubInputField label="VAT Out" fullWidth value={main.vatOut} onChange={(e) => setMain((m) => ({ ...m, vatOut: e.target.value }))} />
+                      <SubInputField label="VAT Out %" fullWidth value={main.vatOutPct} onChange={(e) => setMain((m) => ({ ...m, vatOutPct: e.target.value }))} />
+                      <InputField label="Price With VAT" fullWidth value={main.priceWithVat} onChange={(e) => setMain((m) => ({ ...m, priceWithVat: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ width:'300px', flexShrink:0 }}>
+                <div className="pe-card">
+                  <div className="pe-card-body">
+                    <h3 className="pe-section-title">Selling Prices</h3>
+                    <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
+                      <SubInputField label="Min Unit Price" fullWidth value={main.minUnitPrice} onChange={(e) => setMain((m) => ({ ...m, minUnitPrice: e.target.value }))} />
+                      <SubInputField label="Unit Price" fullWidth value={main.unitPrice} onChange={(e) => setMain((m) => ({ ...m, unitPrice: e.target.value }))} />
+                      <SubInputField label="Price Level 1" fullWidth value={main.priceLevel1} onChange={(e) => setMain((m) => ({ ...m, priceLevel1: e.target.value }))} />
+                    </div>
+                    <div style={{ marginTop:'20px', paddingTop:'16px', borderTop:'1px solid #E9EEF3' }}>
+                      <button
+                        type="button"
+                        className="pe-save w-full rounded-lg py-2.5 text-sm font-bold text-white transition disabled:opacity-50"
+                        style={{ background: `linear-gradient(135deg,${primary} 0%,#a01035 100%)`, boxShadow: `0 2px 8px ${primary}45` }}
+                        disabled={saving}
+                        onClick={handleSaveProduct}
+                      >
+                        {saving ? 'Saving...' : 'Save Product'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STOCK & SUPPLIER */}
+          {entryTab === 'inventory' && (
+            <div className="pe-card">
+              <div className="pe-card-body">
+                <h3 className="pe-section-title">Stock &amp; Supplier</h3>
+                <SupplierStockForm supplier={supplier} setSupplier={setSupplier} />
+              </div>
+            </div>
+          )}
+
+          {/* TRADING & SUBSTITUTES */}
+          {entryTab === 'trading' && (
+            <>
+              {/* Product Lines — entry bar + table in one card */}
+              <div className="pe-card" style={{ marginBottom:'16px' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px 0' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+                    <h3 className="pe-section-title" style={{ margin:0 }}>Product Lines</h3>
+                    {lineRows.length > 0 && (
+                      <span style={{ background:primary, color:'#fff', fontSize:'11px', fontWeight:700, padding:'1px 8px', borderRadius:'99px' }}>{lineRows.length} rows</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize:'11px', color:'#94A3B8' }}>Fill fields below &rarr; press Enter or click &#10003; to add to table</span>
+                </div>
+                {/* Horizontal entry bar */}
+                <div style={{ padding:'10px 20px', borderBottom:'1px solid #F1F5F9', background:'#FAFBFC' }}>
+                  <ProductLineEntryForm lineForm={lineForm} setLineForm={setLineForm} primary={primary} onAdd={handleLineAdd} addLabel={editingIdx !== null ? 'Update' : 'Add'} />
+                </div>
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <CommonTable
+                    fitParentWidth equalColumnWidth maxVisibleRows={10}
+                    headers={['', 'Short Desc.', 'HS Code / Wt', 'Qty', 'Sell Price', 'Disc %', 'Disc Amt', 'Sub Total', 'Tax %', 'Tax Amt', 'Line Total', 'Action']}
+                    rows={lineItemsTableRows}
+                  />
+                </div>
+              </div>
+
+              {/* Substitute Products */}
+              <div className="pe-card">
+                <div className="pe-card-body">
+                  <h3 className="pe-section-title">Substitute Products</h3>
+                  <div style={{ display:'flex', alignItems:'flex-end', gap:'10px', marginBottom:'14px', flexWrap:'wrap' }}>
+                    <div style={{ flex:'1', minWidth:'140px' }}>
+                      <InputField label="Product Name" fullWidth value={searchName} onChange={(e) => setSearchName(e.target.value)} />
+                    </div>
+                    <div style={{ flex:'1', minWidth:'120px' }}>
+                      <SubInputField label="Product Code" fullWidth value={searchCode} onChange={(e) => setSearchCode(e.target.value)} />
+                    </div>
+                    <button
+                      type="button"
+                      style={{ height:'36px', padding:'0 18px', background:`linear-gradient(135deg,${primary} 0%,#a01035 100%)`, color:'#fff', border:'none', borderRadius:'8px', fontSize:'13px', fontWeight:700, cursor:'pointer', whiteSpace:'nowrap', boxShadow:`0 2px 6px ${primary}40`, flexShrink:0 }}
+                      onClick={handleAddSubstitute}
+                    >
+                      + Add Substitute
+                    </button>
+                  </div>
+                  <div className="overflow-hidden rounded-lg border border-[#E9EEF3]">
+                    <CommonTable fitParentWidth equalColumnWidth maxVisibleRows={6} headers={['Product Name', 'Product Code', 'Unit Price', 'Action']} rows={substituteTableRows} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+        </div>
+      </div>
 
       <ConfirmDialog
         open={pendingDelete !== null}
         title={pendingDelete?.type === 'substitute' ? 'Remove substitute product?' : 'Delete line item?'}
-        message={
-          pendingDelete?.type === 'substitute'
-            ? 'This will remove the substitute from the list. This action cannot be undone.'
-            : 'This will remove the row from the table. This action cannot be undone.'
-        }
+        message={pendingDelete?.type === 'substitute' ? 'This will remove the substitute from the list. This action cannot be undone.' : 'This will remove the row from the table. This action cannot be undone.'}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         danger

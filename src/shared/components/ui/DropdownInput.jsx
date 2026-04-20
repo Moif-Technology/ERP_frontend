@@ -6,19 +6,22 @@ import DropdownIcon from '../../assets/icons/dropdown.svg';
  * Dropdown input with label above, arrow icon on the right.
  * Same styling as inputField.box, with dropdown.svg on the right.
  */
-export default function DropdownInput({
-  label,
-  value,
-  onChange,
-  options = [],
-  placeholder,
-  widthPx,
-  heightPx,
-  fullWidth = false,
-  className,
-  labelClassName,
-  ...props
-}) {
+const DropdownInput = React.forwardRef(function DropdownInput(
+  {
+    label,
+    value,
+    onChange,
+    options = [],
+    placeholder,
+    widthPx,
+    heightPx,
+    fullWidth = false,
+    className,
+    labelClassName,
+    ...props
+  },
+  ref,
+) {
   const boxWidth = fullWidth ? '100%' : (widthPx != null ? `${widthPx}px` : inputField.dropdown.width);
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dropdown.height;
   return (
@@ -44,6 +47,7 @@ export default function DropdownInput({
         }}
       >
         <select
+          ref={ref}
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
           className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-2 pr-6 py-0 text-sm leading-normal text-gray-900 outline-none sm:pl-2.5 ${className ?? ''}`.trim()}
@@ -73,4 +77,6 @@ export default function DropdownInput({
       </div>
     </div>
   );
-}
+});
+
+export default DropdownInput;
