@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './modules/backoffice/pages/Dashboard';
+import Home from './modules/backoffice/pages/Home';
 import ProductList from './modules/backoffice/pages/ProductList';
 import Sale from './modules/backoffice/pages/Sale';
 import SalesList from './modules/backoffice/pages/SalesList';
@@ -48,12 +49,28 @@ import GroupEntry from './modules/backoffice/pages/GroupEntry';
 import SubGroupEntry from './modules/backoffice/pages/SubGroupEntry';
 import AreaEntry from './modules/backoffice/pages/AreaEntry';
 import TableEntry from './modules/backoffice/pages/TableEntry';
+import DamageEntry from './modules/backoffice/pages/DamageEntry';
+import ProductMovement from './modules/backoffice/pages/ProductMovement';
+import AdditionalStockEntry from './modules/backoffice/pages/AdditionalStockEntry';
+import StockAdjustment from './modules/backoffice/pages/StockAdjustment';
+import StockAdjustmentList from './modules/backoffice/pages/StockAdjustmentList';
+import ReorderList from './modules/backoffice/pages/ReorderList';
+import DealsOffersPlaceholderPage from './modules/backoffice/pages/DealsOffersPlaceholderPage';
+import DiscountEntry from './modules/backoffice/pages/DiscountEntry';
+import DiscountViewer from './modules/backoffice/pages/DiscountViewer';
+import GiftVoucherSettings from './modules/backoffice/pages/GiftVoucherSettings';
+import GiftVoucherViewer from './modules/backoffice/pages/GiftVoucherViewer';
+import OfferPacketCreation from './modules/backoffice/pages/OfferPacketCreation';
+import OfferPacketList from './modules/backoffice/pages/OfferPacketList';
+import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
+import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/products" element={<ProductList />} />
       <Route path="/sales" element={<Sale />} />
       <Route path="/sales-list" element={<SalesList />} />
@@ -104,6 +121,22 @@ export default function AppRoutes() {
       <Route path="/lists/customer-list" element={<CustomerList />} />
       <Route path="/lists/supplier-list" element={<SupplierList />} />
       <Route path="/lists/agent-list" element={<AgentList />} />
+      <Route path="/stock-hub" element={<Navigate to="/stock-hub/stock-adjustment" replace />} />
+      <Route path="/stock-hub/stock-adjustment-list" element={<StockAdjustmentList />} />
+      <Route path="/stock-hub/reorder-list" element={<ReorderList />} />
+      <Route path="/stock-hub/stock-adjustment" element={<StockAdjustment />} />
+      <Route path="/stock-hub/damage-entry" element={<DamageEntry />} />
+      <Route path="/stock-hub/additional-stock-entry" element={<AdditionalStockEntry />} />
+      <Route path="/stock-hub/product-movement" element={<ProductMovement />} />
+      <Route path="/deals-offers" element={<Navigate to="/deals-offers/discount-entry" replace />} />
+      <Route path="/deals-offers/discount-entry" element={<DiscountEntry />} />
+      <Route path="/deals-offers/discount-viewer" element={<DiscountViewer />} />
+      <Route path="/deals-offers/gift-voucher-settings" element={<GiftVoucherSettings />} />
+      <Route path="/deals-offers/gift-voucher-viewer" element={<GiftVoucherViewer />} />
+      <Route path="/deals-offers/offer-packet-creation" element={<OfferPacketCreation />} />
+      <Route path="/deals-offers/offer-packing-entry" element={<OfferPackingEntry />} />
+      <Route path="/deals-offers/offer-unpacking-entry" element={<OfferUnpackingEntry />} />
+      <Route path="/deals-offers/offer-packet-list" element={<OfferPacketList />} />
       <Route
         path="*"
         element={

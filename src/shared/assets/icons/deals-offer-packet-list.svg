@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <!-- Stacked mini-packets + list lines -->
+  <path d="M4 7 8 5l4 2v3l-4 2-4-2V7Z" stroke="#262626" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M4 7l4 2 4-2M8 9v3" stroke="#262626" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M5 14h13M5 17.5h11M5 21h9" stroke="#262626" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="5" cy="14" r="0.9" fill="#262626"/>
+  <circle cx="5" cy="17.5" r="0.9" fill="#262626"/>
+  <circle cx="5" cy="21" r="0.9" fill="#262626"/>
+</svg>

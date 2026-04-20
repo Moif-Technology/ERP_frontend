@@ -142,6 +142,23 @@ export const tableUi = {
   },
 };
 
+/**
+ * CommonTable defaults for Item Details / Home-style inventory grids (pink header, compact body).
+ */
+export const itemDetailsTablePreset = {
+  fitParentWidth: true,
+  allowHorizontalScroll: true,
+  truncateHeader: true,
+  truncateBody: true,
+  hideVerticalCellBorders: true,
+  cellAlign: 'center',
+  headerBackgroundColor: tableUi.header.backgroundColor,
+  headerTextColor: tableUi.header.color,
+  headerFontSize: 'clamp(7px, 0.75vw, 9px)',
+  bodyFontSize: 'clamp(8px, 0.85vw, 10px)',
+  cellPaddingClass: 'px-1 py-1 sm:px-1.5 sm:py-1.5',
+};
+
 export const typography = {
   fontFamily: {
     sans: '"Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
