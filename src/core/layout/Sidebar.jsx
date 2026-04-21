@@ -11,6 +11,8 @@ import ExchangeIcon from '../../shared/assets/icons/exchange.svg';
 import SalesIcon from '../../shared/assets/icons/sales.svg';
 import ProcurementIcon from '../../shared/assets/icons/procurement.svg';
 import FinancialsIcon from '../../shared/assets/icons/financials.svg';
+import ProfitLossIcon from '../../shared/assets/icons/Income.svg';
+import BalanceSheetIcon from '../../shared/assets/icons/ledger_module.svg';
 import ManufacturingIcon from '../../shared/assets/icons/manufacturing.svg';
 import DealsIcon from '../../shared/assets/icons/deals.svg';
 import LogisticsIcon from '../../shared/assets/icons/logistics.svg';
@@ -84,7 +86,14 @@ const menuItems = [
   { label: 'Exchange Hub', to: '/exchange-hub', icon: ExchangeIcon },
   { label: 'Sales Activities', to: '/delivery-order', icon: SalesIcon },
   { label: 'Procurement', to: '/procurement', icon: ProcurementIcon },
-  { label: 'Financials', to: '/financials', icon: FinancialsIcon },
+  {
+    label: 'Financials',
+    icon: FinancialsIcon,
+    subItems: [
+      { label: 'Profit and Loss Account', to: '/financials/profit-and-loss-account', icon: ProfitLossIcon },
+      { label: 'Balance Sheet', to: '/financials/balance-sheet', icon: BalanceSheetIcon },
+    ],
+  },
   { label: 'Manufacturing', to: '/manufacturing', icon: ManufacturingIcon },
   {
     label: 'Deals & Offers',
@@ -111,7 +120,12 @@ const menuItems = [
 export default function Sidebar() {
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false });
+  const [openMenus, setOpenMenus] = useState({
+    List: true,
+    'Stock Hub': false,
+    Financials: false,
+    'Deals & Offers': false,
+  });
 
   useEffect(() => {
     const onListSection =
@@ -124,6 +138,9 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/stock-hub')) {
       setOpenMenus((prev) => ({ ...prev, 'Stock Hub': true }));
+    }
+    if (location.pathname.startsWith('/financials')) {
+      setOpenMenus((prev) => ({ ...prev, Financials: true }));
     }
     if (location.pathname.startsWith('/deals-offers')) {
       setOpenMenus((prev) => ({ ...prev, 'Deals & Offers': true }));
@@ -226,6 +243,7 @@ export default function Sidebar() {
                           sub.label === 'Product entry' ||
                           item.label === 'List' ||
                           item.label === 'Stock Hub' ||
+                          item.label === 'Financials' ||
                           item.label === 'Deals & Offers'
                             ? 'filter brightness-0 invert'
                             : ''

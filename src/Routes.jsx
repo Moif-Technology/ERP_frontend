@@ -33,6 +33,8 @@ import JournalVoucherEntry from './modules/backoffice/pages/JournalVoucherEntry'
 import AccountGroupDetails from './modules/backoffice/pages/AccountGroupDetails';
 import AccountLedgerDetails from './modules/backoffice/pages/AccountLedgerDetails';
 import TrialBalance from './modules/backoffice/pages/TrialBalance';
+import ProfitAndLossAccount from './modules/backoffice/pages/ProfitAndLossAccount';
+import BalanceSheet from './modules/backoffice/pages/BalanceSheet';
 import PayableSummary from './modules/backoffice/pages/PayableSummary';
 import ReceivableSummary from './modules/backoffice/pages/ReceivableSummary';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
@@ -100,6 +102,9 @@ export default function AppRoutes() {
       <Route path="/account-group-details" element={<AccountGroupDetails />} />
       <Route path="/account-ledger-details" element={<AccountLedgerDetails />} />
       <Route path="/trial-balance" element={<TrialBalance />} />
+      <Route path="/financials" element={<Navigate to="/financials/profit-and-loss-account" replace />} />
+      <Route path="/financials/profit-and-loss-account" element={<ProfitAndLossAccount />} />
+      <Route path="/financials/balance-sheet" element={<BalanceSheet />} />
       <Route path="/statement-payable-summary" element={<PayableSummary />} />
       <Route path="/statement-receivable-summary" element={<ReceivableSummary />} />
       <Route path="/statement-of-accounts-list" element={<AccountsPlaceholderPage />} />
