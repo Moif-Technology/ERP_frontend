@@ -157,6 +157,25 @@ const moduleGroups = {
       ],
     },
   ],
+  hr: [
+    {
+      name: 'Employee',
+      icon: GroupDetailsIcon,
+      actions: [
+        { label: 'Directory', icon: ListIcon },
+        { label: 'Add Employee', icon: ConfigIcon },
+      ],
+    },
+    {
+      name: 'Masters',
+      icon: LedgerModuleIcon,
+      actions: [
+        { label: 'Shift Master', icon: ConfigIcon },
+        { label: 'Leave Master', icon: ConfigIcon },
+        { label: 'Document Master', icon: ConfigIcon },
+      ],
+    },
+  ],
 };
 
 export default function ModuleTabs({ expanded, onExpandedChange }) {
@@ -284,6 +303,22 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Statement of accounts' && action === 'List') {
       navigate('/statement-of-accounts-list');
     }
+    // HR Routes
+    if (module === 'Employee' && action === 'Directory') {
+      navigate('/hr/employees');
+    }
+    if (module === 'Employee' && action === 'Add Employee') {
+      navigate('/hr/employee-entry');
+    }
+    if (module === 'Masters' && action === 'Shift Master') {
+      navigate('/hr/shift-master');
+    }
+    if (module === 'Masters' && action === 'Leave Master') {
+      navigate('/hr/leave-type-master');
+    }
+    if (module === 'Masters' && action === 'Document Master') {
+      navigate('/hr/document-type-master');
+    }
   };
 
   return (
@@ -294,8 +329,8 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     >
       <div className="relative border-b border-rose-200/60">
         {expanded ? (
-          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12">
-            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
+          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12 overflow-x-auto no-scrollbar">
+            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS', 'HR'].map((tab) => {
               const isActive = activeTab === tab.toLowerCase();
               return (
                 <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">

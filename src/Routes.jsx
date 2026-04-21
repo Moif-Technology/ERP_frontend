@@ -61,6 +61,14 @@ import OfferPacketList from './modules/backoffice/pages/OfferPacketList';
 import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
 import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
+// HR Module Pages
+import EmployeeList from './modules/hr/pages/EmployeeList';
+import EmployeeForm from './modules/hr/pages/EmployeeForm';
+import EmployeeProfile from './modules/hr/pages/EmployeeProfile';
+import ShiftMaster from './modules/hr/pages/ShiftMaster';
+import LeaveTypeMaster from './modules/hr/pages/LeaveTypeMaster';
+import DocumentTypeMaster from './modules/hr/pages/DocumentTypeMaster';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -131,6 +139,16 @@ export default function AppRoutes() {
       <Route path="/deals-offers/offer-packing-entry" element={<OfferPackingEntry />} />
       <Route path="/deals-offers/offer-unpacking-entry" element={<OfferUnpackingEntry />} />
       <Route path="/deals-offers/offer-packet-list" element={<OfferPacketList />} />
+
+      {/* HR Module */}
+      <Route path="/hr" element={<Navigate to="/hr/employees" replace />} />
+      <Route path="/hr/employees" element={<EmployeeList />} />
+      <Route path="/hr/employee-entry" element={<EmployeeForm />} />
+      <Route path="/hr/employee-profile/:id" element={<EmployeeProfile />} />
+      <Route path="/hr/shift-master" element={<ShiftMaster />} />
+      <Route path="/hr/leave-type-master" element={<LeaveTypeMaster />} />
+      <Route path="/hr/document-type-master" element={<DocumentTypeMaster />} />
+
       <Route
         path="*"
         element={

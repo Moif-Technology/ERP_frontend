@@ -44,6 +44,11 @@ import SupplierListIcon from '../../shared/assets/icons/invoice.svg';
 import AgentListIcon from '../../shared/assets/icons/proforma.svg';
 import ChevronDown from '../../shared/assets/chevron-down.svg';
 import SearchIcon from '../../shared/assets/iconsax-search.svg';
+import HrModuleIcon from '../../shared/assets/icons/hr-module.svg';
+import EmployeeDirectoryIcon from '../../shared/assets/icons/employee-directory.svg';
+import ShiftMasterIcon from '../../shared/assets/icons/shift-master.svg';
+import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
+import DocumentTypeIcon from '../../shared/assets/icons/document-type.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -111,6 +116,16 @@ const menuItems = [
   },
   { label: 'Logistics', to: '/logistics', icon: LogisticsIcon },
   { label: 'Point of Sale', to: '/point-of-sale', icon: POSIcon },
+  {
+    label: 'Human Resources',
+    icon: HrModuleIcon,
+    subItems: [
+      { label: 'Employee directory', to: '/hr/employees', icon: EmployeeDirectoryIcon },
+      { label: 'Shift master', to: '/hr/shift-master', icon: ShiftMasterIcon },
+      { label: 'Leave type master', to: '/hr/leave-type-master', icon: LeaveTypeIcon },
+      { label: 'Document type master', to: '/hr/document-type-master', icon: DocumentTypeIcon },
+    ],
+  },
   { label: 'Reports', to: '/reports', icon: ReportsIcon },
   { label: 'Tools', to: '/tools', icon: ToolsIcon },
   { label: 'Management', to: '/management', icon: ManagementIcon },
@@ -125,6 +140,7 @@ export default function Sidebar() {
     'Stock Hub': false,
     Financials: false,
     'Deals & Offers': false,
+    'Human Resources': false,
   });
 
   useEffect(() => {
@@ -144,6 +160,9 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/deals-offers')) {
       setOpenMenus((prev) => ({ ...prev, 'Deals & Offers': true }));
+    }
+    if (location.pathname.startsWith('/hr')) {
+      setOpenMenus((prev) => ({ ...prev, 'Human Resources': true }));
     }
   }, [location.pathname]);
 
