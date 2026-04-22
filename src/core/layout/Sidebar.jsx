@@ -47,8 +47,9 @@ import SearchIcon from '../../shared/assets/iconsax-search.svg';
 import HrModuleIcon from '../../shared/assets/icons/hr-module.svg';
 import EmployeeDirectoryIcon from '../../shared/assets/icons/employee-directory.svg';
 import ShiftMasterIcon from '../../shared/assets/icons/shift-master.svg';
-import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
+import LeaveTypeMasterIcon from '../../shared/assets/icons/leave-type-master.svg';
 import DocumentTypeIcon from '../../shared/assets/icons/document-type.svg';
+import CrmModuleIcon from '../../shared/assets/icons/crm-module.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -122,10 +123,25 @@ const menuItems = [
     subItems: [
       { label: 'Employee directory', to: '/hr/employees', icon: EmployeeDirectoryIcon },
       { label: 'Shift master', to: '/hr/shift-master', icon: ShiftMasterIcon },
-      { label: 'Leave type master', to: '/hr/leave-type-master', icon: LeaveTypeIcon },
+      { label: 'Leave type master', to: '/hr/leave-type-master', icon: LeaveTypeMasterIcon },
       { label: 'Document type master', to: '/hr/document-type-master', icon: DocumentTypeIcon },
     ],
   },
+  {
+  label: 'CRM',
+  icon: CrmModuleIcon,
+subItems: [
+  { label: 'Leads', to: '/crm/leads', icon: ManagementIcon },
+  { label: 'Opportunities', to: '/crm/opportunities', icon: ManagementIcon },
+  { label: 'Follow-ups', to: '/crm/followups', icon: ToolsIcon },
+  { label: 'Interactions', to: '/crm/interactions', icon: ToolsIcon },
+  { label: 'Customer 360', to: '/crm/customers', icon: ManagementIcon },
+  { label: 'Lead Source Master', to: '/crm/masters/lead-sources', icon: ConfigIcon },
+  { label: 'Lead Status Master', to: '/crm/masters/lead-statuses', icon: ConfigIcon },
+  { label: 'Opportunity Stage Master', to: '/crm/masters/opportunity-stages', icon: ConfigIcon },
+],
+},
+
   { label: 'Reports', to: '/reports', icon: ReportsIcon },
   { label: 'Tools', to: '/tools', icon: ToolsIcon },
   { label: 'Management', to: '/management', icon: ManagementIcon },
@@ -141,6 +157,7 @@ export default function Sidebar() {
     Financials: false,
     'Deals & Offers': false,
     'Human Resources': false,
+    CRM: false,
   });
 
   useEffect(() => {
@@ -164,6 +181,9 @@ export default function Sidebar() {
     if (location.pathname.startsWith('/hr')) {
       setOpenMenus((prev) => ({ ...prev, 'Human Resources': true }));
     }
+    if (location.pathname.startsWith('/crm')) {
+  setOpenMenus((prev) => ({ ...prev, CRM: true }));
+}
   }, [location.pathname]);
 
   const toggleMenu = (label) =>

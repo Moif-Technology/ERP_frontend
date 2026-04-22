@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
 import DocumentUpload from '../components/DocumentUpload';
-import { StatusBadge } from '../../../shared/components/ui';
+import { ConfirmDialog, StatusBadge } from '../../../shared/components/ui';
+import ViewIcon from '../../../shared/assets/icons/view.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+
+const actionIconBtn =
+  'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900';
 
 export default function EmployeeProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const primary = colors.primary?.main || '#790728';
   const [activeTab, setActiveTab] = useState('info');
+  const [viewDocumentId, setViewDocumentId] = useState(null);
+  const [pendingDeleteDocumentId, setPendingDeleteDocumentId] = useState(null);
 
   const tabs = [
     { id: 'info', label: 'Info' },
@@ -35,10 +43,44 @@ export default function EmployeeProfile() {
     setDocuments([newDoc, ...documents]);
   };
 
+  const handleViewDocument = useCallback((docId) => {
+    setViewDocumentId(docId);
+  }, []);
+
+  const handleDeleteDocument = useCallback((docId) => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+    setViewDocumentId((current) => (current === docId ? null : current));
+  }, []);
+
+  const closeDocumentView = useCallback(() => {
+    setViewDocumentId(null);
+  }, []);
+
+  const viewDocument = useMemo(
+    () => documents.find((doc) => doc.id === viewDocumentId) || null,
+    [documents, viewDocumentId],
+  );
+
+  const pendingDeleteDocument = useMemo(
+    () => documents.find((doc) => doc.id === pendingDeleteDocumentId) || null,
+    [documents, pendingDeleteDocumentId],
+  );
+
   return (
-    <div className="flex flex-col h-full w-[calc(100%+26px)] max-w-none -mx-[13px] bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-full w-[calc(100%+26px)] max-w-none -mx-[13px] rounded-lg border border-gray-200 bg-gray-50 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-white px-6 py-4 flex items-center gap-6">
+      <div className="bg-white px-6 py-4 flex items-center gap-4 sm:gap-6">
+        <button
+          type="button"
+          onClick={() => navigate('/hr/employees')}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded bg-transparent text-gray-700 transition hover:bg-gray-100"
+          aria-label="Back to employee directory"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xl font-bold">
           JD
         </div>
@@ -158,8 +200,26 @@ export default function EmployeeProfile() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button className="text-blue-600 hover:text-blue-800 font-medium mr-3">View</button>
-                          <button className="text-red-600 hover:text-red-800 font-medium">Delete</button>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              type="button"
+                              className={actionIconBtn}
+                              aria-label={`View ${doc.title}`}
+                              title="View"
+                              onClick={() => handleViewDocument(doc.id)}
+                            >
+                              <img src={ViewIcon} alt="" className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              className={actionIconBtn}
+                              aria-label={`Delete ${doc.title}`}
+                              title="Delete"
+                              onClick={() => setPendingDeleteDocumentId(doc.id)}
+                            >
+                              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -169,6 +229,74 @@ export default function EmployeeProfile() {
             </div>
           </div>
         )}
+
+        {viewDocument ? (
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm"
+            onClick={closeDocumentView}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employee-document-detail-title"
+          >
+            <div
+              className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+                onClick={closeDocumentView}
+                aria-label="Close document detail"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+              <h2
+                id="employee-document-detail-title"
+                className="pr-10 text-sm font-bold sm:text-base"
+                style={{ color: primary }}
+              >
+                Document detail
+              </h2>
+              <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <span className="block text-xs text-gray-500">Document Type</span>
+                  <span className="font-medium text-gray-900">{viewDocument.type}</span>
+                </div>
+                <div>
+                  <span className="block text-xs text-gray-500">Expiry Date</span>
+                  <span className="font-medium text-gray-900">{viewDocument.expiryDate}</span>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="block text-xs text-gray-500">Title</span>
+                  <span className="font-medium text-gray-900">{viewDocument.title}</span>
+                </div>
+                <div>
+                  <span className="block text-xs text-gray-500">Status</span>
+                  <span className="font-medium text-gray-900">{viewDocument.status}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <ConfirmDialog
+          open={pendingDeleteDocumentId !== null}
+          title="Delete document?"
+          message={
+            pendingDeleteDocument
+              ? `This will remove ${pendingDeleteDocument.title}. This action cannot be undone.`
+              : 'This will remove the document. This action cannot be undone.'
+          }
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          danger
+          onClose={() => setPendingDeleteDocumentId(null)}
+          onConfirm={() => {
+            if (pendingDeleteDocumentId) handleDeleteDocument(pendingDeleteDocumentId);
+          }}
+        />
         
         {activeTab !== 'info' && activeTab !== 'docs' && (
           <div className="h-full flex items-center justify-center text-gray-400">

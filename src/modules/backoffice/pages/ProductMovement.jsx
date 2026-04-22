@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import { InputField, SubInputField } from '../../../shared/components/ui';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
+import { InputField, SelectDateButton, SubInputField } from '../../../shared/components/ui';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
@@ -28,15 +26,6 @@ const figmaToolbarBtn =
 
 const primaryToolbarBtn =
   'inline-flex h-7 min-h-7 shrink-0 items-center justify-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
-
-/** Figma toolbar chevron (matches Quotation List date control) */
-function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-      <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function buildDummyMovementRows(count) {
   const types = ['IN', 'OUT', 'ADJ', 'TRF'];
@@ -82,7 +71,6 @@ function useViewportMaxWidth(maxPx) {
 }
 
 export default function ProductMovement() {
-  const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedMovementDateRange, setAppliedMovementDateRange] = useState(null);
   const [barcode, setBarcode] = useState('');
   const [group, setGroup] = useState('');
@@ -308,34 +296,14 @@ export default function ProductMovement() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr))',
           }}
         >
-          <div className="relative flex min-w-0 w-full max-w-full flex-col gap-0.5">
-            <span className="text-[9px] font-semibold sm:text-[11px]" style={{ color: '#374151' }}>
-              Select date
-            </span>
-            <button
-              type="button"
-              className={`${figmaToolbarBtn} box-border h-[26px] min-h-[26px] w-full`}
-              onClick={() => setDateModalOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={dateModalOpen}
-              aria-label="Select date"
-            >
-              <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate text-left">
-                {appliedMovementDateRange
-                  ? `${formatDDMMYYYY(appliedMovementDateRange.from)} – ${formatDDMMYYYY(appliedMovementDateRange.to)}`
-                  : 'Select Date'}
-              </span>
-              <ToolbarChevron />
-            </button>
-            <QuotationDateRangeModal
-              open={dateModalOpen}
-              title="Movement date"
-              initialRange={appliedMovementDateRange}
-              onClose={() => setDateModalOpen(false)}
-              onApply={(range) => setAppliedMovementDateRange(range)}
-            />
-          </div>
+          <SelectDateButton
+            label="Select date"
+            title="Movement date"
+            value={appliedMovementDateRange}
+            onApply={setAppliedMovementDateRange}
+            separator=" – "
+            buttonClassName={figmaToolbarBtn}
+          />
 
           <div className="min-w-0 w-full max-w-full">
             <SubInputField

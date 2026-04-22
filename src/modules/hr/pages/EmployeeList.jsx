@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import StatusBadge from '../../../shared/components/ui/StatusBadge';
@@ -20,6 +20,7 @@ const figmaSearchBox = `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-
 const primaryLinkBtn = 'inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-white no-underline shadow-sm transition-opacity hover:opacity-95';
 
 export default function EmployeeList() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -40,6 +41,13 @@ export default function EmployeeList() {
     );
   }, [search]);
 
+  const handleRowClick = useCallback((rowIdx) => {
+    const employee = filteredRows[rowIdx];
+    if (employee) {
+      navigate(`/hr/employee-profile/${employee.id}`);
+    }
+  }, [filteredRows, navigate]);
+
   const tableRows = useMemo(() => {
     return filteredRows.map((r, idx) => {
       const checked = selectedIds.has(r.id);
@@ -54,7 +62,7 @@ export default function EmployeeList() {
           />
         </div>,
         idx + 1,
-        <Link key={`code-${r.id}`} to={`/hr/employee-profile/${r.id}`} className="text-black hover:underline">{r.code}</Link>,
+        <span key={`code-${r.id}`} className="font-semibold text-black">{r.code}</span>,
         r.name,
         r.designation,
         r.department,
@@ -105,6 +113,7 @@ export default function EmployeeList() {
           bodyRowHeightRem={2.35}
           headers={['', 'Sl. no', 'Employee code', 'Employee name', 'Designation', 'Department', 'Mobile no', 'Status']}
           rows={tableRows}
+          onBodyRowClick={handleRowClick}
         />
       </div>
     </div>

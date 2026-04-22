@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
-import { DropdownInput, InputField } from '../../../shared/components/ui';
+import { DropdownInput, InputField, SelectTimeButton } from '../../../shared/components/ui';
 
 export default function ShiftMaster() {
   const primary = colors.primary?.main || '#790728';
@@ -35,10 +35,6 @@ export default function ShiftMaster() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <InputField label="Shift name" fullWidth value={form.shiftName} onChange={(e) => update('shiftName', e.target.value)} />
             <DropdownInput label="Shift type" fullWidth value={form.shiftType} onChange={(v) => update('shiftType', v)} options={shiftTypes} placeholder="Select type" />
-            
-            <InputField label="Start time" type="time" fullWidth value={form.startTime} onChange={(e) => update('startTime', e.target.value)} />
-            <InputField label="End time" type="time" fullWidth value={form.endTime} onChange={(e) => update('endTime', e.target.value)} />
-            
             <InputField label="Min work hours" type="number" fullWidth value={form.minWorkHours} onChange={(e) => update('minWorkHours', e.target.value)} />
             <InputField label="Auto break minutes" type="number" fullWidth value={form.autoBreakMinutes} onChange={(e) => update('autoBreakMinutes', e.target.value)} />
 
@@ -46,6 +42,15 @@ export default function ShiftMaster() {
             <InputField label="Early grace minutes" type="number" fullWidth value={form.earlyGraceMinutes} onChange={(e) => update('earlyGraceMinutes', e.target.value)} />
             
             <InputField label="OT start after (mins)" type="number" fullWidth value={form.otStartAfterMinutes} onChange={(e) => update('otStartAfterMinutes', e.target.value)} />
+            <SelectTimeButton
+              label="Select time"
+              fullWidth
+              startValue={form.startTime}
+              endValue={form.endTime}
+              onApplyRange={({ startTime, endTime }) =>
+                setForm((prev) => ({ ...prev, startTime, endTime }))
+              }
+            />
           </div>
 
           <div className="mt-4 flex justify-end">

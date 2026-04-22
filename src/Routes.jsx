@@ -61,6 +61,7 @@ import OfferPacketList from './modules/backoffice/pages/OfferPacketList';
 import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
 import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
+
 // HR Module Pages
 import EmployeeList from './modules/hr/pages/EmployeeList';
 import EmployeeForm from './modules/hr/pages/EmployeeForm';
@@ -68,6 +69,11 @@ import EmployeeProfile from './modules/hr/pages/EmployeeProfile';
 import ShiftMaster from './modules/hr/pages/ShiftMaster';
 import LeaveTypeMaster from './modules/hr/pages/LeaveTypeMaster';
 import DocumentTypeMaster from './modules/hr/pages/DocumentTypeMaster';
+
+
+import LeadListPage from './modules/crm/pages/LeadListPage';
+import LeadEntryPage from './modules/crm/pages/LeadEntryPage';
+import LeadWorkspacePage from './modules/crm/pages/LeadWorkspacePage';
 
 export default function AppRoutes() {
   return (
@@ -148,6 +154,14 @@ export default function AppRoutes() {
       <Route path="/hr/shift-master" element={<ShiftMaster />} />
       <Route path="/hr/leave-type-master" element={<LeaveTypeMaster />} />
       <Route path="/hr/document-type-master" element={<DocumentTypeMaster />} />
+
+
+
+      <Route path="/crm/leads" element={<LeadListPage />} />
+<Route path="/crm/lead-entry" element={<LeadEntryPage />} />
+<Route path="/crm/lead-workspace/:id" element={<LeadWorkspacePage />} />
+
+
 
       <Route
         path="*"

@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
+import SelectDateButton from '../../../shared/components/ui/SelectDateButton';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 
 const primary = colors.primary?.main || '#790728';
@@ -141,7 +140,6 @@ export default function ProfitAndLossAccount() {
   const [station, setStation] = useState('');
   const [stationQuery, setStationQuery] = useState('');
   const [stationOpen, setStationOpen] = useState(false);
-  const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [activeTab, setActiveTab] = useState('trading');
 
@@ -220,34 +218,13 @@ export default function ProfitAndLossAccount() {
                 onChange={setStation}
                 options={STATIONS}
               />
-              <div className="relative flex min-w-0 w-full max-w-full flex-col gap-0.5">
-                <span className="text-[9px] font-semibold sm:text-[11px]" style={{ color: '#374151' }}>
-                  Select date
-                </span>
-                <button
-                  type="button"
-                  className={`${figmaToolbarBtn} box-border h-[26px] min-h-[26px] w-full`}
-                  onClick={() => setDateModalOpen(true)}
-                  aria-haspopup="dialog"
-                  aria-expanded={dateModalOpen}
-                  aria-label="Select date"
-                >
-                  <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-                  <span className="min-w-0 flex-1 truncate text-left">
-                    {appliedDateRange
-                      ? `${formatDDMMYYYY(appliedDateRange.from)} - ${formatDDMMYYYY(appliedDateRange.to)}`
-                      : 'Select Date'}
-                  </span>
-                  <ToolbarChevron />
-                </button>
-                <QuotationDateRangeModal
-                  open={dateModalOpen}
-                  title="Profit and loss date"
-                  initialRange={appliedDateRange}
-                  onClose={() => setDateModalOpen(false)}
-                  onApply={(range) => setAppliedDateRange(range)}
-                />
-              </div>
+              <SelectDateButton
+                label="Select date"
+                title="Profit and loss date"
+                value={appliedDateRange}
+                onApply={setAppliedDateRange}
+                buttonClassName={figmaToolbarBtn}
+              />
               <div className="flex min-h-[26px] min-w-0 w-full max-w-full items-end justify-stretch sm:justify-end">
                 <button
                   type="button"

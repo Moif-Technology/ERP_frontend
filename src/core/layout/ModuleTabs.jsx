@@ -30,6 +30,7 @@ import LedgerDetailsIcon from '../../shared/assets/icons/ledger.svg';
 import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
 import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
 import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
+import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -171,7 +172,7 @@ const moduleGroups = {
       icon: LedgerModuleIcon,
       actions: [
         { label: 'Shift Master', icon: ConfigIcon },
-        { label: 'Leave Master', icon: ConfigIcon },
+        { label: 'Leave Master', icon: LeaveTypeIcon },
         { label: 'Document Master', icon: ConfigIcon },
       ],
     },

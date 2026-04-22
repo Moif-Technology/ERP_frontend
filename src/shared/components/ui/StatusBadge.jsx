@@ -8,8 +8,8 @@ export default function StatusBadge({ status, className = '' }) {
   const dotColor = isActive ? 'bg-[#4CAF50]' : 'bg-[#F44336]';
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border text-xs font-semibold tracking-wide ${colorClasses} ${className}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
+    <span className={`inline-flex items-center gap-1 px-2 py-px rounded-full border text-[10px] font-semibold leading-tight ${colorClasses} ${className}`}>
+      <span className={`h-1 w-1 rounded-full ${dotColor}`}></span>
       {status}
     </span>
   );

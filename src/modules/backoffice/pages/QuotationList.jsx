@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
+import SelectDateButton from '../../../shared/components/ui/SelectDateButton';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
 import FilterIcon from '../../../shared/assets/icons/filter.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 
@@ -115,7 +114,6 @@ function parseMoneyValue(s) {
 export default function QuotationList() {
   const [quotations, setQuotations] = useState(() => DUMMY_QUOTATIONS.map((r) => ({ ...r })));
   const [search, setSearch] = useState('');
-  const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
   const [sortBy, setSortBy] = useState('default');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -352,28 +350,14 @@ export default function QuotationList() {
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className={figmaToolbarBtn}
-            onClick={() => setDateModalOpen(true)}
-            aria-haspopup="dialog"
-            aria-expanded={dateModalOpen}
-          >
-            <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-            <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
-              {appliedDateRange
-                ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
-                : 'Select Date'}
-            </span>
-            <ToolbarChevron />
-          </button>
-
-          <QuotationDateRangeModal
-            open={dateModalOpen}
+          <SelectDateButton
             title="Quotation Date"
-            initialRange={appliedDateRange}
-            onClose={() => setDateModalOpen(false)}
-            onApply={(range) => setAppliedDateRange(range)}
+            value={appliedDateRange}
+            onApply={setAppliedDateRange}
+            separator=" – "
+            buttonClassName={figmaToolbarBtn}
+            className="w-auto shrink-0"
+            textClassName="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]"
           />
 
           <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
