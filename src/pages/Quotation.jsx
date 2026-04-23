@@ -208,7 +208,12 @@ export default function Quotation() {
                 <SubInputField label="Disc.%" type="number" value={discPct} onChange={(e) => { const v = Number(e.target.value); setDiscPct(v); setDiscAmt(qty * unitPrice * (v / 100)); }} className="h-9 px-3 py-2 text-sm" />
                 <SubInputField label="Disc" type="number" value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} className="h-9 px-3 py-2 text-sm" />
                 <SubInputField label="Tax%" type="number" value={taxPct} onChange={(e) => setTaxPct(Number(e.target.value))} className="h-9 px-3 py-2 text-sm" />
-                <button type="button" onClick={addItem} className="h-9 shrink-0 rounded-md px-5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-95" style={{ background: primary }}>Add</button>
+                <button type="button" onClick={addItem} className="h-9 shrink-0 rounded-md px-5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-95 flex items-center gap-1" style={{ background: primary }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  Add
+                </button>
               </div>
             </div>
 
