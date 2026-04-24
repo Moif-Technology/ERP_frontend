@@ -124,17 +124,22 @@ export default function LeadSourceMasterPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg bg-white shadow-sm">
+      <div className="mt-5 overflow-hidden">
         <CommonTable
           headers={headers}
           rows={tableRows}
           fitParentWidth
+          allowHorizontalScroll={false}
+          truncateHeader
+          hideVerticalCellBorders
+          cellAlign="center"
           columnWidthPercents={[5, 20, 45, 10, 10]}
-          headerBackgroundColor={primary}
-          headerTextColor="#fff"
-          cellPaddingClass="px-3 py-2"
-          bodyFontSize="11px"
-          headerFontSize="11px"
+          headerTextColor="#6b7280"
+          headerFontSize="clamp(7px, 0.85vw, 10px)"
+          bodyFontSize="clamp(8px, 1vw, 10px)"
+          cellPaddingClass="px-1 py-1 sm:px-1.5 sm:py-1.5"
+          bodyRowHeightRem={2.6}
+          maxVisibleRows={10}
         />
       </div>
 
