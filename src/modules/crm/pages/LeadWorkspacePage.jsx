@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
 
 export default function LeadWorkspacePage() {
+  const navigate = useNavigate();
   const primary = colors.primary?.main || '#790728';
 
   const [activeTab, setActiveTab] = useState('Summary');
@@ -23,7 +25,7 @@ export default function LeadWorkspacePage() {
       mode: 'Phone',
       subject: 'Initial discussion',
       outcome: 'Interested in demo',
-      by: 'Sabeeh',
+      by: 'Ahmed',
     },
   ];
 
@@ -32,7 +34,7 @@ export default function LeadWorkspacePage() {
       id: 1,
       dueDate: '2026-04-23',
       subject: 'Send proposal',
-      assignedTo: 'Swetha',
+      assignedTo: 'Priya',
       priority: 'High',
       status: 'Pending',
     },
@@ -43,13 +45,23 @@ export default function LeadWorkspacePage() {
       id: 1,
       title: 'Requirement Note',
       note: 'Customer interested in ERP + POS package.',
-      createdBy: 'Sabeeh',
+      createdBy: 'Ahmed',
       createdOn: '2026-04-21',
     },
   ];
 
   return (
-    <div className="mx-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+      <button
+        type="button"
+        onClick={() => navigate('/crm/leads')}
+        className="mb-3 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-800"
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+        Back to Lead List
+      </button>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
@@ -64,7 +76,7 @@ export default function LeadWorkspacePage() {
               High Priority
             </span>
           </div>
-          <p className="mt-1 text-xs text-gray-500">Lead No: LD-0001 | Assigned to: Sabeeh</p>
+          <p className="mt-1 text-xs text-gray-500">Lead No: LD-0001 | Assigned to: Ahmed</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -134,7 +146,7 @@ export default function LeadWorkspacePage() {
               <div><span className="font-semibold text-gray-600">Mobile:</span> 971500000001</div>
               <div><span className="font-semibold text-gray-600">Email:</span> fahad@alnoor.com</div>
               <div><span className="font-semibold text-gray-600">Status:</span> New</div>
-              <div><span className="font-semibold text-gray-600">Assigned To:</span> Sabeeh</div>
+              <div><span className="font-semibold text-gray-600">Assigned To:</span> Ahmed</div>
               <div><span className="font-semibold text-gray-600">Source:</span> Website</div>
               <div><span className="font-semibold text-gray-600">Priority:</span> High</div>
             </div>

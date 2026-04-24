@@ -74,6 +74,15 @@ import DocumentTypeMaster from './modules/hr/pages/DocumentTypeMaster';
 import LeadListPage from './modules/crm/pages/LeadListPage';
 import LeadEntryPage from './modules/crm/pages/LeadEntryPage';
 import LeadWorkspacePage from './modules/crm/pages/LeadWorkspacePage';
+import CRMDashboard from './modules/crm/pages/CRMDashboard';
+import OpportunityListPage from './modules/crm/pages/OpportunityListPage';
+import OpportunityEntryPage from './modules/crm/pages/OpportunityEntryPage';
+import OpportunityWorkspacePage from './modules/crm/pages/OpportunityWorkspacePage';
+import FollowUpListPage from './modules/crm/pages/FollowUpListPage';
+import InteractionLogPage from './modules/crm/pages/InteractionLogPage';
+import LeadSourceMasterPage from './modules/crm/pages/LeadSourceMasterPage';
+import LeadStatusMasterPage from './modules/crm/pages/LeadStatusMasterPage';
+import OpportunityStageMasterPage from './modules/crm/pages/OpportunityStageMasterPage';
 
 export default function AppRoutes() {
   return (
@@ -157,9 +166,20 @@ export default function AppRoutes() {
 
 
 
+      {/* CRM Module */}
+      <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
+      <Route path="/crm/dashboard" element={<CRMDashboard />} />
       <Route path="/crm/leads" element={<LeadListPage />} />
-<Route path="/crm/lead-entry" element={<LeadEntryPage />} />
-<Route path="/crm/lead-workspace/:id" element={<LeadWorkspacePage />} />
+      <Route path="/crm/lead-entry" element={<LeadEntryPage />} />
+      <Route path="/crm/lead-workspace/:id" element={<LeadWorkspacePage />} />
+      <Route path="/crm/opportunities" element={<OpportunityListPage />} />
+      <Route path="/crm/opportunity-entry" element={<OpportunityEntryPage />} />
+      <Route path="/crm/opportunity-workspace/:id" element={<OpportunityWorkspacePage />} />
+      <Route path="/crm/followups" element={<FollowUpListPage />} />
+      <Route path="/crm/interactions" element={<InteractionLogPage />} />
+      <Route path="/crm/masters/lead-sources" element={<LeadSourceMasterPage />} />
+      <Route path="/crm/masters/lead-statuses" element={<LeadStatusMasterPage />} />
+      <Route path="/crm/masters/opportunity-stages" element={<OpportunityStageMasterPage />} />
 
 
 

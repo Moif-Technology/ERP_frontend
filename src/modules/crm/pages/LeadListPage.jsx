@@ -3,7 +3,7 @@ import { colors } from '../../../shared/constants/theme';
 import { CommonTable, DropdownInput, InputField } from '../../../shared/components/ui';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
-import FollowupActionIcon from '../../../shared/assets/icons/calendar.svg';
+import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
 import { useNavigate } from 'react-router-dom';
 
 const LEAD_COL_PCT = [10, 18, 14, 12, 10, 10, 12, 14, 10];
@@ -20,7 +20,7 @@ const navigate = useNavigate();
     dateTo: '',
   });
 
-  const [rows] = useState([
+  const [rows, setRows] = useState([
     {
       id: 1,
       leadNo: 'LD-0001',
@@ -30,7 +30,7 @@ const navigate = useNavigate();
       email: 'fahad@alnoor.com',
       source: 'Website',
       status: 'New',
-      assignedTo: 'Sabeeh',
+      assignedTo: 'Ahmed',
       priority: 'High',
       nextFollowup: '2026-04-23',
     },
@@ -43,16 +43,37 @@ const navigate = useNavigate();
       email: 'rashid@bluestar.com',
       source: 'Reference',
       status: 'Qualified',
-      assignedTo: 'Swetha',
+      assignedTo: 'Priya',
       priority: 'Medium',
       nextFollowup: '2026-04-24',
     },
   ]);
 
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({});
+
   const sourceOptions = ['Website', 'Reference', 'Walk-in', 'Campaign', 'Sales Call'];
   const statusOptions = ['New', 'Contacted', 'Qualified', 'Lost', 'Converted'];
-  const assignedOptions = ['Sabeeh', 'Swetha', 'Sonu'];
+  const assignedOptions = ['Ahmed', 'Priya', 'Ravi'];
   const priorityOptions = ['High', 'Medium', 'Low'];
+
+  const startEdit = (row) => {
+    setEditingId(row.id);
+    setEditDraft({ ...row });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditDraft({});
+  };
+
+  const saveEdit = () => {
+    setRows((prev) => prev.map((r) => (r.id === editingId ? { ...editDraft } : r)));
+    setEditingId(null);
+    setEditDraft({});
+  };
+
+  const updateDraft = (key, value) => setEditDraft((prev) => ({ ...prev, [key]: value }));
 
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -102,48 +123,59 @@ const navigate = useNavigate();
     return { background: '#F3F4F6', color: '#374151' };
   };
 
-const tableBodyRows = filteredRows.map((row) => [
-  row.leadNo,
-  row.leadName,
-  row.contactPerson,
-  row.mobile,
-  row.source,
-  <span
-    key={`status-${row.id}`}
-    className="inline-flex whitespace-nowrap rounded px-2 py-1 text-[10px] font-semibold"
-    style={badgeStyle(row.status, 'status')}
-  >
-    {row.status}
-  </span>,
-  row.assignedTo,
-  row.nextFollowup,
-<div key={`actions-${row.id}`} className="flex items-center justify-center gap-2 whitespace-nowrap">
-  <button
-  type="button"
-  onClick={() => navigate(`/crm/lead-workspace/${row.id}`)}
-  className="flex h-7 w-7 items-center justify-center rounded bg-white hover:bg-gray-50"
-  title="View"
->
-  <img src={ViewActionIcon} alt="View" className="h-3.5 w-3.5" />
-</button>
+const cellInput = 'w-full rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] text-gray-800 outline-none focus:border-[#790728]';
+const cellSelect = 'w-full rounded border border-gray-300 bg-white px-1 py-0.5 text-[10px] text-gray-800 outline-none focus:border-[#790728]';
 
-  <button
-    type="button"
-    className="flex h-7 w-7 items-center justify-center rounded  bg-white hover:bg-gray-50"
-    title="Edit"
-  >
-    <img src={EditActionIcon} alt="Edit" className="h-3.5 w-3.5" />
-  </button>
+const tableBodyRows = filteredRows.map((row) => {
+  const isEditing = editingId === row.id;
 
-  <button
-    type="button"
-    className="flex h-7 w-7 items-center justify-center rounded  bg-white hover:bg-gray-50"
-    title="Follow-up"
-  >
-    <img src={FollowupActionIcon} alt="Follow-up" className="h-3.5 w-3.5" />
-  </button>
-</div>
-]);
+  return [
+    row.leadNo,
+    isEditing
+      ? <input key={`ln-${row.id}`} className={cellInput} value={editDraft.leadName} onChange={(e) => updateDraft('leadName', e.target.value)} />
+      : row.leadName,
+    isEditing
+      ? <input key={`cp-${row.id}`} className={cellInput} value={editDraft.contactPerson} onChange={(e) => updateDraft('contactPerson', e.target.value)} />
+      : row.contactPerson,
+    isEditing
+      ? <input key={`mb-${row.id}`} className={cellInput} value={editDraft.mobile} onChange={(e) => updateDraft('mobile', e.target.value)} />
+      : row.mobile,
+    isEditing
+      ? <select key={`src-${row.id}`} className={cellSelect} value={editDraft.source} onChange={(e) => updateDraft('source', e.target.value)}>
+          {sourceOptions.map((o) => <option key={o}>{o}</option>)}
+        </select>
+      : row.source,
+    isEditing
+      ? <select key={`st-${row.id}`} className={cellSelect} value={editDraft.status} onChange={(e) => updateDraft('status', e.target.value)}>
+          {statusOptions.map((o) => <option key={o}>{o}</option>)}
+        </select>
+      : <span key={`status-${row.id}`} className="inline-flex whitespace-nowrap rounded px-2 py-1 text-[10px] font-semibold" style={badgeStyle(row.status, 'status')}>{row.status}</span>,
+    isEditing
+      ? <select key={`asgn-${row.id}`} className={cellSelect} value={editDraft.assignedTo} onChange={(e) => updateDraft('assignedTo', e.target.value)}>
+          {assignedOptions.map((o) => <option key={o}>{o}</option>)}
+        </select>
+      : row.assignedTo,
+    isEditing
+      ? <input key={`nf-${row.id}`} type="date" className={cellInput} value={editDraft.nextFollowup} onChange={(e) => updateDraft('nextFollowup', e.target.value)} />
+      : row.nextFollowup,
+    isEditing
+      ? <div key={`actions-${row.id}`} className="flex items-center justify-center gap-1 whitespace-nowrap">
+          <button type="button" onClick={saveEdit} className="rounded px-2 py-0.5 text-[10px] font-semibold text-white" style={{ backgroundColor: primary }}>Save</button>
+          <button type="button" onClick={cancelEdit} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] font-semibold text-gray-600">Cancel</button>
+        </div>
+      : <div key={`actions-${row.id}`} className="flex items-center justify-center gap-2 whitespace-nowrap">
+          <button type="button" onClick={() => navigate(`/crm/lead-workspace/${row.id}`)} className="flex h-7 w-7 items-center justify-center rounded bg-white hover:bg-gray-50" title="View">
+            <img src={ViewActionIcon} alt="View" className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" onClick={() => startEdit(row)} className="flex h-7 w-7 items-center justify-center rounded bg-white hover:bg-gray-50" title="Edit">
+            <img src={EditActionIcon} alt="Edit" className="h-3.5 w-3.5" />
+          </button>
+          <button type="button" className="flex h-7 w-7 items-center justify-center rounded bg-white hover:bg-gray-50" title="Delete">
+            <img src={DeleteActionIcon} alt="Delete" className="h-3.5 w-3.5" />
+          </button>
+        </div>,
+  ];
+});
 const tableFooterRow = [
   '',
   '',
@@ -161,7 +193,7 @@ const tableFooterRow = [
 ];
 
   return (
-    <div className="mx-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 -mx-[13px] w-[calc(100%+26px)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
@@ -174,15 +206,21 @@ const tableFooterRow = [
  <button
   type="button"
   onClick={() => navigate('/crm/lead-entry')}
-  className="rounded px-4 py-2 text-[11px] font-semibold text-white"
+  className="flex items-center gap-1 rounded px-4 py-2 text-[11px] font-semibold text-white"
   style={{ backgroundColor: primary }}
 >
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+  </svg>
   Add
 </button>
           <button
             type="button"
-            className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700"
+            className="flex items-center gap-1 rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
             Export
           </button>
         </div>

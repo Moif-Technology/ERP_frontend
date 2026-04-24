@@ -50,6 +50,14 @@ import ShiftMasterIcon from '../../shared/assets/icons/shift-master.svg';
 import LeaveTypeMasterIcon from '../../shared/assets/icons/leave-type-master.svg';
 import DocumentTypeIcon from '../../shared/assets/icons/document-type.svg';
 import CrmModuleIcon from '../../shared/assets/icons/crm-module.svg';
+import CrmOverviewIcon from '../../shared/assets/icons/trial_balance.svg';
+import CrmLeadsIcon from '../../shared/assets/icons/filter.svg';
+import CrmOpportunitiesIcon from '../../shared/assets/icons/QuotationIcon.svg';
+import CrmFollowupsIcon from '../../shared/assets/icons/leave-type.svg';
+import CrmInteractionsIcon from '../../shared/assets/icons/Receipt.svg';
+import CrmLeadSourceIcon from '../../shared/assets/icons/alternative.svg';
+import CrmLeadStatusIcon from '../../shared/assets/icons/grn.svg';
+import CrmStageIcon from '../../shared/assets/icons/DeliveryIcon.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -128,19 +136,19 @@ const menuItems = [
     ],
   },
   {
-  label: 'CRM',
-  icon: CrmModuleIcon,
-subItems: [
-  { label: 'Leads', to: '/crm/leads', icon: ManagementIcon },
-  { label: 'Opportunities', to: '/crm/opportunities', icon: ManagementIcon },
-  { label: 'Follow-ups', to: '/crm/followups', icon: ToolsIcon },
-  { label: 'Interactions', to: '/crm/interactions', icon: ToolsIcon },
-  { label: 'Customer 360', to: '/crm/customers', icon: ManagementIcon },
-  { label: 'Lead Source Master', to: '/crm/masters/lead-sources', icon: ConfigIcon },
-  { label: 'Lead Status Master', to: '/crm/masters/lead-statuses', icon: ConfigIcon },
-  { label: 'Opportunity Stage Master', to: '/crm/masters/opportunity-stages', icon: ConfigIcon },
-],
-},
+    label: 'CRM',
+    icon: CrmModuleIcon,
+    subItems: [
+      { label: 'CRM Overview', to: '/crm/dashboard', icon: CrmOverviewIcon },
+      { label: 'Leads', to: '/crm/leads', icon: CrmLeadsIcon },
+      { label: 'Opportunities', to: '/crm/opportunities', icon: CrmOpportunitiesIcon },
+      { label: 'Follow-ups', to: '/crm/followups', icon: CrmFollowupsIcon },
+      { label: 'Interactions', to: '/crm/interactions', icon: CrmInteractionsIcon },
+      { label: 'Lead Source Master', to: '/crm/masters/lead-sources', icon: CrmLeadSourceIcon },
+      { label: 'Lead Status Master', to: '/crm/masters/lead-statuses', icon: CrmLeadStatusIcon },
+      { label: 'Opportunity Stage Master', to: '/crm/masters/opportunity-stages', icon: CrmStageIcon },
+    ],
+  },
 
   { label: 'Reports', to: '/reports', icon: ReportsIcon },
   { label: 'Tools', to: '/tools', icon: ToolsIcon },
@@ -283,7 +291,8 @@ export default function Sidebar() {
                           item.label === 'List' ||
                           item.label === 'Stock Hub' ||
                           item.label === 'Financials' ||
-                          item.label === 'Deals & Offers'
+                          item.label === 'Deals & Offers' ||
+                          item.label === 'CRM'
                             ? 'filter brightness-0 invert'
                             : ''
                         }`.trim()}

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
 import { DropdownInput, InputField } from '../../../shared/components/ui';
 
 export default function LeadEntryPage() {
+  const navigate = useNavigate();
   const primary = colors.primary?.main || '#790728';
 
   const [form, setForm] = useState({
@@ -35,7 +37,7 @@ export default function LeadEntryPage() {
   const sourceOptions = ['Website', 'Reference', 'Walk-in', 'Campaign', 'Sales Call'];
   const statusOptions = ['New', 'Contacted', 'Qualified', 'Lost', 'Converted'];
   const priorityOptions = ['High', 'Medium', 'Low'];
-  const assignedOptions = ['Sabeeh', 'Swetha', 'Sonu'];
+  const assignedOptions = ['Ahmed', 'Priya', 'Ravi'];
   const customerTypeOptions = ['Retail', 'Wholesale', 'Corporate', 'Garage'];
   const industryOptions = ['Retail', 'Automotive', 'Trading', 'Manufacturing', 'Services'];
 
@@ -48,7 +50,7 @@ export default function LeadEntryPage() {
   };
 
   return (
-    <div className="mx-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
@@ -68,6 +70,7 @@ export default function LeadEntryPage() {
           </button>
           <button
             type="button"
+            onClick={() => navigate('/crm/leads')}
             className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700"
           >
             Cancel
