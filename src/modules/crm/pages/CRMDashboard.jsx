@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CommonTable, SelectDateButton } from '../../../shared/components/ui';
+import { CommonTable, SelectDateButton, formatDDMMYYYY } from '../../../shared/components/ui';
 
 const primary = '#790728';
 
@@ -8,73 +8,44 @@ const primary = '#790728';
 // Sample data
 // ---------------------------------------------------------------------------
 
-// TODO: Replace with API call — GET /api/crm/dashboard/kpi?from=&to=
-const kpiData = {
-  totalLeads: 148,
-  openLeads: 63,
-  convertedLeads: 31,
-  totalOpportunities: 74,
-  opportunitiesWon: 18,
-  revenuePipeline: 12450000,
-};
-
 // TODO: Replace with API call — GET /api/crm/leads?limit=7&sort=createdAt:desc
 const recentLeads = [
-  { leadNo: 'LD-2025-001', leadName: 'Al Rashid Trading', status: 'New',       assignedTo: 'Ahmed',  date: '22 Apr 2025' },
-  { leadNo: 'LD-2025-002', leadName: 'Gulf Tech Solutions', status: 'Qualified', assignedTo: 'Priya',  date: '21 Apr 2025' },
-  { leadNo: 'LD-2025-003', leadName: 'Noor Interiors LLC',  status: 'Contacted', assignedTo: 'Ravi',    date: '21 Apr 2025' },
-  { leadNo: 'LD-2025-004', leadName: 'Horizon Builders',    status: 'New',       assignedTo: 'Ahmed',  date: '20 Apr 2025' },
-  { leadNo: 'LD-2025-005', leadName: 'Delta Freight Co',    status: 'Lost',      assignedTo: 'Priya',  date: '19 Apr 2025' },
-  { leadNo: 'LD-2025-006', leadName: 'Pinnacle Retail',     status: 'Qualified', assignedTo: 'Ravi',    date: '18 Apr 2025' },
-  { leadNo: 'LD-2025-007', leadName: 'Crescent Logistics',  status: 'Converted', assignedTo: 'Ahmed',  date: '17 Apr 2025' },
+  { leadNo: 'LD-2026-001', leadName: 'Al Rashid Trading', status: 'New',       assignedTo: 'Ahmed',  source: 'Direct',     estimatedValue: 320000,  date: '22 Apr 2026' },
+  { leadNo: 'LD-2026-002', leadName: 'Gulf Tech Solutions', status: 'Qualified', assignedTo: 'Priya',  source: 'Referral',   estimatedValue: 875000,  date: '21 Apr 2026' },
+  { leadNo: 'LD-2026-003', leadName: 'Noor Interiors LLC',  status: 'Contacted', assignedTo: 'Ravi',    source: 'Website',    estimatedValue: 150000,  date: '21 Apr 2026' },
+  { leadNo: 'LD-2026-004', leadName: 'Horizon Builders',    status: 'New',       assignedTo: 'Ahmed',  source: 'Cold Call',  estimatedValue: 540000,  date: '20 Apr 2026' },
+  { leadNo: 'LD-2026-005', leadName: 'Delta Freight Co',    status: 'Lost',      assignedTo: 'Priya',  source: 'Exhibition', estimatedValue: 210000,  date: '19 Apr 2026' },
+  { leadNo: 'LD-2026-006', leadName: 'Pinnacle Retail',     status: 'Qualified', assignedTo: 'Ravi',    source: 'Referral',   estimatedValue: 98000,   date: '18 Apr 2026' },
+  { leadNo: 'LD-2026-007', leadName: 'Crescent Logistics',  status: 'Converted', assignedTo: 'Ahmed',  source: 'Direct',     estimatedValue: 430000,  date: '17 Apr 2026' },
 ];
 
 // TODO: Replace with API call — GET /api/crm/opportunities?limit=7&sort=createdAt:desc
 const recentOpportunities = [
-  { oppNo: 'OP-2025-001', customer: 'Al Rashid Trading',   stage: 'Proposal',     value: 320000,  closeDate: '30 Apr 2025' },
-  { oppNo: 'OP-2025-002', customer: 'Gulf Tech Solutions',  stage: 'Negotiation',  value: 875000,  closeDate: '05 May 2025' },
-  { oppNo: 'OP-2025-003', customer: 'Noor Interiors LLC',   stage: 'Qualified',    value: 150000,  closeDate: '12 May 2025' },
-  { oppNo: 'OP-2025-004', customer: 'Horizon Builders',     stage: 'Prospect',     value: 540000,  closeDate: '20 May 2025' },
-  { oppNo: 'OP-2025-005', customer: 'Delta Freight Co',     stage: 'Won',          value: 210000,  closeDate: '15 Apr 2025' },
-  { oppNo: 'OP-2025-006', customer: 'Pinnacle Retail',      stage: 'Lost',         value: 98000,   closeDate: '10 Apr 2025' },
-  { oppNo: 'OP-2025-007', customer: 'Crescent Logistics',   stage: 'Proposal',     value: 430000,  closeDate: '28 Apr 2025' },
+  { oppNo: 'OP-2026-001', customer: 'Al Rashid Trading',   stage: 'Proposal',     value: 320000,  closeDate: '30 Apr 2026' },
+  { oppNo: 'OP-2026-002', customer: 'Gulf Tech Solutions',  stage: 'Negotiation',  value: 875000,  closeDate: '05 May 2026' },
+  { oppNo: 'OP-2026-003', customer: 'Noor Interiors LLC',   stage: 'Qualified',    value: 150000,  closeDate: '12 May 2026' },
+  { oppNo: 'OP-2026-004', customer: 'Horizon Builders',     stage: 'Prospect',     value: 540000,  closeDate: '20 May 2026' },
+  { oppNo: 'OP-2026-005', customer: 'Delta Freight Co',     stage: 'Won',          value: 210000,  closeDate: '15 Apr 2026' },
+  { oppNo: 'OP-2026-006', customer: 'Pinnacle Retail',      stage: 'Lost',         value: 98000,   closeDate: '10 Apr 2026' },
+  { oppNo: 'OP-2026-007', customer: 'Crescent Logistics',   stage: 'Proposal',     value: 430000,  closeDate: '28 Apr 2026' },
 ];
 
 // TODO: Replace with API call — GET /api/crm/followups?dueDate=today&sort=dueTime:asc
 const todayFollowups = [
-  { id: 1, subject: 'Demo call scheduled',    linkedTo: 'Al Rashid Trading',   type: 'Call',    dueTime: '09:30 AM', priority: 'High'   },
-  { id: 2, subject: 'Send revised quotation',  linkedTo: 'Gulf Tech Solutions',  type: 'Task',    dueTime: '11:00 AM', priority: 'High'   },
-  { id: 3, subject: 'Follow-up on proposal',   linkedTo: 'Noor Interiors LLC',   type: 'Email',   dueTime: '12:30 PM', priority: 'Medium' },
-  { id: 4, subject: 'Site visit confirmation', linkedTo: 'Horizon Builders',     type: 'Meeting', dueTime: '02:00 PM', priority: 'Medium' },
-  { id: 5, subject: 'Contract discussion',     linkedTo: 'Crescent Logistics',   type: 'Call',    dueTime: '04:00 PM', priority: 'Low'    },
-];
-
-// TODO: Replace with API call — GET /api/crm/pipeline/by-stage
-const pipelineByStage = [
-  { stage: 'Prospect',    count: 18, value: 2850000 },
-  { stage: 'Qualified',   count: 14, value: 3120000 },
-  { stage: 'Proposal',    count: 11, value: 2640000 },
-  { stage: 'Negotiation', count:  8, value: 1980000 },
-  { stage: 'Won',         count: 18, value: 3100000 },
-  { stage: 'Lost',        count:  5, value:  760000 },
-];
-
-// TODO: Replace with API call — GET /api/crm/leads/by-source
-const leadSourceBreakdown = [
-  { source: 'Direct',     count: 32, conversionPct: 28 },
-  { source: 'Referral',   count: 41, conversionPct: 37 },
-  { source: 'Website',    count: 29, conversionPct: 17 },
-  { source: 'Cold Call',  count: 25, conversionPct: 12 },
-  { source: 'Exhibition', count: 21, conversionPct: 22 },
+  { id: 1, dueDate: '22 Apr 2026', subject: 'Demo call scheduled',    linkedTo: 'Al Rashid Trading',   type: 'Call',    dueTime: '09:30 AM', priority: 'High'   },
+  { id: 2, dueDate: '22 Apr 2026', subject: 'Send revised quotation',  linkedTo: 'Gulf Tech Solutions',  type: 'Task',    dueTime: '11:00 AM', priority: 'High'   },
+  { id: 3, dueDate: '21 Apr 2026', subject: 'Follow-up on proposal',   linkedTo: 'Noor Interiors LLC',   type: 'Email',   dueTime: '12:30 PM', priority: 'Medium' },
+  { id: 4, dueDate: '20 Apr 2026', subject: 'Site visit confirmation', linkedTo: 'Horizon Builders',     type: 'Meeting', dueTime: '02:00 PM', priority: 'Medium' },
+  { id: 5, dueDate: '17 Apr 2026', subject: 'Contract discussion',     linkedTo: 'Crescent Logistics',   type: 'Call',    dueTime: '04:00 PM', priority: 'Low'    },
 ];
 
 // TODO: Replace with API call — GET /api/crm/followups?upcoming=true&limit=5
 const upcomingFollowups = [
-  { dueDate: '24 Apr 2025', subject: 'Renewal discussion',      linkedTo: 'Gulf Tech Solutions',  type: 'Call',    priority: 'High',   assignedTo: 'Ahmed', status: 'Pending'     },
-  { dueDate: '25 Apr 2025', subject: 'Technical demo',          linkedTo: 'Noor Interiors LLC',   type: 'Meeting', priority: 'High',   assignedTo: 'Priya', status: 'Pending'     },
-  { dueDate: '26 Apr 2025', subject: 'Price negotiation',       linkedTo: 'Pinnacle Retail',      type: 'Call',    priority: 'Medium', assignedTo: 'Ravi',   status: 'Scheduled'   },
-  { dueDate: '28 Apr 2025', subject: 'Agreement signing',       linkedTo: 'Crescent Logistics',   type: 'Meeting', priority: 'High',   assignedTo: 'Ahmed', status: 'Scheduled'   },
-  { dueDate: '30 Apr 2025', subject: 'Post-install check-in',   linkedTo: 'Horizon Builders',     type: 'Email',   priority: 'Low',    assignedTo: 'Priya', status: 'Pending'     },
+  { dueDate: '24 Apr 2026', subject: 'Renewal discussion',      linkedTo: 'Gulf Tech Solutions',  type: 'Call',    priority: 'High',   assignedTo: 'Ahmed', status: 'Pending'     },
+  { dueDate: '25 Apr 2026', subject: 'Technical demo',          linkedTo: 'Noor Interiors LLC',   type: 'Meeting', priority: 'High',   assignedTo: 'Priya', status: 'Pending'     },
+  { dueDate: '26 Apr 2026', subject: 'Price negotiation',       linkedTo: 'Pinnacle Retail',      type: 'Call',    priority: 'Medium', assignedTo: 'Ravi',   status: 'Scheduled'   },
+  { dueDate: '28 Apr 2026', subject: 'Agreement signing',       linkedTo: 'Crescent Logistics',   type: 'Meeting', priority: 'High',   assignedTo: 'Ahmed', status: 'Scheduled'   },
+  { dueDate: '30 Apr 2026', subject: 'Post-install check-in',   linkedTo: 'Horizon Builders',     type: 'Email',   priority: 'Low',    assignedTo: 'Priya', status: 'Pending'     },
 ];
 
 // ---------------------------------------------------------------------------
@@ -85,8 +56,54 @@ function formatINR(amount) {
   return '₹' + amount.toLocaleString('en-IN');
 }
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+function startOfDay(d) {
+  if (!d) return null;
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function parseDashboardDate(value) {
+  if (!value) return null;
+  const monthIndex = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
+  };
+  const displayMatch = String(value).trim().match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
+  const displayMonth = displayMatch ? monthIndex[displayMatch[2]] : undefined;
+  const parsed = displayMatch
+    ? new Date(Number(displayMatch[3]), displayMonth, Number(displayMatch[1]))
+    : new Date(value);
+  return isNaN(parsed.getTime()) ? null : startOfDay(parsed);
+}
+
+function isDateInRange(value, range) {
+  if (!range?.from || !range?.to) return true;
+  const date = parseDashboardDate(value);
+  if (!date) return false;
+  return date >= startOfDay(range.from) && date <= startOfDay(range.to);
+}
+
+function emptyRow(colSpan, message = 'No records for selected date range') {
+  return [
+    [
+      {
+        content: <span className="block py-3 text-center text-[11px] text-gray-400">{message}</span>,
+        colSpan,
+        className: 'text-center',
+      },
+    ],
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -187,35 +204,96 @@ export default function CRMDashboard() {
 
   const [appliedDateRange, setAppliedDateRange] = useState(null);
 
+  const filteredLeads = useMemo(
+    () => recentLeads.filter((lead) => isDateInRange(lead.date, appliedDateRange)),
+    [appliedDateRange]
+  );
+
+  const filteredOpportunities = useMemo(
+    () => recentOpportunities.filter((opp) => isDateInRange(opp.closeDate, appliedDateRange)),
+    [appliedDateRange]
+  );
+
+  const filteredTodayFollowups = useMemo(
+    () => todayFollowups.filter((followup) => isDateInRange(followup.dueDate, appliedDateRange)),
+    [appliedDateRange]
+  );
+
+  const filteredUpcomingFollowups = useMemo(
+    () => upcomingFollowups.filter((followup) => isDateInRange(followup.dueDate, appliedDateRange)),
+    [appliedDateRange]
+  );
+
+  const dashboardKpis = useMemo(() => {
+    const openLeadStatuses = new Set(['New', 'Contacted', 'Qualified']);
+    return {
+      totalLeads: filteredLeads.length,
+      openLeads: filteredLeads.filter((lead) => openLeadStatuses.has(lead.status)).length,
+      convertedLeads: filteredLeads.filter((lead) => lead.status === 'Converted').length,
+      totalOpportunities: filteredOpportunities.length,
+      opportunitiesWon: filteredOpportunities.filter((opp) => opp.stage === 'Won').length,
+      revenuePipeline: filteredOpportunities.reduce((sum, opp) => sum + opp.value, 0),
+    };
+  }, [filteredLeads, filteredOpportunities]);
+
+  const dateRangeLabel = appliedDateRange?.from && appliedDateRange?.to
+    ? `${formatDDMMYYYY(appliedDateRange.from)} - ${formatDDMMYYYY(appliedDateRange.to)}`
+    : 'All dates';
+
+  const filteredPipelineByStage = useMemo(() => {
+    const order = ['Prospect', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
+    return order.map((stage) => {
+      const stageRows = filteredOpportunities.filter((opp) => opp.stage === stage);
+      return {
+        stage,
+        count: stageRows.length,
+        value: stageRows.reduce((sum, opp) => sum + opp.value, 0),
+      };
+    });
+  }, [filteredOpportunities]);
+
+  const filteredLeadSourceBreakdown = useMemo(() => {
+    const sources = ['Direct', 'Referral', 'Website', 'Cold Call', 'Exhibition'];
+    return sources.map((source) => {
+      const sourceLeads = filteredLeads.filter((lead) => lead.source === source);
+      const converted = sourceLeads.filter((lead) => lead.status === 'Converted').length;
+      return {
+        source,
+        count: sourceLeads.length,
+        conversionPct: sourceLeads.length ? Math.round((converted / sourceLeads.length) * 100) : 0,
+      };
+    });
+  }, [filteredLeads]);
+
   // ------------------------------------------------------------------
   // Recent Leads table rows
   // ------------------------------------------------------------------
   const leadTableHeaders = ['Lead No', 'Lead Name', 'Status', 'Assigned To', 'Date'];
-  const leadTableRows = recentLeads.map((l) => [
+  const leadTableRows = filteredLeads.length ? filteredLeads.map((l) => [
     <span className="font-mono text-[11px] text-gray-700">{l.leadNo}</span>,
     <span className="text-[11px] text-gray-800">{l.leadName}</span>,
     <Badge label={l.status} styleMap={LEAD_STATUS_STYLES} />,
     <span className="text-[11px] text-gray-700">{l.assignedTo}</span>,
     <span className="text-[11px] text-gray-500">{l.date}</span>,
-  ]);
+  ]) : emptyRow(leadTableHeaders.length);
 
   // ------------------------------------------------------------------
   // Recent Opportunities table rows
   // ------------------------------------------------------------------
   const oppTableHeaders = ['Opp No', 'Customer', 'Stage', 'Value', 'Close Date'];
-  const oppTableRows = recentOpportunities.map((o) => [
+  const oppTableRows = filteredOpportunities.length ? filteredOpportunities.map((o) => [
     <span className="font-mono text-[11px] text-gray-700">{o.oppNo}</span>,
     <span className="text-[11px] text-gray-800">{o.customer}</span>,
     <Badge label={o.stage} styleMap={STAGE_STYLES} />,
     <span className="text-[11px] text-gray-700 tabular-nums">{formatINR(o.value)}</span>,
     <span className="text-[11px] text-gray-500">{o.closeDate}</span>,
-  ]);
+  ]) : emptyRow(oppTableHeaders.length);
 
   // ------------------------------------------------------------------
   // Upcoming Follow-ups table rows
   // ------------------------------------------------------------------
   const upcomingHeaders = ['Due Date', 'Subject', 'Linked To', 'Type', 'Priority', 'Assigned To', 'Status'];
-  const upcomingRows = upcomingFollowups.map((f) => [
+  const upcomingRows = filteredUpcomingFollowups.length ? filteredUpcomingFollowups.map((f) => [
     <span className="text-[11px] text-gray-700">{f.dueDate}</span>,
     <span className="text-[11px] text-gray-800">{f.subject}</span>,
     <span className="text-[11px] text-gray-700">{f.linkedTo}</span>,
@@ -223,7 +301,7 @@ export default function CRMDashboard() {
     <Badge label={f.priority} styleMap={PRIORITY_STYLES} />,
     <span className="text-[11px] text-gray-700">{f.assignedTo}</span>,
     <Badge label={f.status} styleMap={FOLLOWUP_STATUS_STYLES} />,
-  ]);
+  ]) : emptyRow(upcomingHeaders.length);
 
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden border border-gray-200 bg-white p-3 rounded-lg -mx-[13px] w-[calc(100%+26px)]">
@@ -243,43 +321,53 @@ export default function CRMDashboard() {
         </div>
       </div>
 
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded border border-rose-100 bg-rose-50/60 px-3 py-2">
+        <div className="min-w-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Showing CRM content for</span>
+          <div className="truncate text-xs font-bold text-gray-800">{dateRangeLabel}</div>
+        </div>
+        <span className="text-[10px] font-medium text-gray-500">
+          {dashboardKpis.totalLeads} leads · {dashboardKpis.totalOpportunities} opportunities · {filteredUpcomingFollowups.length + filteredTodayFollowups.length} follow-ups
+        </span>
+      </div>
+
       {/* ------------------------------------------------------------------ */}
       {/* KPI Summary Row                                                     */}
       {/* ------------------------------------------------------------------ */}
       <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiCard
           label="Total Leads"
-          value={kpiData.totalLeads}
+          value={dashboardKpis.totalLeads}
           subtitle="This period"
           indicatorColor="#6366f1"
         />
         <KpiCard
           label="Open Leads"
-          value={kpiData.openLeads}
+          value={dashboardKpis.openLeads}
           subtitle="This period"
           indicatorColor="#f59e0b"
         />
         <KpiCard
           label="Converted Leads"
-          value={kpiData.convertedLeads}
+          value={dashboardKpis.convertedLeads}
           subtitle="This period"
           indicatorColor="#22c55e"
         />
         <KpiCard
           label="Total Opportunities"
-          value={kpiData.totalOpportunities}
+          value={dashboardKpis.totalOpportunities}
           subtitle="This period"
           indicatorColor="#3b82f6"
         />
         <KpiCard
           label="Opportunities Won"
-          value={kpiData.opportunitiesWon}
+          value={dashboardKpis.opportunitiesWon}
           subtitle="This period"
           indicatorColor="#16a34a"
         />
         <KpiCard
           label="Revenue Pipeline"
-          value={formatINR(kpiData.revenuePipeline)}
+          value={formatINR(dashboardKpis.revenuePipeline)}
           subtitle="This period"
           indicatorColor={primary}
         />
@@ -360,7 +448,7 @@ export default function CRMDashboard() {
             }
           >
             <ul className="flex flex-col divide-y divide-gray-100">
-              {todayFollowups.map((f) => (
+              {filteredTodayFollowups.length ? filteredTodayFollowups.map((f) => (
                 <li key={f.id} className="py-2 flex flex-col gap-0.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-semibold text-gray-800 leading-tight truncate">
@@ -376,7 +464,11 @@ export default function CRMDashboard() {
                     <span className="text-[10px] font-medium text-gray-600 tabular-nums">{f.dueTime}</span>
                   </div>
                 </li>
-              ))}
+              )) : (
+                <li className="py-5 text-center text-[11px] text-gray-400">
+                  No follow-ups for selected date range
+                </li>
+              )}
             </ul>
           </SectionCard>
 
@@ -391,7 +483,7 @@ export default function CRMDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {pipelineByStage.map((row) => (
+                {filteredPipelineByStage.map((row) => (
                   <tr key={row.stage} className="hover:bg-gray-50">
                     <td className="py-1.5 text-gray-700 font-medium">{row.stage}</td>
                     <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>
@@ -403,10 +495,10 @@ export default function CRMDashboard() {
                 <tr className="border-t border-gray-200">
                   <td className="py-1.5 text-[10px] font-bold text-gray-600 uppercase">Total</td>
                   <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
-                    {pipelineByStage.reduce((s, r) => s + r.count, 0)}
+                    {filteredPipelineByStage.reduce((s, r) => s + r.count, 0)}
                   </td>
                   <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
-                    {formatINR(pipelineByStage.reduce((s, r) => s + r.value, 0))}
+                    {formatINR(filteredPipelineByStage.reduce((s, r) => s + r.value, 0))}
                   </td>
                 </tr>
               </tfoot>
@@ -424,7 +516,7 @@ export default function CRMDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {leadSourceBreakdown.map((row) => (
+                {filteredLeadSourceBreakdown.map((row) => (
                   <tr key={row.source} className="hover:bg-gray-50">
                     <td className="py-1.5 text-gray-700 font-medium">{row.source}</td>
                     <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>

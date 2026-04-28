@@ -83,6 +83,12 @@ import InteractionLogPage from './modules/crm/pages/InteractionLogPage';
 import LeadSourceMasterPage from './modules/crm/pages/LeadSourceMasterPage';
 import LeadStatusMasterPage from './modules/crm/pages/LeadStatusMasterPage';
 import OpportunityStageMasterPage from './modules/crm/pages/OpportunityStageMasterPage';
+import JobCardEntry from './modules/garage/pages/JobCardEntry';
+import EstimationEntry from './modules/garage/pages/EstimationEntry';
+import PartsMonitor from './modules/garage/pages/PartsMonitor';
+import JobCardList from './modules/garage/pages/JobCardList';
+import EstimationList from './modules/garage/pages/EstimationList';
+import PartsMonitorList from './modules/garage/pages/PartsMonitorList';
 
 export default function AppRoutes() {
   return (
@@ -131,6 +137,13 @@ export default function AppRoutes() {
       <Route path="/statement-payable-summary" element={<PayableSummary />} />
       <Route path="/statement-receivable-summary" element={<ReceivableSummary />} />
       <Route path="/statement-of-accounts-list" element={<AccountsPlaceholderPage />} />
+      <Route path="/garage" element={<Navigate to="/garage/job-card-entry" replace />} />
+      <Route path="/garage/job-card-entry" element={<JobCardEntry />} />
+      <Route path="/garage/job-card-list" element={<JobCardList />} />
+      <Route path="/garage/estimation-entry" element={<EstimationEntry />} />
+      <Route path="/garage/estimation-list" element={<EstimationList />} />
+      <Route path="/garage/parts-monitor" element={<PartsMonitor />} />
+      <Route path="/garage/parts-monitor-list" element={<PartsMonitorList />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />

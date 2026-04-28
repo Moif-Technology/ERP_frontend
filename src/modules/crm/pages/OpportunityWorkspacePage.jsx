@@ -73,14 +73,28 @@ const SAMPLE_STAGE_HISTORY = [
 
 const TABS = ['Summary', 'Interactions', 'Follow-ups', 'Notes', 'Linked Customer/Lead', 'Stage History'];
 
-function SectionTable({ headers, rows }) {
+function SectionTable({ headers, rows, title, columnWidths, maxHeightClass = 'max-h-[calc(100vh-380px)]' }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full border-collapse text-left">
+    <div className={`min-w-0 overflow-auto rounded-lg border border-gray-200 ${maxHeightClass}`}>
+      {title ? (
+        <div className="border-b border-gray-200 bg-white px-3 py-2">
+          <h2 className="text-xs font-bold uppercase tracking-wide" style={{ color: primary }}>{title}</h2>
+        </div>
+      ) : null}
+      <table className="w-full table-fixed border-collapse text-left">
+        {columnWidths?.length === headers.length ? (
+          <colgroup>
+            {columnWidths.map((width, idx) => (
+              <col key={`${headers[idx]}-${width}`} style={{ width }} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead style={{ backgroundColor: '#F9FAFB' }}>
           <tr>
             {headers.map((h) => (
-              <th key={h} className="border-b border-gray-200 px-3 py-2.5 text-[11px] font-semibold text-gray-600 whitespace-nowrap">{h}</th>
+              <th key={h} className="sticky top-0 z-[1] border-b border-gray-200 px-3 py-2.5 text-[11px] font-semibold text-gray-600">
+                <span className="block min-w-0 break-words">{h}</span>
+              </th>
             ))}
           </tr>
         </thead>
@@ -88,7 +102,9 @@ function SectionTable({ headers, rows }) {
           {rows.map((row, ri) => (
             <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
               {row.map((cell, ci) => (
-                <td key={ci} className="border-b border-gray-100 px-3 py-2.5 text-xs text-gray-700 whitespace-nowrap">{cell}</td>
+                <td key={ci} className="border-b border-gray-100 px-3 py-2.5 align-top text-xs leading-relaxed text-gray-700">
+                  <span className="block min-w-0 break-words">{cell}</span>
+                </td>
               ))}
             </tr>
           ))}
@@ -301,7 +317,9 @@ export default function OpportunityWorkspacePage() {
           <div>
             <AddButton label="Add Interaction" onClick={handleAddInteraction} />
             <SectionTable
+              title="Interaction Log"
               headers={['Date', 'Type', 'Mode', 'Subject', 'Outcome', 'By']}
+              columnWidths={['13%', '10%', '12%', '27%', '28%', '10%']}
               rows={SAMPLE_INTERACTIONS.map((r) => [r.date, r.type, r.mode, r.subject, r.outcome, r.by])}
             />
           </div>

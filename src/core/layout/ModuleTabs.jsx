@@ -31,6 +31,9 @@ import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
 import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
 import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
 import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
+import GarageJobCardIcon from '../../shared/assets/icons/garage-job-card.svg';
+import GarageEstimationIcon from '../../shared/assets/icons/garage-estimation.svg';
+import GaragePartsMonitorIcon from '../../shared/assets/icons/garage-parts-monitor.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -177,6 +180,23 @@ const moduleGroups = {
       ],
     },
   ],
+  garage: [
+    {
+      name: 'Job card entry',
+      icon: GarageJobCardIcon,
+      actions: getActionItems(GarageJobCardIcon, ['Entry', 'List']),
+    },
+    {
+      name: 'Estimation entry',
+      icon: GarageEstimationIcon,
+      actions: getActionItems(GarageEstimationIcon, ['Entry', 'List']),
+    },
+    {
+      name: 'Parts monitor',
+      icon: GaragePartsMonitorIcon,
+      actions: getActionItems(GaragePartsMonitorIcon, ['Monitor', 'List']),
+    },
+  ],
 };
 
 export default function ModuleTabs({ expanded, onExpandedChange }) {
@@ -304,6 +324,25 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Statement of accounts' && action === 'List') {
       navigate('/statement-of-accounts-list');
     }
+    // Garage Routes
+    if (module === 'Job card entry' && action === 'Entry') {
+      navigate('/garage/job-card-entry');
+    }
+    if (module === 'Job card entry' && action === 'List') {
+      navigate('/garage/job-card-list');
+    }
+    if (module === 'Estimation entry' && action === 'Entry') {
+      navigate('/garage/estimation-entry');
+    }
+    if (module === 'Estimation entry' && action === 'List') {
+      navigate('/garage/estimation-list');
+    }
+    if (module === 'Parts monitor' && action === 'Monitor') {
+      navigate('/garage/parts-monitor');
+    }
+    if (module === 'Parts monitor' && action === 'List') {
+      navigate('/garage/parts-monitor-list');
+    }
     // HR Routes
     if (module === 'Employee' && action === 'Directory') {
       navigate('/hr/employees');
@@ -331,7 +370,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
       <div className="relative border-b border-rose-200/60">
         {expanded ? (
           <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12 overflow-x-auto no-scrollbar">
-            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS', 'HR'].map((tab) => {
+            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS', 'GARAGE', 'HR'].map((tab) => {
               const isActive = activeTab === tab.toLowerCase();
               return (
                 <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
@@ -400,7 +439,9 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                       : 'h-[64px] w-[162px] sm:w-[172px]'
                   : module.name === 'Product'
                     ? 'h-[64px] w-[156px] sm:w-[172px]'
-                    : 'h-[64px] w-[120px]'
+                    : module.actions?.length === 3
+                      ? 'h-[64px] w-[198px] sm:w-[210px]'
+                      : 'h-[64px] w-[120px]'
               }`}
             >
               <div
