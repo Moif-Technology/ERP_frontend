@@ -53,49 +53,7 @@ function PlusIcon({ className }) {
   );
 }
 
-function SearchIcon({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </svg>
-  );
-}
 
-function RegNoSearchField({ value, onChange, onSearch }) {
-  return (
-    <div className="flex shrink-0 flex-col gap-0.5" style={{ width: inputField.box.width }}>
-      <label className="text-[9px] leading-tight sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>
-        Reg. No.
-      </label>
-      <div className="flex items-center gap-1">
-        <input
-          type="text"
-          value={value}
-          onChange={onChange}
-          placeholder="Registration no."
-          className="box-border min-w-0 flex-1 border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none focus:border-gray-400 sm:px-2 sm:text-[9px]"
-          style={{
-            height: inputField.box.height,
-            minHeight: inputField.box.height,
-            borderRadius: inputField.box.borderRadius,
-            background: colors.input?.background ?? '#fff',
-            borderColor: '#e2e8f0',
-          }}
-        />
-        <button
-          type="button"
-          onClick={onSearch}
-          className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-          style={{ borderRadius: inputField.box.borderRadius }}
-          aria-label="Search registration"
-        >
-          <SearchIcon className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 export default function JobCardEntry() {
   const today = new Date().toISOString().slice(0, 10);
@@ -272,7 +230,7 @@ export default function JobCardEntry() {
                   <div className="shrink-0">
                     <SubInputField label="Job Card No" value={jobCardNo} onChange={(e) => setJobCardNo(e.target.value)} placeholder="Auto" />
                   </div>
-                  <RegNoSearchField value={regNo} onChange={(e) => setRegNo(e.target.value)} onSearch={() => console.log('search:', regNo)} />
+                  <SubInputField label="Reg. No." value={regNo} onChange={(e) => setRegNo(e.target.value)} placeholder="Reg. no." />
                   <div className="shrink-0">
                     <DropdownInput label="Station Code" value={stationCode} onChange={setStationCode} options={STATION_OPTS} placeholder="Select station" />
                   </div>
@@ -414,31 +372,8 @@ export default function JobCardEntry() {
             <div className="min-w-0 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
               <div className="flex min-w-0 flex-wrap items-end gap-2 sm:gap-3">
 
-                {/* Job Code — search style */}
-                <div className="flex shrink-0 flex-col gap-0.5" style={{ width: inputField.subBox.width }}>
-                  <label className="text-[9px] leading-tight sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>
-                    Job Code
-                  </label>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="text"
-                      value={lineJobCode}
-                      onChange={(e) => setLineJobCode(e.target.value)}
-                      placeholder="Code"
-                      className="box-border min-w-0 flex-1 border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none focus:border-gray-400 sm:px-2 sm:text-[9px]"
-                      style={{ height: inputField.subBox.height, minHeight: inputField.subBox.height, borderRadius: inputField.subBox.borderRadius, background: colors.input?.background ?? '#fff', borderColor: '#e2e8f0' }}
-                    />
-                    <button
-                      type="button"
-                      className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-                      style={{ borderRadius: inputField.subBox.borderRadius }}
-                      aria-label="Search job code"
-                    >
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                      </svg>
-                    </button>
-                  </div>
+                <div className="shrink-0">
+                  <SubInputField label="Job Code" value={lineJobCode} onChange={(e) => setLineJobCode(e.target.value)} placeholder="Code" />
                 </div>
 
                 <div className="shrink-0">

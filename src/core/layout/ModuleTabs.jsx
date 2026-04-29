@@ -33,7 +33,10 @@ import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
 import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
 import GarageJobCardIcon from '../../shared/assets/icons/garage-job-card.svg';
 import GarageEstimationIcon from '../../shared/assets/icons/garage-estimation.svg';
-import GaragePartsMonitorIcon from '../../shared/assets/icons/garage-parts-monitor.svg';
+import GarageWorkshopMonitorIcon from '../../shared/assets/icons/garage-workshop-monitor.svg';
+import GaragePartsSearchIcon from '../../shared/assets/icons/garage-parts-search.svg';
+import GarageTechnicianMonitorIcon from '../../shared/assets/icons/garage-technician-monitor.svg';
+import GarageVehicleHistoryIcon from '../../shared/assets/icons/garage-vehicle-history.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -192,9 +195,24 @@ const moduleGroups = {
       actions: getActionItems(GarageEstimationIcon, ['Entry', 'List']),
     },
     {
-      name: 'Parts monitor',
-      icon: GaragePartsMonitorIcon,
-      actions: getActionItems(GaragePartsMonitorIcon, ['Monitor', 'List']),
+      name: 'Workshop monitor',
+      icon: GarageWorkshopMonitorIcon,
+      actions: getActionItems(GarageWorkshopMonitorIcon, ['Monitor']),
+    },
+    {
+      name: 'Parts search',
+      icon: GaragePartsSearchIcon,
+      actions: getActionItems(GaragePartsSearchIcon, ['Search']),
+    },
+    {
+      name: 'Technician monitor',
+      icon: GarageTechnicianMonitorIcon,
+      actions: getActionItems(GarageTechnicianMonitorIcon, ['Monitor']),
+    },
+    {
+      name: 'Vehicle history',
+      icon: GarageVehicleHistoryIcon,
+      actions: getActionItems(GarageVehicleHistoryIcon, ['History']),
     },
   ],
 };
@@ -337,11 +355,17 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Estimation entry' && action === 'List') {
       navigate('/garage/estimation-list');
     }
-    if (module === 'Parts monitor' && action === 'Monitor') {
-      navigate('/garage/parts-monitor');
+    if (module === 'Workshop monitor' && action === 'Monitor') {
+      navigate('/garage/workshop-monitor');
     }
-    if (module === 'Parts monitor' && action === 'List') {
-      navigate('/garage/parts-monitor-list');
+    if (module === 'Parts search' && action === 'Search') {
+      navigate('/garage/parts-search');
+    }
+    if (module === 'Technician monitor' && action === 'Monitor') {
+      navigate('/garage/technician-monitor');
+    }
+    if (module === 'Vehicle history' && action === 'History') {
+      navigate('/garage/vehicle-history');
     }
     // HR Routes
     if (module === 'Employee' && action === 'Directory') {

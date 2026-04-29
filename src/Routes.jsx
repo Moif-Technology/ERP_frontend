@@ -85,10 +85,17 @@ import LeadStatusMasterPage from './modules/crm/pages/LeadStatusMasterPage';
 import OpportunityStageMasterPage from './modules/crm/pages/OpportunityStageMasterPage';
 import JobCardEntry from './modules/garage/pages/JobCardEntry';
 import EstimationEntry from './modules/garage/pages/EstimationEntry';
-import PartsMonitor from './modules/garage/pages/PartsMonitor';
 import JobCardList from './modules/garage/pages/JobCardList';
 import EstimationList from './modules/garage/pages/EstimationList';
-import PartsMonitorList from './modules/garage/pages/PartsMonitorList';
+import WorkshopMonitor from './modules/garage/pages/WorkshopMonitor';
+import PartsSearch from './modules/garage/pages/PartsSearch';
+import TechnicianMonitor from './modules/garage/pages/TechnicianMonitor';
+import VehicleHistory from './modules/garage/pages/VehicleHistory';
+import TechnicianEntry from './modules/garage/pages/TechnicianEntry';
+import JobDescriptionEntry from './modules/garage/pages/JobDescriptionEntry';
+import BranchEntry from './modules/garage/pages/BranchEntry';
+import PartRequest from './modules/garage/pages/PartRequest';
+import SubletJobs from './modules/garage/pages/SubletJobs';
 
 export default function AppRoutes() {
   return (
@@ -142,8 +149,15 @@ export default function AppRoutes() {
       <Route path="/garage/job-card-list" element={<JobCardList />} />
       <Route path="/garage/estimation-entry" element={<EstimationEntry />} />
       <Route path="/garage/estimation-list" element={<EstimationList />} />
-      <Route path="/garage/parts-monitor" element={<PartsMonitor />} />
-      <Route path="/garage/parts-monitor-list" element={<PartsMonitorList />} />
+      <Route path="/garage/workshop-monitor" element={<WorkshopMonitor />} />
+      <Route path="/garage/parts-search" element={<PartsSearch />} />
+      <Route path="/garage/technician-monitor" element={<TechnicianMonitor />} />
+      <Route path="/garage/vehicle-history" element={<VehicleHistory />} />
+      <Route path="/garage/technician-entry" element={<TechnicianEntry />} />
+      <Route path="/garage/job-description-entry" element={<JobDescriptionEntry />} />
+      <Route path="/garage/branch-entry" element={<BranchEntry />} />
+      <Route path="/garage/part-request" element={<PartRequest />} />
+      <Route path="/garage/sublet-jobs" element={<SubletJobs />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />

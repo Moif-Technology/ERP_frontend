@@ -58,6 +58,12 @@ import CrmInteractionsIcon from '../../shared/assets/icons/Receipt.svg';
 import CrmLeadSourceIcon from '../../shared/assets/icons/alternative.svg';
 import CrmLeadStatusIcon from '../../shared/assets/icons/grn.svg';
 import CrmStageIcon from '../../shared/assets/icons/DeliveryIcon.svg';
+import GarageModuleIcon from '../../shared/assets/icons/garage-module.svg';
+import GarageTechnicianEntryIcon from '../../shared/assets/icons/garage-technician-entry.svg';
+import GarageJobDescriptionIcon from '../../shared/assets/icons/garage-job-description-entry.svg';
+import GarageBranchEntryIcon from '../../shared/assets/icons/garage-branch-entry.svg';
+import GaragePartRequestIcon from '../../shared/assets/icons/garage-part-request.svg';
+import GarageSubletJobsIcon from '../../shared/assets/icons/garage-sublet-jobs.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -149,6 +155,17 @@ const menuItems = [
       { label: 'Opportunity Stage Master', to: '/crm/masters/opportunity-stages', icon: CrmStageIcon },
     ],
   },
+  {
+    label: 'Garage',
+    icon: GarageModuleIcon,
+    subItems: [
+      { label: 'Technician Entry', to: '/garage/technician-entry', icon: GarageTechnicianEntryIcon },
+      { label: 'Job Description Entry', to: '/garage/job-description-entry', icon: GarageJobDescriptionIcon },
+      { label: 'Branch Entry', to: '/garage/branch-entry', icon: GarageBranchEntryIcon },
+      { label: 'Part Request', to: '/garage/part-request', icon: GaragePartRequestIcon },
+      { label: 'Sublet Jobs', to: '/garage/sublet-jobs', icon: GarageSubletJobsIcon },
+    ],
+  },
 
   { label: 'Reports', to: '/reports', icon: ReportsIcon },
   { label: 'Tools', to: '/tools', icon: ToolsIcon },
@@ -166,6 +183,7 @@ export default function Sidebar() {
     'Deals & Offers': false,
     'Human Resources': false,
     CRM: false,
+    Garage: false,
   });
 
   useEffect(() => {
@@ -236,7 +254,11 @@ export default function Sidebar() {
                   className="mx-1 flex items-center justify-between p-2 rounded-[10px] cursor-pointer text-sm font-light transition backdrop-blur-md hover:backdrop-blur-lg hover:bg-white/8"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={item.icon} alt="" className="w-4 h-4" />
+                    <img
+                      src={item.icon}
+                      alt=""
+                      className={`w-4 h-4 ${item.label === 'Garage' ? 'filter brightness-0 invert' : ''}`.trim()}
+                    />
                     <span>{item.label}</span>
                   </div>
                   <img
@@ -292,7 +314,8 @@ export default function Sidebar() {
                           item.label === 'Stock Hub' ||
                           item.label === 'Financials' ||
                           item.label === 'Deals & Offers' ||
-                          item.label === 'CRM'
+                          item.label === 'CRM' ||
+                          item.label === 'Garage'
                             ? 'filter brightness-0 invert'
                             : ''
                         }`.trim()}
