@@ -1,5 +1,5 @@
 import React from 'react';
-import { inputField, colors } from '../../constants/theme';
+import { inputField, uiFontSizes, colors } from '../../constants/theme';
 
 /**
  * Sub input field — fixed width/height; parent gap controls spacing.
@@ -13,14 +13,15 @@ export default function SubInputField({ label, suffix, type = 'text', widthPx, h
       style={fullWidth ? { width: '100%' } : { width: boxWidth }}
     >
       {label && (
-        <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
+        <label style={{ fontSize: uiFontSizes.label, lineHeight: '18px', color: inputField.label.color }}>{label}</label>
       )}
       <div className="relative w-full">
         <input
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
-          className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none sm:px-2 sm:text-[9px] ${className ?? ''}`.trim()}
+          className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 outline-none sm:px-2 ${className ?? ''}`.trim()}
           style={{
+            fontSize: uiFontSizes.input,
             width: '100%',
             height: boxHeight,
             minHeight: boxHeight,
@@ -33,7 +34,7 @@ export default function SubInputField({ label, suffix, type = 'text', widthPx, h
           {...props}
         />
         {suffix ? (
-          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-600 sm:text-[9px]">
+          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-gray-600" style={{ fontSize: uiFontSizes.input }}>
             {suffix}
           </span>
         ) : null}

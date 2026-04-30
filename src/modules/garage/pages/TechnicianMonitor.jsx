@@ -85,6 +85,39 @@ function StatusPill({ status }) {
   );
 }
 
+function KpiCard({ label, value, total, subtitle, color, icon }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div
+      className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+      style={{ background: `linear-gradient(135deg, ${color}0d 0%, #ffffff 55%)` }}
+    >
+      <div className="flex items-center justify-between px-2 pt-2 sm:px-2.5 sm:pt-2.5">
+        <span className="text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">{label}</span>
+        <div
+          className="flex h-7 w-7 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${color}1a` }}
+        >
+          {icon}
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-2 pb-2 sm:px-2.5 sm:pb-2.5">
+        <span className="text-[24px] font-extrabold leading-none tracking-tight text-gray-900">{value}</span>
+        <span className="flex items-center gap-1 text-[9px] text-gray-400">
+          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+          {subtitle}
+        </span>
+      </div>
+      <div className="h-[2px] w-full bg-gray-100">
+        <div className="h-full rounded-r-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <div className="px-2 py-1 sm:px-2.5">
+        <span className="text-[9px] font-bold tabular-nums" style={{ color }}>{pct}% of total</span>
+      </div>
+    </div>
+  );
+}
+
 export default function TechnicianMonitor() {
   const [rows, setRows]                         = useState(() => DUMMY_ROWS.map((r) => ({ ...r })));
   const [search, setSearch]                     = useState('');
@@ -207,6 +240,32 @@ export default function TechnicianMonitor() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
+  const dashStats = useMemo(() => {
+    const total = rows.length;
+    return [
+      {
+        label: 'Total Technicians', value: total, total, subtitle: 'All technicians', color: primary,
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+      },
+      {
+        label: 'Active', value: rows.filter((r) => r.status === 'Active').length, total, subtitle: 'On job', color: '#1a7f37',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#1a7f37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+      },
+      {
+        label: 'On Break', value: rows.filter((r) => r.status === 'On Break').length, total, subtitle: 'Resting', color: '#a06000',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#a06000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+      },
+      {
+        label: 'Idle', value: rows.filter((r) => r.status === 'Idle').length, total, subtitle: 'Waiting', color: '#6b7280',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+      },
+      {
+        label: 'Completed', value: rows.filter((r) => r.status === 'Completed').length, total, subtitle: 'Finished today', color: '#1a56db',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>,
+      },
+    ];
+  }, [rows]);
+
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       {/* Header */}
@@ -223,6 +282,13 @@ export default function TechnicianMonitor() {
             Cancel
           </button>
         </div>
+      </div>
+
+      {/* Dashboard KPI Cards */}
+      <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {dashStats.map((s) => (
+          <KpiCard key={s.label} label={s.label} value={s.value} total={s.total} subtitle={s.subtitle} color={s.color} icon={s.icon} />
+        ))}
       </div>
 
       {/* Toolbar */}

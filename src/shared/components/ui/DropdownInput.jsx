@@ -1,5 +1,5 @@
 import React from 'react';
-import { inputField, colors } from '../../constants/theme';
+import { inputField, uiFontSizes, colors } from '../../constants/theme';
 import DropdownIcon from '../../assets/icons/dropdown.svg';
 
 /**
@@ -15,11 +15,12 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
       style={{ width: boxWidth }}
     >
       {label && (
-        <label style={inputField.label}>{label}</label>
+        <label style={{ fontSize: uiFontSizes.label, lineHeight: '18px', color: inputField.label.color }}>{label}</label>
       )}
       <div
-        className="relative flex w-full items-center bg-white text-[8px] outline-none sm:text-[9px]"
+        className="relative flex w-full items-center bg-white outline-none"
         style={{
+          fontSize: uiFontSizes.input,
           width: '100%',
           height: boxHeight,
           minHeight: boxHeight,
@@ -32,13 +33,8 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
         <select
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-0 text-[8px] outline-none sm:pl-2 sm:text-[9px] ${className ?? ''}`.trim()}
-          style={{
-            height: '100%',
-            boxSizing: 'border-box',
-            color: '#000',
-            accentColor: '#BB8295',
-          }}
+          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-0 outline-none sm:pl-2 ${className ?? ''}`.trim()}
+          style={{ fontSize: uiFontSizes.input, height: '100%', boxSizing: 'border-box', color: '#000', accentColor: '#BB8295' }}
           {...props}
         >
           {placeholder && (

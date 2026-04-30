@@ -91,13 +91,30 @@ export const borderRadius = {
   full: "9999px",
 };
 
+/**
+ * Single source of truth for all UI-level font sizes.
+ * Change here → every component that imports uiFontSizes updates automatically.
+ */
+export const uiFontSizes = {
+  label:        '12px',   // labels above inputs / form field captions
+  input:        '12px',   // text typed inside inputs & selects
+  button:       '11px',   // toolbar & action button labels
+  tableHeader:  '11px',   // table column header text
+  tableBody:    '11px',   // table body cell text
+  pageTitle:    '20px',   // main page heading (WORKSHOP MONITOR, etc.)
+  sectionTitle: '13px',   // section / panel headings
+  sidebar:      '12px',   // sidebar item labels
+  badge:        '10px',   // badges, status pills, row-count tags
+  caption:      '10px',   // pagination info, helper text
+};
+
 /** Input field with short description label above. Use for labeled form inputs. */
 export const inputField = {
   /** Label/description above the input box */
   label: {
-    fontSize: "11px",
+    fontSize: uiFontSizes.label,
     color: "#000000",
-    lineHeight: "15px",
+    lineHeight: "18px",
   },
   /** The input box itself — DateInputField uses dateBox for width; parent gap controls spacing */
   box: {
@@ -130,13 +147,13 @@ export const tableUi = {
   border: '1px solid #e2e8f0',
   header: {
     backgroundColor: '#F2E6EA',
-    fontSize: '7.98px',
+    fontSize: '11px',
     fontWeight: 700,
     color: '#000000',
     borderRadius: '6.98px',
   },
   body: {
-    fontSize: '7.98px',
+    fontSize: '11px',
     fontWeight: 400,
     color: '#000000',
   },
@@ -161,18 +178,18 @@ export const itemDetailsTablePreset = {
 
 export const typography = {
   fontFamily: {
-    sans: '"Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    sans: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     serif: '"Times New Roman", Georgia, serif',
   },
 
   fontSize: {
-    xs: "0.75rem",
-    sm: "0.875rem",
-    base: "1rem",
-    lg: "1.125rem",
-    xl: "1.25rem",
-    "2xl": "1.5rem",
-    "3xl": "1.875rem",
+    xs: "0.875rem",    // 14px
+    sm: "1rem",        // 16px
+    base: "1.125rem",  // 18px
+    lg: "1.25rem",     // 20px
+    xl: "1.5rem",      // 24px
+    "2xl": "1.75rem",  // 28px
+    "3xl": "2rem",     // 32px
   },
   fontWeight: {
     normal: 400,

@@ -96,6 +96,10 @@ import JobDescriptionEntry from './modules/garage/pages/JobDescriptionEntry';
 import BranchEntry from './modules/garage/pages/BranchEntry';
 import PartRequest from './modules/garage/pages/PartRequest';
 import SubletJobs from './modules/garage/pages/SubletJobs';
+import GatePassViewer from './modules/garage/pages/GatePassViewer';
+import PunchingEntry from './modules/garage/pages/PunchingEntry';
+import JobCodePunching from './modules/garage/pages/JobCodePunching';
+import PunchingList from './modules/garage/pages/PunchingList';
 
 export default function AppRoutes() {
   return (
@@ -158,6 +162,10 @@ export default function AppRoutes() {
       <Route path="/garage/branch-entry" element={<BranchEntry />} />
       <Route path="/garage/part-request" element={<PartRequest />} />
       <Route path="/garage/sublet-jobs" element={<SubletJobs />} />
+      <Route path="/garage/gate-pass-viewer" element={<GatePassViewer />} />
+      <Route path="/garage/punching-entry" element={<PunchingEntry />} />
+      <Route path="/garage/job-code-punching" element={<JobCodePunching />} />
+      <Route path="/garage/punching-list" element={<PunchingList />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />

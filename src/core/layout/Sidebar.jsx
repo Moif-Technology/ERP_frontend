@@ -64,6 +64,10 @@ import GarageJobDescriptionIcon from '../../shared/assets/icons/garage-job-descr
 import GarageBranchEntryIcon from '../../shared/assets/icons/garage-branch-entry.svg';
 import GaragePartRequestIcon from '../../shared/assets/icons/garage-part-request.svg';
 import GarageSubletJobsIcon from '../../shared/assets/icons/garage-sublet-jobs.svg';
+import GarageGatePassViewerIcon from '../../shared/assets/icons/garage-gate-pass-viewer.svg';
+import GaragePunchingEntryIcon from '../../shared/assets/icons/garage-punching-entry.svg';
+import GarageJobCodePunchingIcon from '../../shared/assets/icons/garage-job-code-punching.svg';
+import GaragePunchingListIcon from '../../shared/assets/icons/garage-punching-list.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -164,6 +168,10 @@ const menuItems = [
       { label: 'Branch Entry', to: '/garage/branch-entry', icon: GarageBranchEntryIcon },
       { label: 'Part Request', to: '/garage/part-request', icon: GaragePartRequestIcon },
       { label: 'Sublet Jobs', to: '/garage/sublet-jobs', icon: GarageSubletJobsIcon },
+      { label: 'Gate Pass Viewer', to: '/garage/gate-pass-viewer', icon: GarageGatePassViewerIcon },
+      { label: 'Punching Entry', to: '/garage/punching-entry', icon: GaragePunchingEntryIcon },
+      { label: 'Job Code Punching', to: '/garage/job-code-punching', icon: GarageJobCodePunchingIcon },
+      { label: 'Punching List', to: '/garage/punching-list', icon: GaragePunchingListIcon },
     ],
   },
 

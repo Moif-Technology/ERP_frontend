@@ -92,6 +92,39 @@ function StatusPill({ status }) {
   );
 }
 
+function KpiCard({ label, value, total, subtitle, color, icon }) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <div
+      className="relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+      style={{ background: `linear-gradient(135deg, ${color}0d 0%, #ffffff 55%)` }}
+    >
+      <div className="flex items-center justify-between px-2 pt-2 sm:px-2.5 sm:pt-2.5">
+        <span className="text-[9px] font-semibold uppercase leading-tight tracking-wide text-gray-500">{label}</span>
+        <div
+          className="flex h-7 w-7 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${color}1a` }}
+        >
+          {icon}
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-2 pb-2 sm:px-2.5 sm:pb-2.5">
+        <span className="text-[24px] font-extrabold leading-none tracking-tight text-gray-900">{value}</span>
+        <span className="flex items-center gap-1 text-[9px] text-gray-400">
+          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+          {subtitle}
+        </span>
+      </div>
+      <div className="h-[2px] w-full bg-gray-100">
+        <div className="h-full rounded-r-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <div className="px-2 py-1 sm:px-2.5">
+        <span className="text-[9px] font-bold tabular-nums" style={{ color }}>{pct}% of total</span>
+      </div>
+    </div>
+  );
+}
+
 export default function WorkshopMonitor() {
   const [rows, setRows]                 = useState(() => DUMMY_ROWS.map((r) => ({ ...r })));
   const [search, setSearch]             = useState('');
@@ -243,6 +276,32 @@ export default function WorkshopMonitor() {
     (drawerFilters.customerType ? 1 : 0);
   const activeFilterCount = (searchCol !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0) + drawerFilterCount;
 
+  const dashStats = useMemo(() => {
+    const total = rows.length;
+    return [
+      {
+        label: 'Total Jobs', value: total, total, subtitle: 'All jobs', color: primary,
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke={primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>,
+      },
+      {
+        label: 'In Progress', value: rows.filter((r) => r.jobStatus === 'In Progress').length, total, subtitle: 'Active work', color: '#1a7f37',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#1a7f37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><polyline points="10 8 16 12 10 16"/></svg>,
+      },
+      {
+        label: 'Waiting Parts', value: rows.filter((r) => r.jobStatus === 'Waiting Parts').length, total, subtitle: 'Parts pending', color: '#a06000',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#a06000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      },
+      {
+        label: 'On Hold', value: rows.filter((r) => r.jobStatus === 'On Hold').length, total, subtitle: 'Paused', color: '#c0392b',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#c0392b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>,
+      },
+      {
+        label: 'Complete', value: rows.filter((r) => r.jobStatus === 'Complete').length, total, subtitle: 'Finished', color: '#1a56db',
+        icon: <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="#1a56db" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>,
+      },
+    ];
+  }, [rows]);
+
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       {/* Header */}
@@ -259,6 +318,13 @@ export default function WorkshopMonitor() {
             Cancel
           </button>
         </div>
+      </div>
+
+      {/* Dashboard KPI Cards */}
+      <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {dashStats.map((s) => (
+          <KpiCard key={s.label} label={s.label} value={s.value} total={s.total} subtitle={s.subtitle} color={s.color} icon={s.icon} />
+        ))}
       </div>
 
       {/* Toolbar */}
