@@ -118,9 +118,8 @@ export default function LeadStatusMasterPage() {
   ]);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 -mx-[13px] w-[calc(100%+26px)]">
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-lg border border-gray-200 bg-white p-3 -mx-[13px] w-[calc(100%+26px)]">
+      <div className="mb-3 flex items-center justify-between">
         <div>
           <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>LEAD STATUS MASTER</h1>
           <p className="mt-0.5 text-[10px] text-gray-500">Manage lead status types · biz.lead_status_master</p>
@@ -137,8 +136,7 @@ export default function LeadStatusMasterPage() {
         </button>
       </div>
 
-      {/* Table */}
-      <div className="mt-5 overflow-hidden">
+      <div className="overflow-hidden">
         <CommonTable
           headers={headers}
           rows={tableRows}
@@ -153,7 +151,7 @@ export default function LeadStatusMasterPage() {
           bodyFontSize="clamp(8px, 1vw, 10px)"
           cellPaddingClass="px-1 py-1 sm:px-1.5 sm:py-1.5"
           bodyRowHeightRem={2.6}
-          maxVisibleRows={10}
+          maxVisibleRows={rows.length}
         />
       </div>
 

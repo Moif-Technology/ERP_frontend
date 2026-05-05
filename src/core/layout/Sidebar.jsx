@@ -75,8 +75,8 @@ import GarageConsumableEntryIcon from '../../shared/assets/icons/garage-consumab
 import GarageLubricantMonitorIcon from '../../shared/assets/icons/garage-lubricant-monitor.svg';
 import GarageConsumableMonitorIcon from '../../shared/assets/icons/garage-consumable-monitor.svg';
 import GarageSubletMonitorIcon from '../../shared/assets/icons/garage-sublet-monitor.svg';
-import GarageHomeIcon from '../../shared/assets/icons/garage-home.svg';
-import GarageDashboardIcon from '../../shared/assets/icons/garage-dashboard.svg';
+import GarageHomeUniqueIcon from '../../shared/assets/icons/garage-home-unique.svg';
+import GarageDashboardUniqueIcon from '../../shared/assets/icons/garage-dashboard-unique.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -172,6 +172,8 @@ const menuItems = [
     label: 'Garage',
     icon: GarageModuleIcon,
     subItems: [
+      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardUniqueIcon },
+      { label: 'Home', to: '/garage/home', icon: GarageHomeUniqueIcon },
       { label: 'Technician Entry', to: '/garage/technician-entry', icon: GarageTechnicianEntryIcon },
       { label: 'Job Description Entry', to: '/garage/job-description-entry', icon: GarageJobDescriptionIcon },
       { label: 'Branch Entry', to: '/garage/branch-entry', icon: GarageBranchEntryIcon },
@@ -188,8 +190,7 @@ const menuItems = [
       { label: 'Lubricant Monitor', to: '/garage/lubricant-monitor', icon: GarageLubricantMonitorIcon },
       { label: 'Consumable Monitor', to: '/garage/consumable-monitor', icon: GarageConsumableMonitorIcon },
       { label: 'Sublet Monitor', to: '/garage/sublet-monitor', icon: GarageSubletMonitorIcon },
-      { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
-      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
+
     ],
   },
 

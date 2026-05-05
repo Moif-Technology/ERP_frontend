@@ -304,12 +304,12 @@ export default function CRMDashboard() {
   ]) : emptyRow(upcomingHeaders.length);
 
   return (
-    <div className="h-full flex flex-col gap-3 overflow-hidden border border-gray-200 bg-white p-3 rounded-lg -mx-[13px] w-[calc(100%+26px)]">
+    <div className="flex flex-col gap-3 overflow-y-auto border border-gray-200 bg-white p-3 rounded-lg -mx-[13px] w-[calc(100%+26px)]">
 
       {/* ------------------------------------------------------------------ */}
       {/* Header bar                                                          */}
       {/* ------------------------------------------------------------------ */}
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>CRM Overview</h1>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -321,7 +321,7 @@ export default function CRMDashboard() {
         </div>
       </div>
 
-      <div className="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded border border-rose-100 bg-rose-50/60 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-rose-100 bg-rose-50/60 px-3 py-2">
         <div className="min-w-0">
           <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Showing CRM content for</span>
           <div className="truncate text-xs font-bold text-gray-800">{dateRangeLabel}</div>
@@ -334,7 +334,7 @@ export default function CRMDashboard() {
       {/* ------------------------------------------------------------------ */}
       {/* KPI Summary Row                                                     */}
       {/* ------------------------------------------------------------------ */}
-      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <KpiCard
           label="Total Leads"
           value={dashboardKpis.totalLeads}
@@ -376,179 +376,146 @@ export default function CRMDashboard() {
       {/* ------------------------------------------------------------------ */}
       {/* Two-column middle section                                           */}
       {/* ------------------------------------------------------------------ */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3">
+      {/* Recent Leads — full width */}
+      <SectionCard
+        title="Recent Leads"
+        action={
+          <button onClick={() => navigate('/crm/leads')} className="text-xs hover:underline" style={{ color: primary }}>
+            View All
+          </button>
+        }
+      >
+        <CommonTable
+          headers={leadTableHeaders}
+          rows={leadTableRows}
+          fitParentWidth
+          equalColumnWidth
+          hideVerticalCellBorders
+          cellPaddingClass="px-2 py-1.5"
+          headerFontSize="11px"
+          bodyFontSize="11px"
+        />
+      </SectionCard>
 
-        {/* ---- LEFT 60% ---- */}
-        <div className="flex flex-col gap-3 lg:w-[60%] min-h-0">
+      {/* Recent Opportunities (60%) + Today's Follow-ups (40%) */}
+      <div className="flex flex-col lg:flex-row gap-3">
+        <SectionCard
+          className="lg:w-[60%]"
+          title="Recent Opportunities"
+          action={
+            <button onClick={() => navigate('/crm/opportunities')} className="text-xs hover:underline" style={{ color: primary }}>
+              View All
+            </button>
+          }
+        >
+          <CommonTable
+            headers={oppTableHeaders}
+            rows={oppTableRows}
+            fitParentWidth
+            equalColumnWidth
+            hideVerticalCellBorders
+            cellPaddingClass="px-2 py-1.5"
+            headerFontSize="11px"
+            bodyFontSize="11px"
+          />
+        </SectionCard>
 
-          {/* Recent Leads */}
-          <SectionCard
-            className="flex-1 min-h-0 overflow-hidden"
-            title="Recent Leads"
-            action={
-              <button
-                onClick={() => navigate('/crm/leads')}
-                className="text-xs text-[#790728] hover:underline"
-              >
-                View All
-              </button>
-            }
-          >
-            <CommonTable
-              headers={leadTableHeaders}
-              rows={leadTableRows}
-              fitParentWidth
-              equalColumnWidth
-              hideVerticalCellBorders
-              cellPaddingClass="px-2 py-1.5"
-              headerFontSize="11px"
-              bodyFontSize="11px"
-            />
-          </SectionCard>
-
-          {/* Recent Opportunities */}
-          <SectionCard
-            className="flex-1 min-h-0 overflow-hidden"
-            title="Recent Opportunities"
-            action={
-              <button
-                onClick={() => navigate('/crm/opportunities')}
-                className="text-xs text-[#790728] hover:underline"
-              >
-                View All
-              </button>
-            }
-          >
-            <CommonTable
-              headers={oppTableHeaders}
-              rows={oppTableRows}
-              fitParentWidth
-              equalColumnWidth
-              hideVerticalCellBorders
-              cellPaddingClass="px-2 py-1.5"
-              headerFontSize="11px"
-              bodyFontSize="11px"
-            />
-          </SectionCard>
-        </div>
-
-        {/* ---- RIGHT 40% ---- */}
-        <div className="flex flex-col gap-3 lg:w-[40%] min-h-0 overflow-y-auto">
-
-          {/* Today's Follow-ups */}
-          <SectionCard
-            title="Today's Follow-ups"
-            action={
-              <button
-                onClick={() => navigate('/crm/followups')}
-                className="text-xs text-[#790728] hover:underline"
-              >
-                View All Follow-ups
-              </button>
-            }
-          >
-            <ul className="flex flex-col divide-y divide-gray-100">
-              {filteredTodayFollowups.length ? filteredTodayFollowups.map((f) => (
-                <li key={f.id} className="py-2 flex flex-col gap-0.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold text-gray-800 leading-tight truncate">
-                      {f.subject}
-                    </span>
-                    <Badge label={f.priority} styleMap={PRIORITY_STYLES} />
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[10px] text-gray-500 truncate">{f.linkedTo}</span>
-                    <span className="text-[10px] text-gray-400">·</span>
-                    <span className="text-[10px] text-gray-400">{f.type}</span>
-                    <span className="text-[10px] text-gray-400">·</span>
-                    <span className="text-[10px] font-medium text-gray-600 tabular-nums">{f.dueTime}</span>
-                  </div>
-                </li>
-              )) : (
-                <li className="py-5 text-center text-[11px] text-gray-400">
-                  No follow-ups for selected date range
-                </li>
-              )}
-            </ul>
-          </SectionCard>
-
-          {/* Pipeline by Stage */}
-          <SectionCard title="Pipeline by Stage">
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Stage</th>
-                  <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Count</th>
-                  <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Value (₹)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredPipelineByStage.map((row) => (
-                  <tr key={row.stage} className="hover:bg-gray-50">
-                    <td className="py-1.5 text-gray-700 font-medium">{row.stage}</td>
-                    <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>
-                    <td className="py-1.5 text-right text-gray-600 tabular-nums">{formatINR(row.value)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-gray-200">
-                  <td className="py-1.5 text-[10px] font-bold text-gray-600 uppercase">Total</td>
-                  <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
-                    {filteredPipelineByStage.reduce((s, r) => s + r.count, 0)}
-                  </td>
-                  <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
-                    {formatINR(filteredPipelineByStage.reduce((s, r) => s + r.value, 0))}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </SectionCard>
-
-          {/* Lead Source Breakdown */}
-          <SectionCard title="Lead Source Breakdown">
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Source</th>
-                  <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Count</th>
-                  <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Conversion %</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredLeadSourceBreakdown.map((row) => (
-                  <tr key={row.source} className="hover:bg-gray-50">
-                    <td className="py-1.5 text-gray-700 font-medium">{row.source}</td>
-                    <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>
-                    <td className="py-1.5 text-right tabular-nums">
-                      <span
-                        className={`font-semibold ${
-                          row.conversionPct >= 30
-                            ? 'text-green-600'
-                            : row.conversionPct >= 20
-                            ? 'text-yellow-600'
-                            : 'text-red-500'
-                        }`}
-                      >
-                        {row.conversionPct}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </SectionCard>
-        </div>
+        <SectionCard
+          className="lg:w-[40%]"
+          title="Today's Follow-ups"
+          action={
+            <button onClick={() => navigate('/crm/followups')} className="text-xs hover:underline" style={{ color: primary }}>
+              View All
+            </button>
+          }
+        >
+          <ul className="flex flex-col divide-y divide-gray-100">
+            {filteredTodayFollowups.length ? filteredTodayFollowups.map((f) => (
+              <li key={f.id} className="py-2 flex flex-col gap-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-gray-800 leading-tight truncate">{f.subject}</span>
+                  <Badge label={f.priority} styleMap={PRIORITY_STYLES} />
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-gray-500 truncate">{f.linkedTo}</span>
+                  <span className="text-[10px] text-gray-400">·</span>
+                  <span className="text-[10px] text-gray-400">{f.type}</span>
+                  <span className="text-[10px] text-gray-400">·</span>
+                  <span className="text-[10px] font-medium text-gray-600 tabular-nums">{f.dueTime}</span>
+                </div>
+              </li>
+            )) : (
+              <li className="py-5 text-center text-[11px] text-gray-400">No follow-ups for selected date range</li>
+            )}
+          </ul>
+        </SectionCard>
       </div>
 
+      {/* Pipeline by Stage (50%) + Lead Source Breakdown (50%) */}
+      <div className="flex flex-col lg:flex-row gap-3">
+        <SectionCard className="lg:w-1/2" title="Pipeline by Stage">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Stage</th>
+                <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Count</th>
+                <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Value (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredPipelineByStage.map((row) => (
+                <tr key={row.stage} className="hover:bg-gray-50">
+                  <td className="py-1.5 text-gray-700 font-medium">{row.stage}</td>
+                  <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>
+                  <td className="py-1.5 text-right text-gray-600 tabular-nums">{formatINR(row.value)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-gray-200">
+                <td className="py-1.5 text-[10px] font-bold text-gray-600 uppercase">Total</td>
+                <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
+                  {filteredPipelineByStage.reduce((s, r) => s + r.count, 0)}
+                </td>
+                <td className="py-1.5 text-right text-[10px] font-bold text-gray-700 tabular-nums">
+                  {formatINR(filteredPipelineByStage.reduce((s, r) => s + r.value, 0))}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </SectionCard>
+
+        <SectionCard className="lg:w-1/2" title="Lead Source Breakdown">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Source</th>
+                <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Count</th>
+                <th className="text-right py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Conversion %</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredLeadSourceBreakdown.map((row) => (
+                <tr key={row.source} className="hover:bg-gray-50">
+                  <td className="py-1.5 text-gray-700 font-medium">{row.source}</td>
+                  <td className="py-1.5 text-right text-gray-600 tabular-nums">{row.count}</td>
+                  <td className="py-1.5 text-right tabular-nums">
+                    <span className={`font-semibold ${row.conversionPct >= 30 ? 'text-green-600' : row.conversionPct >= 20 ? 'text-yellow-600' : 'text-red-500'}`}>
+                      {row.conversionPct}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </SectionCard>
+      </div>
+
+      {/* Upcoming Follow-ups — full width */}
       <SectionCard
-        className="shrink-0"
         title="Upcoming Follow-ups"
         action={
-          <button
-            onClick={() => navigate('/crm/followups')}
-            className="text-xs text-[#790728] hover:underline"
-          >
+          <button onClick={() => navigate('/crm/followups')} className="text-xs hover:underline" style={{ color: primary }}>
             View All
           </button>
         }

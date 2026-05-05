@@ -1,407 +1,244 @@
 import React, { useId, useRef, useState } from 'react';
+import {
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import { colors } from '../../../shared/constants/theme';
 
-const primary = colors.primary?.main || colors.primary?.DEFAULT || colors.primary?.[900] || '#790728';
-/** Maroon vertical gradient from theme (sidebar / brand) */
-const primaryGradient =
-  colors.primary?.gradient ||
-  'linear-gradient(180deg, #C44972 0%, #923A53 23%, #85203E 52%, #790728 95%)';
+const primary         = colors.primary?.main || '#790728';
+const primaryGradient = colors.primary?.gradient || 'linear-gradient(180deg,#C44972 0%,#790728 100%)';
 
-const shellClass =
-  'box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-4 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-5 sm:p-4';
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
 
-function InfoIcon({ className = 'h-3.5 w-3.5' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
+const KPI_ICONS = {
+  revenue: (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
     </svg>
-  );
-}
-
-function MiniSparkline({ className = '' }) {
-  return (
-    <svg className={className} viewBox="0 0 48 16" fill="none" aria-hidden>
-      <path
-        d="M2 12 L10 8 L18 11 L26 4 L34 7 L42 3 L46 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+  ),
+  orders: (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
     </svg>
-  );
-}
-
-const kpiCardTransition =
-  'group relative overflow-hidden rounded-xl p-3 transition-all duration-300 ease-out sm:p-4 ' +
-  'hover:-translate-y-0.5 hover:shadow-xl focus-within:-translate-y-0.5 focus-within:shadow-xl ' +
-  'motion-reduce:transform-none motion-reduce:transition-none';
-
-function KpiCard({ title, value, delta, deltaPositive, featured, isGradientActive }) {
-  const hoverGradientFill =
-    'pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-focus-within:opacity-100';
-  const hoverGradientShine =
-    'pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-white/35 via-white/10 to-transparent opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-focus-within:opacity-100';
-
-  if (isGradientActive) {
-    const badge = (
-      <span className="relative z-[1] inline-flex items-center gap-0.5 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold text-white sm:text-[10px]">
-        {featured ? <MiniSparkline className="h-2.5 w-6 text-white/90" /> : null}
-        {delta}
-      </span>
-    );
-    return (
-      <div
-        className={`${kpiCardTransition} flex h-full min-h-[100px] flex-col gap-1 border border-white/25 shadow-md hover:shadow-2xl hover:shadow-[#790728]/40 focus-within:shadow-2xl focus-within:shadow-[#790728]/40`}
-        style={{ background: primaryGradient, color: '#fff' }}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-white/30 via-white/5 to-transparent opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:transition-none"
-          aria-hidden
-        />
-        <button
-          type="button"
-          className="absolute right-2 top-2 z-[1] rounded p-0.5 text-white/80 transition-colors hover:text-white"
-          aria-label="Info"
-        >
-          <InfoIcon />
-        </button>
-        <p className="relative z-[1] pr-6 text-[10px] font-medium text-white/90 sm:text-[11px]">{title}</p>
-        <div className="relative z-[1] flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="text-xl font-bold tabular-nums sm:text-2xl">{value}</p>
-          {badge}
-        </div>
-      </div>
-    );
-  }
-
-  const badgeBase =
-    'relative z-[1] inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold transition-colors duration-300 sm:text-[10px] ' +
-    'group-hover:bg-white/20 group-hover:text-white group-focus-within:bg-white/20 group-focus-within:text-white';
-  const badgeDefault = featured
-    ? 'bg-rose-50 text-rose-800'
-    : deltaPositive
-      ? 'bg-emerald-50 text-emerald-700'
-      : 'bg-rose-50 text-rose-700';
-  const sparklineClass = featured
-    ? 'h-2.5 w-6 text-rose-600 transition-colors group-hover:text-white/90 group-focus-within:text-white/90'
-    : '';
-
-  const badge = (
-    <span className={`${badgeBase} ${badgeDefault}`}>
-      {featured ? <MiniSparkline className={sparklineClass} /> : null}
-      {delta}
-    </span>
-  );
-
-  return (
-    <div
-      className={`${kpiCardTransition} flex h-full min-h-[100px] flex-col gap-1 border border-gray-200 bg-white shadow-sm hover:border-rose-200/90 hover:shadow-2xl hover:shadow-[#790728]/35 focus-within:border-rose-200/90 focus-within:shadow-2xl focus-within:shadow-[#790728]/35`}
-    >
-      <div className={hoverGradientFill} style={{ background: primaryGradient }} aria-hidden />
-      <div className={hoverGradientShine} aria-hidden />
-      <button
-        type="button"
-        className="absolute right-2 top-2 z-[1] rounded p-0.5 text-gray-400 transition-colors hover:text-gray-600 group-hover:text-white/90 group-hover:hover:text-white group-focus-within:text-white/90"
-        aria-label="Info"
-      >
-        <InfoIcon />
-      </button>
-      <p className="relative z-[1] pr-6 text-[10px] font-medium text-gray-600 transition-colors duration-300 group-hover:text-white/85 group-focus-within:text-white/85 sm:text-[11px]">
-        {title}
-      </p>
-      <div className="relative z-[1] flex min-w-0 flex-row flex-wrap items-center gap-x-2 gap-y-1">
-        <p className="text-xl font-bold tabular-nums text-gray-900 transition-colors duration-300 group-hover:text-white group-focus-within:text-white sm:text-2xl">
-          {value}
-        </p>
-        {badge}
-      </div>
-    </div>
-  );
-}
-
-function MiniStatCard({ label, value, hint, hintTone = 'neutral' }) {
-  const hintClass =
-    hintTone === 'positive'
-      ? 'text-emerald-600'
-      : hintTone === 'muted'
-        ? 'text-gray-400'
-        : 'text-gray-500';
-  return (
-    <div className="flex min-h-[88px] min-w-0 flex-col justify-center rounded-xl border border-dashed border-gray-300 bg-gradient-to-br from-gray-50/90 to-white p-2.5 sm:p-3">
-      <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-500 sm:text-[10px]">{label}</p>
-      <p className="mt-0.5 text-base font-bold tabular-nums text-gray-900 sm:text-lg">{value}</p>
-      {hint ? <p className={`mt-0.5 text-[9px] sm:text-[10px] ${hintClass}`}>{hint}</p> : null}
-    </div>
-  );
-}
+  ),
+  customers: (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
+  pending: (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+  ),
+  stock: (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+  ),
+};
 
 const KPI_ITEMS = [
-  { title: 'Total amount', value: '12345', delta: '+2.5%', deltaPositive: true, featured: true },
-  { title: 'Total amount', value: '56784', delta: '+1.5%', deltaPositive: true, featured: false },
-  { title: 'Total amount', value: '7542', delta: '+1.5%', deltaPositive: true, featured: false },
-  { title: 'Total amount', value: '9637', delta: '-1.5%', deltaPositive: false, featured: false },
-  { title: 'Total amount', value: '84578', delta: '-1.5%', deltaPositive: false, featured: false },
+  { title: 'Total Revenue',   value: 'KWD 84,578', delta: '+12.5%', positive: true,  icon: KPI_ICONS.revenue   },
+  { title: 'Total Orders',    value: '1,245',       delta: '+8.3%',  positive: true,  icon: KPI_ICONS.orders    },
+  { title: 'Total Customers', value: '392',         delta: '+5.1%',  positive: true,  icon: KPI_ICONS.customers },
+  { title: 'Pending Orders',  value: '48',          delta: '-2.4%',  positive: false, icon: KPI_ICONS.pending   },
+  { title: 'Low Stock Items', value: '17',          delta: '+3',     positive: false, icon: KPI_ICONS.stock     },
 ];
 
-/** Mon–Sun sample sales curve, max 400 scale */
-const SALES_POINTS = [
-  { day: 'Mon', v: 120 },
-  { day: 'Tue', v: 185 },
-  { day: 'Wed', v: 95 },
-  { day: 'Thu', v: 240 },
-  { day: 'Fri', v: 310 },
-  { day: 'Sat', v: 275 },
-  { day: 'Sun', v: 355 },
+const monthlySales = [
+  { month: 'Jan', revenue: 42000, orders: 310 },
+  { month: 'Feb', revenue: 38500, orders: 275 },
+  { month: 'Mar', revenue: 51000, orders: 380 },
+  { month: 'Apr', revenue: 47200, orders: 340 },
+  { month: 'May', revenue: 63000, orders: 460 },
+  { month: 'Jun', revenue: 58400, orders: 420 },
+  { month: 'Jul', revenue: 71000, orders: 510 },
+  { month: 'Aug', revenue: 66500, orders: 480 },
+  { month: 'Sep', revenue: 75200, orders: 540 },
+  { month: 'Oct', revenue: 69800, orders: 500 },
+  { month: 'Nov', revenue: 84000, orders: 610 },
+  { month: 'Dec', revenue: 91500, orders: 660 },
 ];
 
-/** Cubic smooth curve through points (Cardinal / Catmull-Rom style control points) */
-function smoothLinePath(points) {
-  if (points.length < 2) return '';
-  const p = points;
-  let d = `M ${p[0].x} ${p[0].y}`;
-  for (let i = 0; i < p.length - 1; i += 1) {
-    const p0 = p[Math.max(0, i - 1)];
-    const p1 = p[i];
-    const p2 = p[i + 1];
-    const p3 = p[Math.min(p.length - 1, i + 2)];
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
-  }
-  return d;
-}
+const weeklyTrend = [
+  { day: 'Mon', sales: 120, returns: 8 },
+  { day: 'Tue', sales: 185, returns: 12 },
+  { day: 'Wed', sales: 95,  returns: 5  },
+  { day: 'Thu', sales: 240, returns: 18 },
+  { day: 'Fri', sales: 310, returns: 22 },
+  { day: 'Sat', sales: 275, returns: 15 },
+  { day: 'Sun', sales: 355, returns: 20 },
+];
 
-/** Snap mouse x to nearest data point index */
-function nearestPointIndex(pts, svgX) {
-  let best = 0;
-  let bestD = Infinity;
-  pts.forEach((p, i) => {
-    const d = Math.abs(svgX - p.x);
-    if (d < bestD) {
-      bestD = d;
-      best = i;
-    }
-  });
-  return best;
-}
+const categoryData = [
+  { name: 'Electronics',  value: 32, color: '#790728' },
+  { name: 'Auto Parts',   value: 24, color: '#C44972' },
+  { name: 'Lubricants',   value: 18, color: '#9C3355' },
+  { name: 'Consumables',  value: 14, color: '#E8809A' },
+  { name: 'Accessories',  value: 12, color: '#F5B8C8' },
+];
 
-/** Compact sales chart: zinc grid, rose fill + rose-900 stroke; hover shows marker + tooltip */
-function SalesAreaChart() {
-  const gradId = useId().replace(/:/g, '');
-  const svgRef = useRef(null);
-  const [hoverIdx, setHoverIdx] = useState(null);
+const crmLeads = [
+  { id: 'LD-0041', customer: 'Al Noor Trading',    status: 'Qualified',   value: 'KWD 12,500', assigned: 'Ahmed K.' },
+  { id: 'LD-0042', customer: 'Gulf Star Motors',   status: 'Contacted',   value: 'KWD 8,200',  assigned: 'Sara M.'  },
+  { id: 'LD-0043', customer: 'Crescent Builders',  status: 'New',         value: 'KWD 5,750',  assigned: 'Omar F.'  },
+  { id: 'LD-0044', customer: 'Horizon Logistics',  status: 'Negotiation', value: 'KWD 21,000', assigned: 'Layla A.' },
+  { id: 'LD-0045', customer: 'Delta Retail Co',    status: 'Closed Won',  value: 'KWD 9,400',  assigned: 'Yusuf B.' },
+];
 
-  const w = 640;
-  const h = 214;
-  const padL = 44;
-  const padR = 16;
-  const padT = 24;
-  const padB = 22;
-  const innerW = w - padL - padR;
-  const innerH = h - padT - padB;
-  const maxY = 400;
-  const n = SALES_POINTS.length;
+const garageJobs = [
+  { jobNo: 'JC-0318', vehicle: 'Toyota Camry • 4521 K', tech: 'Rajan P.',  status: 'In Progress', date: 'Today'  },
+  { jobNo: 'JC-0317', vehicle: 'Nissan Patrol • 8843 K', tech: 'Ali H.',   status: 'Pending',     date: 'Today'  },
+  { jobNo: 'JC-0316', vehicle: 'Honda Accord • 2210 K',  tech: 'Samer T.', status: 'Completed',   date: '04 May' },
+  { jobNo: 'JC-0315', vehicle: 'BMW X5 • 9967 K',        tech: 'Rajan P.', status: 'Waiting',     date: '04 May' },
+  { jobNo: 'JC-0314', vehicle: 'Kia Sportage • 7731 K',  tech: 'Ali H.',   status: 'Completed',   date: '03 May' },
+];
 
-  const pts = SALES_POINTS.map((row, i) => {
-    const x = padL + (innerW * i) / (n - 1);
-    const y = padT + innerH * (1 - row.v / maxY);
-    return { x, y, ...row };
-  });
+const hrEvents = [
+  { name: 'Ahmad Malik',  action: 'Leave Approved',  dept: 'Finance', time: '09:00 AM', type: 'leave'   },
+  { name: 'Sara Johnson', action: 'Checked In',      dept: 'CRM',     time: '08:45 AM', type: 'checkin' },
+  { name: 'Omar Farouq',  action: 'Late Arrival',    dept: 'Garage',  time: '09:32 AM', type: 'late'    },
+  { name: 'Layla Al-Ali', action: 'Leave Request',   dept: 'Admin',   time: '10:15 AM', type: 'request' },
+  { name: 'Rajan Patel',  action: 'Overtime Logged', dept: 'Garage',  time: '06:00 PM', type: 'ot'      },
+];
 
-  const linePath = smoothLinePath(pts);
-  const yBase = padT + innerH;
-  const areaPath = `${linePath} L ${pts[n - 1].x} ${yBase} L ${pts[0].x} ${yBase} Z`;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-  const yTicks = [0, 100, 200, 300, 400];
-  const gridStroke = '#e4e4e7';
-  const axisStroke = '#52525b';
-  const roseStroke = '#881337';
-  const labelClass = { fill: '#52525b', fontSize: 8.75, fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' };
+const CRM_STATUS = {
+  'New':         'bg-[#79072814] text-[#790728]',
+  'Contacted':   'bg-[#7907281F] text-[#790728]',
+  'Qualified':   'bg-[#79072829] text-[#790728]',
+  'Negotiation': 'bg-[#79072814] text-[#790728]',
+  'Closed Won':  'bg-[#79072829] text-[#790728]',
+  'Closed Lost': 'bg-[#7907280F] text-[#790728]',
+};
 
-  const clientToSvg = (clientX, clientY) => {
-    const el = svgRef.current;
-    if (!el) return null;
-    const p = el.createSVGPoint();
-    p.x = clientX;
-    p.y = clientY;
-    const ctm = el.getScreenCTM();
-    if (!ctm) return null;
-    return p.matrixTransform(ctm.inverse());
-  };
+const GARAGE_STATUS = {
+  'In Progress': 'bg-[#7907281F] text-[#790728]',
+  'Pending':     'bg-[#79072814] text-[#790728]',
+  'Waiting':     'bg-[#7907280F] text-[#790728]',
+  'Completed':   'bg-[#79072829] text-[#790728]',
+  'Cancelled':   'bg-[#7907280F] text-[#790728]',
+};
 
-  const handlePointer = (e) => {
-    const loc = clientToSvg(e.clientX, e.clientY);
-    if (!loc) return;
-    if (loc.x < padL || loc.x > w - padR || loc.y < padT || loc.y > yBase) {
-      setHoverIdx(null);
-      return;
-    }
-    setHoverIdx(nearestPointIndex(pts, loc.x));
-  };
+const HR_TYPE = {
+  checkin: { bg: '#7907281F', color: '#790728' },
+  leave:   { bg: '#79072814', color: '#790728' },
+  request: { bg: '#7907280F', color: '#790728' },
+  late:    { bg: '#79072814', color: '#790728' },
+  ot:      { bg: '#79072829', color: '#790728' },
+};
 
-  const hp = hoverIdx !== null ? pts[hoverIdx] : null;
-  const tooltipAbove = hp && hp.y >= 52;
-
+function ChartTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
   return (
-    <div className="relative w-full min-w-0 max-w-[640px] overflow-visible bg-white">
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${w} ${h}`}
-        className="h-36 w-full touch-none sm:h-40"
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label="Sales by day"
-      >
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#881337" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#db2777" stopOpacity="0.05" />
-          </linearGradient>
-          <filter id={`${gradId}-shadow`} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodOpacity="0.12" />
-          </filter>
-        </defs>
-
-        {yTicks.map((tick) => {
-          const y = padT + innerH * (1 - tick / maxY);
-          return <line key={tick} x1={padL} y1={y} x2={w - padR} y2={y} stroke={gridStroke} strokeWidth={0.84} />;
-        })}
-
-        <line x1={padL} y1={yBase} x2={w - padR} y2={yBase} stroke={axisStroke} strokeWidth={0.84} />
-
-        {pts.map((p) => (
-          <line key={`tx-${p.day}`} x1={p.x} y1={yBase} x2={p.x} y2={yBase + 4} stroke={axisStroke} strokeWidth={0.84} />
-        ))}
-
-        {yTicks.map((tick) => {
-          const y = padT + innerH * (1 - tick / maxY) + 2.5;
-          const x = padL - 6;
-          return (
-            <text key={`yl-${tick}`} x={x} y={y} textAnchor="end" style={labelClass}>
-              {tick}
-            </text>
-          );
-        })}
-
-        {pts.map((p) => (
-          <text key={`xl-${p.day}`} x={p.x} y={h - 8} textAnchor="middle" style={labelClass}>
-            {p.day}
-          </text>
-        ))}
-
-        <path d={areaPath} fill={`url(#${gradId})`} />
-        <path
-          d={linePath}
-          fill="none"
-          stroke={roseStroke}
-          strokeWidth={1.35}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        <rect
-          x={padL}
-          y={padT}
-          width={innerW}
-          height={innerH}
-          fill="transparent"
-          className="cursor-crosshair"
-          onPointerMove={handlePointer}
-          onPointerDown={handlePointer}
-          onPointerLeave={() => setHoverIdx(null)}
-        />
-
-        {hp ? (
-          <g pointerEvents="none">
-            <circle cx={hp.x} cy={hp.y} r={4} fill={primary} stroke="#fff" strokeWidth={1.25} />
-            <g transform={`translate(${hp.x}, ${hp.y})`} filter={`url(#${gradId}-shadow)`}>
-              {tooltipAbove ? (
-                <>
-                  <rect x={-40} y={-46} width={80} height={36} rx={5} fill="#fff" stroke="#e4e4e7" strokeWidth={0.85} />
-                  <text x={0} y={-32} textAnchor="middle" style={{ ...labelClass, fontSize: 8.25, fontWeight: 600 }}>
-                    {hp.day}
-                  </text>
-                  <text x={0} y={-18} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700, fill: '#18181b', fontFamily: labelClass.fontFamily }}>
-                    {hp.v} units
-                  </text>
-                </>
-              ) : (
-                <>
-                  <rect x={-40} y={10} width={80} height={36} rx={5} fill="#fff" stroke="#e4e4e7" strokeWidth={0.85} />
-                  <text x={0} y={24} textAnchor="middle" style={{ ...labelClass, fontSize: 8.25, fontWeight: 600 }}>
-                    {hp.day}
-                  </text>
-                  <text x={0} y={38} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700, fill: '#18181b', fontFamily: labelClass.fontFamily }}>
-                    {hp.v} units
-                  </text>
-                </>
-              )}
-            </g>
-          </g>
-        ) : null}
-      </svg>
+    <div className="rounded-lg border border-gray-100 bg-white px-3 py-2 shadow-lg text-[11px]">
+      {label && <p className="font-semibold text-gray-700 mb-1">{label}</p>}
+      {payload.map((p) => (
+        <p key={p.name} className="leading-snug" style={{ color: p.color }}>
+          {p.name}: <span className="font-bold text-gray-800">{typeof p.value === 'number' && p.value > 999 ? `KWD ${p.value.toLocaleString()}` : p.value}</span>
+        </p>
+      ))}
     </div>
   );
 }
 
-const GAUGE_SEGMENTS = [
-  { color: '#f8e8ec' },
-  { color: '#e8c4cf' },
-  { color: '#d5a0b0' },
-  { color: '#b85d78' },
-  { color: primary },
+// ---------------------------------------------------------------------------
+// KPI Card
+// ---------------------------------------------------------------------------
+
+function KpiCard({ title, value, delta, positive, icon, active, onEnter, onLeave }) {
+  return (
+    <div
+      onMouseEnter={onEnter} onMouseLeave={onLeave}
+      className="group relative overflow-hidden rounded-xl border p-3 transition-all duration-300 cursor-default hover:-translate-y-0.5 sm:p-4"
+      style={active
+        ? { background: primaryGradient, borderColor: 'transparent', boxShadow: `0 8px 24px -4px ${primary}55` }
+        : { background: '#fff', borderColor: '#e5e7eb' }}
+    >
+      {/* hover shimmer */}
+      {!active && <div className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity group-hover:opacity-100" style={{ background: primaryGradient }} />}
+
+      <div className="relative z-10 flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <span className={`text-[10px] font-semibold uppercase tracking-wide transition-colors ${active ? 'text-white/80' : 'text-gray-500 group-hover:text-white/80'}`}>{title}</span>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-white/20 group-hover:text-white'}`}>{icon}</span>
+        </div>
+        <p className={`text-xl font-bold tabular-nums transition-colors sm:text-2xl ${active ? 'text-white' : 'text-gray-900 group-hover:text-white'}`}>{value}</p>
+        <span className={`inline-flex w-fit items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold sm:text-[10px] ${
+          active ? 'bg-white/20 text-white' : positive ? 'bg-emerald-50 text-emerald-700 group-hover:bg-white/20 group-hover:text-white' : 'bg-rose-50 text-rose-700 group-hover:bg-white/20 group-hover:text-white'
+        }`}>
+          {positive ? '▲' : '▼'} {delta}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Section card
+// ---------------------------------------------------------------------------
+
+function Card({ title, action, children, className = '' }) {
+  return (
+    <div className={`rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>
+      {title && (
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
+          <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{title}</span>
+          {action}
+        </div>
+      )}
+      <div className="p-3 sm:p-4">{children}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Gauge
+// ---------------------------------------------------------------------------
+
+const GAUGE_SEGS = [
+  { color: '#f5b8c8', label: 'New',       pct: '18%' },
+  { color: '#e8809a', label: 'Regular',   pct: '25%' },
+  { color: '#9C3355', label: 'Premium',   pct: '22%' },
+  { color: '#C44972', label: 'Corporate', pct: '20%' },
+  { color: primary,   label: 'VIP',       pct: '15%' },
 ];
 
-function CustomerGrowthGauge() {
-  const cx = 100;
-  const cy = 92;
-  const r = 68;
-  const stroke = 12;
-  const n = GAUGE_SEGMENTS.length;
-  const arcs = [];
-  for (let i = 0; i < n; i += 1) {
+function CustomerGauge() {
+  const cx = 100, cy = 88, r = 64, stroke = 14;
+  const n = GAUGE_SEGS.length;
+  const arcs = Array.from({ length: n }, (_, i) => {
     const t0 = Math.PI - (i * Math.PI) / n;
     const t1 = Math.PI - ((i + 1) * Math.PI) / n;
-    const x1 = cx + r * Math.cos(t0);
-    const y1 = cy - r * Math.sin(t0);
-    const x2 = cx + r * Math.cos(t1);
-    const y2 = cy - r * Math.sin(t1);
-    const d = `M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}`;
-    arcs.push(
-      <path
-        key={i}
-        d={d}
-        fill="none"
-        stroke={GAUGE_SEGMENTS[i].color}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-      />
+    return (
+      <path key={i} fill="none" stroke={GAUGE_SEGS[i].color} strokeWidth={stroke} strokeLinecap="round"
+        d={`M ${cx + r * Math.cos(t0)} ${cy - r * Math.sin(t0)} A ${r} ${r} 0 0 1 ${cx + r * Math.cos(t1)} ${cy - r * Math.sin(t1)}`} />
     );
-  }
-
+  });
   return (
-    <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 118" className="w-full max-w-[220px]">
+    <div className="flex flex-col items-center gap-2">
+      <svg viewBox="0 0 200 110" className="w-full max-w-[200px]">
         {arcs}
-        <text x="100" y="88" textAnchor="middle" className="fill-gray-500 text-[9px]">
-          Total customers
-        </text>
-        <text x="100" y="104" textAnchor="middle" className="fill-gray-900 text-lg font-bold">
-          20,000
-        </text>
+        <text x="100" y="82" textAnchor="middle" style={{ fontSize: 8, fill: '#6b7280' }}>Total Customers</text>
+        <text x="100" y="98" textAnchor="middle" style={{ fontSize: 14, fontWeight: 700, fill: '#111827' }}>20,000</text>
       </svg>
-      <ul className="mt-1 w-full space-y-1.5 px-1">
-        {GAUGE_SEGMENTS.map((seg, i) => (
-          <li key={i} className="flex items-center justify-between text-[9px] sm:text-[10px]">
-            <span className="flex items-center gap-2 text-gray-600">
-              <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: seg.color }} />
-              Text value
+      <ul className="w-full space-y-1">
+        {GAUGE_SEGS.map((s, i) => (
+          <li key={i} className="flex items-center justify-between text-[10px]">
+            <span className="flex items-center gap-1.5 text-gray-600">
+              <span className="h-2 w-2 rounded-sm shrink-0" style={{ backgroundColor: s.color }} />
+              {s.label}
             </span>
-            <span className="font-semibold tabular-nums text-gray-800">20%</span>
+            <span className="font-semibold text-gray-800">{s.pct}</span>
           </li>
         ))}
       </ul>
@@ -409,48 +246,279 @@ function CustomerGrowthGauge() {
   );
 }
 
-export default function Dashboard() {
-  const [kpiHoverIndex, setKpiHoverIndex] = useState(null);
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 
-  const kpiGradientActive = (i) => (kpiHoverIndex === null ? i === 0 : kpiHoverIndex === i);
+export default function Dashboard() {
+  const [activeKpi, setActiveKpi] = useState(0);
 
   return (
-    <div className={shellClass}>
-      <h1 className="text-base font-bold uppercase tracking-wide sm:text-lg xl:text-xl" style={{ color: primary }}>
-        Dashboard
-      </h1>
+    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none -mx-[13px] flex-col gap-4 rounded-lg border border-gray-200 bg-gray-50 p-3 shadow-sm sm:p-4">
 
-      <div
-        className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4"
-        onMouseLeave={() => setKpiHoverIndex(null)}
-      >
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-base font-bold uppercase tracking-wide sm:text-lg" style={{ color: primary }}>Dashboard</h1>
+          <p className="text-[10px] text-gray-400 mt-0.5">Business performance overview — May 2026</p>
+        </div>
+        <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-[10px] font-semibold text-gray-500 shadow-sm">
+          Last updated: 05 May 2026, 02:00 PM
+        </span>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+        onMouseLeave={() => setActiveKpi(0)}>
         {KPI_ITEMS.map((k, i) => (
-          <div key={`kpi-${i}`} className="min-h-0" onMouseEnter={() => setKpiHoverIndex(i)}>
-            <KpiCard {...k} isGradientActive={kpiGradientActive(i)} />
-          </div>
+          <KpiCard key={i} {...k} active={activeKpi === i}
+            onEnter={() => setActiveKpi(i)} onLeave={() => {}} />
         ))}
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-4 lg:items-stretch">
-        <section className="flex min-h-0 min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-2.5 shadow-sm sm:p-3 lg:col-span-8">
-          <h2 className="mb-1.5 text-xs font-bold text-gray-900 sm:text-sm">Sales</h2>
-          <div className="w-full shrink-0">
-            <SalesAreaChart />
-          </div>
-        </section>
+      {/* Row 1 — Monthly Revenue + Category Donut + Customer Gauge */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
 
-        <div className="grid min-h-0 min-w-0 grid-cols-2 gap-3 lg:col-span-2 lg:grid-cols-1 lg:grid-rows-[minmax(88px,1fr)_minmax(88px,1fr)]">
-          <MiniStatCard label="Open quotations" value="48" hint="+6 vs last week" hintTone="positive" />
-          <MiniStatCard label="On-time delivery" value="96.4%" hint="SLA 95% · MTD" hintTone="positive" />
+        {/* Monthly Revenue Bar */}
+        <Card title="Monthly Revenue" className="lg:col-span-7">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={monthlySales} margin={{ top: 4, right: 8, left: -16, bottom: 0 }} barSize={14}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false}
+                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="revenue" name="Revenue" radius={[4, 4, 0, 0]}>
+                {monthlySales.map((_, i) => (
+                  <Cell key={i} fill={i === monthlySales.length - 1 ? primary : `${primary}55`} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Revenue by Category */}
+        <Card title="Revenue by Category" className="lg:col-span-3">
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={75}
+                paddingAngle={3} dataKey="value" nameKey="name"
+                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                labelLine={false} style={{ fontSize: 9, fontWeight: 600 }}>
+                {categoryData.map((d, i) => <Cell key={i} fill={d.color} />)}
+              </Pie>
+              <Tooltip content={<ChartTooltip />} formatter={(v) => [`${v}%`, 'Share']} />
+              <Legend wrapperStyle={{ fontSize: 9, paddingTop: 4 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Customer Gauge */}
+        <Card title="Customer Segments" className="lg:col-span-2">
+          <CustomerGauge />
+        </Card>
+      </div>
+
+      {/* Row 2 — Weekly Sales Trend + Quick Stats */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+
+        {/* Weekly Trend */}
+        <Card title="Weekly Sales Trend" className="lg:col-span-8">
+          <ResponsiveContainer width="100%" height={170}>
+            <AreaChart data={weeklyTrend} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradSales" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={primary} stopOpacity={0.25} />
+                  <stop offset="95%" stopColor={primary} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradReturns" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} />
+              <Area type="monotone" dataKey="sales"   name="Sales"   stroke={primary}    fill="url(#gradSales)"   strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="returns" name="Returns" stroke="#f59e0b"   fill="url(#gradReturns)" strokeWidth={2} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3 lg:col-span-4 lg:grid-cols-1 content-start">
+          {[
+            { label: 'Open Quotations',   value: '48',    hint: '+6 vs last week',   color: '#6366f1' },
+            { label: 'On-Time Delivery',  value: '96.4%', hint: 'SLA 95% · MTD',     color: '#22c55e' },
+            { label: 'Avg Order Value',   value: 'KWD 67',hint: '+KWD 4 vs last mo', color: '#f59e0b' },
+            { label: 'Returns Rate',      value: '2.1%',  hint: '-0.3% vs last mo',  color: primary   },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm">
+              <span className="h-8 w-1 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+              <div className="min-w-0">
+                <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">{s.label}</p>
+                <p className="text-sm font-bold tabular-nums text-gray-900">{s.value}</p>
+                <p className="text-[9px] text-gray-400">{s.hint}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 3 — Module Summaries: CRM · Garage · HR */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+        {/* ── CRM Summary ── */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          {/* CRM header */}
+          <div className="border-b border-gray-100 bg-white px-4 py-3" style={{ borderTop: `2px solid ${primary}` }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: `${primary}1A`, color: primary }}>
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </span>
+                <span className="text-sm font-bold uppercase tracking-widest" style={{ color: primary }}>CRM</span>
+              </div>
+              <button className="text-[10px] font-semibold transition-colors hover:opacity-80" style={{ color: primary }}>View All →</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Active Leads', value: '84' },
+                { label: 'Open Deals',   value: '23' },
+                { label: "Today's F/U",  value: '12' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-center">
+                  <p className="text-lg font-bold tabular-nums" style={{ color: primary }}>{s.value}</p>
+                  <p className="text-[9px] leading-tight text-gray-500">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* CRM leads list */}
+          <div className="divide-y divide-gray-50">
+            {crmLeads.map((l) => (
+              <div key={l.id} className="flex items-center gap-2 px-4 py-2 transition-colors">
+                <span className="w-14 shrink-0 font-mono text-[9px] text-gray-400">{l.id}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-semibold text-gray-800">{l.customer}</p>
+                  <p className="text-[9px] text-gray-400">{l.assigned} · {l.value}</p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ${CRM_STATUS[l.status]}`}>{l.status}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <section className="flex min-h-0 min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4 lg:col-span-2">
-          <h2 className="mb-2 text-center text-xs font-bold text-gray-900 sm:text-sm">Customer growth</h2>
-          <div className="flex min-h-0 flex-1 flex-col justify-center">
-            <CustomerGrowthGauge />
+        {/* ── Garage Summary ── */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          {/* Garage header */}
+          <div className="border-b border-gray-100 bg-white px-4 py-3" style={{ borderTop: `2px solid ${primary}` }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: `${primary}1A`, color: primary }}>
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+                    <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                    <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+                    <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+                    <path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/>
+                    <path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                    <path d="M10 9.5C10 8.67 9.33 8 8.5 8h-5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/>
+                    <path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/>
+                  </svg>
+                </span>
+                <span className="text-sm font-bold uppercase tracking-widest" style={{ color: primary }}>Garage</span>
+              </div>
+              <button className="text-[10px] font-semibold transition-colors hover:opacity-80" style={{ color: primary }}>View All →</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Active Jobs',   value: '32' },
+                { label: 'Pending Parts', value: '9'  },
+                { label: 'Deliveries',    value: '7'  },
+              ].map((s) => (
+                <div key={s.label} className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-center">
+                  <p className="text-lg font-bold tabular-nums" style={{ color: primary }}>{s.value}</p>
+                  <p className="text-[9px] leading-tight text-gray-500">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
+          {/* Garage jobs list */}
+          <div className="divide-y divide-gray-50">
+            {garageJobs.map((j) => (
+              <div key={j.jobNo} className="flex items-center gap-2 px-4 py-2 transition-colors">
+                <span className="w-16 shrink-0 font-mono text-[9px] text-gray-400">{j.jobNo}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-semibold text-gray-800">{j.vehicle}</p>
+                  <p className="text-[9px] text-gray-400">{j.tech} · {j.date}</p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ${GARAGE_STATUS[j.status]}`}>{j.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── HR Summary ── */}
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          {/* HR header */}
+          <div className="border-b border-gray-100 bg-white px-4 py-3" style={{ borderTop: `2px solid ${primary}` }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: `${primary}1A`, color: primary }}>
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                    <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </span>
+                <span className="text-sm font-bold uppercase tracking-widest" style={{ color: primary }}>HR</span>
+              </div>
+              <button className="text-[10px] font-semibold transition-colors hover:opacity-80" style={{ color: primary }}>View All →</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Employees',     value: '128' },
+                { label: 'On Leave',      value: '7'   },
+                { label: 'Present Today', value: '112' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-center">
+                  <p className="text-lg font-bold tabular-nums" style={{ color: primary }}>{s.value}</p>
+                  <p className="text-[9px] leading-tight text-gray-500">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* HR events list */}
+          <div className="divide-y divide-gray-50">
+            {hrEvents.map((ev, i) => {
+              const t = HR_TYPE[ev.type];
+              return (
+                <div key={i} className="flex items-center gap-2.5 px-4 py-2 hover:bg-emerald-50/40 transition-colors">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                    style={{ background: t.bg, color: t.color }}>
+                    {ev.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-gray-800">{ev.name}</p>
+                    <p className="text-[9px] text-gray-400">{ev.dept} · {ev.time}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold"
+                    style={{ background: t.bg, color: t.color }}>
+                    {ev.action}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
+
     </div>
   );
 }
