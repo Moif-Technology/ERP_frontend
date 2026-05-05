@@ -15,6 +15,14 @@ export function requestMe() {
   return httpClient.get('/api/auth/me');
 }
 
+export function requestAccessVersion() {
+  return httpClient.get('/api/auth/access/version');
+}
+
+export function requestAccessRefresh() {
+  return httpClient.get('/api/auth/access/refresh');
+}
+
 export function requestWelcomeComplete() {
   return httpClient.post('/api/auth/welcome/complete');
 }

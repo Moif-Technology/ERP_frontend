@@ -1,21 +1,27 @@
 import httpClient from './http/httpClient.js';
+import { getDeliveryOrder, listDeliveryOrders } from './deliveryOrderEntry.api.js';
+import { getQuotation, listQuotations } from './quotationEntry.api.js';
 
 /** Quotations for a branch (same contract as quotation entry). */
 export function listQuotationsForSale(params) {
-  return httpClient.get('/api/quotations', { params });
+  return listQuotations(params);
 }
 
 /** Delivery orders for a branch (same contract as delivery order entry). */
 export function listDeliveryOrdersForSale(params) {
-  return httpClient.get('/api/delivery-orders', { params });
+  return listDeliveryOrders(params);
 }
 
 export function getQuotationForSale(quotationId) {
-  return httpClient.get(`/api/quotations/${quotationId}`);
+  return getQuotation(quotationId);
 }
 
 export function getDeliveryOrderForSale(deliveryOrderId) {
-  return httpClient.get(`/api/delivery-orders/${deliveryOrderId}`);
+  return getDeliveryOrder(deliveryOrderId);
+}
+
+export function listSales(params) {
+  return httpClient.get('/api/sales', { params });
 }
 
 /**

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { colors, inputField } from '../../../shared/constants/theme';
 import { DropdownInput, InputField } from '../../../shared/components/ui';
 import * as supplierEntryApi from '../../../services/supplierEntry.api.js';
@@ -23,6 +23,10 @@ function digitsOnly(v) {
 export default function SupplierEntry() {
   const primary = colors.primary?.main || '#790728';
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const editSupplierId = searchParams.get('supplierId');
+  const isEditMode = Boolean(editSupplierId);
   const [form, setForm] = useState({
     supplierCode: '',
     supplierName: '',
@@ -46,6 +50,18 @@ export default function SupplierEntry() {
   const [success, setSuccess] = useState('');
   const [lastSaved, setLastSaved] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+    const s = location.state?.supplier;
+    if (!s) return;
+    setForm((prev) => ({
+      ...prev,
+      supplierCode: s.supplierCode === '—' ? '' : (s.supplierCode ?? ''),
+      supplierName: s.supplierName === '—' ? '' : (s.supplierName ?? ''),
+      mobileNo: s.mobile === '—' ? '' : (s.mobile ?? ''),
+    }));
+  }, [isEditMode, editSupplierId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const countryOptions = useMemo(() => toOptions(COUNTRIES), []);
   const cityOptions = useMemo(() => toOptions(CITIES), []);
@@ -78,16 +94,19 @@ export default function SupplierEntry() {
     setSaveError('');
     setSuccess('');
     setLastSaved(null);
+    const payload = {
+      supplierCode: code,
+      supplierName: name,
+      mobileNo: form.mobileNo.trim() || undefined,
+      email: form.email.trim() || undefined,
+    };
     try {
-      const { data } = await supplierEntryApi.createSupplier({
-        supplierCode: code,
-        supplierName: name,
-        mobileNo: form.mobileNo.trim() || undefined,
-        email: form.email.trim() || undefined,
-      });
+      const { data } = isEditMode
+        ? await supplierEntryApi.updateSupplier(editSupplierId, payload)
+        : await supplierEntryApi.createSupplier(payload);
       const sid = data?.supplierId;
       setLastSaved({ supplierId: sid, supplierName: data.supplierName, supplierCode: data.supplierCode });
-      setSuccess(`Saved “${data.supplierName}” (code ${data.supplierCode}, id ${sid}).`);
+      setSuccess(`${isEditMode ? 'Updated' : 'Saved'} “${data.supplierName}” (code ${data.supplierCode}, id ${sid}).`);
       setForm((prev) => ({
         ...prev,
         supplierCode: '',
@@ -403,7 +422,7 @@ export default function SupplierEntry() {
               className="w-full rounded-lg py-2.5 text-[13px] font-semibold text-white shadow-md transition enabled:hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ backgroundColor: primary }}
             >
-              {saving ? 'Saving…' : 'Save supplier'}
+              {saving ? (isEditMode ? 'Updating…' : 'Saving…') : (isEditMode ? 'Update supplier' : 'Save supplier')}
             </button>
           </div>
         </aside>

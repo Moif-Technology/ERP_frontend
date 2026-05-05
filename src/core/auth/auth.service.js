@@ -1,4 +1,5 @@
 import * as authApi from './auth.api.js';
+import { getSessionAccessVersion, persistSessionAccess } from '../access/access.service.js';
 
 /**
  * Persists tokens and session from POST /api/auth/login (same credentials for every tenant:
@@ -13,6 +14,7 @@ export async function login(username, password) {
   sessionStorage.setItem('refresh_token', data.refreshToken);
   sessionStorage.setItem('session_user', JSON.stringify(data.session.user));
   sessionStorage.setItem('session_company', JSON.stringify(data.session.company));
+  persistSessionAccess({ ...data.session, accessVersion: data.session?.accessVersion ?? 0 });
   if (data.session.welcome != null) {
     sessionStorage.setItem('session_welcome', JSON.stringify(data.session.welcome));
   } else {
@@ -42,7 +44,33 @@ export async function signOut(navigate) {
 
 export async function getMe() {
   const { data } = await authApi.requestMe();
+  if (data.session) {
+    sessionStorage.setItem('session_user', JSON.stringify(data.session.user));
+    sessionStorage.setItem('session_company', JSON.stringify(data.session.company));
+    persistSessionAccess({ ...data.session, accessVersion: data.session?.accessVersion ?? 0 });
+  }
   return data.user;
+}
+
+export async function syncAccessIfChanged() {
+  const { data: versionRes } = await authApi.requestAccessVersion();
+  const serverVersion = Number(versionRes?.version || 0);
+  const localVersion = getSessionAccessVersion();
+
+  if (serverVersion <= localVersion) {
+    return { changed: false, version: localVersion };
+  }
+
+  const { data: refreshRes } = await authApi.requestAccessRefresh();
+  const access = refreshRes?.access || {};
+  persistSessionAccess({
+    subscription: access.subscription ?? null,
+    features: access.features ?? {},
+    limits: access.limits ?? {},
+    permissions: access.permissions ?? [],
+    accessVersion: serverVersion,
+  });
+  return { changed: true, version: serverVersion };
 }
 
 export function getSessionUser() {

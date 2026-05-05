@@ -1,0 +1,12 @@
+node_modules/
+release/
+dist/
+electron/
+public/
+src/shared/assets/icons/
+package-lock.json
+skills-lock.json
+jsconfig.json
+src/App.test.js
+src/setupTests.js
+src/reportWebVitals.js

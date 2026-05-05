@@ -1,14 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getSessionUser } from '../../../core/auth/auth.service.js';
+import * as quotationEntryApi from '../../../services/quotationEntry.api.js';
+import * as staffEntryApi from '../../../services/staffEntry.api.js';
+import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
+import CancelIcon from '../../../shared/assets/icons/cancel.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import EditIcon from '../../../shared/assets/icons/edit4.svg';
+import FilterIcon from '../../../shared/assets/icons/filter.svg';
+import PrinterIcon from '../../../shared/assets/icons/printer.svg';
+import SearchIcon from '../../../shared/assets/icons/search2.svg';
+import { AppActionButton } from '../../../shared/components/ui';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import PrinterIcon from '../../../shared/assets/icons/printer.svg';
-import CancelIcon from '../../../shared/assets/icons/cancel.svg';
-import EditIcon from '../../../shared/assets/icons/edit4.svg';
-import SearchIcon from '../../../shared/assets/icons/search2.svg';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
-import FilterIcon from '../../../shared/assets/icons/filter.svg';
-import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -21,78 +26,17 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   );
 }
 
-const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
-
-const DUMMY_CUSTOMER_NAMES = [
-  'Al Noor Trading LLC',
-  'Gulf Fresh Markets',
-  'City Hyper Stores',
-  'Prime Wholesale Co.',
-  'Emirates Retail Group',
-  'Desert Bloom Supplies',
-  'Harbor View Trading',
-  'Oasis Foods LLC',
-  'Metro Cash & Carry',
-  'Sunrise General Trading',
-  'Pearl Coast Distributors',
-  'Falcon Electronics',
-  'Royal Star Hypermarket',
-  'Blue Wave Imports',
-  'Golden Sands Wholesale',
-];
-
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
-
-/** Deterministic dummy list for filters, sort, and pagination */
-function buildDummyQuotations(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const seq = 900 - i;
-    const d = 1 + (i % 28);
-    const m = 1 + (i % 4);
-    const y = 2026;
-    const quotationDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const refD = Math.max(1, d - (1 + (i % 5)));
-    const custRefDate = `${String(refD).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const h = 8 + (i % 10);
-    const min = (i * 7) % 60;
-    const time = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-    const baseAmt = 1500 + (i * 173) % 42000 + (i % 3) * 99.5;
-    const disc = (i % 4 === 0 ? 0 : ((i * 41) % 500) + (i % 7) * 12.5).toFixed(2);
-    const amt = baseAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    rows.push({
-      id: String(i + 1),
-      station: STATIONS[i % STATIONS.length],
-      quotationNo: `QTN-2026-${String(seq).padStart(4, '0')}`,
-      quotationDate,
-      time,
-      custRefNo: `CR-${8000 + (i * 13) % 5000}`,
-      custRefDate,
-      customerName: DUMMY_CUSTOMER_NAMES[i % DUMMY_CUSTOMER_NAMES.length],
-      discountAmount: disc,
-      quotationAmount: amt,
-    });
-  }
-  return rows;
-}
-
-const DUMMY_QUOTATIONS = buildDummyQuotations(52);
 
 /** Figma control bar: 0.5px black outline, 3px radius, h-7 row */
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
-
-const figmaToolbarBtn =
-  `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
 
 /** Compact search (Figma: pl-1.5 pr-44 was frame-relative; here capped width, not full row) */
 const figmaSearchBox =
   `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
 
-const primaryToolbarBtn =
-  'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
-
 /** Checkbox, Qtn no, Qtn date, Time, Cust ref, Cust ref date, Customer, Disc, Amount — sums to 100 */
-const QUOTATION_LIST_COL_PCT = [2, 12, 10, 6, 10, 10, 26, 10, 14];
+const QUOTATION_LIST_COL_PCT = [2, 11, 10, 6, 10, 10, 24, 9, 13, 5];
 
 function parseQuotationListDate(ddmmyyyy) {
   const parts = String(ddmmyyyy).split('/');
@@ -112,8 +56,65 @@ function parseMoneyValue(s) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function formatMoney(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatApiDate(value) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  const d = String(dt.getDate()).padStart(2, '0');
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const y = dt.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
+function formatApiTime(value) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  return `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+}
+
+function displayOrDash(value) {
+  const s = String(value ?? '').trim();
+  return s || '-';
+}
+
+function branchLabel(branch) {
+  return [branch.branchCode, branch.branchName].filter(Boolean).join(' - ') || `Branch ${branch.branchId}`;
+}
+
+function mapApiQuotation(row, branchMap) {
+  const branchId = row.branchId != null ? String(row.branchId) : '';
+  return {
+    id: String(row.quotationId ?? row.quotationNo ?? branchId),
+    branchId,
+    station: branchMap.get(branchId) || (branchId ? `Branch ${branchId}` : '-'),
+    quotationNo: displayOrDash(row.quotationNo),
+    quotationDate: formatApiDate(row.quotationDate),
+    time: formatApiTime(row.quotationDate),
+    custRefNo: displayOrDash(row.customerRefNo),
+    custRefDate: formatApiDate(row.customerRefDate),
+    customerName: displayOrDash(row.customerName),
+    discountAmount: formatMoney(row.discountAmount),
+    quotationAmount: formatMoney(row.quotationAmount),
+  };
+}
+
 export default function QuotationList() {
-  const [quotations, setQuotations] = useState(() => DUMMY_QUOTATIONS.map((r) => ({ ...r })));
+  const navigate = useNavigate();
+  const user = getSessionUser();
+  const [quotations, setQuotations] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [branchId, setBranchId] = useState('');
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingQuotations, setLoadingQuotations] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
@@ -126,6 +127,78 @@ export default function QuotationList() {
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
   const filterWrapRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingBranches(true);
+      setLoadError('');
+      try {
+        const { data } = await staffEntryApi.fetchStaffBranches();
+        if (cancelled) return;
+        const list = data.branches || [];
+        setBranches(list);
+        const station = user?.stationId != null ? String(user.stationId) : '';
+        const stationInList = list.some((branch) => String(branch.branchId) === station);
+        if (list.length === 1) {
+          setBranchId(String(list[0].branchId));
+        } else if (stationInList) {
+          setBranchId(station);
+        } else if (list[0]) {
+          setBranchId(String(list[0].branchId));
+        } else {
+          setBranchId('');
+        }
+      } catch {
+        if (!cancelled) {
+          setBranches([]);
+          setLoadError('Could not load branches.');
+        }
+      } finally {
+        if (!cancelled) setLoadingBranches(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.stationId]);
+
+  const branchMap = useMemo(
+    () => new Map(branches.map((branch) => [String(branch.branchId), branchLabel(branch)])),
+    [branches],
+  );
+
+  useEffect(() => {
+    if (loadingBranches) return undefined;
+    if (!branchId) {
+      setQuotations([]);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingQuotations(true);
+      setLoadError('');
+      try {
+        const { data } = await quotationEntryApi.listQuotations({
+          branchId: Number(branchId),
+          limit: 200,
+          offset: 0,
+        });
+        if (cancelled) return;
+        setQuotations((data.quotations || []).map((row) => mapApiQuotation(row, branchMap)));
+      } catch (err) {
+        if (!cancelled) {
+          setQuotations([]);
+          setLoadError(err.response?.data?.message || 'Could not load quotations.');
+        }
+      } finally {
+        if (!cancelled) setLoadingQuotations(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, branchMap, loadingBranches, refreshKey]);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -142,6 +215,28 @@ export default function QuotationList() {
     setQuotations((prev) => prev.filter((row) => !ids.has(String(row.id))));
     setSelectedIds(new Set());
   }, []);
+
+  const handleEditQuotation = useCallback(
+    (quotationId) => {
+      const id = String(quotationId || '').trim();
+      if (!id) return;
+      navigate(`/quotation?quotationId=${encodeURIComponent(id)}`);
+    },
+    [navigate],
+  );
+
+  const branchOptions = useMemo(
+    () => branches.map((branch) => ({ value: String(branch.branchId), label: branchLabel(branch) })),
+    [branches],
+  );
+
+  const stationOptions = useMemo(() => {
+    const set = new Set();
+    quotations.forEach((row) => {
+      if (row.station && row.station !== '-') set.add(row.station);
+    });
+    return Array.from(set).sort((a, b) => String(a).localeCompare(String(b)));
+  }, [quotations]);
 
   useEffect(() => {
     setPage(1);
@@ -272,6 +367,16 @@ export default function QuotationList() {
         r.customerName,
         r.discountAmount,
         r.quotationAmount,
+        <button
+          key={`edit-${r.id}`}
+          type="button"
+          onClick={() => handleEditQuotation(r.id)}
+          className="inline-flex h-6 w-6 items-center justify-center rounded border border-gray-200 bg-white transition-colors hover:border-[#790728]/40 hover:bg-[#F2E6EA]"
+          title={`Edit ${r.quotationNo}`}
+          aria-label={`Edit ${r.quotationNo}`}
+        >
+          <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
+        </button>,
       ];
     });
 
@@ -287,10 +392,11 @@ export default function QuotationList() {
       },
       quotationColumnTotals.disc.toFixed(2),
       quotationColumnTotals.amt.toFixed(2),
+      '',
     ];
 
     return [...dataRows, totalRow];
-  }, [paginatedRows, selectedIds, toggleRowSelected, quotationColumnTotals]);
+  }, [paginatedRows, selectedIds, toggleRowSelected, quotationColumnTotals, handleEditQuotation]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -303,6 +409,10 @@ export default function QuotationList() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
+  const emptyMessage = loadingBranches || loadingQuotations
+    ? 'Loading quotations...'
+    : loadError || 'No quotations match the current view.';
+
   /* Match ModuleTabs width (mx 15 vs main px 28); height from Layout main flex chain */
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
@@ -311,17 +421,29 @@ export default function QuotationList() {
           QUOTATION LIST
         </h1>
         <div className="flex flex-wrap items-center gap-2.5">
-          <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
-            <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
-          </button>
-          <button type="button" className={figmaToolbarBtn}>
-            <img src={CancelIcon} alt="" className="h-3.5 w-3.5" />
+          <AppActionButton
+            title="Print"
+            ariaLabel="Print"
+            icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />}
+            className="h-7 px-2 text-[10px]"
+          />
+          <AppActionButton
+            title="Cancel"
+            ariaLabel="Cancel"
+            icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />}
+            className="h-7 px-2 text-[10px]"
+          >
             Cancel
-          </button>
-          <button type="button" className={figmaToolbarBtn}>
-            <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
-            Edit
-          </button>
+          </AppActionButton>
+          <AppActionButton
+            title="Refresh"
+            ariaLabel="Refresh quotations"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loadingBranches || loadingQuotations}
+            className="h-7 px-2 text-[10px]"
+          >
+            Refresh
+          </AppActionButton>
         </div>
       </div>
 
@@ -339,34 +461,55 @@ export default function QuotationList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
-          {selectedRowCount >= 1 ? (
-            <button
-              type="button"
-              className={primaryToolbarBtn}
-              style={{ backgroundColor: primary, borderColor: primary }}
-              onClick={handleDeleteSelected}
-              aria-label={`Delete ${selectedRowCount} selected quotation${selectedRowCount === 1 ? '' : 's'}`}
-            >
-              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
-              Delete
-            </button>
+          {branchOptions.length > 1 ? (
+            <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+              <select
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                aria-label="Branch"
+                disabled={loadingBranches || loadingQuotations}
+              >
+                {branchOptions.map((branch) => (
+                  <option key={branch.value} value={branch.value}>
+                    {branch.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+                <ToolbarChevron />
+              </span>
+            </div>
           ) : null}
 
-          <button
-            type="button"
-            className={figmaToolbarBtn}
+          {selectedRowCount >= 1 ? (
+            <AppActionButton
+              variant="primary"
+              onClick={handleDeleteSelected}
+              ariaLabel={`Delete ${selectedRowCount} selected quotation${selectedRowCount === 1 ? '' : 's'}`}
+              icon={<img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />}
+              className="h-7 px-2 text-[10px]"
+            >
+              Delete
+            </AppActionButton>
+          ) : null}
+
+          <AppActionButton
             onClick={() => setDateModalOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={dateModalOpen}
+            title="Select Date"
+            ariaLabel="Select Date"
+            icon={<img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
+            className="h-7 px-2 text-[10px]"
           >
-            <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
             <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
               {appliedDateRange
                 ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
                 : 'Select Date'}
             </span>
             <ToolbarChevron />
-          </button>
+          </AppActionButton>
 
           <QuotationDateRangeModal
             open={dateModalOpen}
@@ -393,19 +536,20 @@ export default function QuotationList() {
           </div>
 
           <div className="relative shrink-0" ref={filterWrapRef}>
-            <button
-              type="button"
-              className={figmaToolbarBtn}
+            <AppActionButton
               aria-expanded={filterOpen}
               aria-haspopup="listbox"
               onClick={() => setFilterOpen((o) => !o)}
+              title="Filters"
+              ariaLabel="Filters"
+              icon={<img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
+              className="h-7 px-2 text-[10px]"
             >
-              <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
               <span className="max-w-[5rem] truncate sm:max-w-[6rem]">
                 {stationFilter ? `Station: ${stationFilter}` : 'Filters'}
               </span>
               <ToolbarChevron />
-            </button>
+            </AppActionButton>
             {filterOpen ? (
               <div
                 className="absolute right-0 top-full z-50 mt-0.5 min-w-[9.5rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
@@ -425,7 +569,7 @@ export default function QuotationList() {
                   All stations
                 </button>
                 <div className="my-0.5 border-t border-gray-100" />
-                {STATIONS.map((s) => (
+                {stationOptions.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -447,6 +591,18 @@ export default function QuotationList() {
           </div>
         </div>
       </div>
+
+      {loadingBranches || loadingQuotations || loadError ? (
+        <div
+          className={`shrink-0 rounded border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.08em] ${
+            loadError ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          {emptyMessage}
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
@@ -473,6 +629,7 @@ export default function QuotationList() {
             'Customer name',
             'Discount amount',
             'Quotation amount',
+            'Action',
           ]}
           rows={tableRows}
         />

@@ -7,6 +7,14 @@ import WelcomeSetup from '../modules/backoffice/pages/WelcomeSetup';
 import ProtectedRoute from './router/ProtectedRoute';
 import PublicRoute from './router/PublicRoute';
 import WelcomeGate from './router/WelcomeGate';
+import PlatformProtectedRoute from '../modules/superAdmin/PlatformProtectedRoute.jsx';
+import SuperAdminLayout from '../modules/superAdmin/SuperAdminLayout.jsx';
+import SuperAdminLogin from '../modules/superAdmin/pages/SuperAdminLogin.jsx';
+import TenantsListPage from '../modules/superAdmin/pages/TenantsListPage.jsx';
+import TenantDetailPage from '../modules/superAdmin/pages/TenantDetailPage.jsx';
+import FeatureCatalogPage from '../modules/superAdmin/pages/FeatureCatalogPage.jsx';
+import LimitCatalogPage from '../modules/superAdmin/pages/LimitCatalogPage.jsx';
+import PlanCatalogPage from '../modules/superAdmin/pages/PlanCatalogPage.jsx';
 
 function App() {
   return (
@@ -35,6 +43,22 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+      <Route
+        path="/super-admin"
+        element={
+          <PlatformProtectedRoute>
+            <SuperAdminLayout />
+          </PlatformProtectedRoute>
+        }
+      >
+        <Route index element={<TenantsListPage />} />
+        <Route path="tenants" element={<TenantsListPage />} />
+        <Route path="tenants/:companyId" element={<TenantDetailPage />} />
+        <Route path="catalog/features" element={<FeatureCatalogPage />} />
+        <Route path="catalog/limits" element={<LimitCatalogPage />} />
+        <Route path="catalog/plans" element={<PlanCatalogPage />} />
+      </Route>
       <Route
         path="/*"
         element={

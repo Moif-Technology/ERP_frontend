@@ -1,6 +1,7 @@
 // src/core/layout/ModuleTabs.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { hasAnyFeature } from '../access/access.service.js';
 import ProductIcon from '../../shared/assets/icons/ProductIcon.svg';
 import QuotationIcon from '../../shared/assets/icons/QuotationIcon.svg';
 import DeliveryIcon from '../../shared/assets/icons/DeliveryIcon.svg';
@@ -30,6 +31,7 @@ import LedgerDetailsIcon from '../../shared/assets/icons/ledger.svg';
 import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
 import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
 import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
+import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -75,25 +77,26 @@ const getActionItems = (moduleIcon, labels) => {
 
 const moduleGroups = {
   customer: [
-    { name: 'Product', icon: ProductIcon, actions: getActionItems(ProductIcon, ['Product entry', 'List']) },
-    { name: 'Quotation', icon: QuotationIcon, actions: getActionItems(QuotationIcon, ['Quotation', 'List']) },
-    { name: 'Delivery Order', icon: DeliveryIcon, actions: getActionItems(DeliveryIcon, ['Delivery', 'List']) },
-    { name: 'Sale', icon: SaleIcon, actions: getActionItems(SaleIcon, ['Sales', 'List']) },
-    { name: 'Sale Return', icon: SalesReturnIcon, actions: getActionItems(SalesReturnIcon, ['Returns', 'List']) },
+    { name: 'Product', icon: ProductIcon, feature: 'backoffice.product_master', actions: getActionItems(ProductIcon, ['Product entry', 'List']) },
+    { name: 'Quotation', icon: QuotationIcon, feature: 'backoffice.sales_quotation', actions: getActionItems(QuotationIcon, ['Quotation', 'List']) },
+    { name: 'Delivery Order', icon: DeliveryIcon, feature: 'backoffice.delivery_order', actions: getActionItems(DeliveryIcon, ['Delivery', 'List']) },
+    { name: 'Sale', icon: SaleIcon, feature: 'backoffice.sales', actions: getActionItems(SaleIcon, ['Sales', 'List']) },
+    { name: 'Sale Return', icon: SalesReturnIcon, feature: 'backoffice.sales', actions: getActionItems(SalesReturnIcon, ['Returns', 'List']) },
   ],
   supplier: [
-    { name: 'Purchase', icon: PurchaseIcon, actions: getActionItems(PurchaseIcon, ['Purchases', 'List']) },
-    { name: 'Local Purchase Order', icon: PurchaseOrderIcon, actions: getActionItems(PurchaseOrderIcon, ['LPO', 'List']) },
-    { name: 'GRN', icon: GrnIcon, actions: getActionItems(GrnIcon, ['GRN', 'List']) },
-    { name: 'Supplier Invoice', icon: SupplierInvoiceIcon, actions: getActionItems(SupplierInvoiceIcon, ['Invoices', 'List']) },
-    { name: 'Supplier Return', icon: ReturnIcon, actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
+    { name: 'Purchase', icon: PurchaseIcon, feature: 'backoffice.purchase', actions: getActionItems(PurchaseIcon, ['Purchases', 'List']) },
+    { name: 'Local Purchase Order', icon: PurchaseOrderIcon, feature: 'backoffice.purchase_order', actions: getActionItems(PurchaseOrderIcon, ['LPO', 'List']) },
+    { name: 'GRN', icon: GrnIcon, feature: 'backoffice.grn', actions: getActionItems(GrnIcon, ['GRN', 'List']) },
+    { name: 'Supplier Invoice', icon: SupplierInvoiceIcon, feature: 'backoffice.purchase', actions: getActionItems(SupplierInvoiceIcon, ['Invoices', 'List']) },
+    { name: 'Supplier Return', icon: ReturnIcon, feature: 'backoffice.purchase', actions: getActionItems(ReturnIcon, ['Returns', 'List']) },
   ],
   accounts: [
-    { name: 'Purchase voucher', icon: PurchaseVoucherIcon, actions: getActionItems(PurchaseVoucherIcon, ['Purchase voucher', 'List']) },
-    { name: 'Sales voucher', icon: SalesVoucherIcon, actions: getActionItems(SalesVoucherIcon, ['Sales voucher', 'List']) },
+    { name: 'Purchase voucher', icon: PurchaseVoucherIcon, feature: 'backoffice.vouchers', actions: getActionItems(PurchaseVoucherIcon, ['Purchase voucher', 'List']) },
+    { name: 'Sales voucher', icon: SalesVoucherIcon, feature: 'backoffice.vouchers', actions: getActionItems(SalesVoucherIcon, ['Sales voucher', 'List']) },
     {
       name: 'Debit / Credit notes',
       icon: DebitNoteIcon,
+      feature: 'backoffice.vouchers',
       actions: [
         { label: 'Debit note', icon: DebitNoteIcon },
         { label: 'Debit list', icon: ListIcon },
@@ -104,6 +107,7 @@ const moduleGroups = {
     {
       name: 'Income/Expense voucher',
       icon: IncomeIcon,
+      feature: 'backoffice.vouchers',
       actions: [
         { label: 'Income', icon: IncomeIcon },
         { label: 'Income list', icon: ListIcon },
@@ -114,6 +118,7 @@ const moduleGroups = {
     {
       name: 'Payment Voucher',
       icon: PaymentEntryIcon,
+      feature: 'backoffice.vouchers',
       actions: [
         { label: 'Payment Voucher supplier', icon: PaymentSupplierIcon },
         { label: 'Payment voucher', icon: PaymentEntryIcon },
@@ -123,6 +128,7 @@ const moduleGroups = {
     {
       name: 'Receipt voucher',
       icon: ReceiptVoucherIcon,
+      feature: 'backoffice.vouchers',
       actions: [
         { label: 'Receipt (customer)', icon: ReceiptCustomerIcon },
         { label: 'Receipt voucher', icon: ReceiptVoucherIcon },
@@ -132,6 +138,7 @@ const moduleGroups = {
     {
       name: 'Contra / Journal',
       icon: QuotationIcon,
+      feature: 'backoffice.vouchers',
       actions: [
         { label: 'Contra voucher', icon: LedgerModuleIcon },
         { label: 'Journal voucher', icon: QuotationIcon },
@@ -141,6 +148,7 @@ const moduleGroups = {
     {
       name: 'Account details',
       icon: GroupDetailsIcon,
+      feature: 'backoffice.accounts',
       actions: [
         { label: 'Group details', icon: GroupDetailsIcon },
         { label: 'Ledger details', icon: LedgerDetailsIcon },
@@ -150,10 +158,42 @@ const moduleGroups = {
     {
       name: 'Statement of accounts',
       icon: ListIcon,
+      feature: 'backoffice.accounts',
       actions: [
         { label: 'Payable summary', icon: PayableSummaryIcon },
         { label: 'Receivable summary', icon: ReceivableSummaryIcon },
         { label: 'List', icon: ListIcon },
+      ],
+    },
+  ],
+  hr: [
+    {
+      name: 'Overview',
+      icon: ListIcon,
+      features: ['hr.dashboard', 'hr.attendance', 'hr.leave'],
+      actions: [
+        { label: 'Dashboard', icon: TrialBalanceIcon },
+        { label: 'Attendance', icon: SearchIcon },
+        { label: 'Leaves', icon: LeaveTypeIcon },
+      ],
+    },
+    {
+      name: 'Employee',
+      icon: GroupDetailsIcon,
+      feature: 'hr.employee_master',
+      actions: [
+        { label: 'Directory', icon: ListIcon },
+        { label: 'Add Employee', icon: ConfigIcon },
+      ],
+    },
+    {
+      name: 'Masters',
+      icon: LedgerModuleIcon,
+      features: ['hr.shifts', 'hr.leave', 'hr.document_types'],
+      actions: [
+        { label: 'Shift Master', icon: ConfigIcon },
+        { label: 'Leave Master', icon: LeaveTypeIcon },
+        { label: 'Document Master', icon: ConfigIcon },
       ],
     },
   ],
@@ -164,9 +204,21 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
   const [activeTab, setActiveTab] = useState('customer');
   const [selectedAction, setSelectedAction] = useState({ module: null, action: null });
 
-  const currentModules = moduleGroups[activeTab] || moduleGroups.customer;
-  const activeTabLabel = activeTab ? activeTab.charAt(0).toUpperCase() + activeTab.slice(1) : '';
-  const isAccountsTab = activeTab === 'accounts';
+  const availableTabs = [
+    { key: 'customer', label: 'CUSTOMER', features: ['backoffice.product_master', 'backoffice.sales', 'backoffice.sales_quotation', 'backoffice.delivery_order'] },
+    { key: 'supplier', label: 'SUPPLIER', features: ['backoffice.purchase', 'backoffice.purchase_order', 'backoffice.grn'] },
+    { key: 'accounts', label: 'ACCOUNTS', features: ['backoffice.accounts', 'backoffice.vouchers'] },
+    { key: 'hr', label: 'HR', features: ['hr'] },
+  ].filter((tab) => hasAnyFeature(tab.features));
+
+  const safeActiveTab = availableTabs.some((tab) => tab.key === activeTab)
+    ? activeTab
+    : availableTabs[0]?.key || 'customer';
+  const currentModules = (moduleGroups[safeActiveTab] || moduleGroups.customer).filter((module) =>
+    hasAnyFeature(module.features ?? module.feature),
+  );
+  const activeTabLabel = safeActiveTab ? safeActiveTab.charAt(0).toUpperCase() + safeActiveTab.slice(1) : '';
+  const isAccountsTab = safeActiveTab === 'accounts';
 
   const handleActionClick = (module, action) => {
     setSelectedAction({ module, action });
@@ -188,17 +240,20 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Quotation' && action === 'List') {
       navigate('/quotation-list');
     }
-    if (module === 'Delivery Order' && (action === 'Delivery' || action === 'List')) {
+    if (module === 'Delivery Order' && action === 'Delivery') {
       navigate('/delivery-order');
     }
+    if (module === 'Delivery Order' && action === 'List') {
+      navigate('/delivery-order-list');
+    }
     if (module === 'Purchase' && (action === 'Purchases' || action === 'List')) {
-      navigate('/purchase');
+      navigate(action === 'List' ? '/purchase-list' : '/purchase');
     }
     if (module === 'Local Purchase Order' && (action === 'LPO' || action === 'List')) {
-      navigate('/purchase-order');
+      navigate(action === 'List' ? '/purchase-order-list' : '/purchase-order');
     }
     if (module === 'GRN' && (action === 'GRN' || action === 'List')) {
-      navigate('/goods-receive-note');
+      navigate(action === 'List' ? '/goods-receive-note-list' : '/goods-receive-note');
     }
     if (module === 'Sale Return' && (action === 'Returns' || action === 'List')) {
       navigate('/sales-return');
@@ -284,6 +339,31 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     if (module === 'Statement of accounts' && action === 'List') {
       navigate('/statement-of-accounts-list');
     }
+    // HR Routes
+    if (module === 'Employee' && action === 'Directory') {
+      navigate('/hr/employees');
+    }
+    if (module === 'Employee' && action === 'Add Employee') {
+      navigate('/hr/employee-entry');
+    }
+    if (module === 'Overview' && action === 'Dashboard') {
+      navigate('/hr/dashboard');
+    }
+    if (module === 'Overview' && action === 'Attendance') {
+      navigate('/hr/attendance');
+    }
+    if (module === 'Overview' && action === 'Leaves') {
+      navigate('/hr/leave-management');
+    }
+    if (module === 'Masters' && action === 'Shift Master') {
+      navigate('/hr/shift-master');
+    }
+    if (module === 'Masters' && action === 'Leave Master') {
+      navigate('/hr/leave-type-master');
+    }
+    if (module === 'Masters' && action === 'Document Master') {
+      navigate('/hr/document-type-master');
+    }
   };
 
   return (
@@ -294,17 +374,17 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     >
       <div className="relative border-b border-rose-200/60">
         {expanded ? (
-          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12">
-            {['CUSTOMER', 'SUPPLIER', 'ACCOUNTS'].map((tab) => {
-              const isActive = activeTab === tab.toLowerCase();
+          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12 overflow-x-auto no-scrollbar">
+            {availableTabs.map((tab) => {
+              const isActive = safeActiveTab === tab.key;
               return (
-                <div key={tab} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
+                <div key={tab.key} className="flex flex-shrink-0 flex-col items-stretch gap-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab(tab.toLowerCase())}
+                    onClick={() => setActiveTab(tab.key)}
                     className="border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors"
                   >
-                    {tab}
+                    {tab.label}
                   </button>
                   <div
                     className={`h-0.5 w-full rounded-full ${isActive ? 'bg-[#800000]' : 'bg-transparent'}`}

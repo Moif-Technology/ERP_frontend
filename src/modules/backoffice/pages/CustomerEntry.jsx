@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { colors, inputField } from '../../../shared/constants/theme';
 import { DropdownInput, InputField, Switch } from '../../../shared/components/ui';
 import * as customerEntryApi from '../../../services/customerEntry.api.js';
@@ -47,6 +48,10 @@ function useColumnCount() {
 export default function CustomerEntry() {
   const primary = colors.primary?.main || '#790728';
   const colCount = useColumnCount();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const editCustomerId = searchParams.get('customerId');
+  const isEditMode = Boolean(editCustomerId);
 
   const [form, setForm] = useState({
     customerCode: '',
@@ -78,6 +83,25 @@ export default function CustomerEntry() {
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (!isEditMode) return;
+    const c = location.state?.customer;
+    if (!c) return;
+    setForm((prev) => ({
+      ...prev,
+      customerCode: c.customerCode === '—' ? '' : (c.customerCode ?? ''),
+      customerName: c.customerName === '—' ? '' : (c.customerName ?? ''),
+      companyName: c.customerNameAlt === '—' ? '' : (c.customerNameAlt ?? ''),
+      contactPerson: c.contactPerson === '—' ? '' : (c.contactPerson ?? ''),
+      telephone: c.telephone === '—' ? '' : (c.telephone ?? ''),
+      mobileNo: c.mobile === '—' ? '' : (c.mobile ?? ''),
+      country: c.country === '—' ? '' : (c.country ?? ''),
+      city: c.city === '—' ? '' : (c.city ?? ''),
+      customerType: c.customerTx === '—' ? '' : (c.customerTx ?? ''),
+      loyaltyCustStatus: c.loyaltyStatus === '—' ? '' : (c.loyaltyStatus ?? ''),
+    }));
+  }, [isEditMode, editCustomerId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const countryOptions = useMemo(() => toOptions(COUNTRIES), []);
   const cityOptions = useMemo(() => toOptions(CITIES), []);
   const paymentModeOptions = useMemo(() => toOptions(PAYMENT_MODES), []);
@@ -106,33 +130,36 @@ export default function CustomerEntry() {
     setSaving(true);
     setSaveError('');
     setSuccess('');
+    const payload = {
+      customerCode: code,
+      customerName: name,
+      companyName: form.companyName.trim() || undefined,
+      taxRegNo: form.taxRegNo.trim() || undefined,
+      contactPerson: form.contactPerson.trim() || undefined,
+      designation: form.designation.trim() || undefined,
+      address: form.address.trim() || undefined,
+      poBox: form.poBox.trim() || undefined,
+      country: form.country.trim() || undefined,
+      city: form.city.trim() || undefined,
+      telephone: form.telephone.trim() || undefined,
+      mobileNo: form.mobileNo.trim() || undefined,
+      faxNo: form.faxNo.trim() || undefined,
+      email: form.email.trim() || undefined,
+      paymentMode: form.paymentMode.trim() || undefined,
+      creditLimit: form.creditLimit === '' ? undefined : form.creditLimit,
+      creditPeriodDays: form.creditPeriodDays === '' ? undefined : form.creditPeriodDays,
+      creditBalance: form.creditBalance === '' ? undefined : form.creditBalance,
+      customerType: form.customerType.trim() || undefined,
+      loyaltyCustStatus: form.loyaltyCustStatus.trim() || undefined,
+      creditStatus: form.creditStatus.trim() || 'ACTIVE',
+      remarks: form.remarks.trim() || undefined,
+      newBarcode: form.newBarcode,
+    };
     try {
-      const { data } = await customerEntryApi.createCustomer({
-        customerCode: code,
-        customerName: name,
-        companyName: form.companyName.trim() || undefined,
-        taxRegNo: form.taxRegNo.trim() || undefined,
-        contactPerson: form.contactPerson.trim() || undefined,
-        designation: form.designation.trim() || undefined,
-        address: form.address.trim() || undefined,
-        poBox: form.poBox.trim() || undefined,
-        country: form.country.trim() || undefined,
-        city: form.city.trim() || undefined,
-        telephone: form.telephone.trim() || undefined,
-        mobileNo: form.mobileNo.trim() || undefined,
-        faxNo: form.faxNo.trim() || undefined,
-        email: form.email.trim() || undefined,
-        paymentMode: form.paymentMode.trim() || undefined,
-        creditLimit: form.creditLimit === '' ? undefined : form.creditLimit,
-        creditPeriodDays: form.creditPeriodDays === '' ? undefined : form.creditPeriodDays,
-        creditBalance: form.creditBalance === '' ? undefined : form.creditBalance,
-        customerType: form.customerType.trim() || undefined,
-        loyaltyCustStatus: form.loyaltyCustStatus.trim() || undefined,
-        creditStatus: form.creditStatus.trim() || 'ACTIVE',
-        remarks: form.remarks.trim() || undefined,
-        newBarcode: form.newBarcode,
-      });
-      setSuccess(`Saved “${data.customerName}” (code ${data.customerCode}, id ${data.customerId}).`);
+      const { data } = isEditMode
+        ? await customerEntryApi.updateCustomer(editCustomerId, payload)
+        : await customerEntryApi.createCustomer(payload);
+      setSuccess(`${isEditMode ? 'Updated' : 'Saved'} “${data.customerName}” (code ${data.customerCode}, id ${data.customerId}).`);
       setForm((prev) => ({
         ...prev,
         customerCode: '',
@@ -516,7 +543,7 @@ export default function CustomerEntry() {
             className="h-8 shrink-0 rounded-md px-5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-95 disabled:opacity-45"
             style={{ backgroundColor: primary }}
           >
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? (isEditMode ? 'Updating…' : 'Saving…') : (isEditMode ? 'Update' : 'Save')}
           </button>
         </div>
       </div>

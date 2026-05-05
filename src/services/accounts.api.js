@@ -81,3 +81,7 @@ export function getLedgerTransactions(accountId, params) {
 export function getTrialBalance(params) {
   return httpClient.get('/api/vouchers/trial-balance', { params });
 }
+
+export function getAgingSummary(params) {
+  return httpClient.get('/api/vouchers/aging-summary', { params });
+}

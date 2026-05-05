@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import { InputField, SubInputField } from '../../../shared/components/ui';
@@ -6,52 +6,13 @@ import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import * as api from '../../../services/dealsOffers.api.js';
 
 const primary = colors.primary?.main || '#790728';
 
-const PRODUCT_BRANDS = ['Nova', 'Vertex', 'Apex', 'Pulse', 'Zenith'];
-const GROUPS = ['Grocery', 'Beverages', 'Household', 'Electronics', 'Personal care'];
-const SUB_GROUPS = ['Chilled', 'Ambient', 'Frozen', 'Snacks', 'Beverages cold', 'Core range'];
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Trans no · Barcode · Short descriotion · Pkd .details · Unit price · Qty price · Qty on hand · AddQty · Actions */
 const LINE_COL_PCT = [8, 12, 18, 14, 9, 10, 10, 8, 11];
-
-function buildDummyOfferLines(count) {
-  const items = [
-    ['8901234500012', 'Mango juice 1L', '6', 'Carton'],
-    ['8901234500023', 'Mineral water 500ml', '12', 'Pack'],
-    ['8901234500034', 'Snack mix 200g', '8', 'Box'],
-    ['8901234500045', 'Chocolate biscuit', '24', 'Case'],
-  ];
-
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const [barcode, shortDescription, pktQty, pktDetails] = items[i % items.length];
-    const offerPackQty = 1 + (i % 5);
-    const offerQty = 2 + (i % 6);
-    const rate = (5 + ((i * 7) % 20)).toFixed(2);
-    const amount = (offerQty * Number(rate)).toFixed(2);
-
-    rows.push({
-      id: `ope-${i + 1}`,
-      productBrand: PRODUCT_BRANDS[i % PRODUCT_BRANDS.length],
-      group: GROUPS[i % GROUPS.length],
-      subGroup: SUB_GROUPS[i % SUB_GROUPS.length],
-      barcode,
-      shortDescription,
-      pktQty,
-      pktDetails,
-      offerPackQty: String(offerPackQty),
-      offerQty: String(offerQty),
-      rate,
-      amount,
-    });
-  }
-  return rows;
-}
-
-const DUMMY_LINES = buildDummyOfferLines(18);
 
 const figmaOutline =
   'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
@@ -70,16 +31,7 @@ const tableCellInputClass =
 
 function PlusIcon({ className }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.25"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M12 5v14M5 12h14" />
     </svg>
   );
@@ -95,7 +47,6 @@ function useViewportMaxWidth(maxPx) {
   const [matches, setMatches] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia(query).matches : false,
   );
-
   useEffect(() => {
     const mq = window.matchMedia(query);
     const onChange = () => setMatches(mq.matches);
@@ -103,12 +54,15 @@ function useViewportMaxWidth(maxPx) {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, [query]);
-
   return matches;
 }
 
 export default function OfferPackingEntry() {
-  const [tableData, setTableData] = useState(() => DUMMY_LINES.map((r) => ({ ...r })));
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const tableDataRef = useRef([]);
+  const prevEditRef = useRef(null);
 
   const [barcode, setBarcode] = useState('');
   const [shortDescription, setShortDescription] = useState('');
@@ -125,11 +79,42 @@ export default function OfferPackingEntry() {
 
   const filteredRows = tableData;
 
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setSaveError('');
+    api.listPackingEntries()
+      .then(({ data }) => { if (!cancelled) setTableData(data.items ?? []); })
+      .catch((err) => { if (!cancelled) setSaveError(err?.response?.data?.message || 'Failed to load packing entries'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => { tableDataRef.current = tableData; }, [tableData]);
+
+  useEffect(() => {
+    const prev = prevEditRef.current;
+    prevEditRef.current = editingRowId;
+    if (prev !== null && editingRowId !== prev) {
+      const row = tableDataRef.current.find((r) => r.id === prev);
+      if (row) {
+        api.updatePackingEntry(row.id, {
+          barcode: row.barcode,
+          shortDescription: row.shortDescription,
+          packingDetails: row.pktDetails,
+          rate: row.rate,
+          offerQty: row.offerQty,
+          qtyOnHand: row.pktQty,
+          amount: row.amount,
+        }).catch(console.error);
+      }
+    }
+  }, [editingRowId]);
+
   const updateLine = useCallback((id, patch) => {
     setTableData((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
-
         const next = { ...r, ...patch };
         const nextOfferQty = parseAmount(next.offerQty);
         const nextRate = parseAmount(next.rate);
@@ -148,32 +133,26 @@ export default function OfferPackingEntry() {
     setNewQty('');
   }, []);
 
-  const handleAddLine = useCallback(() => {
-    const id = `ope-${Date.now()}`;
+  const handleAddLine = useCallback(async () => {
     const safeOfferQty = newQty.trim() || '0';
     const safeRate = unitPrice.trim() || '0.00';
     const amount = (parseAmount(safeOfferQty) * parseAmount(safeRate)).toFixed(2);
-
-    setTableData((prev) => [
-      {
-        id,
-        productBrand: '',
-        group: '',
-        subGroup: '',
+    try {
+      const { data } = await api.createPackingEntry({
         barcode: barcode.trim(),
         shortDescription: shortDescription.trim(),
-        pktQty: qtyOnHand.trim() || '0',
-        pktDetails: packingDetails.trim(),
-        offerPackQty: '0',
+        packingDetails: packingDetails.trim(),
+        unitPrice: safeRate,
+        qtyOnHand: qtyOnHand.trim() || '0',
         offerQty: safeOfferQty,
-        rate: safeRate,
         amount,
-      },
-      ...prev,
-    ]);
-
-    setPage(1);
-    clearForm();
+      });
+      setTableData((prev) => [data, ...prev]);
+      setPage(1);
+      clearForm();
+    } catch (err) {
+      setSaveError(err?.response?.data?.message || 'Failed to add packing entry');
+    }
   }, [barcode, shortDescription, packingDetails, unitPrice, qtyOnHand, newQty, clearForm]);
 
   const handleViewLine = useCallback((id) => {
@@ -186,10 +165,15 @@ export default function OfferPackingEntry() {
     setEditingRowId((prev) => (prev === id ? null : id));
   }, []);
 
-  const handleDeleteLine = useCallback((id) => {
+  const handleDeleteLine = useCallback(async (id) => {
     setTableData((prev) => prev.filter((r) => r.id !== id));
     setDetailRowId((cur) => (cur === id ? null : cur));
     setEditingRowId((cur) => (cur === id ? null : cur));
+    try {
+      await api.deletePackingEntry(id);
+    } catch (err) {
+      console.error('Delete failed', err);
+    }
   }, []);
 
   const closeDetailModal = useCallback(() => setDetailRowId(null), []);
@@ -206,21 +190,22 @@ export default function OfferPackingEntry() {
   }, [detailRowId, filteredRows]);
 
   useEffect(() => {
-    if (detailRowId && !filteredRows.some((r) => r.id === detailRowId)) {
-      setDetailRowId(null);
-    }
+    if (detailRowId && !filteredRows.some((r) => r.id === detailRowId)) setDetailRowId(null);
   }, [detailRowId, filteredRows]);
 
   useEffect(() => {
     if (!detailRowId) return;
-    const onKey = (e) => {
-      if (e.key === 'Escape') setDetailRowId(null);
-    };
+    const onKey = (e) => { if (e.key === 'Escape') setDetailRowId(null); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [detailRowId]);
 
-  const handleDeleteDocument = useCallback(() => {
+  const handleDeleteDocument = useCallback(async () => {
+    try {
+      await api.deleteAllPackingEntries();
+    } catch (err) {
+      console.error('Delete all failed', err);
+    }
     setTableData([]);
     clearForm();
     setPage(1);
@@ -229,7 +214,6 @@ export default function OfferPackingEntry() {
   }, [clearForm]);
 
   const handleNewDocument = useCallback(() => {
-    setTableData([]);
     clearForm();
     setPage(1);
     setEditingRowId(null);
@@ -239,9 +223,7 @@ export default function OfferPackingEntry() {
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
 
-  useEffect(() => {
-    setPage((p) => Math.min(Math.max(1, p), totalPages));
-  }, [totalPages]);
+  useEffect(() => { setPage((p) => Math.min(Math.max(1, p), totalPages)); }, [totalPages]);
 
   const paginatedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -252,16 +234,12 @@ export default function OfferPackingEntry() {
   const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
   const tableTotals = useMemo(() => {
-    let totalQtyPrice = 0;
-    let totalQtyOnHand = 0;
-    let totalAddQty = 0;
-
+    let totalQtyPrice = 0, totalQtyOnHand = 0, totalAddQty = 0;
     for (const r of filteredRows) {
       totalQtyPrice += parseAmount(r.amount);
       totalQtyOnHand += parseAmount(r.pktQty);
       totalAddQty += parseAmount(r.offerQty);
     }
-
     return { totalQtyPrice, totalQtyOnHand, totalAddQty };
   }, [filteredRows]);
 
@@ -272,17 +250,8 @@ export default function OfferPackingEntry() {
 
       const textInput = (key, field, aria, align = 'text-left') =>
         rowIsEditing ? (
-          <input
-            key={key}
-            type="text"
-            className={`${tableCellInputClass} ${align}`}
-            value={r[field] ?? ''}
-            onChange={(e) => updateLine(r.id, { [field]: e.target.value })}
-            aria-label={aria}
-          />
-        ) : (
-          r[field] ?? ''
-        );
+          <input key={key} type="text" className={`${tableCellInputClass} ${align}`} value={r[field] ?? ''} onChange={(e) => updateLine(r.id, { [field]: e.target.value })} aria-label={aria} />
+        ) : (r[field] ?? '');
 
       return [
         displaySl,
@@ -291,42 +260,18 @@ export default function OfferPackingEntry() {
         textInput(`pd-${r.id}`, 'pktDetails', 'Packet details'),
         textInput(`rt-${r.id}`, 'rate', 'Unit price', 'text-center'),
         rowIsEditing ? (
-          <input
-            key={`qp-${r.id}`}
-            type="text"
-            className={`${tableCellInputClass} text-center bg-gray-50`}
-            value={r.amount ?? ''}
-            readOnly
-            aria-label="Qty price"
-          />
-        ) : (
-          r.amount ?? ''
-        ),
+          <input key={`qp-${r.id}`} type="text" className={`${tableCellInputClass} text-center bg-gray-50`} value={r.amount ?? ''} readOnly aria-label="Qty price" />
+        ) : (r.amount ?? ''),
         textInput(`qoh-${r.id}`, 'pktQty', 'Qty on hand', 'text-center'),
         textInput(`aq-${r.id}`, 'offerQty', 'Add quantity', 'text-center'),
         <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="View line"
-            onClick={() => handleViewLine(r.id)}
-          >
+          <button type="button" className={actionIconBtn} aria-label="View line" onClick={() => handleViewLine(r.id)}>
             <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="Edit line"
-            onClick={() => handleEditLine(r.id)}
-          >
+          <button type="button" className={actionIconBtn} aria-label="Edit line" onClick={() => handleEditLine(r.id)}>
             <img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="Delete line"
-            onClick={() => handleDeleteLine(r.id)}
-          >
+          <button type="button" className={actionIconBtn} aria-label="Delete line" onClick={() => handleDeleteLine(r.id)}>
             <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </button>
         </div>,
@@ -336,27 +281,10 @@ export default function OfferPackingEntry() {
 
   const tableFooterRow = useMemo(
     () => [
-      {
-        content: (
-          <div key="ope-total" className="text-left font-bold">
-            Total
-          </div>
-        ),
-        colSpan: 5,
-        className: 'align-middle font-bold',
-      },
-      tableTotals.totalQtyPrice.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      tableTotals.totalQtyOnHand.toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }),
-      tableTotals.totalAddQty.toLocaleString('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }),
+      { content: (<div key="ope-total" className="text-left font-bold">Total</div>), colSpan: 5, className: 'align-middle font-bold' },
+      tableTotals.totalQtyPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      tableTotals.totalQtyOnHand.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
+      tableTotals.totalAddQty.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
       '',
     ],
     [tableTotals],
@@ -364,9 +292,7 @@ export default function OfferPackingEntry() {
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
-    if (totalPages <= maxBtns) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
+    if (totalPages <= maxBtns) return Array.from({ length: totalPages }, (_, i) => i + 1);
     let start = Math.max(1, page - 1);
     let end = Math.min(totalPages, start + maxBtns - 1);
     start = Math.max(1, end - maxBtns + 1);
@@ -377,35 +303,23 @@ export default function OfferPackingEntry() {
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2">
         <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <h1
-            className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
-            style={{ color: primary }}
-          >
-            OFFER PACKING ENTRY
-          </h1>
+          <div className="flex min-w-0 shrink-0 flex-col gap-1">
+            <h1 className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl" style={{ color: primary }}>
+              OFFER PACKING ENTRY
+            </h1>
+            {saveError && <p className="text-[10px] font-semibold text-red-600">{saveError}</p>}
+            {loading && <p className="text-[10px] font-semibold text-gray-500">Loading…</p>}
+          </div>
 
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:h-7 sm:flex-nowrap sm:gap-2">
             <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
               <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
             </button>
-
-            <button
-              type="button"
-              className={`${figmaToolbarBtn} font-semibold text-black`}
-              onClick={handleDeleteDocument}
-              aria-label="Delete offer packing entry document"
-            >
+            <button type="button" className={`${figmaToolbarBtn} font-semibold text-black`} onClick={handleDeleteDocument} aria-label="Delete offer packing entry document">
               <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
               Delete
             </button>
-
-            <button
-              type="button"
-              className={primaryToolbarBtn}
-              style={{ backgroundColor: primary, borderColor: primary }}
-              onClick={handleNewDocument}
-              aria-label="New offer packing entry"
-            >
+            <button type="button" className={primaryToolbarBtn} style={{ backgroundColor: primary, borderColor: primary }} onClick={handleNewDocument} aria-label="New offer packing entry">
               <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
               <span className="hidden min-[420px]:inline">New Offer Packing</span>
               <span className="min-[420px]:hidden">New</span>
@@ -418,69 +332,25 @@ export default function OfferPackingEntry() {
         <h3 className="text-[10px] font-bold uppercase tracking-wide text-gray-700 sm:text-[11px]">Offer packet details</h3>
         <div className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-3">
           <div className="shrink-0">
-            <SubInputField
-              label="barcode"
-              value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-              placeholder=""
-            />
+            <SubInputField label="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} placeholder="" />
           </div>
-
           <div className="shrink-0">
-            <InputField
-              label="short description"
-              value={shortDescription}
-              onChange={(e) => setShortDescription(e.target.value)}
-              placeholder=""
-              widthPx={150}
-            />
+            <InputField label="short description" value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} placeholder="" widthPx={150} />
           </div>
-
           <div className="shrink-0">
-            <SubInputField
-              label="Pcking details"
-              value={packingDetails}
-              onChange={(e) => setPackingDetails(e.target.value)}
-              placeholder=""
-            />
+            <SubInputField label="Pcking details" value={packingDetails} onChange={(e) => setPackingDetails(e.target.value)} placeholder="" />
           </div>
-
           <div className="shrink-0">
-            <SubInputField
-              label="unit price"
-              value={unitPrice}
-              onChange={(e) => setUnitPrice(e.target.value)}
-              placeholder=""
-              inputMode="decimal"
-            />
+            <SubInputField label="unit price" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="" inputMode="decimal" />
           </div>
-
           <div className="shrink-0">
-            <SubInputField
-              label="qty on hand"
-              value={qtyOnHand}
-              onChange={(e) => setQtyOnHand(e.target.value)}
-              placeholder=""
-              inputMode="decimal"
-            />
+            <SubInputField label="qty on hand" value={qtyOnHand} onChange={(e) => setQtyOnHand(e.target.value)} placeholder="" inputMode="decimal" />
           </div>
-
           <div className="shrink-0">
-            <SubInputField
-              label="new qty"
-              value={newQty}
-              onChange={(e) => setNewQty(e.target.value)}
-              placeholder=""
-              inputMode="decimal"
-            />
+            <SubInputField label="new qty" value={newQty} onChange={(e) => setNewQty(e.target.value)} placeholder="" inputMode="decimal" />
           </div>
           <div className="ml-auto flex shrink-0 self-end">
-            <button
-              type="button"
-              onClick={handleAddLine}
-              className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white"
-              style={{ backgroundColor: primary, borderColor: primary }}
-            >
+            <button type="button" onClick={handleAddLine} className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 py-0 text-[10px] font-semibold leading-none text-white" style={{ backgroundColor: primary, borderColor: primary }}>
               Add
             </button>
           </div>
@@ -504,17 +374,7 @@ export default function OfferPackingEntry() {
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={pageSize}
-          headers={[
-            'Trans no',
-            'Barcode',
-            'Short descriotion',
-            'Pkd .details',
-            'Unit price',
-            'Qty price',
-            'Qty on hand',
-            'AddQty',
-            'Actions',
-          ]}
+          headers={['Trans no', 'Barcode', 'Short descriotion', 'Pkd .details', 'Unit price', 'Qty price', 'Qty on hand', 'AddQty', 'Actions']}
           rows={tableBodyRows}
           footerRow={tableFooterRow}
         />
@@ -522,112 +382,44 @@ export default function OfferPackingEntry() {
         <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center justify-items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:justify-items-stretch sm:gap-x-2 sm:gap-y-0">
           <div className="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
             <p className="text-center font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700 sm:text-left">
-              Showing <span className="text-black">{rangeStart}</span>–<span className="text-black">{rangeEnd}</span> of{' '}
-              <span className="text-black">{totalFiltered}</span>
+              Showing <span className="text-black">{rangeStart}</span>–<span className="text-black">{rangeEnd}</span> of <span className="text-black">{totalFiltered}</span>
             </p>
-
             <label className="flex items-center gap-1 font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
               Rows
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setPage(1);
-                }}
-                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300"
-                aria-label="Rows per page"
-              >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
+              <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300" aria-label="Rows per page">
+                {PAGE_SIZE_OPTIONS.map((n) => (<option key={n} value={n}>{n}</option>))}
               </select>
             </label>
           </div>
 
           <span className="hidden sm:block" aria-hidden />
 
-          <div
-            className="inline-flex h-7 w-max max-w-full shrink-0 items-stretch justify-self-center overflow-hidden rounded-[3px] border border-gray-200 bg-white sm:justify-self-end"
-            role="navigation"
-            aria-label="Pagination"
-          >
-            <button
-              type="button"
-              className="inline-flex w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              aria-label="Previous page"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <div className="inline-flex h-7 w-max max-w-full shrink-0 items-stretch justify-self-center overflow-hidden rounded-[3px] border border-gray-200 bg-white sm:justify-self-end" role="navigation" aria-label="Pagination">
+            <button type="button" className="inline-flex w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden><path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-
             <div className="flex items-stretch border-l border-gray-200">
               {pageNumbers.map((n) => {
                 const active = n === page;
                 return (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${
-                      active ? 'text-white' : 'text-gray-700 hover:bg-gray-50'
-                    } ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`}
-                    style={active ? { backgroundColor: primary } : undefined}
-                    onClick={() => setPage(n)}
-                    aria-label={`Page ${n}`}
-                    aria-current={active ? 'page' : undefined}
-                  >
-                    {n}
-                  </button>
+                  <button key={n} type="button" className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${active ? 'text-white' : 'text-gray-700 hover:bg-gray-50'} ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`} style={active ? { backgroundColor: primary } : undefined} onClick={() => setPage(n)} aria-label={`Page ${n}`} aria-current={active ? 'page' : undefined}>{n}</button>
                 );
               })}
             </div>
-
-            <button
-              type="button"
-              className="inline-flex w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              aria-label="Next page"
-            >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <button type="button" className="inline-flex w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden><path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
           </div>
         </div>
       </div>
 
       {detailRowId && detailRow ? (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm"
-          onClick={closeDetailModal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="ope-line-detail-title"
-        >
-          <div
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-              onClick={closeDetailModal}
-              aria-label="Close line detail"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden>
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-sm" onClick={closeDetailModal} role="dialog" aria-modal="true" aria-labelledby="ope-line-detail-title">
+          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 pt-5 shadow-xl sm:max-w-lg sm:p-5 sm:pt-6" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800" onClick={closeDetailModal} aria-label="Close line detail">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
             </button>
-
-            <h2 id="ope-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>
-              Line detail
-            </h2>
-
+            <h2 id="ope-line-detail-title" className="pr-10 text-sm font-bold sm:text-base" style={{ color: primary }}>Line detail</h2>
             <div className="mt-3 flex flex-col gap-3 sm:mt-4">
               <InputField label="Sl no." fullWidth readOnly value={String(detailSlNo)} />
               <InputField label="Barcode" fullWidth readOnly value={detailRow.barcode ?? ''} />

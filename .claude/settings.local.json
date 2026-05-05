@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python -c \"import json; from graphify.detect import detect; from pathlib import Path; result = detect\\(Path\\('.'\\)\\); open\\('.graphify_detect.json','w'\\).write\\(json.dumps\\(result\\)\\)\"; python -c \"import json; d=json.load\\(open\\('.graphify_detect.json'\\)\\); print\\('total_files',d.get\\('total_files'\\)\\); print\\('total_words',d.get\\('total_words'\\)\\); print\\('skipped_sensitive',len\\(d.get\\('skipped_sensitive',[]\\)\\)\\); [print\\(k,len\\(v\\)\\) for k,v in d.get\\('files',{}\\).items\\(\\)]\")",
+      "PowerShell(python .graphify_merge.py)",
+      "PowerShell(python .graphify_step4.py)",
+      "PowerShell(python .graphify_inspect.py)",
+      "PowerShell(python .graphify_step5.py)",
+      "PowerShell(python .graphify_step6.py)",
+      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; python .graphify_final.py)",
+      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; Test-Path graphify-out/graph.json; Test-Path graphify-out/GRAPH_REPORT.md; Test-Path graphify-out/graph.html; Test-Path graphify-out/cost.json)",
+      "PowerShell(python -c \"import json; from graphify.detect import detect_incremental; from pathlib import Path; result = detect_incremental\\(Path\\('.'\\)\\); Path\\('.graphify_incremental.json'\\).write_text\\(json.dumps\\(result\\)\\); print\\('new_total=', result.get\\('new_total', 0\\)\\); print\\('files keys:', list\\(result.get\\('new_files',{}\\).keys\\(\\)\\)\\)\")",
+      "Bash(python *)",
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python *)"
+    ]
+  }
+}

@@ -7,3 +7,7 @@ export function listSuppliers(params) {
 export function createSupplier(payload) {
   return httpClient.post('/api/suppliers', payload);
 }
+
+export function updateSupplier(supplierId, payload) {
+  return httpClient.put(`/api/suppliers/${supplierId}`, payload);
+}

@@ -1,5 +1,9 @@
 import httpClient from './http/httpClient.js';
 
+export function listPurchases(params) {
+  return httpClient.get('/api/purchases', { params });
+}
+
 export function listLposForPurchase(params) {
   return httpClient.get('/api/lpos', { params });
 }

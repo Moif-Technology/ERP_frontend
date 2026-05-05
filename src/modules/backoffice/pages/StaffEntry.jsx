@@ -13,9 +13,15 @@ export default function StaffEntry() {
     password: '',
     confirmPassword: '',
     branchId: '',
+    roleId: '',
     mobileNo: '',
   });
   const [branches, setBranches] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [staffRows, setStaffRows] = useState([]);
+  const [roleDrafts, setRoleDrafts] = useState({});
+  const [roleSavingId, setRoleSavingId] = useState(null);
+  const [roleMessage, setRoleMessage] = useState('');
   const [loadError, setLoadError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [success, setSuccess] = useState('');
@@ -30,18 +36,39 @@ export default function StaffEntry() {
     setSuccess('');
   };
 
+  const applyStaffRows = (rows) => {
+    setStaffRows(rows);
+    setRoleDrafts(
+      Object.fromEntries(
+        rows.map((staff) => [String(staff.staffId), staff.roleId != null ? String(staff.roleId) : ''])
+      )
+    );
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoadingBranches(true);
       setLoadError('');
       try {
-        const { data } = await staffEntryApi.fetchStaffBranches();
+        const [branchRes, roleRes, staffRes] = await Promise.all([
+          staffEntryApi.fetchStaffBranches(),
+          staffEntryApi.fetchStaffRoles(),
+          staffEntryApi.listStaffMembers({ limit: 500 }),
+        ]);
         if (cancelled) return;
-        const list = data.branches || [];
+        const list = branchRes.data.branches || [];
+        const roleList = roleRes.data.roles || [];
+        const staffList = staffRes.data.staff || [];
         setBranches(list);
+        setRoles(roleList);
+        applyStaffRows(staffList);
         if (list.length === 1) {
           setForm((prev) => ({ ...prev, branchId: String(list[0].branchId) }));
+        }
+        const staffRole = roleList.find((role) => String(role.roleName).toLowerCase() === 'staff') || roleList[0];
+        if (staffRole) {
+          setForm((prev) => ({ ...prev, roleId: String(staffRole.roleId) }));
         }
       } catch {
         if (!cancelled) setLoadError('Could not load branches. Check API and login.');
@@ -62,6 +89,41 @@ export default function StaffEntry() {
       })),
     [branches]
   );
+
+  const roleOptions = useMemo(
+    () =>
+      roles.map((role) => ({
+        value: String(role.roleId),
+        label: role.roleName,
+      })),
+    [roles]
+  );
+
+  const reloadStaffRows = async () => {
+    const { data } = await staffEntryApi.listStaffMembers({ limit: 500 });
+    applyStaffRows(data.staff || []);
+  };
+
+  const handleStaffRoleChange = (staffId, roleId) => {
+    setRoleMessage('');
+    setRoleDrafts((prev) => ({ ...prev, [String(staffId)]: roleId }));
+  };
+
+  const handleUpdateStaffRole = async (staff) => {
+    const nextRoleId = roleDrafts[String(staff.staffId)];
+    if (!nextRoleId) return;
+    setRoleSavingId(staff.staffId);
+    setRoleMessage('');
+    try {
+      await staffEntryApi.updateStaffRole(staff.staffId, Number(nextRoleId));
+      await reloadStaffRows();
+      setRoleMessage(`Updated role for ${staff.staffName}.`);
+    } catch (err) {
+      setRoleMessage(err.response?.data?.message || 'Could not update staff role.');
+    } finally {
+      setRoleSavingId(null);
+    }
+  };
 
   const handleSave = async () => {
     setSaveError('');
@@ -90,6 +152,10 @@ export default function StaffEntry() {
       setSaveError('Branch is required.');
       return;
     }
+    if (!form.roleId) {
+      setSaveError('Role is required.');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -99,6 +165,7 @@ export default function StaffEntry() {
         email: form.email.trim(),
         password: form.password,
         branchId: Number(form.branchId),
+        roleId: Number(form.roleId),
         mobileNo: form.mobileNo.trim() || undefined,
       });
       setSuccess(
@@ -112,6 +179,7 @@ export default function StaffEntry() {
         confirmPassword: '',
         mobileNo: '',
       }));
+      await reloadStaffRows();
     } catch (err) {
       setSaveError(err.response?.data?.message || 'Could not save staff.');
     } finally {
@@ -265,6 +333,18 @@ export default function StaffEntry() {
                       options={branchOptions}
                       placeholder={loadingBranches ? 'Loading branches…' : branches.length ? 'Select branch' : 'No branches'}
                     />
+
+                    <DropdownInput
+                      label={req('Role')}
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      value={form.roleId}
+                      onChange={(v) => update('roleId', v)}
+                      options={roleOptions}
+                      placeholder={loadingBranches ? 'Loading roles...' : roles.length ? 'Select role' : 'No roles'}
+                    />
                   </div>
                 </div>
               </section>
@@ -338,7 +418,7 @@ export default function StaffEntry() {
                 </div>
                 <p className="text-xs leading-relaxed text-gray-600 sm:text-sm">
                   The staff member will use <span className="font-medium text-gray-800">email + password</span> to sign in.
-                  Choose a branch they belong to; you can adjust access from your admin tools later if needed.
+                  Choose a branch and role. The role controls what pages and actions they can use after sign-in.
                 </p>
                 <ul className="mt-4 space-y-2.5 border-t border-gray-200/80 pt-4 text-xs text-gray-700 sm:text-sm">
                   <li className="flex gap-2.5">
@@ -354,6 +434,76 @@ export default function StaffEntry() {
                     Mobile is optional; add it if you use it for contact on file.
                   </li>
                 </ul>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.03] sm:p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Existing staff</p>
+                    <h3 className="text-sm font-semibold text-gray-900">Role assignment</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={reloadStaffRows}
+                    className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                {roleMessage ? (
+                  <p className="mb-3 rounded-lg border border-gray-100 bg-slate-50 px-3 py-2 text-xs text-gray-700">
+                    {roleMessage}
+                  </p>
+                ) : null}
+
+                <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                  {staffRows.length ? (
+                    staffRows.map((staff) => {
+                      const draft = roleDrafts[String(staff.staffId)] ?? '';
+                      const changed = String(staff.roleId ?? '') !== String(draft);
+                      return (
+                        <div key={staff.staffId} className="rounded-xl border border-gray-200 bg-slate-50/70 p-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-gray-900">{staff.staffName}</p>
+                            <p className="truncate text-xs text-gray-500">
+                              {staff.staffCode || `U${staff.staffId}`} {staff.email ? `- ${staff.email}` : ''}
+                            </p>
+                          </div>
+                          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                            <select
+                              value={draft}
+                              onChange={(event) => handleStaffRoleChange(staff.staffId, event.target.value)}
+                              className="h-9 min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-xs font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#790728]/20"
+                            >
+                              <option value="" disabled>
+                                Select role
+                              </option>
+                              {roles.map((role) => (
+                                <option key={role.roleId} value={role.roleId}>
+                                  {role.roleName}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              disabled={!changed || roleSavingId === staff.staffId}
+                              onClick={() => handleUpdateStaffRole(staff)}
+                              className="h-9 rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:pointer-events-none disabled:opacity-40"
+                              style={{ backgroundColor: primary }}
+                            >
+                              {roleSavingId === staff.staffId ? 'Saving' : 'Apply'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="rounded-xl border border-gray-200 bg-slate-50 px-3 py-4 text-sm text-gray-600">
+                      No staff loaded.
+                    </p>
+                  )}
+                </div>
               </div>
             </aside>
           </div>
@@ -387,7 +537,7 @@ export default function StaffEntry() {
             ) : null}
             <button
               type="button"
-              disabled={saving || loadingBranches || !branches.length}
+              disabled={saving || loadingBranches || !branches.length || !roles.length}
               onClick={handleSave}
               className="inline-flex w-full items-center justify-center rounded-xl px-8 py-2.5 text-sm font-semibold text-white shadow-md transition-[opacity,transform,box-shadow] hover:opacity-95 hover:shadow-lg active:scale-[0.99] active:opacity-90 disabled:pointer-events-none disabled:opacity-50 sm:w-auto sm:min-w-[168px]"
               style={{ backgroundColor: primary }}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import CustomerListFilterDrawer from '../../../shared/components/ui/CustomerListFilterDrawer';
@@ -9,6 +9,7 @@ import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import FilterIcon from '../../../shared/assets/icons/filter.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import * as customerEntryApi from '../../../services/customerEntry.api';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -27,36 +28,21 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 /** Checkbox + 11 columns — widths sum to 100 */
 const CL_COL_PCT = [2, 3, 6, 10, 10, 7, 7, 10, 7, 7, 8, 13];
 
-const FIRST_NAMES = ['Ahmed', 'Sara', 'James', 'Fatima', 'Omar', 'Layla', 'David', 'Noor'];
-const LAST_NAMES = ['Al-Mansoori', 'Khan', 'Smith', 'Hassan', 'Patel', 'Brown', 'Ibrahim', 'Lee'];
-const CITIES = ['Dubai', 'Abu Dhabi', 'Sharjah', 'Riyadh', 'Doha', 'Kuwait City', 'Muscat', 'Manama'];
-const COUNTRIES = ['UAE', 'UAE', 'UAE', 'KSA', 'Qatar', 'Kuwait', 'Oman', 'Bahrain'];
-
-function buildDummyCustomers(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const fn = FIRST_NAMES[i % FIRST_NAMES.length];
-    const ln = LAST_NAMES[i % LAST_NAMES.length];
-    const legal = `${fn} ${ln} Trading LLC`;
-    const trade = i % 3 === 0 ? `${fn} Retail` : i % 3 === 1 ? `${ln} & Co.` : `${fn} ${ln} Est.`;
-    rows.push({
-      id: String(i + 1),
-      customerCode: `CUST-${String(1200 + i * 17).padStart(5, '0')}`,
-      customerName: legal,
-      customerNameAlt: trade,
-      telephone: `04-${2000000 + (i * 913) % 7000000}`,
-      mobile: `+971 50 ${1000000 + (i * 173) % 8999999}`,
-      contactPerson: `${fn} (${['Mgr', 'Owner', 'Acct'][i % 3]})`,
-      country: COUNTRIES[i % COUNTRIES.length],
-      city: CITIES[i % CITIES.length],
-      customerTx: ['STD-5%', 'GCC VAT', 'Export 0%', 'Exempt', 'RCM'][i % 5],
-      loyaltyStatus: LOYALTY_STATUSES[i % LOYALTY_STATUSES.length],
-    });
-  }
-  return rows;
+function mapApiCustomer(c) {
+  return {
+    id: String(c.customerId),
+    customerCode: c.customerCode ?? '—',
+    customerName: c.customerName ?? '—',
+    customerNameAlt: c.companyName ?? '—',
+    telephone: c.telephone ?? '—',
+    mobile: c.mobileNo ?? '—',
+    contactPerson: c.contactPerson ?? '—',
+    country: c.countryName ?? '—',
+    city: c.cityName ?? '—',
+    customerTx: c.customerType ?? '—',
+    loyaltyStatus: c.loyaltyStatus ?? '—',
+  };
 }
-
-const DUMMY_CUSTOMERS = buildDummyCustomers(44);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -76,7 +62,9 @@ const primaryLinkBtn =
 const SEARCH_PLACEHOLDER = 'Search…';
 
 export default function CustomerList() {
-  const [customers, setCustomers] = useState(() => DUMMY_CUSTOMERS.map((r) => ({ ...r })));
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -86,6 +74,27 @@ export default function CustomerList() {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    customerEntryApi.listCustomers()
+      .then(({ data }) => {
+        if (!cancelled) {
+          setCustomers((data.customers || []).map(mapApiCustomer));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err?.response?.data?.message || 'Failed to load customers');
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -273,7 +282,17 @@ export default function CustomerList() {
             <img src={CancelIcon} alt="" className="h-3.5 w-3.5" />
             Cancel
           </button>
-          <button type="button" className={figmaToolbarBtn}>
+          <button
+            type="button"
+            className={figmaToolbarBtn}
+            disabled={selectedRowCount !== 1}
+            style={selectedRowCount !== 1 ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+            onClick={() => {
+              const selectedId = [...selectedIds].find((id) => filteredIdSet.has(id));
+              const row = filteredRows.find((r) => r.id === selectedId);
+              if (row) navigate(`/data-entry/customer-entry?customerId=${row.id}`, { state: { customer: row } });
+            }}
+          >
             <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
             Edit
           </button>
@@ -348,6 +367,12 @@ export default function CustomerList() {
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {loadError && (
+          <p className="mb-2 rounded bg-red-50 px-3 py-2 text-[10px] font-semibold text-red-600">{loadError}</p>
+        )}
+        {loading && (
+          <p className="mb-2 text-[10px] font-semibold text-gray-500">Loading customers…</p>
+        )}
         <CommonTable
           className="customer-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth

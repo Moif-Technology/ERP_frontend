@@ -12,3 +12,11 @@ export function listStaffMembers(params) {
 export function createStaffMember(payload) {
   return httpClient.post('/api/staff', payload);
 }
+
+export function fetchStaffRoles() {
+  return httpClient.get('/api/roles');
+}
+
+export function updateStaffRole(staffId, roleId) {
+  return httpClient.patch(`/api/staff/members/${staffId}/role`, { roleId });
+}

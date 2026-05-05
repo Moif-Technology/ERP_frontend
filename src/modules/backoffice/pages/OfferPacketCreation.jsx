@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as api from '../../../services/dealsOffers.api.js';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import { InputField, SubInputField } from '../../../shared/components/ui';
@@ -31,69 +32,6 @@ const offerPacketCreationTableHeaders = [
 const actionIconBtn =
   'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-transparent p-0 text-gray-600 transition-colors hover:bg-gray-100/80 hover:text-gray-900 sm:h-7 sm:w-7';
 
-function addDaysIsoDate(ymd, days) {
-  if (!ymd || String(ymd).split('-').length !== 3) return '';
-  const [y, m, d] = String(ymd).split('-').map(Number);
-  const dt = new Date(y, m - 1, d + days);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-}
-
-function buildDummyOfferPacketLines(count) {
-  const items = [
-    ['8901234500012', 'Mango juice 1L'],
-    ['8901234500023', 'Mineral water 500ml'],
-    ['8901234500034', 'Snack mix 200g'],
-    ['8901234500045', 'Cooking oil 2L'],
-    ['8901234500056', 'Rice 5kg'],
-  ];
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const [bc, desc] = items[i % items.length];
-    const d = 1 + (i % 22);
-    const m = 1 + (i % 12);
-    const y = 2026;
-    const discFrom = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const discTo = addDaysIsoDate(discFrom, 14);
-    const pkt = 6 + (i % 8);
-    const sell = (45 + (i * 13) % 120).toFixed(2);
-    const disP = (2.5 + ((i * 3) % 15)).toFixed(2);
-    const disSell = (Number(sell) - Number(disP)).toFixed(2);
-    const pct = 5 + (i * 7) % 25;
-    const qty = String(12 + (i * 11) % 180);
-    const unit = i % 2 === 0 ? 'Carton' : 'Each';
-    const uc = (2.5 + (i % 5)).toFixed(2);
-    const up = (Number(sell) / (Number(qty) || 1)).toFixed(2);
-    rows.push({
-      id: `opc-${i + 1}`,
-      barcode: bc,
-      description: `${desc} — full line text`,
-      shortDescription: desc,
-      supplierName: 'Gulf Supplies LLC',
-      productBrand: 'Nova',
-      group: 'Grocery',
-      unit,
-      unitCost: uc,
-      unitPrice: up,
-      qty,
-      packetQty: String(pkt),
-      totalCost: (Number(uc) * Number(qty)).toFixed(2),
-      totalPrice: sell,
-      packetDescription: `${unit} / pkt ${pkt}`,
-      presentQty: qty,
-      sellPrice: sell,
-      disPrice: disP,
-      disSellPrice: disSell,
-      discPct: String(pct),
-      profitPct: String(pct),
-      remark: i % 3 === 0 ? 'Promo bundle' : '',
-      discFrom,
-      discTo,
-    });
-  }
-  return rows;
-}
-
-const DUMMY_LINES = buildDummyOfferPacketLines(20);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -135,7 +73,9 @@ function useViewportMaxWidth(maxPx) {
 }
 
 export default function OfferPacketCreation() {
-  const [tableData, setTableData] = useState(() => DUMMY_LINES.map((r) => ({ ...r })));
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   /** First strip — copy into Offer packet details on APPLY */
   const [headerBarcode, setHeaderBarcode] = useState('');
@@ -267,13 +207,56 @@ export default function OfferPacketCreation() {
     clearOfferPacketDetailsForm,
   ]);
 
+  const handleSavePacket = useCallback(async () => {
+    setSaveError('');
+    setLoading(true);
+    try {
+      await api.createOfferPacket({
+        header: {
+          barcode: headerBarcode.trim(),
+          description: headerDescription.trim(),
+          shortDescription: headerShortDescription.trim() || headerDescription.trim(),
+          supplierName: headerSupplierName.trim(),
+          productBrand: headerProductBrand.trim(),
+          groupName: headerGroup.trim(),
+          unitCost: headerUnitCost.trim() || '0',
+          unitPrice: headerUnitPrice.trim() || '0',
+          profitPct: headerProfitPct.trim() || '0',
+          remark: headerRemark.trim(),
+        },
+        lines: tableData.map((r) => ({
+          barcode: r.barcode,
+          shortDescription: r.shortDescription,
+          unit: r.unit,
+          unitCost: r.unitCost,
+          unitPrice: r.unitPrice,
+          qty: r.qty ?? r.presentQty ?? '0',
+          packetQty: r.packetQty,
+          totalCost: r.totalCost,
+          totalPrice: r.totalPrice ?? r.sellPrice ?? '0',
+        })),
+      });
+      setTableData([]);
+      clearHeaderStripForm();
+      clearOfferPacketDetailsForm();
+      setPage(1);
+    } catch (err) {
+      setSaveError(err?.response?.data?.message || 'Failed to save offer packet');
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    headerBarcode, headerDescription, headerShortDescription, headerSupplierName,
+    headerProductBrand, headerGroup, headerUnitCost, headerUnitPrice, headerProfitPct,
+    headerRemark, tableData, clearHeaderStripForm, clearOfferPacketDetailsForm,
+  ]);
+
   const handleDeleteDocument = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log('Delete offer packet creation');
     setTableData([]);
     clearHeaderStripForm();
     clearOfferPacketDetailsForm();
     setPage(1);
+    setSaveError('');
   }, [clearHeaderStripForm, clearOfferPacketDetailsForm]);
 
   const handleNewDocument = useCallback(() => {
@@ -281,6 +264,7 @@ export default function OfferPacketCreation() {
     clearHeaderStripForm();
     clearOfferPacketDetailsForm();
     setPage(1);
+    setSaveError('');
   }, [clearHeaderStripForm, clearOfferPacketDetailsForm]);
 
   const handleViewLine = useCallback((id) => {
@@ -476,12 +460,16 @@ export default function OfferPacketCreation() {
   return (
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <h1
-          className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
-          style={{ color: primary }}
-        >
-          OFFER PACKET CREATION
-        </h1>
+        <div className="flex min-w-0 shrink-0 flex-col gap-1">
+          <h1
+            className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl"
+            style={{ color: primary }}
+          >
+            OFFER PACKET CREATION
+          </h1>
+          {saveError && <p className="text-[10px] font-semibold text-red-600">{saveError}</p>}
+          {loading && <p className="text-[10px] font-semibold text-gray-500">Saving…</p>}
+        </div>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
@@ -490,10 +478,20 @@ export default function OfferPacketCreation() {
             type="button"
             className={`${figmaToolbarBtn} font-semibold text-black`}
             onClick={handleDeleteDocument}
-            aria-label="Delete offer packet creation document"
+            aria-label="Clear offer packet creation"
           >
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" />
-            Delete
+            Clear
+          </button>
+          <button
+            type="button"
+            className={primaryToolbarBtn}
+            style={{ backgroundColor: '#16a34a', borderColor: '#16a34a' }}
+            onClick={handleSavePacket}
+            disabled={loading}
+            aria-label="Save offer packet"
+          >
+            Save Packet
           </button>
           <button
             type="button"
@@ -503,8 +501,7 @@ export default function OfferPacketCreation() {
             aria-label="New offer packet creation"
           >
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
-            <span className="hidden min-[420px]:inline">New Offer Packet Creation</span>
-            <span className="min-[420px]:hidden">New</span>
+            <span className="hidden min-[420px]:inline">New</span>
           </button>
         </div>
       </div>

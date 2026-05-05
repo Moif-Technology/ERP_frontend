@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import FeatureGuard from './core/access/FeatureGuard.jsx';
+import LockedAccessPage from './core/access/LockedAccessPage.jsx';
 import Dashboard from './modules/backoffice/pages/Dashboard';
 import Home from './modules/backoffice/pages/Home';
 import ProductList from './modules/backoffice/pages/ProductList';
@@ -8,9 +10,13 @@ import SalesReturn from './modules/backoffice/pages/SalesReturn';
 import Quotation from './modules/backoffice/pages/Quotation';
 import QuotationList from './modules/backoffice/pages/QuotationList';
 import DeliveryOrder from './modules/backoffice/pages/DeliveryOrder';
+import DeliveryOrderList from './modules/backoffice/pages/DeliveryOrderList';
 import Purchase from './modules/backoffice/pages/Purchase';
 import PurchaseOrder from './modules/backoffice/pages/PurchaseOrder';
 import GoodsReceiveNote from './modules/backoffice/pages/GoodsReceiveNote';
+import PurchaseList from './modules/backoffice/pages/PurchaseList';
+import PurchaseOrderList from './modules/backoffice/pages/PurchaseOrderList';
+import GoodsReceiveNoteList from './modules/backoffice/pages/GoodsReceiveNoteList';
 import PurchaseVoucherEntry from './modules/backoffice/pages/PurchaseVoucherEntry';
 import PurchaseVoucherList from './modules/backoffice/pages/PurchaseVoucherList';
 import SalesVoucherEntry from './modules/backoffice/pages/SalesVoucherEntry';
@@ -43,21 +49,23 @@ import ProductPriceList from './modules/backoffice/pages/ProductPriceList';
 import CustomerList from './modules/backoffice/pages/CustomerList';
 import SupplierList from './modules/backoffice/pages/SupplierList';
 import AgentList from './modules/backoffice/pages/AgentList';
-import ListPlaceholderPage from './modules/backoffice/pages/ListPlaceholderPage';
 import StaffEntry from './modules/backoffice/pages/StaffEntry';
+import RoleEntry from './modules/backoffice/pages/RoleEntry';
+import RoleManagement from './modules/backoffice/pages/RoleManagement';
 import GroupEntry from './modules/backoffice/pages/GroupEntry';
 import SubGroupEntry from './modules/backoffice/pages/SubGroupEntry';
 import AreaEntry from './modules/backoffice/pages/AreaEntry';
 import TableEntry from './modules/backoffice/pages/TableEntry';
 import DamageEntry from './modules/backoffice/pages/DamageEntry';
+import DamageEntryList from './modules/backoffice/pages/DamageEntryList';
 import ProductMovement from './modules/backoffice/pages/ProductMovement';
 import AdditionalStockEntry from './modules/backoffice/pages/AdditionalStockEntry';
+import AdditionalStockEntryList from './modules/backoffice/pages/AdditionalStockEntryList';
 import StockAdjustment from './modules/backoffice/pages/StockAdjustment';
 import StockAdjustmentList from './modules/backoffice/pages/StockAdjustmentList';
 import ReorderList from './modules/backoffice/pages/ReorderList';
 import DealsOffersPlaceholderPage from './modules/backoffice/pages/DealsOffersPlaceholderPage';
 import DiscountEntry from './modules/backoffice/pages/DiscountEntry';
-import DiscountViewer from './modules/backoffice/pages/DiscountViewer';
 import GiftVoucherSettings from './modules/backoffice/pages/GiftVoucherSettings';
 import GiftVoucherViewer from './modules/backoffice/pages/GiftVoucherViewer';
 import OfferPacketCreation from './modules/backoffice/pages/OfferPacketCreation';
@@ -65,78 +73,153 @@ import OfferPacketList from './modules/backoffice/pages/OfferPacketList';
 import OfferPackingEntry from './modules/backoffice/pages/OfferPackingEntry';
 import OfferUnpackingEntry from './modules/backoffice/pages/OfferUnpackingEntry';
 
+// HR Module Pages
+import EmployeeList from './modules/hr/pages/EmployeeList';
+import EmployeeForm from './modules/hr/pages/EmployeeForm';
+import EmployeeProfile from './modules/hr/pages/EmployeeProfile';
+import HRDashboard from './modules/hr/pages/HRDashboard';
+import AttendanceOverview from './modules/hr/pages/AttendanceOverview';
+import ShiftMaster from './modules/hr/pages/ShiftMaster';
+import LeaveManagement from './modules/hr/pages/LeaveManagement';
+import LeaveTypeMaster from './modules/hr/pages/LeaveTypeMaster';
+import DocumentTypeMaster from './modules/hr/pages/DocumentTypeMaster';
+
+// CRM Module Pages
+import LeadListPage from './modules/crm/pages/LeadListPage';
+import LeadEntryPage from './modules/crm/pages/LeadEntryPage';
+import LeadWorkspacePage from './modules/crm/pages/LeadWorkspacePage';
+import CRMDashboard from './modules/crm/pages/CRMDashboard';
+import OpportunityListPage from './modules/crm/pages/OpportunityListPage';
+import OpportunityEntryPage from './modules/crm/pages/OpportunityEntryPage';
+import OpportunityWorkspacePage from './modules/crm/pages/OpportunityWorkspacePage';
+import FollowUpListPage from './modules/crm/pages/FollowUpListPage';
+import InteractionLogPage from './modules/crm/pages/InteractionLogPage';
+import LeadSourceMasterPage from './modules/crm/pages/LeadSourceMasterPage';
+import LeadStatusMasterPage from './modules/crm/pages/LeadStatusMasterPage';
+import OpportunityStageMasterPage from './modules/crm/pages/OpportunityStageMasterPage';
+
+const guarded = (element, features) => (
+  <FeatureGuard any={features}>{element}</FeatureGuard>
+);
+
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/products" element={<ProductList />} />
-      <Route path="/sales" element={<Sale />} />
-      <Route path="/sales-list" element={<SalesList />} />
-      <Route path="/sales-return" element={<SalesReturn />} />
-      <Route path="/quotation" element={<Quotation />} />
-      <Route path="/quotation-list" element={<QuotationList />} />
-      <Route path="/delivery-order" element={<DeliveryOrder />} />
-      <Route path="/purchase" element={<Purchase />} />
-      <Route path="/purchase-order" element={<PurchaseOrder />} />
-      <Route path="/goods-receive-note" element={<GoodsReceiveNote />} />
-      <Route path="/purchase-voucher-entry" element={<PurchaseVoucherEntry />} />
-      <Route path="/purchase-voucher-list" element={<PurchaseVoucherList />} />
-      <Route path="/sales-voucher-entry" element={<SalesVoucherEntry />} />
-      <Route path="/sales-voucher-list" element={<SalesVoucherList />} />
-      <Route path="/debit-note-entry" element={<DebitNoteEntry />} />
-      <Route path="/debit-note-list" element={<DebitNoteList />} />
-      <Route path="/credit-note-entry" element={<CreditNoteEntry />} />
-      <Route path="/credit-note-list" element={<CreditNoteList />} />
-      <Route path="/income-voucher" element={<IncomeVoucherEntry />} />
-      <Route path="/income-voucher-list" element={<IncomeVoucherList />} />
-      <Route path="/expense-voucher" element={<ExpenseVoucherEntry />} />
-      <Route path="/expense-voucher-list" element={<ExpenseVoucherList />} />
+      <Route path="/" element={guarded(<Dashboard />, 'backoffice.dashboard')} />
+      <Route path="/dashboard" element={guarded(<Dashboard />, 'backoffice.dashboard')} />
+      <Route path="/home" element={guarded(<Home />, 'backoffice.dashboard')} />
+      <Route path="/products" element={guarded(<ProductList />, ['backoffice.product_master', 'pos.product_search'])} />
+      <Route path="/sales" element={guarded(<Sale />, 'backoffice.sales')} />
+      <Route path="/sales-list" element={guarded(<SalesList />, 'backoffice.sales')} />
+      <Route path="/sales-return" element={guarded(<SalesReturn />, 'backoffice.sales')} />
+      <Route path="/quotation" element={guarded(<Quotation />, 'backoffice.sales_quotation')} />
+      <Route path="/quotation-list" element={guarded(<QuotationList />, 'backoffice.sales_quotation')} />
+      <Route path="/delivery-order" element={guarded(<DeliveryOrder />, 'backoffice.delivery_order')} />
+      <Route path="/delivery-order-list" element={guarded(<DeliveryOrderList />, 'backoffice.delivery_order')} />
+      <Route path="/purchase" element={guarded(<Purchase />, 'backoffice.purchase')} />
+      <Route path="/purchase-list" element={guarded(<PurchaseList />, 'backoffice.purchase')} />
+      <Route path="/purchase-order" element={guarded(<PurchaseOrder />, 'backoffice.purchase_order')} />
+      <Route path="/purchase-order-list" element={guarded(<PurchaseOrderList />, 'backoffice.purchase_order')} />
+      <Route path="/goods-receive-note" element={guarded(<GoodsReceiveNote />, 'backoffice.grn')} />
+      <Route path="/goods-receive-note-list" element={guarded(<GoodsReceiveNoteList />, 'backoffice.grn')} />
+      <Route path="/purchase-voucher-entry" element={guarded(<PurchaseVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/purchase-voucher-list" element={guarded(<PurchaseVoucherList />, 'backoffice.vouchers')} />
+      <Route path="/sales-voucher-entry" element={guarded(<SalesVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/sales-voucher-list" element={guarded(<SalesVoucherList />, 'backoffice.vouchers')} />
+      <Route path="/debit-note-entry" element={guarded(<DebitNoteEntry />, 'backoffice.vouchers')} />
+      <Route path="/debit-note-list" element={guarded(<DebitNoteList />, 'backoffice.vouchers')} />
+      <Route path="/credit-note-entry" element={guarded(<CreditNoteEntry />, 'backoffice.vouchers')} />
+      <Route path="/credit-note-list" element={guarded(<CreditNoteList />, 'backoffice.vouchers')} />
+      <Route path="/income-voucher" element={guarded(<IncomeVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/income-voucher-list" element={guarded(<IncomeVoucherList />, 'backoffice.vouchers')} />
+      <Route path="/expense-voucher" element={guarded(<ExpenseVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/expense-voucher-list" element={guarded(<ExpenseVoucherList />, 'backoffice.vouchers')} />
       <Route path="/income-expense-voucher-list" element={<Navigate to="/income-voucher-list" replace />} />
-      <Route path="/payment-voucher-supplier" element={<PaymentVoucherSupplierEntry />} />
-      <Route path="/payment-voucher" element={<PaymentVoucherEntry />} />
-      <Route path="/payment-voucher-list" element={<VoucherListPage title="PAYMENT VOUCHER LIST" filterVoucherTypeId={4} />} />
-      <Route path="/receipt-voucher-customer" element={<ReceiptVoucherCustomerEntry />} />
-      <Route path="/receipt-voucher-entry" element={<ReceiptVoucherEntry />} />
-      <Route path="/receipt-voucher-list" element={<VoucherListPage title="RECEIPT VOUCHER LIST" filterVoucherTypeId={2} />} />
-      <Route path="/contra-voucher-entry" element={<ContraVoucherEntry />} />
-      <Route path="/journal-voucher-entry" element={<JournalVoucherEntry />} />
-      <Route path="/contra-journal-voucher-list" element={<VoucherListPage title="CONTRA / JOURNAL VOUCHER LIST" />} />
-      <Route path="/account-group-details" element={<AccountGroupDetails />} />
-      <Route path="/account-ledger-details" element={<AccountLedgerDetails />} />
-      <Route path="/trial-balance" element={<TrialBalance />} />
-      <Route path="/statement-payable-summary" element={<PayableSummary />} />
-      <Route path="/statement-receivable-summary" element={<ReceivableSummary />} />
-      <Route path="/statement-of-accounts-list" element={<VoucherListPage title="STATEMENT OF ACCOUNTS" />} />
-      <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
-      <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
-      <Route path="/data-entry/product-entry" element={<ProductEntry />} />
-      <Route path="/data-entry/staff-entry" element={<StaffEntry />} />
-      <Route path="/data-entry/group-entry" element={<GroupEntry />} />
-      <Route path="/data-entry/sub-group-entry" element={<SubGroupEntry />} />
-      <Route path="/data-entry/area-entry" element={<AreaEntry />} />
-      <Route path="/data-entry/table-entry" element={<TableEntry />} />
-      <Route path="/lists/product-price-list" element={<ProductPriceList />} />
-      <Route path="/lists/customer-list" element={<CustomerList />} />
-      <Route path="/lists/supplier-list" element={<SupplierList />} />
-      <Route path="/lists/agent-list" element={<AgentList />} />
+      <Route path="/payment-voucher-supplier" element={guarded(<PaymentVoucherSupplierEntry />, 'backoffice.vouchers')} />
+      <Route path="/payment-voucher" element={guarded(<PaymentVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/payment-voucher-list" element={guarded(<VoucherListPage title="PAYMENT VOUCHER LIST" filterVoucherTypeId={4} />, 'backoffice.vouchers')} />
+      <Route path="/receipt-voucher-customer" element={guarded(<ReceiptVoucherCustomerEntry />, 'backoffice.vouchers')} />
+      <Route path="/receipt-voucher-entry" element={guarded(<ReceiptVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/receipt-voucher-list" element={guarded(<VoucherListPage title="RECEIPT VOUCHER LIST" filterVoucherTypeId={2} />, 'backoffice.vouchers')} />
+      <Route path="/contra-voucher-entry" element={guarded(<ContraVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/journal-voucher-entry" element={guarded(<JournalVoucherEntry />, 'backoffice.vouchers')} />
+      <Route path="/contra-journal-voucher-list" element={guarded(<VoucherListPage title="CONTRA / JOURNAL VOUCHER LIST" />, 'backoffice.vouchers')} />
+      <Route path="/account-group-details" element={guarded(<AccountGroupDetails />, 'backoffice.accounts')} />
+      <Route path="/account-ledger-details" element={guarded(<AccountLedgerDetails />, 'backoffice.accounts')} />
+      <Route path="/trial-balance" element={guarded(<TrialBalance />, 'backoffice.accounts')} />
+      <Route path="/financials" element={<Navigate to="/trial-balance" replace />} />
+      <Route path="/statement-payable-summary" element={guarded(<PayableSummary />, 'backoffice.accounts')} />
+      <Route path="/statement-receivable-summary" element={guarded(<ReceivableSummary />, 'backoffice.accounts')} />
+      <Route path="/statement-of-accounts-list" element={guarded(<VoucherListPage title="STATEMENT OF ACCOUNTS" />, 'backoffice.accounts')} />
+      <Route path="/data-entry/customer-entry" element={guarded(<CustomerEntry />, ['core.customers', 'backoffice.customers'])} />
+      <Route path="/data-entry/supplier-entry" element={guarded(<SupplierEntry />, ['core.suppliers', 'backoffice.suppliers'])} />
+      <Route path="/data-entry/product-entry" element={guarded(<ProductEntry />, 'backoffice.product_master')} />
+      <Route path="/data-entry/staff-entry" element={guarded(<StaffEntry />, ['core.users', 'backoffice.staff'])} />
+      <Route path="/data-entry/role-entry" element={guarded(<RoleEntry />, 'core.roles')} />
+      <Route path="/configuration/handle-permissions" element={guarded(<RoleManagement />, ['core.roles', 'core.permissions'])} />
+      <Route path="/data-entry/roles" element={<Navigate to="/configuration/handle-permissions" replace />} />
+      <Route path="/data-entry/group-entry" element={guarded(<GroupEntry />, 'backoffice.product_group')} />
+      <Route path="/data-entry/sub-group-entry" element={guarded(<SubGroupEntry />, 'backoffice.product_group')} />
+      <Route path="/data-entry/area-entry" element={guarded(<AreaEntry />, ['backoffice.area_master', 'pos.areas'])} />
+      <Route path="/data-entry/table-entry" element={guarded(<TableEntry />, ['backoffice.table_master', 'pos.tables'])} />
+      <Route path="/lists/product-price-list" element={guarded(<ProductPriceList />, 'backoffice.product_master')} />
+      <Route path="/lists/customer-list" element={guarded(<CustomerList />, ['core.customers', 'backoffice.customers', 'crm'])} />
+      <Route path="/lists/supplier-list" element={guarded(<SupplierList />, ['core.suppliers', 'backoffice.suppliers', 'backoffice.purchase'])} />
+      <Route path="/lists/agent-list" element={guarded(<AgentList />, 'backoffice.staff')} />
       <Route path="/stock-hub" element={<Navigate to="/stock-hub/stock-adjustment" replace />} />
-      <Route path="/stock-hub/stock-adjustment-list" element={<StockAdjustmentList />} />
-      <Route path="/stock-hub/reorder-list" element={<ReorderList />} />
-      <Route path="/stock-hub/stock-adjustment" element={<StockAdjustment />} />
-      <Route path="/stock-hub/damage-entry" element={<DamageEntry />} />
-      <Route path="/stock-hub/additional-stock-entry" element={<AdditionalStockEntry />} />
-      <Route path="/stock-hub/product-movement" element={<ProductMovement />} />
+      <Route path="/stock-hub/stock-adjustment-list" element={guarded(<StockAdjustmentList />, 'backoffice.stock_adjustment')} />
+      <Route path="/stock-hub/reorder-list" element={guarded(<ReorderList />, 'backoffice.reorder')} />
+      <Route path="/stock-hub/stock-adjustment" element={guarded(<StockAdjustment />, 'backoffice.stock_adjustment')} />
+      <Route path="/stock-hub/stock-adjustment/:id" element={guarded(<StockAdjustment />, 'backoffice.stock_adjustment')} />
+      <Route path="/stock-hub/damage-entry" element={guarded(<DamageEntry />, 'backoffice.damage_entry')} />
+      <Route path="/stock-hub/damage-entry/:id" element={guarded(<DamageEntry />, 'backoffice.damage_entry')} />
+      <Route path="/stock-hub/damage-entry-list" element={guarded(<DamageEntryList />, 'backoffice.damage_entry')} />
+      <Route path="/stock-hub/additional-stock-entry" element={guarded(<AdditionalStockEntry />, 'backoffice.stock_entry')} />
+      <Route path="/stock-hub/additional-stock-entry/:id" element={guarded(<AdditionalStockEntry />, 'backoffice.stock_entry')} />
+      <Route path="/stock-hub/additional-stock-entry-list" element={guarded(<AdditionalStockEntryList />, 'backoffice.stock_entry')} />
+      <Route path="/stock-hub/product-movement" element={guarded(<ProductMovement />, 'backoffice.product_movement')} />
       <Route path="/deals-offers" element={<Navigate to="/deals-offers/discount-entry" replace />} />
-      <Route path="/deals-offers/discount-entry" element={<DiscountEntry />} />
-      <Route path="/deals-offers/discount-viewer" element={<DiscountViewer />} />
-      <Route path="/deals-offers/gift-voucher-settings" element={<GiftVoucherSettings />} />
-      <Route path="/deals-offers/gift-voucher-viewer" element={<GiftVoucherViewer />} />
-      <Route path="/deals-offers/offer-packet-creation" element={<OfferPacketCreation />} />
-      <Route path="/deals-offers/offer-packing-entry" element={<OfferPackingEntry />} />
-      <Route path="/deals-offers/offer-unpacking-entry" element={<OfferUnpackingEntry />} />
-      <Route path="/deals-offers/offer-packet-list" element={<OfferPacketList />} />
+      <Route path="/deals-offers/discount-entry" element={guarded(<DiscountEntry />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/discount-viewer" element={<Navigate to="/deals-offers/discount-entry" replace />} />
+      <Route path="/deals-offers/gift-voucher-settings" element={guarded(<GiftVoucherSettings />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/gift-voucher-viewer" element={guarded(<GiftVoucherViewer />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/offer-packet-creation" element={guarded(<OfferPacketCreation />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/offer-packing-entry" element={guarded(<OfferPackingEntry />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/offer-unpacking-entry" element={guarded(<OfferUnpackingEntry />, 'backoffice.deals_offers')} />
+      <Route path="/deals-offers/offer-packet-list" element={guarded(<OfferPacketList />, 'backoffice.deals_offers')} />
+
+      {/* HR Module */}
+      <Route path="/hr" element={<Navigate to="/hr/dashboard" replace />} />
+      <Route path="/hr/dashboard" element={guarded(<HRDashboard />, 'hr.dashboard')} />
+      <Route path="/hr/employees" element={guarded(<EmployeeList />, 'hr.employee_master')} />
+      <Route path="/hr/employee-entry" element={guarded(<EmployeeForm />, 'hr.employee_master')} />
+      <Route path="/hr/employee-entry/:id" element={guarded(<EmployeeForm />, 'hr.employee_master')} />
+      <Route path="/hr/employee-profile/:id" element={guarded(<EmployeeProfile />, 'hr.employee_master')} />
+      <Route path="/hr/attendance" element={guarded(<AttendanceOverview />, 'hr.attendance')} />
+      <Route path="/hr/leave-management" element={guarded(<LeaveManagement />, 'hr.leave')} />
+      <Route path="/hr/shift-master" element={guarded(<ShiftMaster />, 'hr.shifts')} />
+      <Route path="/hr/leave-type-master" element={guarded(<LeaveTypeMaster />, 'hr.leave')} />
+      <Route path="/hr/document-type-master" element={guarded(<DocumentTypeMaster />, 'hr.document_types')} />
+
+      {/* CRM Module */}
+      <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
+      <Route path="/crm/dashboard" element={guarded(<CRMDashboard />, 'crm.dashboard')} />
+      <Route path="/crm/leads" element={guarded(<LeadListPage />, 'crm.leads')} />
+      <Route path="/crm/lead-entry" element={guarded(<LeadEntryPage />, 'crm.leads')} />
+      <Route path="/crm/lead-entry/:id" element={guarded(<LeadEntryPage />, 'crm.leads')} />
+      <Route path="/crm/lead-workspace/:id" element={guarded(<LeadWorkspacePage />, 'crm.leads')} />
+      <Route path="/crm/opportunities" element={guarded(<OpportunityListPage />, 'crm.opportunities')} />
+      <Route path="/crm/opportunity-entry" element={guarded(<OpportunityEntryPage />, 'crm.opportunities')} />
+      <Route path="/crm/opportunity-entry/:id" element={guarded(<OpportunityEntryPage />, 'crm.opportunities')} />
+      <Route path="/crm/opportunity-workspace/:id" element={guarded(<OpportunityWorkspacePage />, 'crm.opportunities')} />
+      <Route path="/crm/followups" element={guarded(<FollowUpListPage />, 'crm.followups')} />
+      <Route path="/crm/interactions" element={guarded(<InteractionLogPage />, 'crm.interactions')} />
+      <Route path="/crm/masters/lead-sources" element={guarded(<LeadSourceMasterPage />, 'crm.lead_sources')} />
+      <Route path="/crm/masters/lead-statuses" element={guarded(<LeadStatusMasterPage />, 'crm.lead_statuses')} />
+      <Route path="/crm/masters/opportunity-stages" element={guarded(<OpportunityStageMasterPage />, 'crm.opportunity_stages')} />
+
+      <Route path="/locked" element={<LockedAccessPage />} />
+
       <Route
         path="*"
         element={

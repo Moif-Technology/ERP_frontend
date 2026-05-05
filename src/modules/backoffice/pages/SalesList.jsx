@@ -1,4 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getSessionUser } from '../../../core/auth/auth.service.js';
+import * as saleEntryApi from '../../../services/saleEntry.api.js';
+import * as staffEntryApi from '../../../services/staffEntry.api.js';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
@@ -21,84 +24,12 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   );
 }
 
-const STATIONS = ['Main', 'North', 'South', 'Warehouse A', 'Express'];
-
-const DUMMY_CUSTOMER_NAMES = [
-  'Al Noor Trading LLC',
-  'Gulf Fresh Markets',
-  'City Hyper Stores',
-  'Prime Wholesale Co.',
-  'Emirates Retail Group',
-  'Desert Bloom Supplies',
-  'Harbor View Trading',
-  'Oasis Foods LLC',
-  'Metro Cash & Carry',
-  'Sunrise General Trading',
-  'Pearl Coast Distributors',
-  'Falcon Electronics',
-  'Royal Star Hypermarket',
-  'Blue Wave Imports',
-  'Golden Sands Wholesale',
-];
-
-const PAYMENT_MODES = ['Cash', 'Card', 'Credit', 'Cheque', 'Split'];
-const SALESMEN = ['Ahmed K.', 'Sara M.', 'James R.', 'Priya N.', 'Omar H.'];
-const POST_STATUS_OPTIONS = ['Draft', 'Posted'];
-const TRANSACTION_TYPES = ['Cash sale', 'Credit sale', 'Wholesale', 'Retail', 'Export'];
-
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
 /** Checkbox + Sl no, Bill no, Counter, Bill date, Time, Payment mode, Local bill no, Customer LP, Customer, TRN, Salesman, Subtotal, Disc, Tax, Round off, Amount, Post status, Counter close, Remarks, STN */
 const SALES_LIST_COL_PCT = [
   2, 2.5, 5, 3, 5, 4, 5, 5, 4, 12.5, 5, 5, 5, 4, 4, 3, 5, 4, 4, 9, 4,
 ];
-
-function buildDummySales(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const seq = 1200 - i;
-    const d = 1 + (i % 28);
-    const m = 1 + (i % 4);
-    const y = 2026;
-    const billDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
-    const h = 9 + (i % 12);
-    const min = (i * 11) % 60;
-    const billTime = `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-    const sub = 1800 + (i * 211) % 48000 + (i % 5) * 77.25;
-    const disc = (i % 5 === 0 ? 0 : ((i * 37) % 800) + (i % 9) * 15.5).toFixed(2);
-    const tax = (sub * 0.05 + (i % 3) * 12).toFixed(2);
-    const roundOff = (i % 7 === 0 ? -0.15 : i % 7 === 1 ? 0.2 : 0).toFixed(2);
-    const amountNum = sub - Number(disc) + Number(tax) + Number(roundOff);
-    const amount = amountNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const subStr = sub.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    rows.push({
-      id: String(i + 1),
-      station: STATIONS[i % STATIONS.length],
-      billNo: `BILL-2026-${String(seq).padStart(5, '0')}`,
-      counter: String(1 + (i % 4)),
-      billDate,
-      billTime,
-      paymentMode: PAYMENT_MODES[i % PAYMENT_MODES.length],
-      localBillNo: `LB-${(10000 + i * 17) % 90000}`,
-      customerLpNo: `LP-${7000 + (i * 19) % 4000}`,
-      customerName: DUMMY_CUSTOMER_NAMES[i % DUMMY_CUSTOMER_NAMES.length],
-      trnNo: `100-${(200000000 + i * 100001) % 900000000}`,
-      salesMan: SALESMEN[i % SALESMEN.length],
-      subTotal: subStr,
-      discount: disc,
-      taxAmount: tax,
-      roundOffAdj: roundOff,
-      amount,
-      postStatus: i % 8 === 0 ? 'Draft' : 'Posted',
-      transactionType: TRANSACTION_TYPES[i % TRANSACTION_TYPES.length],
-      counterClose: i % 6 === 0 ? 'Open' : 'Closed',
-      remarks: i % 4 === 0 ? 'Walk-in' : i % 4 === 1 ? 'Urgent delivery' : '—',
-    });
-  }
-  return rows;
-}
-
-const DUMMY_SALES = buildDummySales(48);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -129,8 +60,74 @@ function parseBillDate(ddmmyyyy) {
   return dt;
 }
 
+function displayOrDash(value) {
+  const s = String(value ?? '').trim();
+  return s || '-';
+}
+
+function formatMoney(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '0.00';
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatApiDate(value) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  const d = String(dt.getDate()).padStart(2, '0');
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const y = dt.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
+function formatApiTime(value) {
+  if (!value) return '-';
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return '-';
+  return `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+}
+
+function branchLabel(branch) {
+  return [branch.branchCode, branch.branchName].filter(Boolean).join(' - ') || `Branch ${branch.branchId}`;
+}
+
+function mapApiSale(row, branchMap) {
+  const branchId = row.branchId != null ? String(row.branchId) : '';
+  return {
+    id: String(row.salesId ?? row.billNo ?? branchId),
+    station: branchMap.get(branchId) || (branchId ? `Branch ${branchId}` : '-'),
+    billNo: displayOrDash(row.billNo),
+    counter: displayOrDash(row.counterNo),
+    billDate: formatApiDate(row.billDate),
+    billTime: formatApiTime(row.billTime || row.billDate),
+    paymentMode: displayOrDash(row.paymentMode),
+    localBillNo: displayOrDash(row.billNo),
+    customerLpNo: displayOrDash(row.customerCode),
+    customerName: displayOrDash(row.customerName),
+    trnNo: displayOrDash(row.trnNo),
+    salesMan: displayOrDash(row.salesMan),
+    subTotal: formatMoney(row.subTotal),
+    discount: formatMoney(row.discount),
+    taxAmount: formatMoney(row.taxAmount),
+    roundOffAdj: formatMoney(row.roundOffAdjustment),
+    amount: formatMoney(row.amount),
+    postStatus: displayOrDash(row.postStatus),
+    transactionType: displayOrDash(row.transactionType),
+    counterClose: displayOrDash(row.counterClose),
+    remarks: displayOrDash(row.remarks),
+  };
+}
+
 export default function SalesList() {
-  const [sales, setSales] = useState(() => DUMMY_SALES.map((r) => ({ ...r })));
+  const user = getSessionUser();
+  const [sales, setSales] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [branchId, setBranchId] = useState('');
+  const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingSales, setLoadingSales] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState('');
   const [dateModalOpen, setDateModalOpen] = useState(false);
   const [appliedDateRange, setAppliedDateRange] = useState(null);
@@ -146,6 +143,73 @@ export default function SalesList() {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingBranches(true);
+      setLoadError('');
+      try {
+        const { data } = await staffEntryApi.fetchStaffBranches();
+        if (cancelled) return;
+        const list = data.branches || [];
+        setBranches(list);
+        const station = user?.stationId != null ? String(user.stationId) : '';
+        const stationInList = list.some((branch) => String(branch.branchId) === station);
+        if (list.length === 1) setBranchId(String(list[0].branchId));
+        else if (stationInList) setBranchId(station);
+        else if (list[0]) setBranchId(String(list[0].branchId));
+        else setBranchId('');
+      } catch {
+        if (!cancelled) {
+          setBranches([]);
+          setLoadError('Could not load branches.');
+        }
+      } finally {
+        if (!cancelled) setLoadingBranches(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.stationId]);
+
+  const branchMap = useMemo(
+    () => new Map(branches.map((branch) => [String(branch.branchId), branchLabel(branch)])),
+    [branches],
+  );
+
+  useEffect(() => {
+    if (loadingBranches) return undefined;
+    if (!branchId) {
+      setSales([]);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingSales(true);
+      setLoadError('');
+      try {
+        const { data } = await saleEntryApi.listSales({
+          branchId: Number(branchId),
+          limit: 200,
+          offset: 0,
+        });
+        if (cancelled) return;
+        setSales((data.sales || []).map((row) => mapApiSale(row, branchMap)));
+      } catch (err) {
+        if (!cancelled) {
+          setSales([]);
+          setLoadError(err.response?.data?.message || 'Could not load sales.');
+        }
+      } finally {
+        if (!cancelled) setLoadingSales(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId, branchMap, loadingBranches, refreshKey]);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -187,6 +251,26 @@ export default function SalesList() {
     if (salesFilters.transactionType) n += 1;
     return n;
   }, [salesFilters]);
+
+  const branchOptions = useMemo(
+    () => branches.map((branch) => ({ value: String(branch.branchId), label: branchLabel(branch) })),
+    [branches],
+  );
+
+  const stationOptions = useMemo(
+    () => Array.from(new Set(sales.map((row) => row.station).filter((v) => v && v !== '-'))).sort(),
+    [sales],
+  );
+
+  const postStatusOptions = useMemo(
+    () => Array.from(new Set(sales.map((row) => row.postStatus).filter((v) => v && v !== '-'))).sort(),
+    [sales],
+  );
+
+  const transactionTypeOptions = useMemo(
+    () => Array.from(new Set(sales.map((row) => row.transactionType).filter((v) => v && v !== '-'))).sort(),
+    [sales],
+  );
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -370,6 +454,14 @@ export default function SalesList() {
             <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
             Edit
           </button>
+          <button
+            type="button"
+            className={figmaToolbarBtn}
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loadingBranches || loadingSales}
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -386,6 +478,27 @@ export default function SalesList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
+          {branchOptions.length > 1 ? (
+            <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+              <select
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                aria-label="Branch"
+                disabled={loadingBranches || loadingSales}
+              >
+                {branchOptions.map((branch) => (
+                  <option key={branch.value} value={branch.value}>
+                    {branch.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+                <ToolbarChevron />
+              </span>
+            </div>
+          ) : null}
+
           {selectedRowCount >= 1 ? (
             <button
               type="button"
@@ -458,12 +571,24 @@ export default function SalesList() {
       <SalesFilterDrawer
         open={filterDrawerOpen}
         onClose={() => setFilterDrawerOpen(false)}
-        stations={STATIONS}
-        postStatusOptions={POST_STATUS_OPTIONS}
-        transactionTypeOptions={TRANSACTION_TYPES}
+        stations={stationOptions}
+        postStatusOptions={postStatusOptions}
+        transactionTypeOptions={transactionTypeOptions}
         applied={salesFilters}
         onApply={setSalesFilters}
       />
+
+      {loadingBranches || loadingSales || loadError ? (
+        <div
+          className={`shrink-0 rounded border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.08em] ${
+            loadError ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          {loadingBranches || loadingSales ? 'Loading sales...' : loadError}
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <CommonTable
