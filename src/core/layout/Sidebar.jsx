@@ -68,6 +68,15 @@ import GarageGatePassViewerIcon from '../../shared/assets/icons/garage-gate-pass
 import GaragePunchingEntryIcon from '../../shared/assets/icons/garage-punching-entry.svg';
 import GarageJobCodePunchingIcon from '../../shared/assets/icons/garage-job-code-punching.svg';
 import GaragePunchingListIcon from '../../shared/assets/icons/garage-punching-list.svg';
+import GaragePreJobCardEntryIcon from '../../shared/assets/icons/garage-pre-job-card-entry.svg';
+import GarageAdditionalVehicleHistoryIcon from '../../shared/assets/icons/garage-additional-vehicle-history.svg';
+import GarageSubletLpoIcon from '../../shared/assets/icons/garage-sublet-lpo.svg';
+import GarageConsumableEntryIcon from '../../shared/assets/icons/garage-consumable-entry.svg';
+import GarageLubricantMonitorIcon from '../../shared/assets/icons/garage-lubricant-monitor.svg';
+import GarageConsumableMonitorIcon from '../../shared/assets/icons/garage-consumable-monitor.svg';
+import GarageSubletMonitorIcon from '../../shared/assets/icons/garage-sublet-monitor.svg';
+import GarageHomeIcon from '../../shared/assets/icons/garage-home.svg';
+import GarageDashboardIcon from '../../shared/assets/icons/garage-dashboard.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
@@ -172,6 +181,15 @@ const menuItems = [
       { label: 'Punching Entry', to: '/garage/punching-entry', icon: GaragePunchingEntryIcon },
       { label: 'Job Code Punching', to: '/garage/job-code-punching', icon: GarageJobCodePunchingIcon },
       { label: 'Punching List', to: '/garage/punching-list', icon: GaragePunchingListIcon },
+      { label: 'Pre Job Card Entry', to: '/garage/pre-job-card-entry', icon: GaragePreJobCardEntryIcon },
+      { label: 'Additional Vehicle History', to: '/garage/additional-vehicle-history', icon: GarageAdditionalVehicleHistoryIcon },
+      { label: 'Sublet Lpo', to: '/garage/sublet-lpo', icon: GarageSubletLpoIcon },
+      { label: 'Consumable Entry', to: '/garage/consumable-entry', icon: GarageConsumableEntryIcon },
+      { label: 'Lubricant Monitor', to: '/garage/lubricant-monitor', icon: GarageLubricantMonitorIcon },
+      { label: 'Consumable Monitor', to: '/garage/consumable-monitor', icon: GarageConsumableMonitorIcon },
+      { label: 'Sublet Monitor', to: '/garage/sublet-monitor', icon: GarageSubletMonitorIcon },
+      { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
+      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
     ],
   },
 
@@ -184,15 +202,7 @@ const menuItems = [
 export default function Sidebar() {
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({
-    List: true,
-    'Stock Hub': false,
-    Financials: false,
-    'Deals & Offers': false,
-    'Human Resources': false,
-    CRM: false,
-    Garage: false,
-  });
+  const [openMenus, setOpenMenus] = useState({});
 
   useEffect(() => {
     const onListSection =
@@ -216,8 +226,11 @@ export default function Sidebar() {
       setOpenMenus((prev) => ({ ...prev, 'Human Resources': true }));
     }
     if (location.pathname.startsWith('/crm')) {
-  setOpenMenus((prev) => ({ ...prev, CRM: true }));
-}
+      setOpenMenus((prev) => ({ ...prev, CRM: true }));
+    }
+    if (location.pathname.startsWith('/garage')) {
+      setOpenMenus((prev) => ({ ...prev, Garage: true }));
+    }
   }, [location.pathname]);
 
   const toggleMenu = (label) =>

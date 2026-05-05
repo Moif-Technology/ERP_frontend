@@ -1,0 +1,17 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clipboard body -->
+  <rect x="2" y="3.5" width="10.5" height="12.5" rx="1.1" stroke="black" stroke-width="1.05"/>
+  <!-- Clipboard clip -->
+  <path d="M5.5 3.5V2.8C5.5 2.36 5.86 2 6.3 2h2.9c.44 0 .8.36.8.8v.7" stroke="black" stroke-width="1" stroke-linecap="round"/>
+  <!-- Tick row 1 -->
+  <polyline points="4.5,8 5.5,9 7.5,7" stroke="black" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="8" x2="11.5" y2="8" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- Tick row 2 -->
+  <polyline points="4.5,11 5.5,12 7.5,10" stroke="black" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="11" x2="11.5" y2="11" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- Mini clock badge (pre) -->
+  <circle cx="14.5" cy="4" r="2.8" stroke="black" stroke-width="1" fill="white"/>
+  <circle cx="14.5" cy="4" r="0.4" fill="black"/>
+  <line x1="14.5" y1="4" x2="14.5" y2="2.5" stroke="black" stroke-width="0.8" stroke-linecap="round"/>
+  <line x1="14.5" y1="4" x2="15.7" y2="4.8" stroke="black" stroke-width="0.8" stroke-linecap="round"/>
+</svg>

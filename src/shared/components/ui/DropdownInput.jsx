@@ -34,7 +34,7 @@ export default function DropdownInput({ label, value, onChange, options = [], pl
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
           className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-1.5 pr-6 py-0 outline-none sm:pl-2 ${className ?? ''}`.trim()}
-          style={{ fontSize: uiFontSizes.input, height: '100%', boxSizing: 'border-box', color: '#000', accentColor: '#BB8295' }}
+          style={{ fontSize: uiFontSizes.input, height: '100%', boxSizing: 'border-box', color: '#000', accentColor: '#790728' }}
           {...props}
         >
           {placeholder && (

@@ -1,4 +1,6 @@
 export { default as InputField } from './InputField';
+export { default as DatePickerInput } from './DatePickerInput';
+export { default as TimePickerInput } from './TimePickerInput';
 export { default as DropdownInput } from './DropdownInput';
 export { default as SubInputField } from './SubInputField';
 export { default as DateInputField } from './DateInputField';

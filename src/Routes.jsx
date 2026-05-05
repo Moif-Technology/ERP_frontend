@@ -100,6 +100,15 @@ import GatePassViewer from './modules/garage/pages/GatePassViewer';
 import PunchingEntry from './modules/garage/pages/PunchingEntry';
 import JobCodePunching from './modules/garage/pages/JobCodePunching';
 import PunchingList from './modules/garage/pages/PunchingList';
+import PreJobCardEntry from './modules/garage/pages/PreJobCardEntry';
+import AdditionalVehicleHistory from './modules/garage/pages/AdditionalVehicleHistory';
+import SubletLpo from './modules/garage/pages/SubletLpo';
+import ConsumableEntry from './modules/garage/pages/ConsumableEntry';
+import LubricantMonitor from './modules/garage/pages/LubricantMonitor';
+import ConsumableMonitor from './modules/garage/pages/ConsumableMonitor';
+import SubletMonitor from './modules/garage/pages/SubletMonitor';
+import GarageHome from './modules/garage/pages/GarageHome';
+import GarageDashboard from './modules/garage/pages/GarageDashboard';
 
 export default function AppRoutes() {
   return (
@@ -166,6 +175,15 @@ export default function AppRoutes() {
       <Route path="/garage/punching-entry" element={<PunchingEntry />} />
       <Route path="/garage/job-code-punching" element={<JobCodePunching />} />
       <Route path="/garage/punching-list" element={<PunchingList />} />
+      <Route path="/garage/pre-job-card-entry" element={<PreJobCardEntry />} />
+      <Route path="/garage/additional-vehicle-history" element={<AdditionalVehicleHistory />} />
+      <Route path="/garage/sublet-lpo" element={<SubletLpo />} />
+      <Route path="/garage/consumable-entry" element={<ConsumableEntry />} />
+      <Route path="/garage/lubricant-monitor" element={<LubricantMonitor />} />
+      <Route path="/garage/consumable-monitor" element={<ConsumableMonitor />} />
+      <Route path="/garage/sublet-monitor" element={<SubletMonitor />} />
+      <Route path="/garage/home" element={<GarageHome />} />
+      <Route path="/garage/dashboard" element={<GarageDashboard />} />
       <Route path="/data-entry/customer-entry" element={<CustomerEntry />} />
       <Route path="/data-entry/supplier-entry" element={<SupplierEntry />} />
       <Route path="/data-entry/product-entry" element={<ProductEntry />} />
