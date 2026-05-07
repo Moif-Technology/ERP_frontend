@@ -128,6 +128,11 @@ import ConsumableMonitor from './modules/garage/pages/ConsumableMonitor';
 import SubletMonitor from './modules/garage/pages/SubletMonitor';
 import GarageHome from './modules/garage/pages/GarageHome';
 import GarageDashboard from './modules/garage/pages/GarageDashboard';
+import VehicleEntry from './modules/garage/pages/VehicleEntry';
+import VehicleList from './modules/garage/pages/VehicleList';
+import ColorEntry from './modules/garage/pages/ColorEntry';
+import CarGroupEntry from './modules/garage/pages/CarGroupEntry';
+import CarSubGroupEntry from './modules/garage/pages/CarSubGroupEntry';
 
 const guarded = (element, features) => (
   <FeatureGuard any={features}>{element}</FeatureGuard>
@@ -249,6 +254,12 @@ export default function AppRoutes() {
       <Route path="/garage/sublet-monitor" element={<SubletMonitor />} />
       <Route path="/garage/home" element={<GarageHome />} />
       <Route path="/garage/dashboard" element={<GarageDashboard />} />
+      <Route path="/garage/vehicle-list" element={<VehicleList />} />
+      <Route path="/garage/vehicle-entry" element={<VehicleEntry />} />
+      <Route path="/garage/vehicle-entry/:id" element={<VehicleEntry />} />
+      <Route path="/garage/color-entry" element={<ColorEntry />} />
+      <Route path="/garage/car-group-entry" element={<CarGroupEntry />} />
+      <Route path="/garage/car-sub-group-entry" element={<CarSubGroupEntry />} />
 
       {/* HR Module */}
       <Route path="/hr" element={<Navigate to="/hr/dashboard" replace />} />

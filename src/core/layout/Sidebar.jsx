@@ -74,6 +74,7 @@ import GarageConsumableMonitorIcon from '../../shared/assets/icons/garage-consum
 import GarageSubletMonitorIcon from '../../shared/assets/icons/garage-sublet-monitor.svg';
 import GarageHomeIcon from '../../shared/assets/icons/garage-home.svg';
 import GarageDashboardIcon from '../../shared/assets/icons/garage-dashboard.svg';
+import GarageVehicleEntryIcon from '../../shared/assets/icons/garage-vehicle-history.svg';
 import ChevronDown from '../../shared/assets/chevron-down.svg';
 import SearchIcon from '../../shared/assets/iconsax-search.svg';
 
@@ -198,6 +199,13 @@ const menuItems = [
     label: 'Garage',
     icon: GarageModuleIcon,
     subItems: [
+      { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
+      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
+      { label: 'Vehicle list', to: '/garage/vehicle-list', icon: GarageVehicleEntryIcon },
+      { label: 'Vehicle entry', to: '/garage/vehicle-entry', icon: GarageVehicleEntryIcon },
+      { label: 'Color entry', to: '/garage/color-entry', icon: GarageVehicleEntryIcon },
+      { label: 'Car group entry', to: '/garage/car-group-entry', icon: GarageVehicleEntryIcon },
+      { label: 'Car sub group entry', to: '/garage/car-sub-group-entry', icon: GarageVehicleEntryIcon },
       { label: 'Technician entry', to: '/garage/technician-entry', icon: GarageTechnicianEntryIcon },
       { label: 'Job description entry', to: '/garage/job-description-entry', icon: GarageJobDescriptionIcon },
       { label: 'Branch entry', to: '/garage/branch-entry', icon: GarageBranchEntryIcon },
@@ -214,8 +222,6 @@ const menuItems = [
       { label: 'Lubricant monitor', to: '/garage/lubricant-monitor', icon: GarageLubricantMonitorIcon },
       { label: 'Consumable monitor', to: '/garage/consumable-monitor', icon: GarageConsumableMonitorIcon },
       { label: 'Sublet monitor', to: '/garage/sublet-monitor', icon: GarageSubletMonitorIcon },
-      { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
-      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
     ],
   },
   { label: 'Reports', to: '/reports', icon: ReportsIcon, features: ['backoffice.reports', 'hr.reports', 'crm.reports'] },
@@ -316,7 +322,7 @@ export default function Sidebar() {
                   className="mx-1 flex items-center justify-between p-2 rounded-[10px] cursor-pointer text-sm font-light transition backdrop-blur-md hover:backdrop-blur-lg hover:bg-white/8"
                 >
                   <div className="flex items-center gap-3">
-                    <img src={item.icon} alt="" className="w-4 h-4" />
+                    <img src={item.icon} alt="" className="w-4 h-4 filter brightness-0 invert" />
                     <span>{item.label}</span>
                   </div>
                   <img
@@ -342,7 +348,7 @@ export default function Sidebar() {
                   <img
                     src={item.icon}
                     alt=""
-                    className={`w-4 h-4 ${item.label === 'Home' ? 'filter brightness-0 invert' : ''}`.trim()}
+                    className={`w-4 h-4 ${item.label === 'Home' || item.label === 'Garage' ? 'filter brightness-0 invert' : ''}`.trim()}
                   />
                   <span>{item.label}</span>
                 </NavLink>
@@ -358,7 +364,8 @@ export default function Sidebar() {
                       sub.label === 'Product entry' ||
                       item.label === 'List' ||
                       item.label === 'Stock Hub' ||
-                      item.label === 'Deals & Offers'
+                      item.label === 'Deals & Offers' ||
+                      item.label === 'Garage'
                         ? 'filter brightness-0 invert'
                         : ''
                     }`.trim();

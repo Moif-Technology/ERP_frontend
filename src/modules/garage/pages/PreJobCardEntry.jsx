@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { colors, inputField, uiFontSizes } from '../../../shared/constants/theme';
 import { InputField, DropdownInput } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
+import { createPreJobCard, updatePreJobCard } from '../api/preJobCard.api';
+import { getVehicleByRegNo } from '../api/vehicleLookup.api';
 
 const primary  = colors.primary?.main     || '#790728';
 const gradient = colors.primary?.gradient || 'linear-gradient(180deg,#C44972 0%,#790728 100%)';
@@ -57,12 +59,6 @@ const now = () => {
   };
 };
 
-const MOCK_VEHICLES = {
-  'KWI-1234': { brand: 'TOYOTA', colour: 'Silver', model: 'Land Cruiser 200' },
-  'KWI-5678': { brand: 'NISSAN', colour: 'White',  model: 'Patrol Y62' },
-  'KWI-9012': { brand: 'HONDA',  colour: 'Black',  model: 'Pilot 2022' },
-};
-
 const emptyForm = () => {
   const { date, time } = now();
   return {
@@ -75,23 +71,78 @@ const emptyForm = () => {
 
 export default function PreJobCardEntry() {
   const [form, setForm] = useState(emptyForm());
+  const [savedId, setSavedId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const set     = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
   const setDrop = (key) => (val) => setForm((prev) => ({ ...prev, [key]: val }));
   const toggle  = (key) => () => setForm((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const reset = () => setForm(emptyForm());
+  const reset = () => {
+    setForm(emptyForm());
+    setSavedId(null);
+    setError('');
+    setSuccessMsg('');
+  };
 
-  const handleSearch = () => {
-    const info = MOCK_VEHICLES[form.regNo.toUpperCase().trim()] || null;
-    setForm((prev) => ({ ...prev, vehicleInfo: info }));
+  const handleSearch = async () => {
+    const regNo = form.regNo.trim();
+    if (!regNo) return;
+    setSearching(true);
+    setError('');
+    try {
+      const vehicle = await getVehicleByRegNo(regNo);
+      setForm((prev) => ({ ...prev, vehicleInfo: vehicle || null }));
+      if (!vehicle) setError('No vehicle found for this registration number.');
+    } catch {
+      setError('Vehicle lookup failed.');
+      setForm((prev) => ({ ...prev, vehicleInfo: null }));
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
 
-  const handleSave = () => console.log('Save pre job card', form);
+  const handleSave = async () => {
+    if (!form.regNo.trim()) { setError('Reg. No. is required'); return; }
+    setSaving(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const payload = {
+        regNo: form.regNo.trim(),
+        chassisNo: form.chassisNo,
+        customerName: form.customerName,
+        serviceAdvisor: form.serviceAdvisor,
+        bookingDate: form.bookingDate,
+        bookingTime: form.bookingTime,
+        kmReading: form.kmReading || null,
+        remarks: form.remarks,
+        policeReport: form.policeReport,
+        warrantyRepair: form.warrantyRepair,
+        totalLoss: form.totalLoss,
+      };
+      let result;
+      if (savedId) {
+        result = await updatePreJobCard(savedId, payload);
+        setSuccessMsg(`Pre Job Card updated (Pre JC #${result.preJcId})`);
+      } else {
+        result = await createPreJobCard(payload);
+        setSavedId(result.id);
+        setSuccessMsg(`Pre Job Card saved (Pre JC #${result.preJcId})`);
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const CHECKBOXES = [
     { key: 'policeReport',   label: 'Police Report' },
@@ -115,13 +166,11 @@ export default function PreJobCardEntry() {
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
           </button>
 
-          {/* Veh. Delivery */}
           <button type="button" className={figmaBtn}>
             <CarIcon className="h-3.5 w-3.5 shrink-0" />
             Veh. Delivery
           </button>
 
-          {/* Make Job Card */}
           <button
             type="button"
             className={primaryBtn}
@@ -134,13 +183,11 @@ export default function PreJobCardEntry() {
             Make Job Card
           </button>
 
-          {/* Save */}
-          <button type="button" className={figmaBtn} onClick={handleSave}>
+          <button type="button" className={figmaBtn} onClick={handleSave} disabled={saving}>
             <SaveDiskIcon className="h-3.5 w-3.5 shrink-0" />
-            Save
+            {saving ? 'Saving…' : 'Save'}
           </button>
 
-          {/* New Entry */}
           <button
             type="button"
             className={primaryBtn}
@@ -153,6 +200,14 @@ export default function PreJobCardEntry() {
           </button>
         </div>
       </div>
+
+      {/* ── status messages ── */}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700">{error}</div>
+      )}
+      {successMsg && (
+        <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-[11px] text-green-700">{successMsg}</div>
+      )}
 
       {/* ── form body ── */}
       <div className="mt-1 flex justify-center overflow-y-auto">
@@ -180,11 +235,12 @@ export default function PreJobCardEntry() {
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-[3px] px-3 text-[10px] font-semibold text-white transition-opacity hover:opacity-90"
+                  disabled={searching}
+                  className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-[3px] px-3 text-[10px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                   style={{ background: gradient }}
                 >
                   <SearchIcon className="h-3.5 w-3.5" />
-                  Search
+                  {searching ? 'Searching…' : 'Search'}
                 </button>
               </div>
             </div>
@@ -197,37 +253,26 @@ export default function PreJobCardEntry() {
               >
                 {form.vehicleInfo ? (
                   <div className="flex flex-wrap items-center gap-6">
-                    {/* Brand */}
                     <div className="flex flex-col items-center gap-0.5">
-                      <span
-                        className="text-base font-extrabold tracking-widest uppercase"
-                        style={{ color: primary }}
-                      >
-                        {form.vehicleInfo.brand}
+                      <span className="text-base font-extrabold tracking-widest uppercase" style={{ color: primary }}>
+                        {form.vehicleInfo.carGroupName || form.vehicleInfo.model || '—'}
                       </span>
-                      <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Brand Type</span>
+                      <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Brand / Group</span>
                     </div>
-
                     <div className="h-10 w-px bg-gray-200" />
-
-                    {/* Colour */}
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Colour</span>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="h-3 w-3 rounded-full border border-gray-300 shadow-sm"
-                          style={{ backgroundColor: form.vehicleInfo.colour.toLowerCase() === 'silver' ? '#c0c0c0' : form.vehicleInfo.colour.toLowerCase() }}
-                        />
-                        <span className="text-[12px] font-semibold text-gray-700">{form.vehicleInfo.colour}</span>
-                      </div>
+                      <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Body Colour</span>
+                      <span className="text-[12px] font-semibold text-gray-700">{form.vehicleInfo.bodyColor || '—'}</span>
                     </div>
-
                     <div className="h-10 w-px bg-gray-200" />
-
-                    {/* Model */}
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Model</span>
-                      <span className="text-[12px] font-semibold text-gray-700">{form.vehicleInfo.model}</span>
+                      <span className="text-[12px] font-semibold text-gray-700">{form.vehicleInfo.model || '—'}</span>
+                    </div>
+                    <div className="h-10 w-px bg-gray-200" />
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Chassis No</span>
+                      <span className="text-[12px] font-semibold text-gray-700">{form.vehicleInfo.chassisNo || '—'}</span>
                     </div>
                   </div>
                 ) : (
@@ -239,7 +284,6 @@ export default function PreJobCardEntry() {
               </div>
             </div>
 
-            {/* Chassis No */}
             <InputField
               label="Chassis No"
               fullWidth
@@ -248,7 +292,6 @@ export default function PreJobCardEntry() {
               placeholder="Chassis number"
             />
 
-            {/* Customer Name */}
             <InputField
               label="Customer Name"
               fullWidth
@@ -257,7 +300,6 @@ export default function PreJobCardEntry() {
               placeholder="Customer full name"
             />
 
-            {/* Service Advisor */}
             <DropdownInput
               label="Service Advisor"
               fullWidth
@@ -267,7 +309,6 @@ export default function PreJobCardEntry() {
               placeholder="Select service advisor"
             />
 
-            {/* KM Reading (IN) */}
             <InputField
               label="KM Reading (IN)"
               fullWidth
@@ -277,7 +318,6 @@ export default function PreJobCardEntry() {
               type="number"
             />
 
-            {/* Booking Date + Time combined card */}
             <div className="sm:col-span-2 rounded-xl border border-gray-200 bg-gradient-to-br from-slate-50 via-white to-white p-3">
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex-1 min-w-[140px]">
@@ -289,7 +329,6 @@ export default function PreJobCardEntry() {
               </div>
             </div>
 
-            {/* Remarks */}
             <div className="sm:col-span-2">
               <label
                 className="mb-0.5 block"
@@ -307,7 +346,6 @@ export default function PreJobCardEntry() {
               />
             </div>
 
-            {/* Switches */}
             <div className="sm:col-span-2">
               <span
                 className="mb-2 block"
@@ -323,7 +361,6 @@ export default function PreJobCardEntry() {
                     onClick={toggle(key)}
                     className="flex items-center gap-2.5 cursor-pointer select-none"
                   >
-                    {/* track */}
                     <span
                       className="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-all duration-200"
                       style={{
@@ -331,7 +368,6 @@ export default function PreJobCardEntry() {
                         boxShadow: form[key] ? `0 0 0 2px ${primary}33` : 'none',
                       }}
                     >
-                      {/* thumb */}
                       <span
                         className="absolute h-3.5 w-3.5 rounded-full bg-white shadow transition-all duration-200"
                         style={{ left: form[key] ? 'calc(100% - 18px)' : '3px' }}
@@ -350,15 +386,15 @@ export default function PreJobCardEntry() {
 
           </div>
 
-          {/* Save button */}
           <div className="mt-5 flex justify-end">
             <button
               type="button"
               onClick={handleSave}
-              className="rounded px-5 py-2 text-[11px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+              disabled={saving}
+              className="rounded px-5 py-2 text-[11px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ background: gradient }}
             >
-              Save Entry
+              {saving ? 'Saving…' : 'Save Entry'}
             </button>
           </div>
         </div>
