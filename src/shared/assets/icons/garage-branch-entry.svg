@@ -1,0 +1,17 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Workshop/store front -->
+  <rect x="2.25" y="7.5" width="13.5" height="8.25" rx="1" stroke="black" stroke-width="1.2"/>
+  <!-- Roof canopy -->
+  <path d="M1.5 7.5H16.5" stroke="black" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Sign board above -->
+  <rect x="4.5" y="3.75" width="9" height="3" rx="0.75" stroke="black" stroke-width="1.1"/>
+  <!-- Sign lines -->
+  <path d="M6 5.25H12" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- Shutter / door panels -->
+  <rect x="7" y="9.75" width="4" height="6" rx="0.5" stroke="black" stroke-width="1"/>
+  <!-- Windows left/right -->
+  <rect x="3" y="9.75" width="3" height="2.25" rx="0.5" stroke="black" stroke-width="0.9"/>
+  <rect x="12" y="9.75" width="3" height="2.25" rx="0.5" stroke="black" stroke-width="0.9"/>
+  <!-- Pole connecting sign to canopy -->
+  <path d="M9 6.75V7.5" stroke="black" stroke-width="1.1" stroke-linecap="round"/>
+</svg>

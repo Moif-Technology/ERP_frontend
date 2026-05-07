@@ -32,6 +32,12 @@ import TrialBalanceIcon from '../../shared/assets/icons/trial_balance.svg';
 import PayableSummaryIcon from '../../shared/assets/icons/payable.svg';
 import ReceivableSummaryIcon from '../../shared/assets/icons/receivable.svg';
 import LeaveTypeIcon from '../../shared/assets/icons/leave-type.svg';
+import GarageJobCardIcon from '../../shared/assets/icons/garage-job-card.svg';
+import GarageEstimationIcon from '../../shared/assets/icons/garage-estimation.svg';
+import GarageWorkshopMonitorIcon from '../../shared/assets/icons/garage-workshop-monitor.svg';
+import GaragePartsSearchIcon from '../../shared/assets/icons/garage-parts-search.svg';
+import GarageTechnicianMonitorIcon from '../../shared/assets/icons/garage-technician-monitor.svg';
+import GarageVehicleHistoryIcon from '../../shared/assets/icons/garage-vehicle-history.svg';
 
 function ExpandChevron({ expanded }) {
   return (
@@ -197,6 +203,44 @@ const moduleGroups = {
       ],
     },
   ],
+  garage: [
+    {
+      name: 'Job card entry',
+      icon: GarageJobCardIcon,
+      feature: 'garage',
+      actions: getActionItems(GarageJobCardIcon, ['Entry', 'List']),
+    },
+    {
+      name: 'Estimation entry',
+      icon: GarageEstimationIcon,
+      feature: 'garage',
+      actions: getActionItems(GarageEstimationIcon, ['Entry', 'List']),
+    },
+    {
+      name: 'Workshop monitor',
+      icon: GarageWorkshopMonitorIcon,
+      feature: 'garage',
+      actions: getActionItems(GarageWorkshopMonitorIcon, ['Monitor']),
+    },
+    {
+      name: 'Parts search',
+      icon: GaragePartsSearchIcon,
+      feature: 'garage',
+      actions: getActionItems(GaragePartsSearchIcon, ['Search']),
+    },
+    {
+      name: 'Technician monitor',
+      icon: GarageTechnicianMonitorIcon,
+      feature: 'garage',
+      actions: getActionItems(GarageTechnicianMonitorIcon, ['Monitor']),
+    },
+    {
+      name: 'Vehicle history',
+      icon: GarageVehicleHistoryIcon,
+      feature: 'garage',
+      actions: getActionItems(GarageVehicleHistoryIcon, ['History']),
+    },
+  ],
 };
 
 export default function ModuleTabs({ expanded, onExpandedChange }) {
@@ -208,6 +252,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     { key: 'customer', label: 'CUSTOMER', features: ['backoffice.product_master', 'backoffice.sales', 'backoffice.sales_quotation', 'backoffice.delivery_order'] },
     { key: 'supplier', label: 'SUPPLIER', features: ['backoffice.purchase', 'backoffice.purchase_order', 'backoffice.grn'] },
     { key: 'accounts', label: 'ACCOUNTS', features: ['backoffice.accounts', 'backoffice.vouchers'] },
+    { key: 'garage', label: 'GARAGE', features: ['garage'] },
     { key: 'hr', label: 'HR', features: ['hr'] },
   ].filter((tab) => hasAnyFeature(tab.features));
 
@@ -338,6 +383,31 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
     }
     if (module === 'Statement of accounts' && action === 'List') {
       navigate('/statement-of-accounts-list');
+    }
+    // Garage Routes
+    if (module === 'Job card entry' && action === 'Entry') {
+      navigate('/garage/job-card-entry');
+    }
+    if (module === 'Job card entry' && action === 'List') {
+      navigate('/garage/job-card-list');
+    }
+    if (module === 'Estimation entry' && action === 'Entry') {
+      navigate('/garage/estimation-entry');
+    }
+    if (module === 'Estimation entry' && action === 'List') {
+      navigate('/garage/estimation-list');
+    }
+    if (module === 'Workshop monitor' && action === 'Monitor') {
+      navigate('/garage/workshop-monitor');
+    }
+    if (module === 'Parts search' && action === 'Search') {
+      navigate('/garage/parts-search');
+    }
+    if (module === 'Technician monitor' && action === 'Monitor') {
+      navigate('/garage/technician-monitor');
+    }
+    if (module === 'Vehicle history' && action === 'History') {
+      navigate('/garage/vehicle-history');
     }
     // HR Routes
     if (module === 'Employee' && action === 'Directory') {

@@ -55,6 +55,25 @@ import CrmInteractionsIcon from '../../shared/assets/icons/Receipt.svg';
 import CrmLeadSourceIcon from '../../shared/assets/icons/alternative.svg';
 import CrmLeadStatusIcon from '../../shared/assets/icons/grn.svg';
 import CrmStageIcon from '../../shared/assets/icons/DeliveryIcon.svg';
+import GarageModuleIcon from '../../shared/assets/icons/garage-module.svg';
+import GarageTechnicianEntryIcon from '../../shared/assets/icons/garage-technician-entry.svg';
+import GarageJobDescriptionIcon from '../../shared/assets/icons/garage-job-description-entry.svg';
+import GarageBranchEntryIcon from '../../shared/assets/icons/garage-branch-entry.svg';
+import GaragePartRequestIcon from '../../shared/assets/icons/garage-part-request.svg';
+import GarageSubletJobsIcon from '../../shared/assets/icons/garage-sublet-jobs.svg';
+import GarageGatePassViewerIcon from '../../shared/assets/icons/garage-gate-pass-viewer.svg';
+import GaragePunchingEntryIcon from '../../shared/assets/icons/garage-punching-entry.svg';
+import GarageJobCodePunchingIcon from '../../shared/assets/icons/garage-job-code-punching.svg';
+import GaragePunchingListIcon from '../../shared/assets/icons/garage-punching-list.svg';
+import GaragePreJobCardEntryIcon from '../../shared/assets/icons/garage-pre-job-card-entry.svg';
+import GarageAdditionalVehicleHistoryIcon from '../../shared/assets/icons/garage-additional-vehicle-history.svg';
+import GarageSubletLpoIcon from '../../shared/assets/icons/garage-sublet-lpo.svg';
+import GarageConsumableEntryIcon from '../../shared/assets/icons/garage-consumable-entry.svg';
+import GarageLubricantMonitorIcon from '../../shared/assets/icons/garage-lubricant-monitor.svg';
+import GarageConsumableMonitorIcon from '../../shared/assets/icons/garage-consumable-monitor.svg';
+import GarageSubletMonitorIcon from '../../shared/assets/icons/garage-sublet-monitor.svg';
+import GarageHomeIcon from '../../shared/assets/icons/garage-home.svg';
+import GarageDashboardIcon from '../../shared/assets/icons/garage-dashboard.svg';
 import ChevronDown from '../../shared/assets/chevron-down.svg';
 import SearchIcon from '../../shared/assets/iconsax-search.svg';
 
@@ -175,6 +194,30 @@ const menuItems = [
       { label: 'Opportunity Stage Master', to: '/crm/masters/opportunity-stages', icon: CrmStageIcon, feature: 'crm.opportunity_stages' },
     ],
   },
+  {
+    label: 'Garage',
+    icon: GarageModuleIcon,
+    subItems: [
+      { label: 'Technician entry', to: '/garage/technician-entry', icon: GarageTechnicianEntryIcon },
+      { label: 'Job description entry', to: '/garage/job-description-entry', icon: GarageJobDescriptionIcon },
+      { label: 'Branch entry', to: '/garage/branch-entry', icon: GarageBranchEntryIcon },
+      { label: 'Part request', to: '/garage/part-request', icon: GaragePartRequestIcon },
+      { label: 'Sublet jobs', to: '/garage/sublet-jobs', icon: GarageSubletJobsIcon },
+      { label: 'Gate pass viewer', to: '/garage/gate-pass-viewer', icon: GarageGatePassViewerIcon },
+      { label: 'Punching entry', to: '/garage/punching-entry', icon: GaragePunchingEntryIcon },
+      { label: 'Job code punching', to: '/garage/job-code-punching', icon: GarageJobCodePunchingIcon },
+      { label: 'Punching list', to: '/garage/punching-list', icon: GaragePunchingListIcon },
+      { label: 'Pre job card entry', to: '/garage/pre-job-card-entry', icon: GaragePreJobCardEntryIcon },
+      { label: 'Additional vehicle history', to: '/garage/additional-vehicle-history', icon: GarageAdditionalVehicleHistoryIcon },
+      { label: 'Sublet LPO', to: '/garage/sublet-lpo', icon: GarageSubletLpoIcon },
+      { label: 'Consumable entry', to: '/garage/consumable-entry', icon: GarageConsumableEntryIcon },
+      { label: 'Lubricant monitor', to: '/garage/lubricant-monitor', icon: GarageLubricantMonitorIcon },
+      { label: 'Consumable monitor', to: '/garage/consumable-monitor', icon: GarageConsumableMonitorIcon },
+      { label: 'Sublet monitor', to: '/garage/sublet-monitor', icon: GarageSubletMonitorIcon },
+      { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
+      { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
+    ],
+  },
   { label: 'Reports', to: '/reports', icon: ReportsIcon, features: ['backoffice.reports', 'hr.reports', 'crm.reports'] },
   { label: 'Tools', to: '/tools', icon: ToolsIcon, feature: 'core.settings' },
   { label: 'Management', to: '/management', icon: ManagementIcon, feature: 'core.users' },
@@ -194,7 +237,7 @@ export default function Sidebar() {
 
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false, 'Stock Adjustment': false, 'Damage Entry': false, 'Additional Stock': false, 'Human Resources': false, 'CRM': false });
+  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false, 'Stock Adjustment': false, 'Damage Entry': false, 'Additional Stock': false, 'Human Resources': false, CRM: false, Garage: false });
 
   useEffect(() => {
     const onListSection =
@@ -219,6 +262,9 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/deals-offers')) {
       setOpenMenus((prev) => ({ ...prev, 'Deals & Offers': true }));
+    }
+    if (location.pathname.startsWith('/garage')) {
+      setOpenMenus((prev) => ({ ...prev, Garage: true }));
     }
     if (location.pathname.startsWith('/hr')) {
       setOpenMenus((prev) => ({ ...prev, 'Human Resources': true }));

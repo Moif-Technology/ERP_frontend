@@ -1,0 +1,11 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Document body -->
+  <rect x="2.5" y="2" width="9" height="12" rx="1.1" stroke="black" stroke-width="1.05"/>
+  <!-- Lines on document -->
+  <line x1="4.5" y1="5.5" x2="9.5" y2="5.5" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <line x1="4.5" y1="9.5" x2="7.5" y2="9.5" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- LPO badge bottom-right -->
+  <rect x="9.5" y="10" width="6.5" height="6" rx="1.1" stroke="black" stroke-width="0.95" fill="white"/>
+  <text x="12.75" y="14.2" font-size="3.8" font-family="Arial" font-weight="bold" text-anchor="middle" fill="black">LPO</text>
+</svg>

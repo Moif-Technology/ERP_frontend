@@ -1,0 +1,15 @@
+<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Document base -->
+  <rect x="2.25" y="2.25" width="13.5" height="13.5" rx="1.2" stroke="black" stroke-width="1.1"/>
+  <!-- Check row 1 -->
+  <polyline points="4.5,6 5.5,7 7.5,5" stroke="black" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="6" x2="13.5" y2="6" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- Check row 2 -->
+  <polyline points="4.5,9.5 5.5,10.5 7.5,8.5" stroke="black" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="9" y1="9.5" x2="13.5" y2="9.5" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+  <!-- Clock row 3 -->
+  <circle cx="6" cy="13" r="1.5" stroke="black" stroke-width="0.8"/>
+  <line x1="6" y1="13" x2="6" y2="12" stroke="black" stroke-width="0.7" stroke-linecap="round"/>
+  <line x1="6" y1="13" x2="6.75" y2="13.5" stroke="black" stroke-width="0.7" stroke-linecap="round"/>
+  <line x1="9" y1="13" x2="13.5" y2="13" stroke="black" stroke-width="0.9" stroke-linecap="round"/>
+</svg>

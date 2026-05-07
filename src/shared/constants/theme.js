@@ -125,6 +125,11 @@ export const inputField = {
   },
 };
 
+/** Quick font-size tokens used by newer garage screens. */
+export const uiFontSizes = {
+  label: inputField.label.fontSize,
+};
+
 /** Common table UI style tokens */
 export const tableUi = {
   border: '1px solid #e2e8f0',

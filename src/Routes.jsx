@@ -40,6 +40,8 @@ import JournalVoucherEntry from './modules/backoffice/pages/JournalVoucherEntry'
 import AccountGroupDetails from './modules/backoffice/pages/AccountGroupDetails';
 import AccountLedgerDetails from './modules/backoffice/pages/AccountLedgerDetails';
 import TrialBalance from './modules/backoffice/pages/TrialBalance';
+import ProfitAndLossAccount from './modules/backoffice/pages/ProfitAndLossAccount';
+import BalanceSheet from './modules/backoffice/pages/BalanceSheet';
 import PayableSummary from './modules/backoffice/pages/PayableSummary';
 import ReceivableSummary from './modules/backoffice/pages/ReceivableSummary';
 import CustomerEntry from './modules/backoffice/pages/CustomerEntry';
@@ -66,6 +68,7 @@ import StockAdjustmentList from './modules/backoffice/pages/StockAdjustmentList'
 import ReorderList from './modules/backoffice/pages/ReorderList';
 import DealsOffersPlaceholderPage from './modules/backoffice/pages/DealsOffersPlaceholderPage';
 import DiscountEntry from './modules/backoffice/pages/DiscountEntry';
+import DiscountViewer from './modules/backoffice/pages/DiscountViewer';
 import GiftVoucherSettings from './modules/backoffice/pages/GiftVoucherSettings';
 import GiftVoucherViewer from './modules/backoffice/pages/GiftVoucherViewer';
 import OfferPacketCreation from './modules/backoffice/pages/OfferPacketCreation';
@@ -97,6 +100,34 @@ import InteractionLogPage from './modules/crm/pages/InteractionLogPage';
 import LeadSourceMasterPage from './modules/crm/pages/LeadSourceMasterPage';
 import LeadStatusMasterPage from './modules/crm/pages/LeadStatusMasterPage';
 import OpportunityStageMasterPage from './modules/crm/pages/OpportunityStageMasterPage';
+
+// Garage Module Pages
+import JobCardEntry from './modules/garage/pages/JobCardEntry';
+import EstimationEntry from './modules/garage/pages/EstimationEntry';
+import JobCardList from './modules/garage/pages/JobCardList';
+import EstimationList from './modules/garage/pages/EstimationList';
+import WorkshopMonitor from './modules/garage/pages/WorkshopMonitor';
+import PartsSearch from './modules/garage/pages/PartsSearch';
+import TechnicianMonitor from './modules/garage/pages/TechnicianMonitor';
+import VehicleHistory from './modules/garage/pages/VehicleHistory';
+import TechnicianEntry from './modules/garage/pages/TechnicianEntry';
+import JobDescriptionEntry from './modules/garage/pages/JobDescriptionEntry';
+import BranchEntry from './modules/garage/pages/BranchEntry';
+import PartRequest from './modules/garage/pages/PartRequest';
+import SubletJobs from './modules/garage/pages/SubletJobs';
+import GatePassViewer from './modules/garage/pages/GatePassViewer';
+import PunchingEntry from './modules/garage/pages/PunchingEntry';
+import JobCodePunching from './modules/garage/pages/JobCodePunching';
+import PunchingList from './modules/garage/pages/PunchingList';
+import PreJobCardEntry from './modules/garage/pages/PreJobCardEntry';
+import AdditionalVehicleHistory from './modules/garage/pages/AdditionalVehicleHistory';
+import SubletLpo from './modules/garage/pages/SubletLpo';
+import ConsumableEntry from './modules/garage/pages/ConsumableEntry';
+import LubricantMonitor from './modules/garage/pages/LubricantMonitor';
+import ConsumableMonitor from './modules/garage/pages/ConsumableMonitor';
+import SubletMonitor from './modules/garage/pages/SubletMonitor';
+import GarageHome from './modules/garage/pages/GarageHome';
+import GarageDashboard from './modules/garage/pages/GarageDashboard';
 
 const guarded = (element, features) => (
   <FeatureGuard any={features}>{element}</FeatureGuard>
@@ -148,6 +179,8 @@ export default function AppRoutes() {
       <Route path="/account-ledger-details" element={guarded(<AccountLedgerDetails />, 'backoffice.accounts')} />
       <Route path="/trial-balance" element={guarded(<TrialBalance />, 'backoffice.accounts')} />
       <Route path="/financials" element={<Navigate to="/trial-balance" replace />} />
+      <Route path="/financials/profit-and-loss-account" element={guarded(<ProfitAndLossAccount />, 'backoffice.accounts')} />
+      <Route path="/financials/balance-sheet" element={guarded(<BalanceSheet />, 'backoffice.accounts')} />
       <Route path="/statement-payable-summary" element={guarded(<PayableSummary />, 'backoffice.accounts')} />
       <Route path="/statement-receivable-summary" element={guarded(<ReceivableSummary />, 'backoffice.accounts')} />
       <Route path="/statement-of-accounts-list" element={guarded(<VoucherListPage title="STATEMENT OF ACCOUNTS" />, 'backoffice.accounts')} />
@@ -180,13 +213,42 @@ export default function AppRoutes() {
       <Route path="/stock-hub/product-movement" element={guarded(<ProductMovement />, 'backoffice.product_movement')} />
       <Route path="/deals-offers" element={<Navigate to="/deals-offers/discount-entry" replace />} />
       <Route path="/deals-offers/discount-entry" element={guarded(<DiscountEntry />, 'backoffice.deals_offers')} />
-      <Route path="/deals-offers/discount-viewer" element={<Navigate to="/deals-offers/discount-entry" replace />} />
+      <Route path="/deals-offers/discount-viewer" element={guarded(<DiscountViewer />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/gift-voucher-settings" element={guarded(<GiftVoucherSettings />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/gift-voucher-viewer" element={guarded(<GiftVoucherViewer />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/offer-packet-creation" element={guarded(<OfferPacketCreation />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/offer-packing-entry" element={guarded(<OfferPackingEntry />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/offer-unpacking-entry" element={guarded(<OfferUnpackingEntry />, 'backoffice.deals_offers')} />
       <Route path="/deals-offers/offer-packet-list" element={guarded(<OfferPacketList />, 'backoffice.deals_offers')} />
+
+      {/* Garage Module */}
+      <Route path="/garage" element={<Navigate to="/garage/job-card-entry" replace />} />
+      <Route path="/garage/job-card-entry" element={<JobCardEntry />} />
+      <Route path="/garage/job-card-list" element={<JobCardList />} />
+      <Route path="/garage/estimation-entry" element={<EstimationEntry />} />
+      <Route path="/garage/estimation-list" element={<EstimationList />} />
+      <Route path="/garage/workshop-monitor" element={<WorkshopMonitor />} />
+      <Route path="/garage/parts-search" element={<PartsSearch />} />
+      <Route path="/garage/technician-monitor" element={<TechnicianMonitor />} />
+      <Route path="/garage/vehicle-history" element={<VehicleHistory />} />
+      <Route path="/garage/technician-entry" element={<TechnicianEntry />} />
+      <Route path="/garage/job-description-entry" element={<JobDescriptionEntry />} />
+      <Route path="/garage/branch-entry" element={<BranchEntry />} />
+      <Route path="/garage/part-request" element={<PartRequest />} />
+      <Route path="/garage/sublet-jobs" element={<SubletJobs />} />
+      <Route path="/garage/gate-pass-viewer" element={<GatePassViewer />} />
+      <Route path="/garage/punching-entry" element={<PunchingEntry />} />
+      <Route path="/garage/job-code-punching" element={<JobCodePunching />} />
+      <Route path="/garage/punching-list" element={<PunchingList />} />
+      <Route path="/garage/pre-job-card-entry" element={<PreJobCardEntry />} />
+      <Route path="/garage/additional-vehicle-history" element={<AdditionalVehicleHistory />} />
+      <Route path="/garage/sublet-lpo" element={<SubletLpo />} />
+      <Route path="/garage/consumable-entry" element={<ConsumableEntry />} />
+      <Route path="/garage/lubricant-monitor" element={<LubricantMonitor />} />
+      <Route path="/garage/consumable-monitor" element={<ConsumableMonitor />} />
+      <Route path="/garage/sublet-monitor" element={<SubletMonitor />} />
+      <Route path="/garage/home" element={<GarageHome />} />
+      <Route path="/garage/dashboard" element={<GarageDashboard />} />
 
       {/* HR Module */}
       <Route path="/hr" element={<Navigate to="/hr/dashboard" replace />} />
