@@ -13,6 +13,7 @@
 
 # misc
 .DS_Store
+.claude/
 .env.local
 .env.development.local
 .env.test.local
@@ -22,3 +23,18 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dist/
+
+# graphify generated files
+graphify-out/
+src/graphify-out/
+.graphify_ast.json
+.graphify_cached.json
+.graphify_incremental.json
+.graphify_old.json
+.graphify_python
+.graphify_semantic.json
+.graphify_semantic_new.json
+.graphify_uncached.txt
+
+# electron build output
+release/

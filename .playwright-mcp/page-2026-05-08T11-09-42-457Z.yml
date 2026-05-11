@@ -1,0 +1,25 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Moif" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Back Office
+    - paragraph [ref=e9]: Inventory management, sales, purchases, and accounting in one place.
+    - generic [ref=e10]: Ver.24.Nxt.06.24
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - heading "SIGN IN" [level=2] [ref=e16]
+      - paragraph [ref=e17]: Enter your credentials to access the back office
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: Email or username
+        - textbox "Email or username" [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]: Password
+        - generic [ref=e24]:
+          - textbox "Enter password" [ref=e25]
+          - button "Show password" [ref=e26]:
+            - img [ref=e27]
+        - link "Forgot password?" [ref=e30] [cursor=pointer]:
+          - /url: /forgot-password
+      - button "Sign in" [ref=e31]
+    - paragraph [ref=e32]: Moif Back Office · Ver.24.Nxt.06.24

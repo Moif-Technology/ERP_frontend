@@ -1,0 +1,574 @@
+
+> erp_frontend_new@1.0.0 dev
+> vite --host 127.0.0.1 --port 5174
+
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m498[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5174[22m/[39m
+[2m2:05:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CurrencyMaster.jsx[22m
+[2m2:05:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateEntry.jsx[22m
+[2m2:05:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateList.jsx[22m
+[2m2:09:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CurrencyMaster.jsx[22m
+[2m2:09:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateEntry.jsx[22m
+[2m2:09:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateList.jsx[22m
+[2m2:35:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateEntry.jsx, /src/modules/backoffice/pages/CurrencyMaster.jsx, /src/modules/backoffice/pages/ExchangeRateList.jsx[22m
+[2m2:57:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/api/graphify-out/graph.html[22m
+[2m3:07:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:08:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:08:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:08:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:10:36 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:10:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:10:49 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:10:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:18:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m3:18:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m3:18:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:18:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:18:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:18:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:18:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:27:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m3:27:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m3:28:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:28:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:28:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:28:46 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:28:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:29:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:29:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m3:29:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m6:57:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m8:37:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mgraphify-out/graph.html[22m
+[2m8:40:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m9:32:31 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Layout.jsx, /src/app/router/WelcomeGate.jsx, /src/app/router/ProtectedRoute.jsx, /src/modules/backoffice/pages/Login.jsx, /src/app/router/PublicRoute.jsx, /src/modules/backoffice/pages/WelcomeSetup.jsx, /src/core/layout/Header.jsx, /src/core/layout/Sidebar.jsx, /src/modules/backoffice/pages/ProductList.jsx, /src/modules/backoffice/pages/SalesList.jsx, /src/modules/backoffice/pages/DeliveryOrder.jsx, /src/modules/backoffice/pages/QuotationList.jsx, /src/modules/backoffice/pages/GroupEntry.jsx, /src/modules/backoffice/pages/RoleManagement.jsx, /src/modules/backoffice/pages/Sale.jsx, /src/modules/backoffice/pages/GoodsReceiveNoteList.jsx, /src/modules/backoffice/pages/Purchase.jsx, /src/modules/backoffice/pages/PurchaseOrderList.jsx, /src/modules/backoffice/pages/TableEntry.jsx, /src/modules/backoffice/pages/DeliveryOrderList.jsx, /src/modules/backoffice/pages/Quotation.jsx, /src/modules/backoffice/pages/PurchaseList.jsx, /src/modules/backoffice/pages/AreaEntry.jsx, /src/modules/backoffice/pages/SubGroupEntry.jsx, /src/modules/backoffice/pages/GoodsReceiveNote.jsx, /src/modules/backoffice/pages/PurchaseOrder.jsx, /src/modules/backoffice/pages/ProductEntry.jsx, /src/core/layout/ModuleTabs.jsx, /src/core/access/LockedAccessPage.jsx, /src/core/access/FeatureGuard.jsx, /src/modules/backoffice/pages/DiscountEntry.jsx, /src/shared/components/ui/PermissionGate.jsx[22m
+[2m10:49:19 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/SuperAdminLogin.jsx, /src/shared/styles/index.css[22m
+[2m10:50:09 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/SuperAdminLayout.jsx, /src/shared/styles/index.css[22m
+[2m10:51:05 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantsListPage.jsx, /src/shared/styles/index.css[22m
+[2m10:53:14 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantDetailPage.jsx, /src/shared/styles/index.css[22m
+[2m10:54:00 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/FeatureCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m10:54:41 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/LimitCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m10:55:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/PlanCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m11:07:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantDetailPage.jsx, /src/shared/styles/index.css[22m
+[2m11:14:49 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantDetailPage.jsx, /src/shared/styles/index.css[22m
+[2m11:14:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantDetailPage.jsx, /src/shared/styles/index.css[22m
+[2m11:41:16 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Layout.jsx, /src/app/router/WelcomeGate.jsx, /src/app/router/ProtectedRoute.jsx, /src/modules/backoffice/pages/Login.jsx, /src/app/router/PublicRoute.jsx, /src/modules/backoffice/pages/WelcomeSetup.jsx, /src/core/layout/Header.jsx, /src/core/layout/Sidebar.jsx, /src/modules/backoffice/pages/ProductList.jsx, /src/modules/backoffice/pages/SalesList.jsx, /src/modules/backoffice/pages/DeliveryOrder.jsx, /src/modules/backoffice/pages/QuotationList.jsx, /src/modules/backoffice/pages/GroupEntry.jsx, /src/modules/backoffice/pages/RoleManagement.jsx, /src/modules/backoffice/pages/Sale.jsx, /src/modules/backoffice/pages/GoodsReceiveNoteList.jsx, /src/modules/backoffice/pages/Purchase.jsx, /src/modules/backoffice/pages/PurchaseOrderList.jsx, /src/modules/backoffice/pages/TableEntry.jsx, /src/modules/backoffice/pages/DeliveryOrderList.jsx, /src/modules/backoffice/pages/Quotation.jsx, /src/modules/backoffice/pages/PurchaseList.jsx, /src/modules/backoffice/pages/AreaEntry.jsx, /src/modules/backoffice/pages/SubGroupEntry.jsx, /src/modules/backoffice/pages/GoodsReceiveNote.jsx, /src/modules/backoffice/pages/PurchaseOrder.jsx, /src/modules/backoffice/pages/ProductEntry.jsx, /src/core/layout/ModuleTabs.jsx, /src/core/access/LockedAccessPage.jsx, /src/core/access/FeatureGuard.jsx, /src/modules/backoffice/pages/DiscountEntry.jsx, /src/shared/components/ui/PermissionGate.jsx[22m
+[2m11:41:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Layout.jsx, /src/app/router/WelcomeGate.jsx, /src/app/router/ProtectedRoute.jsx, /src/modules/backoffice/pages/Login.jsx, /src/app/router/PublicRoute.jsx, /src/modules/backoffice/pages/WelcomeSetup.jsx, /src/core/layout/Header.jsx, /src/core/layout/Sidebar.jsx, /src/modules/backoffice/pages/ProductList.jsx, /src/modules/backoffice/pages/SalesList.jsx, /src/modules/backoffice/pages/DeliveryOrder.jsx, /src/modules/backoffice/pages/QuotationList.jsx, /src/modules/backoffice/pages/GroupEntry.jsx, /src/modules/backoffice/pages/RoleManagement.jsx, /src/modules/backoffice/pages/Sale.jsx, /src/modules/backoffice/pages/GoodsReceiveNoteList.jsx, /src/modules/backoffice/pages/Purchase.jsx, /src/modules/backoffice/pages/PurchaseOrderList.jsx, /src/modules/backoffice/pages/TableEntry.jsx, /src/modules/backoffice/pages/DeliveryOrderList.jsx, /src/modules/backoffice/pages/Quotation.jsx, /src/modules/backoffice/pages/PurchaseList.jsx, /src/modules/backoffice/pages/AreaEntry.jsx, /src/modules/backoffice/pages/SubGroupEntry.jsx, /src/modules/backoffice/pages/GoodsReceiveNote.jsx, /src/modules/backoffice/pages/PurchaseOrder.jsx, /src/modules/backoffice/pages/ProductEntry.jsx, /src/core/layout/ModuleTabs.jsx, /src/core/access/LockedAccessPage.jsx, /src/core/access/FeatureGuard.jsx, /src/modules/backoffice/pages/DiscountEntry.jsx, /src/shared/components/ui/PermissionGate.jsx[22m
+[2m11:41:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/access/FeatureGuard.jsx[22m
+[2m11:41:55 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/Routes.jsx[22m
+[2m11:42:26 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m2:08:17 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseOrderList.jsx[22m
+[2m2:08:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseOrderList.jsx[22m
+[2m2:08:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseOrderList.jsx[22m
+[2m2:16:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m2:16:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m2:16:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m2:16:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m2:16:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m2:16:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:04:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardList.jsx[22m
+[2m3:07:55 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:08:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:08:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:08:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:08:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:09:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardList.jsx[22m
+[2m3:09:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardList.jsx[22m
+[2m3:09:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardList.jsx[22m
+[2m3:13:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:16:00 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:51:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:51:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:54:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m3:54:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:08:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:09:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:09:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:10:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:11:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:11:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:12:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:12:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:17:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:17:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:23:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m4:26:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:00:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/SubInputField.jsx[22m
+[2m5:00:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/DateInputField.jsx[22m
+[2m5:00:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:00:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:01:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:01:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/SubInputField.jsx[22m
+[2m5:01:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/DateInputField.jsx[22m
+[2m5:01:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/DropdownInput.jsx[22m
+[2m5:02:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:04:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:04:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:04:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:07:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/SubInputField.jsx[22m
+[2m5:07:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/DropdownInput.jsx[22m
+[2m5:07:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/DateInputField.jsx[22m
+[2m5:07:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:07:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:08:07 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:08:24 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:10:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:10:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m5:12:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m9:46:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Home.jsx[22m
+[2m9:46:42 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/core/layout/Layout.jsx, /src/shared/styles/index.css[22m
+[2m9:47:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/MiniToolbar.jsx[22m
+[2m9:49:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/MiniToolbar.jsx[22m
+[2m9:58:58 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/core/layout/Layout.jsx, /src/shared/styles/index.css[22m
+[2m10:02:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/core/layout/Layout.jsx, /src/shared/styles/index.css[22m
+[2m10:06:32 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/ModuleTabs.jsx[22m
+[2m10:06:38 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/core/layout/Layout.jsx, /src/shared/styles/index.css[22m
+[2m10:06:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m10:27:28 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:27:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:34:10 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:34:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:43:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:47:27 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:48:01 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:54:03 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:54:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m10:54:37 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:05:23 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:05:29 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:13:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:20:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:22:15 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:25:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:25:09 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:32:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:34:08 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:34:46 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:37:21 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:37:44 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:37:45 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:38:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:38:02 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:38:18 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:38:20 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:38:22 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:39:33 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m11:39:53 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m11:40:12 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m11:40:30 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m11:40:50 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m11:40:59 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m11:42:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:42:54 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:46:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m11:46:36 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m11:56:04 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductEntry.jsx[22m
+[2m11:56:48 AM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductEntry.jsx[22m
+[2m12:12:32 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StaffEntry.jsx[22m
+[2m12:28:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StaffEntry.jsx[22m
+[2m12:37:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/RoleEntry.jsx[22m
+[2m12:41:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GroupEntry.jsx[22m
+[2m12:43:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SubGroupEntry.jsx[22m
+[2m12:47:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AreaEntry.jsx[22m
+[2m12:48:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/TableEntry.jsx[22m
+[2m12:52:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GroupEntry.jsx[22m
+[2m12:53:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AreaEntry.jsx[22m
+[2m12:54:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SubGroupEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/app/router/AppRoutes.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/PermissionGate.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/access/FeatureGuard.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/access/LockedAccessPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/core/auth/auth.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/app/router/ProtectedRoute.jsx, /src/app/router/PublicRoute.jsx, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Header.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/core/layout/Layout.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/Sidebar.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/ModuleTabs.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/core/layout/MiniToolbar.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/components/StockProductPicker.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AccountGroupDetails.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/main.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/app/router/routerMode.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/router/WelcomeGate.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AccountLedgerDetails.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AccountsPlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AccountVoucherListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AdditionalStockEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AdditionalStockEntryList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AgentList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/BalanceSheet.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ContraVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CreditNoteEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CreditNoteList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CurrencyMaster.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/CustomerList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DamageEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DamageEntryList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Dashboard.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DealsOffersPlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DebitNoteEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DebitNoteList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DeliveryOrder.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DeliveryOrderList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DiscountEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DiscountViewer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExchangeRateList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExpenseVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ExpenseVoucherList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/backoffice/pages/ForgotPassword.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GiftVoucherSettings.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GiftVoucherViewer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GoodsReceiveNote.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GoodsReceiveNoteList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Home.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/IncomeVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/IncomeVoucherList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/JournalVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/backoffice/pages/Login.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/OfferPacketCreation.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/OfferPacketList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/OfferPackingEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/OfferUnpackingEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PayableSummary.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PaymentVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PaymentVoucherSupplierEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductMovement.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductPriceList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProfitAndLossAccount.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Purchase.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseOrder.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseOrderList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/PurchaseVoucherList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Quotation.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/QuotationList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ReceiptVoucherCustomerEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ReceiptVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ReceivableSummary.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ReorderList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/RoleManagement.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/Sale.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SalesList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SalesReturn.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SalesVoucherEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SalesVoucherList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StockAdjustment.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StockAdjustmentList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StockHubListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/TrialBalance.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/VoucherListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/backoffice/pages/WelcomeSetup.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/RecipeEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/RecipeList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductionOrderEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ProductionOrderList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/MaterialRequisition.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DeliveryScheduleEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DeliveryScheduleList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DispatchEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DeliveryTracking.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/DriverEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/VehicleEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ReportsPlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ManagementPlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/ToolsPlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SupplierEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/StaffEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/RoleEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/GroupEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/SubGroupEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/AreaEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/backoffice/pages/TableEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/garage/api/jobCard.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/garage/api/preJobCard.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/shared/components/ui/VehiclePicker.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/AdditionalVehicleHistory.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/BranchEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/CarGroupEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/CarSubGroupEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/ColorEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/ConsumableEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/ConsumableMonitor.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/EstimationList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/GarageDashboard.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/GarageHome.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/GaragePlaceholderPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/GatePassViewer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCardList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobCodePunching.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/JobDescriptionEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/LubricantMonitor.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/PartRequest.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/PartsSearch.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/PreJobCardEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/PunchingEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/PunchingList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/SubletJobs.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/SubletLpo.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/SubletMonitor.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/TechnicianEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/TechnicianMonitor.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/VehicleEntry.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/VehicleHistory.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/VehicleList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/garage/pages/WorkshopMonitor.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/PlatformProtectedRoute.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/SuperAdminLayout.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/superAdmin/api/admin.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/FeatureCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/LimitCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/PlanCatalogPage.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/SuperAdminLogin.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantDetailPage.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/superAdmin/pages/TenantsListPage.jsx, /src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/superAdmin/http/platformHttpClient.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmDashboard.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmFollowups.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmInteractions.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmLeads.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmLeadSources.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmLeadStatuses.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmNotes.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmOpportunities.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/crm/api/crmOpportunityStages.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/CRMDashboard.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/FollowUpListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/InteractionLogPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/LeadEntryPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/LeadListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/LeadSourceMasterPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/LeadStatusMasterPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/LeadWorkspacePage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/OpportunityEntryPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/OpportunityListPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/OpportunityStageMasterPage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css, /src/modules/crm/pages/OpportunityWorkspacePage.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/components/DocumentUpload.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/components/ExpiringDocumentsWidget.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/data/hrData.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/AttendanceOverview.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/DocumentTypeMaster.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/EmployeeForm.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/EmployeeList.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/EmployeeProfile.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/HRDashboard.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/LeaveManagement.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/LeaveTypeMaster.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/pages/ShiftMaster.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/project/index.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/accounts.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/api/exchangeApi.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/http/httpClient.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/chevron-down.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/Group 1.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/iconsax-search.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/alternative.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/calendar.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/cancel.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/config.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/creadit_note.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/crm-module.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/dashboard.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/data-entry (2) 2.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-discount-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-discount-viewer.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-gift-voucher-settings.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-gift-voucher-viewer.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-offer-packet-creation.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-offer-packet-list.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-offer-packing-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals-offer-unpacking-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/deals.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/debit_note.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/delete.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/delete2.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/DeliveryIcon.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/document-type.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/dropdown.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/edit.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/edit2.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/edit3.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/edit4.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/employee-directory.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/exchange.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/expence.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/filter.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/financials.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-additional-vehicle-history.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-branch-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-consumable-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-consumable-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-dashboard.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-estimation.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-gate-pass-viewer.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-home.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-job-card.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-job-code-punching.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-job-description-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-lubricant-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-module.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-part-request.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-parts-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-parts-search.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-pre-job-card-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-punching-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-punching-list.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-sublet-jobs.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-sublet-lpo.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-sublet-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-technician-entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-technician-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-vehicle-history.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/garage-workshop-monitor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/grn.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/group_details.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/home.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/hr-module.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/Income.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/invoice.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/leave-type-master.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/leave-type.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/ledger.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/ledger_module.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/list.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/list2.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/logistics.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/management.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/manufacturing.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/pay.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/payable.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/payment_entry.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/payment_supplier.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/pos.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/post.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/pricing.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/printer.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/procurement.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/product-movement.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/ProductIcon.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/proforma.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/purchase order.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/purchase.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/purchase_voucher.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/QuotationIcon.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/Receipt.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/receipt_cutomer.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/receivable.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/refresh.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/remove.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/reorder-list.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/reports.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/ReturnIcon.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/SaleIcon.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/sales.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/sales_voucher.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/search.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/search2.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/search3.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/shift-master.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/stock-adjustment-list.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/stock-hub.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/tools.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/trial_balance.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/unpost.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/vendor.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/assets/icons/view.svg[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/AppActionButton.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/CommonTable.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/ConfirmDialog.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/CustomerListFilterDrawer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/CustomerPicker.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/DateInputField.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/DatePickerInput.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/DropdownInput.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/index.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/InputField.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/PartsSearchFilterDrawer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/PermissionGate.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/ProductListFilterDrawer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/QuotationDateRangeModal.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/SalesFilterDrawer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/SelectDateButton.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/SelectTimeButton.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/StatusBadge.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/SubInputField.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/Switch.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/TableRowViewModal.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/TabsBar.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/TimePickerInput.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/VehiclePicker.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/components/ui/WorkshopMonitorFilterDrawer.jsx[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/constants/designationOptions.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/constants/theme.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/shared/styles/App.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/shared/styles/index.css[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/modules/hr/index.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/areaEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/customerEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/dealsOffers.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/deliveryOrderEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/group.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/groupEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/hr.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/productEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/purchaseEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/quotationEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/roleManagement.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/saleEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/staffEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/stock.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/subGroup.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/subGroupEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/supplierEntry.api.js[22m
+[2m1:13:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/services/tableEntry.api.js[22m
+[2m1:14:43 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m1:14:43 PM[22m [36m[1m[vite][22m[39m server restarted.
+[2m1:28:01 PM[22m [36m[1m[vite][22m[39m [32m.env changed, restarting server...[39m
+[2m1:28:02 PM[22m [36m[1m[vite][22m[39m server restarted.
