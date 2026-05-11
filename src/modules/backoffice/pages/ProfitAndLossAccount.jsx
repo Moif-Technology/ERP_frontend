@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { colors } from '../../../shared/constants/theme';
+import { useMemo, useState } from 'react';
+import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import SelectDateButton from '../../../shared/components/ui/SelectDateButton';
-import PrinterIcon from '../../../shared/assets/icons/printer.svg';
+import { colors } from '../../../shared/constants/theme';
 
 const primary = colors.primary?.main || '#790728';
 

@@ -1,0 +1,246 @@
+- generic [ref=e33]:
+  - banner [ref=e34]:
+    - generic "Pattambi Restaurant" [ref=e35]
+    - generic [ref=e37]:
+      - img "Search" [ref=e38]
+      - textbox "Search here" [ref=e39]
+    - generic [ref=e40]:
+      - generic "Head Office" [ref=e41]: "Station: Head Office"
+      - button "Pattambi Restaurant" [ref=e42]:
+        - img [ref=e43]
+        - generic [ref=e44]: Pattambi Restaurant
+      - button "Menu" [ref=e46] [cursor=pointer]: ⋮
+  - generic [ref=e47]:
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - button "CUSTOMER" [ref=e52] [cursor=pointer]
+          - button "SUPPLIER" [ref=e55] [cursor=pointer]
+          - button "ACCOUNTS" [ref=e58] [cursor=pointer]
+          - button "GARAGE" [ref=e61] [cursor=pointer]
+          - button "HR" [ref=e64] [cursor=pointer]
+        - button "Hide toolbars" [expanded] [ref=e66]:
+          - img [ref=e68]
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e72]: Product
+          - generic [ref=e73]:
+            - button "Product entry" [ref=e74] [cursor=pointer]:
+              - generic [ref=e75]: Product entry
+            - button "List" [ref=e76] [cursor=pointer]:
+              - generic [ref=e77]: List
+        - generic [ref=e78]:
+          - generic [ref=e79]: Quotation
+          - generic [ref=e80]:
+            - button "Quotation" [ref=e81] [cursor=pointer]:
+              - generic [ref=e82]: Quotation
+            - button "List" [ref=e83] [cursor=pointer]:
+              - generic [ref=e84]: List
+        - generic [ref=e85]:
+          - generic [ref=e86]: Delivery Order
+          - generic [ref=e87]:
+            - button "Delivery" [ref=e88] [cursor=pointer]:
+              - generic [ref=e89]: Delivery
+            - button "List" [ref=e90] [cursor=pointer]:
+              - generic [ref=e91]: List
+        - generic [ref=e92]:
+          - generic [ref=e93]: Sale
+          - generic [ref=e94]:
+            - button "Sales" [ref=e95] [cursor=pointer]:
+              - generic [ref=e96]: Sales
+            - button "List" [ref=e97] [cursor=pointer]:
+              - generic [ref=e98]: List
+        - generic [ref=e99]:
+          - generic [ref=e100]: Sale Return
+          - generic [ref=e101]:
+            - button "Returns" [ref=e102] [cursor=pointer]:
+              - generic [ref=e103]: Returns
+            - button "List" [ref=e104] [cursor=pointer]:
+              - generic [ref=e105]: List
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - button "Multi vendors" [ref=e108]:
+          - generic [ref=e109]: Multi vendors
+        - button "Item Ledger" [ref=e110]:
+          - generic [ref=e111]: Item Ledger
+        - button "Pricing" [ref=e112]:
+          - generic [ref=e113]: Pricing
+        - button "Alternative" [ref=e114]:
+          - generic [ref=e115]: Alternative
+      - generic [ref=e116]:
+        - button [ref=e117]
+        - button [ref=e118]
+        - button [ref=e119]
+        - button [ref=e120]
+  - generic [ref=e121]:
+    - complementary [ref=e122]:
+      - generic [ref=e124]:
+        - img "Search" [ref=e125]
+        - textbox "Search..." [ref=e126]
+      - navigation [ref=e127]:
+        - link "Dashboard" [ref=e129] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e130]: Dashboard
+        - link "Home" [ref=e132] [cursor=pointer]:
+          - /url: /home
+          - generic [ref=e133]: Home
+        - generic [ref=e135] [cursor=pointer]:
+          - generic [ref=e137]: Data Entry
+          - img "toggle" [ref=e138]
+        - generic [ref=e139]:
+          - generic [ref=e140] [cursor=pointer]:
+            - generic [ref=e142]: List
+            - img "toggle" [ref=e143]
+          - generic [ref=e144]:
+            - link "Product list" [ref=e145] [cursor=pointer]:
+              - /url: /products
+              - generic [ref=e146]: Product list
+            - link "Product price list" [ref=e147] [cursor=pointer]:
+              - /url: /lists/product-price-list
+              - generic [ref=e148]: Product price list
+            - link "Customer list" [ref=e149] [cursor=pointer]:
+              - /url: /lists/customer-list
+              - generic [ref=e150]: Customer list
+            - link "Supplier list" [ref=e151] [cursor=pointer]:
+              - /url: /lists/supplier-list
+              - generic [ref=e152]: Supplier list
+            - link "Agent list" [ref=e153] [cursor=pointer]:
+              - /url: /lists/agent-list
+              - generic [ref=e154]: Agent list
+        - generic [ref=e156] [cursor=pointer]:
+          - generic [ref=e158]: Stock Hub
+          - img "toggle" [ref=e159]
+        - generic [ref=e161] [cursor=pointer]:
+          - generic [ref=e163]: Exchange Hub
+          - img "toggle" [ref=e164]
+        - generic [ref=e166] [cursor=pointer]:
+          - generic [ref=e168]: Sales Activities
+          - img "toggle" [ref=e169]
+        - generic [ref=e171] [cursor=pointer]:
+          - generic [ref=e173]: Procurement
+          - img "toggle" [ref=e174]
+        - generic [ref=e176] [cursor=pointer]:
+          - generic [ref=e178]: Financials
+          - img "toggle" [ref=e179]
+        - generic [ref=e181] [cursor=pointer]:
+          - generic [ref=e183]: Manufacturing
+          - img "toggle" [ref=e184]
+        - generic [ref=e186] [cursor=pointer]:
+          - generic [ref=e188]: Deals & Offers
+          - img "toggle" [ref=e189]
+        - generic [ref=e191] [cursor=pointer]:
+          - generic [ref=e193]: Logistics
+          - img "toggle" [ref=e194]
+        - link "Point of Sale" [ref=e196] [cursor=pointer]:
+          - /url: /point-of-sale
+          - generic [ref=e197]: Point of Sale
+        - generic [ref=e199] [cursor=pointer]:
+          - generic [ref=e201]: Human Resources
+          - img "toggle" [ref=e202]
+        - generic [ref=e204] [cursor=pointer]:
+          - generic [ref=e206]: CRM
+          - img "toggle" [ref=e207]
+        - generic [ref=e209] [cursor=pointer]:
+          - generic [ref=e211]: Garage
+          - img "toggle" [ref=e212]
+        - generic [ref=e214] [cursor=pointer]:
+          - generic [ref=e216]: Reports
+          - img "toggle" [ref=e217]
+        - generic [ref=e219] [cursor=pointer]:
+          - generic [ref=e221]: Tools
+          - img "toggle" [ref=e222]
+        - generic [ref=e224] [cursor=pointer]:
+          - generic [ref=e226]: Management
+          - img "toggle" [ref=e227]
+        - generic [ref=e229] [cursor=pointer]:
+          - generic [ref=e231]: Configuration
+          - img "toggle" [ref=e232]
+      - button "Log out" [ref=e234]
+    - main [ref=e235]:
+      - generic [ref=e236]:
+        - heading "Dashboard" [level=1] [ref=e237]
+        - generic [ref=e238]:
+          - generic [ref=e240]:
+            - button "Info" [ref=e241]:
+              - img [ref=e242]
+            - paragraph [ref=e245]: Total amount
+            - generic [ref=e246]:
+              - paragraph [ref=e247]: "12345"
+              - generic [ref=e248]:
+                - img [ref=e249]
+                - text: +2.5%
+          - generic [ref=e252]:
+            - button "Info" [ref=e253]:
+              - img [ref=e254]
+            - paragraph [ref=e257]: Total amount
+            - generic [ref=e258]:
+              - paragraph [ref=e259]: "56784"
+              - generic [ref=e260]: +1.5%
+          - generic [ref=e262]:
+            - button "Info" [ref=e263]:
+              - img [ref=e264]
+            - paragraph [ref=e267]: Total amount
+            - generic [ref=e268]:
+              - paragraph [ref=e269]: "7542"
+              - generic [ref=e270]: +1.5%
+          - generic [ref=e272]:
+            - button "Info" [ref=e273]:
+              - img [ref=e274]
+            - paragraph [ref=e277]: Total amount
+            - generic [ref=e278]:
+              - paragraph [ref=e279]: "9637"
+              - generic [ref=e280]: "-1.5%"
+          - generic [ref=e282]:
+            - button "Info" [ref=e283]:
+              - img [ref=e284]
+            - paragraph [ref=e287]: Total amount
+            - generic [ref=e288]:
+              - paragraph [ref=e289]: "84578"
+              - generic [ref=e290]: "-1.5%"
+        - generic [ref=e291]:
+          - generic [ref=e292]:
+            - heading "Sales" [level=2] [ref=e293]
+            - img "Sales by day" [ref=e296]:
+              - generic [ref=e297]: "0"
+              - generic [ref=e298]: "100"
+              - generic [ref=e299]: "200"
+              - generic [ref=e300]: "300"
+              - generic [ref=e301]: "400"
+              - generic [ref=e302]: Mon
+              - generic [ref=e303]: Tue
+              - generic [ref=e304]: Wed
+              - generic [ref=e305]: Thu
+              - generic [ref=e306]: Fri
+              - generic [ref=e307]: Sat
+              - generic [ref=e308]: Sun
+          - generic [ref=e312]:
+            - generic [ref=e313]:
+              - paragraph [ref=e314]: Open quotations
+              - paragraph [ref=e315]: "48"
+              - paragraph [ref=e316]: +6 vs last week
+            - generic [ref=e317]:
+              - paragraph [ref=e318]: On-time delivery
+              - paragraph [ref=e319]: 96.4%
+              - paragraph [ref=e320]: SLA 95% · MTD
+          - generic [ref=e321]:
+            - heading "Customer growth" [level=2] [ref=e322]
+            - generic [ref=e324]:
+              - img [ref=e325]:
+                - generic [ref=e331]: Total customers
+                - generic [ref=e332]: 20,000
+              - list [ref=e333]:
+                - listitem [ref=e334]:
+                  - generic [ref=e335]: Text value
+                  - generic [ref=e337]: 20%
+                - listitem [ref=e338]:
+                  - generic [ref=e339]: Text value
+                  - generic [ref=e341]: 20%
+                - listitem [ref=e342]:
+                  - generic [ref=e343]: Text value
+                  - generic [ref=e345]: 20%
+                - listitem [ref=e346]:
+                  - generic [ref=e347]: Text value
+                  - generic [ref=e349]: 20%
+                - listitem [ref=e350]:
+                  - generic [ref=e351]: Text value
+                  - generic [ref=e353]: 20%

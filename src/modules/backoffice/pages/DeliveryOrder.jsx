@@ -1,508 +1,881 @@
-import React, { useEffect, useMemo, useState } from 'react';
+/**
+ * Delivery order — same API pattern as Quotation (branch, customer, lines, save).
+ */
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { colors } from '../../../shared/constants/theme';
+import { InputField, SubInputField, CommonTable, ConfirmDialog, DropdownInput } from '../../../shared/components/ui';
+import { getSessionUser } from '../../../core/auth/auth.service.js';
+import * as staffEntryApi from '../../../services/staffEntry.api.js';
+import * as customerEntryApi from '../../../services/customerEntry.api.js';
+import * as productEntryApi from '../../../services/productEntry.api.js';
+import * as quotationEntryApi from '../../../services/quotationEntry.api.js';
+import * as deliveryOrderEntryApi from '../../../services/deliveryOrderEntry.api.js';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
-import CancelIcon from '../../../shared/assets/icons/cancel.svg';
-import EditIcon from '../../../shared/assets/icons/edit.svg';
+import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
-import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable, ConfirmDialog } from '../../../shared/components/ui';
+
+const primary = colors.primary?.main || colors.primary?.DEFAULT || '#790728';
+const primaryHover = colors.primary?.[50] || '#F2E6EA';
+
+function mapApiProductToPicker(p) {
+  const inv = p.inventory || {};
+  return {
+    productId: p.productId,
+    shortDescription: (p.shortName || p.productName || '').trim() || '—',
+    unitPrice: inv.unitPrice != null ? Number(inv.unitPrice) : 0,
+    barCode: p.barcode || p.productCode || '',
+    unit: p.unitName || '',
+    locationCode: inv.locationCode || '',
+    qtyOnHand: inv.qtyOnHand,
+  };
+}
 
 export default function DeliveryOrder() {
-  const [doDate, setDoDate] = useState('');
-  const [enteredDate, setEnteredDate] = useState('');
-  const [tableRows, setTableRows] = useState([
-    ['1', 'OR-001', 'Product A', 'Main Store', 'SR-1001', 'Box Pack', 'PCS', '1', '250.00', '5', '12.50', '237.50', '5', '11.88', '249.38'],
-  ]);
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [pendingDeleteIndex, setPendingDeleteIndex] = useState(null);
-  const [editingRowIndex, setEditingRowIndex] = useState(null);
-  const [editingRowData, setEditingRowData] = useState([]);
-  const [itemForm, setItemForm] = useState({
-    ownRefNo: '',
-    productCode: '',
-    shortDescription: '',
-    serialNo: '',
-    packetDetails: '',
-    unit: '',
-    qty: '',
-    unitPrice: '',
-    discPercent: '',
-    disc: '',
-    subTotal: '',
-    taxPercent: '',
-    taxAmt: '',
-    lineTotal: '',
-  });
+  const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState([]);
+  const [customersRows, setCustomersRows] = useState([]);
+  const [productsCatalog, setProductsCatalog] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [saveError, setSaveError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loadingRefs, setLoadingRefs] = useState(true);
+
+  const [doNo, setDoNo] = useState('');
+  const [doDate, setDoDate] = useState(() => new Date().toISOString().slice(0, 10));
+  /** '' or business quotationId string from dropdown */
+  const [selectedQuotationId, setSelectedQuotationId] = useState('');
+  const [quotationsRows, setQuotationsRows] = useState([]);
+  const [loadingQuotations, setLoadingQuotations] = useState(false);
+  const [staffRows, setStaffRows] = useState([]);
+  const [staffLoadError, setStaffLoadError] = useState('');
+  /** '' or company staff_id (business id) for ops.delivery_order_master.salesman_id */
+  const [selectedSalesmanStaffId, setSelectedSalesmanStaffId] = useState('');
+  const [loadingQuotationDetail, setLoadingQuotationDetail] = useState(false);
+  const quotationPrefillSeq = useRef(0);
+  const [customerLpo, setCustomerLpo] = useState('');
+  const [deliveryBy, setDeliveryBy] = useState('');
+  /** Optional POS / register counter number */
+  const [counterNoStr, setCounterNoStr] = useState('');
+  const [remarks, setRemarks] = useState('');
+
+  const [customerId, setCustomerId] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+
+  const [productSearch, setProductSearch] = useState('');
+  const [productResults, setProductResults] = useState([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [ownRefNo, setOwnRefNo] = useState('');
+  const [productCode, setProductCode] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [unit, setUnit] = useState('');
+  const [qty, setQty] = useState(1);
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [discPct, setDiscPct] = useState(0);
+  const [discAmt, setDiscAmt] = useState(0);
+  const [items, setItems] = useState([]);
+  const [subTotal, setSubTotal] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [roundOff, setRoundOff] = useState(0);
+  const [netAmount, setNetAmount] = useState(0);
+
+  const [productInfo, setProductInfo] = useState({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
+  const [lineItemDetail, setLineItemDetail] = useState(null);
+  const [pendingRemoveIndex, setPendingRemoveIndex] = useState(null);
+
+  const branchOptions = useMemo(
+    () =>
+      branches.map((b) => ({
+        value: String(b.branchId),
+        label: `${b.branchCode} - ${b.branchName}`,
+      })),
+    [branches],
+  );
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    let cancelled = false;
+    (async () => {
+      setLoadingRefs(true);
+      try {
+        const sess = getSessionUser();
+        const defaultBr = sess?.stationId != null ? String(sess.stationId) : '';
+        const [{ data: brData }, { data: custData }] = await Promise.all([
+          staffEntryApi.fetchStaffBranches(),
+          customerEntryApi.listCustomers({ limit: 1000 }),
+        ]);
+        if (cancelled) return;
+        setBranches(brData?.branches || []);
+        setCustomersRows(custData?.customers || []);
+        setBranchId((prev) => prev || defaultBr || (brData?.branches?.[0] ? String(brData.branches[0].branchId) : ''));
+
+        setStaffLoadError('');
+        try {
+          const { data: staffData } = await staffEntryApi.listStaffMembers({ limit: 400 });
+          if (!cancelled) setStaffRows(staffData?.staff || []);
+        } catch (err) {
+          if (!cancelled) {
+            setStaffRows([]);
+            setStaffLoadError(err.response?.data?.message || err.message || 'Could not load staff list');
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setBranches([]);
+          setCustomersRows([]);
+          setStaffRows([]);
+        }
+      } finally {
+        if (!cancelled) setLoadingRefs(false);
+      }
+    })();
     return () => {
-      document.body.style.overflow = previousOverflow;
+      cancelled = true;
     };
   }, []);
 
-  const primary = colors.primary?.main || '#790728';
-
-  const handleDeleteRow = (idx) => {
-    setTableRows((prev) => prev.filter((_, i) => i !== idx));
-    if (editingRowIndex === idx) {
-      setEditingRowIndex(null);
-      setEditingRowData([]);
-    } else if (editingRowIndex !== null && idx < editingRowIndex) {
-      setEditingRowIndex((prev) => prev - 1);
+  useEffect(() => {
+    if (!branchId) {
+      setProductsCatalog([]);
+      return;
     }
-  };
-
-  const updateItemForm = (key, value) => {
-    setItemForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleAddRow = () => {
-    const newRow = [
-      String(tableRows.length + 1),
-      itemForm.ownRefNo || '-',
-      itemForm.shortDescription || '-',
-      itemForm.productCode || '-',
-      itemForm.serialNo || '-',
-      itemForm.packetDetails || '-',
-      itemForm.unit || '-',
-      itemForm.qty || '0',
-      itemForm.unitPrice || '0.00',
-      itemForm.discPercent || '0',
-      itemForm.disc || '0.00',
-      itemForm.subTotal || '0.00',
-      itemForm.taxPercent || '0',
-      itemForm.taxAmt || '0.00',
-      itemForm.lineTotal || '0.00',
-    ];
-    setTableRows((prev) => [newRow, ...prev]);
-    setItemForm({
-      ownRefNo: '',
-      productCode: '',
-      shortDescription: '',
-      serialNo: '',
-      packetDetails: '',
-      unit: '',
-      qty: '',
-      unitPrice: '',
-      discPercent: '',
-      disc: '',
-      subTotal: '',
-      taxPercent: '',
-      taxAmt: '',
-      lineTotal: '',
-    });
-  };
-
-  const handleEditRow = (idx) => {
-    setEditingRowIndex(idx);
-    setEditingRowData([...tableRows[idx]]);
-  };
-
-  const handleEditCellChange = (cellIdx, value) => {
-    setEditingRowData((prev) => {
-      const next = [...prev];
-      next[cellIdx] = value;
-      return next;
-    });
-  };
-
-  const handleSaveEdit = () => {
-    if (editingRowIndex === null) return;
-    setTableRows((prev) => prev.map((row, idx) => (idx === editingRowIndex ? editingRowData : row)));
-    setEditingRowIndex(null);
-    setEditingRowData([]);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingRowIndex(null);
-    setEditingRowData([]);
-  };
-
-  const parseCellNum = (v) => {
-    const n = parseFloat(String(v ?? '').replace(/,/g, ''));
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  const tableTotals = useMemo(() => {
-    const n = tableRows.length;
-    if (n === 0) {
-      return {
-        totalDisc: 0,
-        totalSub: 0,
-        avgTaxPct: 0,
-        totalTaxAmt: 0,
-        totalLine: 0,
-      };
-    }
-    let totalDisc = 0;
-    let totalSub = 0;
-    let sumTaxPct = 0;
-    let totalTaxAmt = 0;
-    let totalLine = 0;
-    tableRows.forEach((row) => {
-      totalDisc += parseCellNum(row[10]);
-      totalSub += parseCellNum(row[11]);
-      sumTaxPct += parseCellNum(row[12]);
-      totalTaxAmt += parseCellNum(row[13]);
-      totalLine += parseCellNum(row[14]);
-    });
-    return {
-      totalDisc,
-      totalSub,
-      avgTaxPct: sumTaxPct / n,
-      totalTaxAmt,
-      totalLine,
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await productEntryApi.fetchProducts(Number(branchId));
+        if (cancelled) return;
+        const list = (data?.products || []).map(mapApiProductToPicker);
+        setProductsCatalog(list);
+      } catch {
+        if (!cancelled) setProductsCatalog([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
-  }, [tableRows]);
+  }, [branchId]);
+
+  useEffect(() => {
+    quotationPrefillSeq.current += 1;
+    if (!branchId) {
+      setQuotationsRows([]);
+      setSelectedQuotationId('');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingQuotations(true);
+      try {
+        const { data } = await quotationEntryApi.listQuotations({
+          branchId: Number(branchId),
+          limit: 150,
+        });
+        if (cancelled) return;
+        setQuotationsRows(data?.quotations || []);
+      } catch {
+        if (!cancelled) setQuotationsRows([]);
+      } finally {
+        if (!cancelled) setLoadingQuotations(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [branchId]);
+
+  const quotationOptions = useMemo(
+    () =>
+      (quotationsRows || []).map((q) => ({
+        value: String(q.quotationId),
+        label: `${q.quotationNo || 'QTN'} · ${String(q.quotationDate || '').slice(0, 10)}${q.customerName ? ` · ${q.customerName}` : ''}`,
+      })),
+    [quotationsRows],
+  );
+
+  const quotationDropdownOptions = useMemo(
+    () => [{ value: '', label: loadingQuotations ? 'Loading quotations…' : '— No quotation —' }, ...quotationOptions],
+    [loadingQuotations, quotationOptions],
+  );
+
+  const staffDropdownOptions = useMemo(
+    () => [
+      { value: '', label: '— No salesman —' },
+      ...(staffRows || []).map((s) => ({
+        value: String(s.staffId),
+        label: s.staffCode ? `${s.staffName} (${s.staffCode})` : `${s.staffName} (#${s.staffId})`,
+      })),
+    ],
+    [staffRows],
+  );
+
+  /** Load full quotation (header + lines) and fill DO form. */
+  const applyQuotationSelection = async (quotationBusinessIdStr) => {
+    const v = String(quotationBusinessIdStr || '').trim();
+    setSelectedQuotationId(v);
+    if (!v) return;
+    const seq = ++quotationPrefillSeq.current;
+    setSaveError('');
+    setLoadingQuotationDetail(true);
+    try {
+      const qid = Number(v);
+      const { data } = await quotationEntryApi.getQuotation(qid);
+      if (seq !== quotationPrefillSeq.current) return;
+      const q = data?.quotation;
+      const lines = Array.isArray(data?.lines) ? data.lines : [];
+      if (!q) {
+        setSaveError('Quotation response was empty.');
+        return;
+      }
+      if (q.customerId != null) {
+        setCustomerId(String(q.customerId));
+        const cust = customersRows.find((c) => String(c.customerId) === String(q.customerId));
+        setCustomerAddress(q.customerAddress || cust?.address || '');
+      }
+      if (q.quotationDate) {
+        const d = String(q.quotationDate).slice(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) setDoDate(d);
+      }
+      setDiscountAmount(Number(q.discountAmount) || 0);
+      setRoundOff(Number(q.roundOffAdjustment) || 0);
+      setRemarks([q.remarks, q.quotationTerms].filter(Boolean).join('\n\n'));
+
+      const mapped = lines.map((L, idx) => {
+        const qty = Number(L.qty) || 0;
+        const unitPrice = Number(L.unitPrice) || 0;
+        const discAmt = Number(L.itemDiscount) || 0;
+        const gross = qty * unitPrice;
+        const discPct = gross > 0 ? Math.round((discAmt / gross) * 10000) / 100 : 0;
+        const sub = Number(L.subtotalAmount) || Math.round((gross - discAmt) * 100) / 100;
+        const lineTotal = Number(L.lineTotal) || sub;
+        return {
+          slNo: idx + 1,
+          productId: L.productId,
+          ownRefNo: L.barcode || '',
+          productCode: L.barcode || '',
+          shortDescription: (L.productDescription || '').trim() || '—',
+          location: L.locationCode || '',
+          unit: L.unitName || '',
+          qty,
+          unitPrice,
+          discPct,
+          discAmt,
+          subTotal: sub,
+          taxPct: 0,
+          taxAmount: 0,
+          lineTotal,
+          origin: L.originName || '',
+          stockStatus: L.stockStatus || '',
+          quotationId: qid,
+        };
+      });
+      setItems(mapped);
+      setSelectedProductId(null);
+    } catch (err) {
+      if (seq !== quotationPrefillSeq.current) return;
+      setSaveError(err.response?.data?.message || 'Could not load quotation details.');
+    } finally {
+      if (seq === quotationPrefillSeq.current) setLoadingQuotationDetail(false);
+    }
+  };
+
+  const getFilteredProducts = (query) => {
+    if (!branchId) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return productsCatalog.filter((p) => {
+      const shortDesc = String(p.shortDescription ?? '').toLowerCase();
+      const code = String(p.barCode ?? '').toLowerCase();
+      const u = String(p.unit ?? '').toLowerCase();
+      return shortDesc.includes(q) || code.includes(q) || u.includes(q);
+    });
+  };
+
+  const handleProductSearch = () => {
+    const filtered = getFilteredProducts(productSearch.trim());
+    setProductResults(filtered);
+    setShowSearchDropdown(true);
+  };
+
+  const selectProduct = (p) => {
+    setSelectedProductId(p.productId);
+    setOwnRefNo(p.barCode ?? '');
+    setProductCode(p.barCode ?? '');
+    setShortDescription(p.shortDescription ?? '');
+    setUnit(p.unit ?? '');
+    setUnitPrice(Number(p.unitPrice ?? 0));
+    setLocation(p.locationCode || '');
+    const stock = p.qtyOnHand != null ? String(p.qtyOnHand) : '';
+    setProductInfo({
+      lastCost: '',
+      origin: '',
+      minPrice: '',
+      stock,
+      loc: p.locationCode || '',
+    });
+    setProductResults([]);
+    setShowSearchDropdown(false);
+    setProductSearch('');
+  };
+
+  const addItem = () => {
+    if (!selectedProductId || !shortDescription || qty <= 0) return;
+    const sub = Math.round((qty * unitPrice - discAmt) * 100) / 100;
+    const lineTotal = sub;
+    const headerQid = selectedQuotationId.trim() ? parseInt(selectedQuotationId, 10) : NaN;
+    const lineQuotationId = Number.isFinite(headerQid) && headerQid >= 1 ? headerQid : undefined;
+    const newItem = {
+      productId: selectedProductId,
+      ownRefNo,
+      productCode,
+      shortDescription,
+      location: location || productInfo.loc,
+      unit,
+      qty,
+      unitPrice,
+      discPct,
+      discAmt,
+      subTotal: sub,
+      taxPct: 0,
+      taxAmount: 0,
+      lineTotal,
+      quotationId: lineQuotationId,
+    };
+    setItems((prev) => [
+      { ...newItem, slNo: 1 },
+      ...prev.map((r, i) => ({ ...r, slNo: i + 2 })),
+    ]);
+    setQty(1);
+    setUnitPrice(0);
+    setDiscPct(0);
+    setDiscAmt(0);
+    setSelectedProductId(null);
+  };
+
+  const removeItem = (idx) => {
+    setItems((prev) => prev.filter((_, i) => i !== idx).map((r, i) => ({ ...r, slNo: i + 1 })));
+  };
+
+  const parseHeaderQuotationId = () => {
+    const t = selectedQuotationId.trim();
+    if (!t) return undefined;
+    const n = parseInt(t, 10);
+    return Number.isFinite(n) && n >= 1 ? n : undefined;
+  };
+
+  const handleSaveDeliveryOrder = async () => {
+    setSaveError('');
+    setSuccessMsg('');
+    if (!branchId) {
+      setSaveError('Select a branch.');
+      return;
+    }
+    if (items.length === 0) {
+      setSaveError('Add at least one line item.');
+      return;
+    }
+    if (items.some((r) => !r.productId)) {
+      setSaveError('Each line must have a product (use search to pick a product).');
+      return;
+    }
+    setSaving(true);
+    try {
+      const qid = parseHeaderQuotationId();
+      const qRow = quotationsRows.find((q) => String(q.quotationId) === selectedQuotationId);
+      const qno = qRow?.quotationNo?.trim() || undefined;
+      const payload = {
+        branchId: Number(branchId),
+        deliveryOrderDate: doDate,
+        customerId: customerId ? Number(customerId) : undefined,
+        customerName: customersRows.find((c) => String(c.customerId) === customerId)?.customerName,
+        quotationId: qid,
+        quotationNo: qno,
+        customerLpoNo: customerLpo.trim() || undefined,
+        deliveryBy: deliveryBy.trim() || undefined,
+        salesmanId: selectedSalesmanStaffId.trim() ? Number(selectedSalesmanStaffId) : undefined,
+        counterNo: counterNoStr.trim() ? Number(counterNoStr) : undefined,
+        remarks: remarks.trim() || undefined,
+        discountAmount,
+        roundOff: Number(roundOff) || 0,
+        lines: items.map((r) => ({
+          productId: r.productId,
+          barcode: r.ownRefNo || r.productCode || undefined,
+          shortDescription: r.shortDescription,
+          unitName: r.unit || undefined,
+          qty: r.qty,
+          unitPrice: r.unitPrice,
+          itemDiscount: r.discAmt ?? 0,
+          quotationId: r.quotationId,
+        })),
+      };
+      const { data } = await deliveryOrderEntryApi.createDeliveryOrder(payload);
+      const d = data.deliveryOrder;
+      setDoNo(d.deliveryOrderNo || '');
+      setSuccessMsg(`Saved delivery order ${d.deliveryOrderNo} (id ${d.deliveryOrderId}).`);
+      setLineItemDetail(null);
+      setItems([]);
+      setDiscountAmount(0);
+      setRoundOff(0);
+      setSelectedQuotationId('');
+      setSelectedSalesmanStaffId('');
+      setCustomerLpo('');
+      setDeliveryBy('');
+      setCounterNoStr('');
+      setRemarks('');
+      setSelectedProductId(null);
+    } catch (err) {
+      setSaveError(err.response?.data?.message || 'Could not save delivery order.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddDeliveryOrder = () => {
+    setLineItemDetail(null);
+    setDoNo('');
+    setDoDate(new Date().toISOString().slice(0, 10));
+    setSelectedQuotationId('');
+    setSelectedSalesmanStaffId('');
+    setCustomerLpo('');
+    setDeliveryBy('');
+    setCounterNoStr('');
+    setRemarks('');
+    setCustomerId('');
+    setCustomerAddress('');
+    setProductSearch('');
+    setProductResults([]);
+    setShowSearchDropdown(false);
+    setOwnRefNo('');
+    setProductCode('');
+    setShortDescription('');
+    setLocation('');
+    setUnit('');
+    setQty(1);
+    setUnitPrice(0);
+    setDiscPct(0);
+    setDiscAmt(0);
+    setItems([]);
+    setDiscountAmount(0);
+    setRoundOff(0);
+    setProductInfo({ lastCost: '', origin: '', minPrice: '', stock: '', loc: '' });
+    setSelectedProductId(null);
+    setSaveError('');
+    setSuccessMsg('');
+    setStaffLoadError('');
+  };
+
+  useEffect(() => {
+    let sub = 0;
+    items.forEach((r) => {
+      sub += r.subTotal;
+    });
+    const tot = sub - discountAmount;
+    setSubTotal(sub);
+    setNetAmount(Math.round((tot + Number(roundOff || 0)) * 100) / 100);
+  }, [items, discountAmount, roundOff]);
+
+  const totalPrice = items.reduce((sum, r) => sum + Number(r.unitPrice || 0), 0);
+  const tableTaxTotal = items.reduce((sum, r) => sum + Number(r.taxAmount || 0), 0);
+  const tableLineTotal = items.reduce((sum, r) => sum + Number(r.lineTotal || 0), 0);
+
+  const quoteDetailRowLabel =
+    'min-w-0 shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-[10px]';
+  const detailRowInput =
+    'min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]';
 
   return (
     <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:mb-[15px] sm:mt-0 sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
       <style>{`
-        .delivery-btn-outline:hover {
-          border-color: ${primary} !important;
-          background: #F2E6EA !important;
-          color: ${primary} !important;
-        }
-        .delivery-order-table table {
-          table-layout: fixed;
-        }
-        .delivery-order-table th,
-        .delivery-order-table td {
-          vertical-align: middle;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .delivery-order-table th:first-child,
-        .delivery-order-table td:first-child {
-          width: 34px !important;
-          min-width: 34px !important;
-          max-width: 34px !important;
-          text-align: center;
-          padding-left: 4px !important;
-          padding-right: 4px !important;
-        }
-        .delivery-order-table th:nth-child(8),
-        .delivery-order-table td:nth-child(8),
-        .delivery-order-table th:nth-child(9),
-        .delivery-order-table td:nth-child(9),
-        .delivery-order-table th:nth-child(10),
-        .delivery-order-table td:nth-child(10),
-        .delivery-order-table th:nth-child(11),
-        .delivery-order-table td:nth-child(11),
-        .delivery-order-table th:nth-child(12),
-        .delivery-order-table td:nth-child(12),
-        .delivery-order-table th:nth-child(13),
-        .delivery-order-table td:nth-child(13),
-        .delivery-order-table th:nth-child(14),
-        .delivery-order-table td:nth-child(14),
-        .delivery-order-table th:nth-child(15),
-        .delivery-order-table td:nth-child(15) {
-          text-align: center;
-        }
-        .delivery-order-table th:last-child,
-        .delivery-order-table td:last-child {
-          width: 90px !important;
-          min-width: 90px !important;
-          text-align: center;
-        }
-        .delivery-order-table tbody tr:last-child td {
-          font-weight: 700;
-          background-color: #faf5f6;
-        }
-        .delivery-order-table tbody tr:last-child td:first-child {
-          text-align: left !important;
-          padding-left: 8px !important;
-        }
+        .do-outline:hover { border-color: ${primary} !important; background: ${primaryHover} !important; color: ${primary} !important; }
+        .do-primary:hover { filter: brightness(1.05); }
+        .do-scroll-table td:has(button) { white-space: nowrap; }
       `}</style>
 
-      <div className="flex h-[100%] w-full min-h-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex w-full flex-col gap-2 rounded-lg border border-gray-200 bg-white px-2.5 pb-2.5 pt-1.5 shadow-sm sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
+        <header className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-            DELIVERY ORDER
+            Delivery order
           </h1>
-          <div className="flex flex-wrap items-center gap-2">
-            {[{ icon: PrinterIcon }, { icon: CancelIcon, label: 'Cancel' }, { icon: EditIcon, label: 'Edit' }].map((btn) => (
-              <button
-                key={btn.label || 'print'}
-                type="button"
-                className="delivery-btn-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
-              >
-                <img src={btn.icon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
-                {btn.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className="delivery-btn-outline rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] sm:px-2 sm:py-1 sm:text-[11px]"
+              className="do-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-medium sm:px-2 sm:py-1 sm:text-[11px]"
             >
-              Save
+              <img src={PrinterIcon} alt="" className="h-3 w-3 sm:h-4 sm:w-4" />
+              Print
             </button>
             <button
               type="button"
-              className="flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium text-white sm:px-2 sm:py-1 sm:text-[11px]"
+              onClick={handleSaveDeliveryOrder}
+              disabled={saving || loadingRefs}
+              className="do-outline flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[9px] font-medium enabled:hover:bg-gray-50 disabled:opacity-50 sm:px-2 sm:py-1 sm:text-[11px]"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+            <button
+              type="button"
+              onClick={handleAddDeliveryOrder}
+              className="do-primary flex items-center gap-1 rounded border px-1.5 py-0.5 text-[9px] font-medium text-white sm:px-2 sm:py-1 sm:text-[11px]"
               style={{ backgroundColor: primary, borderColor: primary }}
             >
-              <svg
-                className="h-3 w-3 shrink-0 sm:h-4 sm:w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                strokeLinecap="round"
-                aria-hidden
-              >
+              <svg className="h-3 w-3 shrink-0 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              DELIVERY ORDER
+              New DO
             </button>
           </div>
-        </div>
+        </header>
+        {(saveError || successMsg || staffLoadError) && (
+          <div className="px-0.5 text-[10px] sm:text-[11px]">
+            {saveError && <p className="text-red-600">{saveError}</p>}
+            {staffLoadError && <p className="text-amber-700">{staffLoadError}</p>}
+            {successMsg && <p className="text-green-700">{successMsg}</p>}
+          </div>
+        )}
 
-        <div className="grid h-full min-h-0 grid-cols-1 gap-3 overflow-hidden xl:grid-cols-[1.72fr_1.28fr]">
-        <div className="flex min-h-0 flex-col gap-3">
-          <div
-            className="w-full rounded bg-white xl:w-[860px]"
-            style={{
-              borderRadius: '9.9px',
-              border: '0.49px solid #e5e7eb',
-              padding: '3.99px 5px',
-              minHeight: '117.95px',
-            }}
-          >
-            <div className="flex flex-col gap-[5.94px]">
-              <div className="flex flex-wrap items-end gap-[5.94px] xl:flex-nowrap">
-                <SubInputField label="DO No" widthPx={82} />
-                <DateInputField label="DO date" value={doDate} onChange={setDoDate} widthPx={108} />
-                <DateInputField label="Entered Date" value={enteredDate} onChange={setEnteredDate} widthPx={108} />
-                <InputField label="Customer name" widthPx={152} />
-                <InputField label="Customer LPO No" widthPx={152} />
-                <SubInputField label="Delivery By" widthPx={90} />
-                <SubInputField label="Bill #" widthPx={82} />
+        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
+          <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
+                <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
+                  DO details
+                </h2>
+                <div className="flex w-full min-w-0 flex-col gap-2">
+                  <DropdownInput
+                    label="Branch"
+                    placeholder={loadingRefs ? 'Loading…' : 'Select branch'}
+                    options={branchOptions}
+                    value={branchId}
+                    onChange={(v) => setBranchId(v)}
+                    fullWidth
+                    heightPx={28}
+                    disabled={loadingRefs || !branchOptions.length}
+                  />
+                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
+                    <SubInputField fullWidth label="DO No" heightPx={28} value={doNo} onChange={() => {}} placeholder="Auto on save" readOnly />
+                    <InputField fullWidth label="DO date" type="date" heightPx={28} value={doDate} onChange={(e) => setDoDate(e.target.value)} />
+                  </div>
+                  <DropdownInput
+                    label="From quotation (optional)"
+                    placeholder={
+                      !branchId
+                        ? 'Select branch first'
+                        : loadingQuotations
+                          ? 'Loading quotations…'
+                          : loadingQuotationDetail
+                            ? 'Loading quotation lines…'
+                            : 'Pick a saved quotation'
+                    }
+                    options={quotationDropdownOptions}
+                    value={selectedQuotationId}
+                    onChange={(v) => {
+                      void applyQuotationSelection(v);
+                    }}
+                    fullWidth
+                    heightPx={28}
+                    disabled={!branchId || loadingQuotations || loadingQuotationDetail}
+                  />
+                  <p className="text-[8px] leading-snug text-gray-500 sm:text-[9px]">
+                    Chooses a branch quotation, then loads <strong>full quotation lines</strong> (products, qty, price, discount), customer, dates, header discount/round off, and remarks/terms into this delivery order. Save when ready.
+                  </p>
+                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
+                    <SubInputField fullWidth label="Customer LPO" heightPx={28} value={customerLpo} onChange={(e) => setCustomerLpo(e.target.value)} />
+                    <SubInputField fullWidth label="Delivery by" heightPx={28} value={deliveryBy} onChange={(e) => setDeliveryBy(e.target.value)} />
+                  </div>
+                  <DropdownInput
+                    label="Salesman (optional)"
+                    placeholder="Who is responsible for this DO"
+                    options={staffDropdownOptions}
+                    value={selectedSalesmanStaffId}
+                    onChange={(v) => setSelectedSalesmanStaffId(v)}
+                    fullWidth
+                    heightPx={28}
+                  />
+                  <p className="text-[8px] leading-snug text-gray-500 sm:text-[9px]">
+                    Stores the staff member <strong>staff id</strong> from Staff entry (who owns this delivery). Leave blank if not needed.
+                  </p>
+                  <SubInputField
+                    fullWidth
+                    label="Counter no. (optional)"
+                    heightPx={28}
+                    value={counterNoStr}
+                    onChange={(e) => setCounterNoStr(e.target.value)}
+                    placeholder="e.g. POS register / counter"
+                    title="Optional: retail counter or register number for traceability"
+                  />
+                </div>
               </div>
-              <div className="flex flex-wrap items-end gap-[5.94px] xl:flex-nowrap">
-                <DropdownInput
-                  label="Sales Man"
-                  options={['000001', '000002']}
-                  value="000001"
-                  onChange={() => {}}
-                  widthPx={108}
-                />
-                <SubInputField label="Counter" widthPx={82} />
+              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
+                <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
+                  Customer
+                </h2>
+                <div className="flex flex-col gap-1 sm:gap-[8px]">
+                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
+                    <label className={quoteDetailRowLabel}>Customer</label>
+                    <select
+                      value={customerId === '' ? '' : String(customerId)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCustomerId(v);
+                        const row = customersRows.find((c) => String(c.customerId) === v);
+                        setCustomerAddress(row?.address || '');
+                      }}
+                      className={`${detailRowInput} cursor-pointer`}
+                    >
+                      <option value="">— Select —</option>
+                      {customersRows.map((c) => (
+                        <option key={c.customerId} value={String(c.customerId)}>
+                          {c.customerName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex w-full items-start justify-start gap-2 sm:gap-[10px]">
+                    <label className={`${quoteDetailRowLabel} pt-1`}>Address</label>
+                    <textarea
+                      value={customerAddress}
+                      onChange={(e) => setCustomerAddress(e.target.value)}
+                      rows={2}
+                      className={`${detailRowInput} min-h-[48px] resize-y`}
+                    />
+                  </div>
+                  <div className="flex w-full items-start justify-start gap-2 sm:gap-[10px]">
+                    <label className={`${quoteDetailRowLabel} pt-1`}>Remarks</label>
+                    <textarea
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      rows={2}
+                      className={`${detailRowInput} min-h-[48px] resize-y`}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-
-
-          <div className="w-full rounded border border-gray-200 bg-white p-2 sm:p-3 xl:w-[860px]">
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
-                <SubInputField label="Own Ref No" widthPx={80} value={itemForm.ownRefNo} onChange={(e) => updateItemForm('ownRefNo', e.target.value)} />
-                <SubInputField label="Product Code" widthPx={80} value={itemForm.productCode} onChange={(e) => updateItemForm('productCode', e.target.value)} />
-                <InputField label="Short Description" widthPx={145} value={itemForm.shortDescription} onChange={(e) => updateItemForm('shortDescription', e.target.value)} />
-                <SubInputField label="Serial #" widthPx={80} value={itemForm.serialNo} onChange={(e) => updateItemForm('serialNo', e.target.value)} />
-                <InputField label="Packet details" widthPx={145} value={itemForm.packetDetails} onChange={(e) => updateItemForm('packetDetails', e.target.value)} />
-                <SubInputField label="Qty" widthPx={64} value={itemForm.qty} onChange={(e) => updateItemForm('qty', e.target.value)} />
-                <SubInputField label="Unit Price" widthPx={80} value={itemForm.unitPrice} onChange={(e) => updateItemForm('unitPrice', e.target.value)} />
-                <SubInputField label="Disc %" widthPx={80} value={itemForm.discPercent} onChange={(e) => updateItemForm('discPercent', e.target.value)} />
-              </div>
-              <div className="flex flex-wrap items-end gap-2.5 xl:flex-nowrap">
-                <SubInputField label="Disc." widthPx={80} value={itemForm.disc} onChange={(e) => updateItemForm('disc', e.target.value)} />
-                <SubInputField label="Sub total" widthPx={80} value={itemForm.subTotal} onChange={(e) => updateItemForm('subTotal', e.target.value)} />
-                <SubInputField label="Tax%" widthPx={80} value={itemForm.taxPercent} onChange={(e) => updateItemForm('taxPercent', e.target.value)} />
-                <SubInputField label="T.Amt" widthPx={80} value={itemForm.taxAmt} onChange={(e) => updateItemForm('taxAmt', e.target.value)} />
-                <SubInputField label="Total" widthPx={80} value={itemForm.lineTotal} onChange={(e) => updateItemForm('lineTotal', e.target.value)} />
-                <div className="ml-auto flex items-end">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold" style={{ color: primary }}>
+                  Add line
+                </h2>
+                <div className="relative w-full max-w-[300px] min-w-[220px]">
+                  <input
+                    type="text"
+                    placeholder={branchId ? 'Search product…' : 'Select branch first'}
+                    disabled={!branchId}
+                    value={productSearch}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setProductSearch(val);
+                      setProductResults(getFilteredProducts(val));
+                      setShowSearchDropdown(true);
+                    }}
+                    onFocus={() => {
+                      setProductResults(getFilteredProducts(productSearch));
+                      setShowSearchDropdown(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleProductSearch();
+                      }
+                    }}
+                    className="h-[24px] w-full rounded border border-gray-300 bg-white pl-2 pr-[60px] text-[9px] outline-none sm:h-[28px] sm:text-[10px]"
+                  />
                   <button
                     type="button"
-                    onClick={handleAddRow}
-                    className="h-[20.08px] rounded border px-3 text-[11px] font-medium text-white"
-                    style={{ backgroundColor: primary, borderColor: primary }}
+                    onClick={handleProductSearch}
+                    className="absolute right-1 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded bg-transparent sm:h-[20px] sm:w-[20px]"
+                    aria-label="Search"
                   >
-                    Save
+                    <img src={SearchIcon} alt="" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                  </button>
+                  {showSearchDropdown && productResults.length > 0 && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-[180px] overflow-auto rounded border border-gray-200 bg-white shadow-md">
+                      {productResults.map((p) => (
+                        <button
+                          key={p.productId}
+                          type="button"
+                          onClick={() => selectProduct(p)}
+                          className="block w-full px-2 py-1 text-left text-[8px] hover:bg-gray-100 sm:text-[9px]"
+                        >
+                          {p.shortDescription} — {p.unitPrice} / {p.unit}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <SubInputField label="Own Ref" value={ownRefNo} onChange={(e) => setOwnRefNo(e.target.value)} />
+                <InputField label="Product Code" value={productCode} onChange={(e) => setProductCode(e.target.value)} />
+                <InputField label="Short Desc" value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
+                <InputField label="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <SubInputField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} />
+                <SubInputField label="Qty" type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} />
+                <SubInputField label="Unit Price" type="number" value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
+                <SubInputField
+                  label="Disc.%"
+                  type="number"
+                  value={discPct}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setDiscPct(v);
+                    setDiscAmt(qty * unitPrice * (v / 100));
+                  }}
+                />
+                <SubInputField label="Disc" type="number" value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} />
+                <div className="ml-auto flex shrink-0 items-end">
+                  <button
+                    type="button"
+                    onClick={addItem}
+                    className="flex h-[20px] items-center rounded px-2 text-[8px] font-medium text-white sm:text-[9px]"
+                    style={{ backgroundColor: primary }}
+                  >
+                    Add
                   </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          
-
-          <div className="hidden min-h-0 flex-1 flex-col rounded bg-white p-2 sm:p-3 xl:flex xl:w-[860px]">
-            <div className="min-h-0 overflow-y-auto max-h-[185px]">
+            <div
+              className={`do-scroll-table w-full overflow-x-hidden ${
+                items.length > 5 ? 'max-h-[min(15rem,48vh)] overflow-y-auto sm:max-h-[min(17rem,52vh)]' : ''
+              }`}
+            >
               <CommonTable
-                className="delivery-order-table"
-                headers={['Sl no', 'Own Ref No', 'Short Description', 'Location', 'Serial #', 'Packet details', 'Unit', 'Qty', 'Unit Price', 'Disc%', 'Disc.', 'Sub total', 'Tax%', 'T.Amt', 'Line Total', 'Action']}
                 fitParentWidth
+                stickyHeader={items.length > 7}
+                headers={['Sl', 'Own Ref', 'Code', 'Description', 'Loc', 'Unit', 'Qty', 'Price', 'Disc%', 'Disc', 'Tax%', 'Tax', 'Total', 'Action']}
                 rows={[
-                  ...tableRows.map((row, idx) => [
-                    ...row.map((cell, cellIdx) =>
-                      editingRowIndex === idx ? (
-                        <input
-                          key={`edit-${idx}-${cellIdx}`}
-                          value={editingRowData[cellIdx] ?? ''}
-                          onChange={(e) => handleEditCellChange(cellIdx, e.target.value)}
-                          className="h-5 w-full rounded border border-gray-300 bg-white px-1 text-[8px] outline-none"
-                        />
-                      ) : (
-                        cell
-                      )
-                    ),
-                    <div key={`action-${idx}`} className="flex min-w-[90px] items-center justify-center gap-0.5 text-center">
-                      {editingRowIndex === idx ? (
-                        <>
-                          <button
-                            type="button"
-                            className="rounded border border-gray-300 px-1 py-0 text-[7px]"
-                            onClick={handleSaveEdit}
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded border border-gray-300 px-1 py-0 text-[7px]"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" className="rounded p-0.5" aria-label="View row details" onClick={() => setSelectedRow(row)}>
-                            <img src={ViewActionIcon} alt="View" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                          <button type="button" className="rounded p-0.5" aria-label="Edit row" onClick={() => handleEditRow(idx)}>
-                            <img src={EditActionIcon} alt="Edit" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                          <button type="button" className="rounded p-0.5" aria-label="Delete row" onClick={() => setPendingDeleteIndex(idx)}>
-                            <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </button>
-                        </>
-                      )}
+                  ...items.map((r, i) => [
+                    r.slNo,
+                    r.ownRefNo,
+                    r.productCode,
+                    r.shortDescription,
+                    r.location,
+                    r.unit,
+                    r.qty,
+                    r.unitPrice?.toFixed(2),
+                    r.discPct,
+                    r.discAmt?.toFixed(2),
+                    r.taxPct,
+                    r.taxAmount?.toFixed(2),
+                    r.lineTotal?.toFixed(2),
+                    <div key={`act-${i}`} className="flex items-center justify-center gap-0.5">
+                      <button type="button" className="p-0.5" onClick={() => setLineItemDetail(r)} aria-label="View">
+                        <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
+                      <button type="button" className="p-0.5" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete">
+                        <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
                     </div>,
                   ]),
                   [
-                    { content: 'Total', colSpan: 10, className: 'text-left font-bold' },
-                    tableTotals.totalDisc.toFixed(2),
-                    tableTotals.totalSub.toFixed(2),
-                    tableTotals.avgTaxPct.toFixed(2),
-                    tableTotals.totalTaxAmt.toFixed(2),
-                    tableTotals.totalLine.toFixed(2),
+                    { content: 'Total', colSpan: 7, className: 'text-left font-bold' },
+                    totalPrice.toFixed(2),
+                    '',
+                    '',
+                    '',
+                    tableTaxTotal.toFixed(2),
+                    tableLineTotal.toFixed(2),
                     '',
                   ],
                 ]}
               />
             </div>
           </div>
-        </div>
 
-        <div className="flex min-h-0 flex-col gap-3">
-          <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
-            <div className="flex flex-col gap-2.5">
-              {['Qtn no', 'Job no', 'Product code', 'Stock', 'Min Price'].map((label) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <label className="w-[92px] shrink-0 text-[10px] font-semibold text-gray-700 sm:w-[100px]">{label}</label>
-                  <SubInputField label="" fullWidth />
+          <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[250px]">
+            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-2.5 shadow-sm sm:p-3">
+              <h2 className="mb-2 text-[10px] font-semibold sm:text-[11px]" style={{ color: primary }}>
+                Product info
+              </h2>
+              <div className="space-y-1.5 text-[9px] text-gray-800 sm:text-[10px]">
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Code</span>
+                  <span className="text-right font-medium">{productCode || '—'}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div
-            className="w-full rounded bg-white xl:h-[165px]"
-            style={{
-              borderRadius: '9.9px',
-              border: '0.49px solid #e5e7eb',
-              padding: '3.99px 5px',
-            }}
-          >
-            <div className="flex flex-col gap-2.5">
-              <div className="flex flex-wrap items-end gap-2.5 lg:flex-nowrap">
-                <InputField label="Sub Total" defaultValue="00000.00" fullWidth />
-                <SubInputField label="Discount Amount" defaultValue="1" widthPx={92} />
-                <SubInputField label="" defaultValue="11" suffix="%" widthPx={72} />
-              </div>
-              <div className="flex flex-wrap items-end gap-2.5 lg:flex-nowrap">
-                <InputField label="Total Amount" defaultValue="00000.00" fullWidth />
-                <SubInputField label="Tax" defaultValue="1" widthPx={92} />
-                <SubInputField label="" defaultValue="67" suffix="%" widthPx={72} />
-              </div>
-              <div className="flex flex-wrap items-end gap-2.5 lg:flex-nowrap">
-                <InputField label="Round Off" defaultValue="00000.00" fullWidth />
-                <InputField label="Net Amount" defaultValue="00000.00" fullWidth />
-              </div>
-            </div>
-          </div>
-          <div className="w-full rounded border border-gray-200 bg-white p-3 sm:p-3.5">
-            <div className="flex flex-col gap-2.5">
-              {['Attention', 'Remark'].map((label) => (
-                <div key={label} className="flex items-center gap-2.5">
-                  <label className="w-[92px] shrink-0 text-[10px] font-semibold text-gray-700 sm:w-[100px]">{label}</label>
-                  <InputField label="" fullWidth />
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Stock</span>
+                  <span className="text-right">{productInfo.stock || '—'}</span>
                 </div>
-              ))}
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Location</span>
+                  <span className="text-right">{productInfo.loc || '—'}</span>
+                </div>
+              </div>
             </div>
-          </div>
+            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-2.5 shadow-md sm:p-3">
+              <h2 className="mb-2 text-[10px] font-bold sm:text-[11px]" style={{ color: primary }}>
+                Totals
+              </h2>
+              <div className="space-y-1.5 text-[9px] sm:text-[10px]">
+                <div className="flex justify-between gap-2">
+                  <span className="text-gray-600">Sub total</span>
+                  <span className="font-semibold tabular-nums">{subTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-600">Discount</span>
+                  <input
+                    type="number"
+                    className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-[9px]"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-gray-600">Round off</span>
+                  <input
+                    type="number"
+                    className="w-20 rounded border border-gray-300 px-1 py-0.5 text-right text-[9px]"
+                    value={roundOff}
+                    onChange={(e) => setRoundOff(Number(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="flex justify-between border-t border-[#790728]/20 pt-1 font-bold" style={{ color: primary }}>
+                  <span>Net</span>
+                  <span className="tabular-nums">{netAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
       <ConfirmDialog
-        open={pendingDeleteIndex !== null}
-        title="Delete line item?"
-        message="This will remove the row from the delivery order. This action cannot be undone."
-        confirmLabel="Delete"
+        open={pendingRemoveIndex !== null}
+        title="Remove line?"
+        message="Remove this line from the delivery order?"
+        confirmLabel="Remove"
         cancelLabel="Cancel"
         danger
-        onClose={() => setPendingDeleteIndex(null)}
+        onClose={() => setPendingRemoveIndex(null)}
         onConfirm={() => {
-          if (pendingDeleteIndex !== null) handleDeleteRow(pendingDeleteIndex);
+          if (pendingRemoveIndex !== null) removeItem(pendingRemoveIndex);
+          setPendingRemoveIndex(null);
         }}
       />
 
-      {selectedRow && (
+      {lineItemDetail && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-          onClick={() => setSelectedRow(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+          onClick={() => setLineItemDetail(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Row details"
         >
-          <div className="mx-4 w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold sm:text-base" style={{ color: primary }}>Item details</h2>
-              <button type="button" className="rounded p-1 text-gray-500 hover:bg-gray-100" onClick={() => setSelectedRow(null)} aria-label="Close details">x</button>
+          <div className="max-h-[90vh] w-full max-w-md overflow-auto rounded-lg border bg-white p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-2 flex justify-between">
+              <h2 className="text-sm font-bold" style={{ color: primary }}>
+                Line detail
+              </h2>
+              <button type="button" className="text-gray-500" onClick={() => setLineItemDetail(null)}>
+                ×
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {[
-                ['Sl no', selectedRow[0]],
-                ['Own Ref No', selectedRow[1]],
-                ['Short Description', selectedRow[2]],
-                ['Location', selectedRow[3]],
-                ['Serial #', selectedRow[4]],
-                ['Packet details', selectedRow[5]],
-                ['Unit', selectedRow[6]],
-                ['Qty', selectedRow[7]],
-                ['Unit Price', selectedRow[8]],
-                ['Disc%', selectedRow[9]],
-                ['Disc.', selectedRow[10]],
-                ['Sub total', selectedRow[11]],
-                ['Tax%', selectedRow[12]],
-                ['T.Amt', selectedRow[13]],
-                ['Line Total', selectedRow[14]],
-              ].map(([label, value]) => (
-                <React.Fragment key={label}>
-                  <div className="font-semibold text-gray-700">{label}</div>
-                  <div className="rounded border border-gray-200 bg-gray-50 px-2 py-1">{value}</div>
-                </React.Fragment>
-              ))}
-            </div>
+            <pre className="whitespace-pre-wrap text-[10px] text-gray-700">{JSON.stringify(lineItemDetail, null, 2)}</pre>
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

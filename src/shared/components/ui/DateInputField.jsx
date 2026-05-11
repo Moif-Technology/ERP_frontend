@@ -8,7 +8,7 @@ function formatDate(dateValue) {
   return `${day}/${month}/${year}`;
 }
 
-export default function DateInputField({ label, value, onChange, widthPx, heightPx, fullWidth }) {
+export default function DateInputField({ label, value, onChange, widthPx, heightPx, fullWidth, className, labelClassName, inputStyle }) {
   const dateRef = useRef(null);
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.dateBox.width;
   const boxHeight = heightPx != null ? `${heightPx}px` : inputField.dateBox.height;
@@ -27,7 +27,10 @@ export default function DateInputField({ label, value, onChange, widthPx, height
       style={fullWidth ? { width: '100%' } : { width: boxWidth }}
     >
       {label ? (
-        <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>
+        <label
+          className={labelClassName || 'text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]'}
+          style={labelClassName ? undefined : { color: inputField.label.color }}
+        >
           {label}
         </label>
       ) : null}
@@ -37,7 +40,7 @@ export default function DateInputField({ label, value, onChange, widthPx, height
           readOnly
           value={displayValue}
           placeholder="DD/MM/YYYY"
-          className="box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 pr-6 text-[8px] outline-none sm:px-2 sm:text-[9px]"
+          className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 pr-6 text-[8px] outline-none sm:px-2 sm:text-[9px] ${className ?? ''}`.trim()}
           style={{
             background: colors.input?.background ?? '#fff',
             borderColor: '#e2e8f0',
@@ -45,6 +48,7 @@ export default function DateInputField({ label, value, onChange, widthPx, height
             width: '100%',
             height: boxHeight,
             minHeight: boxHeight,
+            ...inputStyle,
           }}
           onClick={openPicker}
         />

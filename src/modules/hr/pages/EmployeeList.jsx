@@ -1,19 +1,15 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import StatusBadge from '../../../shared/components/ui/StatusBadge';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
+import { employees as employeeRecords } from '../data/hrData';
+import * as hrApi from '../../../services/hr.api.js';
 
 const primary = colors.primary?.main || '#790728';
 
 const CL_COL_PCT = [4, 6, 12, 20, 15, 15, 15, 13];
-
-const DUMMY_EMPLOYEES = [
-  { id: '1', code: 'EMP-001', name: 'John Doe', designation: 'Software Engineer', department: 'IT', mobile: '0501234567', status: 'Active' },
-  { id: '2', code: 'EMP-002', name: 'Jane Smith', designation: 'HR Manager', department: 'HR', mobile: '0509876543', status: 'Active' },
-  { id: '3', code: 'EMP-003', name: 'Ali Khan', designation: 'Accountant', department: 'Finance', mobile: '0561112222', status: 'Inactive' },
-];
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 const figmaSearchBox = `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px]`;
@@ -23,6 +19,32 @@ export default function EmployeeList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [rowsData, setRowsData] = useState(employeeRecords);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await hrApi.listHrEmployees();
+        if (cancelled) return;
+        const rows = (data?.employees || []).map((e) => ({
+          id: String(e.employeeId),
+          code: e.employeeCode,
+          name: e.employeeName,
+          designation: e.designation || '-',
+          department: e.department || '-',
+          mobile: e.mobileNo || '-',
+          status: e.isActive ? 'Active' : 'Inactive',
+        }));
+        if (rows.length) setRowsData(rows);
+      } catch {
+        // Keep fallback mock rows when HR tables are not installed yet.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -35,11 +57,11 @@ export default function EmployeeList() {
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return DUMMY_EMPLOYEES;
-    return DUMMY_EMPLOYEES.filter((r) => 
+    if (!q) return rowsData;
+    return rowsData.filter((r) =>
       Object.values(r).join(' ').toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, rowsData]);
 
   const handleRowClick = useCallback((rowIdx) => {
     const employee = filteredRows[rowIdx];
@@ -75,10 +97,16 @@ export default function EmployeeList() {
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="shrink-0 text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-          EMPLOYEE DIRECTORY
-        </h1>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Human Resources</p>
+          <h1 className="shrink-0 text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
+            EMPLOYEE DIRECTORY
+          </h1>
+        </div>
         <div className="flex flex-wrap items-center gap-2.5">
+          <Link to="/hr/dashboard" className="inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border border-rose-200 bg-white px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-slate-700 no-underline shadow-sm">
+            HR Dashboard
+          </Link>
           <Link to="/hr/employee-entry" className={primaryLinkBtn} style={{ backgroundColor: primary, borderColor: primary }}>
             Add Employee
           </Link>

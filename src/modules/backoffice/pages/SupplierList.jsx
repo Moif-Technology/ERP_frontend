@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import * as supplierEntryApi from '../../../services/supplierEntry.api';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
@@ -23,33 +24,19 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 /** Checkbox + 8 columns — widths sum to 100 */
 const SL_COL_PCT = [2, 10, 18, 14, 14, 7, 10, 9, 16];
 
-const COMPANY_PARTS = ['Global', 'Metro', 'Gulf', 'United', 'Prime', 'Atlas', 'Vertex', 'Summit'];
-const COMPANY_SUFFIX = ['Trading LLC', 'Supplies FZE', 'Imports Co.', 'Distribution', 'Wholesale Est.', 'Holdings Ltd'];
-
-const COUNTRIES = ['UAE', 'UAE', 'KSA', 'Qatar', 'Kuwait', 'Oman', 'Bahrain', 'India'];
-
-function buildDummySuppliers(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const a = COMPANY_PARTS[i % COMPANY_PARTS.length];
-    const b = COMPANY_PARTS[(i + 3) % COMPANY_PARTS.length];
-    const suf = COMPANY_SUFFIX[i % COMPANY_SUFFIX.length];
-    rows.push({
-      id: String(i + 1),
-      supplierCode: `SUP-${String(900 + i * 19).padStart(5, '0')}`,
-      supplierName: `${a} ${b} ${suf}`,
-      taxRegNo: i % 7 === 0 ? '—' : `100${(310000000 + i * 100019) % 900000000}`,
-      contactPerson: `${['Ravi', 'Hassan', 'Priya', 'Omar', 'Li Wei'][i % 5]} (${['Purchasing', 'Accounts', 'GM'][i % 3]})`,
-      qty: 1 + (i * 11) % 48,
-      country: COUNTRIES[i % COUNTRIES.length],
-      telephone: `04-${2200000 + (i * 817) % 6800000}`,
-      mobile: `+971 55 ${1000000 + (i * 191) % 8999999}`,
-    });
-  }
-  return rows;
+function mapApiSupplier(s) {
+  return {
+    id: String(s.supplierId),
+    supplierCode: s.supplierCode ?? '—',
+    supplierName: s.supplierName ?? '—',
+    taxRegNo: '—',
+    contactPerson: '—',
+    qty: '—',
+    country: '—',
+    telephone: '—',
+    mobile: s.mobileNo ?? '—',
+  };
 }
-
-const DUMMY_SUPPLIERS = buildDummySuppliers(40);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -68,7 +55,9 @@ const primaryLinkBtn =
 const SEARCH_PLACEHOLDER = 'Search…';
 
 export default function SupplierList() {
-  const [suppliers, setSuppliers] = useState(() => DUMMY_SUPPLIERS.map((r) => ({ ...r })));
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [page, setPage] = useState(1);
@@ -76,6 +65,27 @@ export default function SupplierList() {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    supplierEntryApi.listSuppliers()
+      .then(({ data }) => {
+        if (!cancelled) {
+          setSuppliers((data.suppliers || []).map(mapApiSupplier));
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err?.response?.data?.message || 'Failed to load suppliers');
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleRowSelected = useCallback((id) => {
     setSelectedIds((prev) => {
@@ -246,7 +256,17 @@ export default function SupplierList() {
             <img src={CancelIcon} alt="" className="h-3.5 w-3.5" />
             Cancel
           </button>
-          <button type="button" className={figmaToolbarBtn}>
+          <button
+            type="button"
+            className={figmaToolbarBtn}
+            disabled={selectedRowCount !== 1}
+            style={selectedRowCount !== 1 ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+            onClick={() => {
+              const selectedId = [...selectedIds].find((id) => filteredIdSet.has(id));
+              const row = filteredRows.find((r) => r.id === selectedId);
+              if (row) navigate(`/data-entry/supplier-entry?supplierId=${row.id}`, { state: { supplier: row } });
+            }}
+          >
             <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
             Edit
           </button>
@@ -300,6 +320,12 @@ export default function SupplierList() {
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {loadError && (
+          <p className="mb-2 rounded bg-red-50 px-3 py-2 text-[10px] font-semibold text-red-600">{loadError}</p>
+        )}
+        {loading && (
+          <p className="mb-2 text-[10px] font-semibold text-gray-500">Loading suppliers…</p>
+        )}
         <CommonTable
           className="supplier-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth

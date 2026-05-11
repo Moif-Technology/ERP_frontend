@@ -1,7 +1,8 @@
 {
   "name": "erp_frontend_new",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "main": "electron/main.js",
   "dependencies": {
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
@@ -20,15 +21,49 @@
     "@tailwindcss/vite": "^4.2.1",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.27",
+    "concurrently": "^9.1.2",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "wait-on": "^8.0.3"
   },
   "scripts": {
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && set ELECTRON_DEV=true&& electron .\"",
+    "electron:build": "vite build && electron-builder --win",
+    "electron:portable": "vite build && electron-builder --win zip"
+  },
+  "build": {
+    "appId": "com.moiftech.erp",
+    "productName": "MOIF ERP",
+    "copyright": "Copyright © 2025 MOIF Technologies",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
+    }
   },
   "browserslist": {
     "production": [

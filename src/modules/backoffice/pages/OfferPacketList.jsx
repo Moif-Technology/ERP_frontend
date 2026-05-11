@@ -7,54 +7,14 @@ import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
-import FilterIcon from '../../../shared/assets/icons/filter.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
+import * as api from '../../../services/dealsOffers.api.js';
 
 const primary = colors.primary?.main || '#790728';
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
 const OP_COL_PCT = [7, 7, 7, 10, 10, 5, 4, 6, 6, 7, 6, 7, 6, 5, 4, 3];
-
-const PACKET_NAMES = ['Weekend Combo', 'Family Saver', 'Snack Bundle', 'Office Pack', 'Fresh Picks'];
-const BRANDS = ['Nova', 'Vertex', 'Apex', 'Pulse', 'Zenith'];
-const GROUPS = ['Grocery', 'Beverages', 'Household', 'Personal care', 'Snacks'];
-const SUPPLIERS = ['Gulf Supplies LLC', 'Prime Trade House', 'Apex Distribution', 'Blue Ocean Foods', 'Retail Source'];
-const PRODUCT_TYPES = ['Offer packet', 'Bundle', 'Combo', 'Promo item', 'Seasonal'];
-const LOCATIONS = ['Dubai Main', 'Sharjah Hub', 'Abu Dhabi WH', 'Ajman Store', 'RAK Depot'];
-
-function buildDummyOfferPackets(count) {
-  const rows = [];
-  for (let i = 0; i < count; i += 1) {
-    const unitCost = (6 + (i % 7) * 1.35).toFixed(2);
-    const lastPurchase = (Number(unitCost) + 0.65).toFixed(2);
-    const unitPrice = (Number(unitCost) + 2.4).toFixed(2);
-    const sellingPrice = (Number(unitPrice) + 1.75).toFixed(2);
-    const margin = (((Number(sellingPrice) - Number(unitCost)) / Number(sellingPrice)) * 100).toFixed(2);
-    rows.push({
-      id: String(i + 1),
-      ownRefNo: `OPL-${String(1001 + i).padStart(5, '0')}`,
-      supplierRefNo: `SUP-${String(301 + i).padStart(4, '0')}`,
-      barcode: `628${String(1000000 + i * 173).slice(-10)}`,
-      shortDescription: `${PACKET_NAMES[i % PACKET_NAMES.length]} ${i + 1}`,
-      supplierName: SUPPLIERS[i % SUPPLIERS.length],
-      productBrand: BRANDS[i % BRANDS.length],
-      pktQty: String(4 + (i % 8)),
-      pktDetails: GROUPS[i % GROUPS.length],
-      unitCost,
-      lastPurchase,
-      unitPrice,
-      sellingPrice,
-      productType: PRODUCT_TYPES[i % PRODUCT_TYPES.length],
-      location: LOCATIONS[i % LOCATIONS.length],
-      marginPct: margin,
-      packetQty: String(4 + (i % 8)),
-    });
-  }
-  return rows;
-}
-
-const DUMMY_PACKETS = buildDummyOfferPackets(36);
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
@@ -81,57 +41,55 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
 }
 
 export default function OfferPacketList() {
-  const [packets, setPackets] = useState(() => DUMMY_PACKETS.map((r) => ({ ...r })));
+  const [packets, setPackets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('default');
-  const [brandFilter, setBrandFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
+    api.listOfferPackets()
+      .then(({ data }) => { if (!cancelled) setPackets(data.items ?? []); })
+      .catch((err) => { if (!cancelled) setLoadError(err?.response?.data?.message || 'Failed to load offer packets'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleDeletePacket = useCallback(async (id) => {
+    setPackets((prev) => prev.filter((r) => r.id !== id));
+    try {
+      await api.deleteOfferPacket(id);
+    } catch (err) {
+      console.error('Delete offer packet failed', err);
+    }
+  }, []);
+
+  useEffect(() => {
     setPage(1);
-  }, [search, sortBy, brandFilter]);
+  }, [search, sortBy]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = packets;
     if (q) {
       list = packets.filter((r) =>
-        [
-          r.ownRefNo,
-          r.supplierRefNo,
-          r.barcode,
-          r.shortDescription,
-          r.supplierName,
-          r.productBrand,
-          r.pktQty,
-          r.pktDetails,
-          r.unitCost,
-          r.lastPurchase,
-          r.unitPrice,
-          r.sellingPrice,
-          r.productType,
-          r.location,
-          r.marginPct,
-        ]
-          .map((x) => String(x ?? '').toLowerCase())
-          .join(' ')
-          .includes(q),
+        [r.ownRefNo, r.supplierRefNo, r.barcode, r.shortDescription, r.supplierName,
+          r.productBrand, r.pktQty, r.pktDetails, r.unitCost, r.lastPurchase,
+          r.unitPrice, r.sellingPrice, r.productType, r.location, r.marginPct]
+          .map((x) => String(x ?? '').toLowerCase()).join(' ').includes(q),
       );
     }
-    if (brandFilter !== 'all') {
-      list = list.filter((r) => String(r.productBrand).toLowerCase() === brandFilter);
-    }
     const sorted = [...list];
-    if (sortBy === 'ownRefNo') {
-      sorted.sort((a, b) => String(a.ownRefNo).localeCompare(String(b.ownRefNo)));
-    } else if (sortBy === 'shortDescription') {
-      sorted.sort((a, b) => String(a.shortDescription).localeCompare(String(b.shortDescription)));
-    } else if (sortBy === 'supplierName') {
-      sorted.sort((a, b) => String(a.supplierName).localeCompare(String(b.supplierName)));
-    }
+    if (sortBy === 'ownRefNo') sorted.sort((a, b) => String(a.ownRefNo).localeCompare(String(b.ownRefNo)));
+    else if (sortBy === 'shortDescription') sorted.sort((a, b) => String(a.shortDescription).localeCompare(String(b.shortDescription)));
+    else if (sortBy === 'supplierName') sorted.sort((a, b) => String(a.supplierName).localeCompare(String(b.supplierName)));
     return sorted;
-  }, [packets, search, sortBy, brandFilter]);
+  }, [packets, search, sortBy]);
 
   const totalFiltered = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize) || 1);
@@ -149,56 +107,32 @@ export default function OfferPacketList() {
   const rangeEnd = Math.min(page * pageSize, totalFiltered);
 
   const tableRows = useMemo(() => {
-    return paginatedRows.map((r) => {
-      return [
-        r.ownRefNo,
-        r.supplierRefNo,
-        r.barcode,
-        <span key={`sd-${r.id}`} className="block w-full text-left">
-          {r.shortDescription}
-        </span>,
-        <span key={`sn-${r.id}`} className="block w-full text-left">
-          {r.supplierName}
-        </span>,
-        r.productBrand,
-        r.pktQty,
-        r.pktDetails,
-        r.unitCost,
-        r.lastPurchase,
-        r.unitPrice,
-        r.sellingPrice,
-        r.productType,
-        r.location,
-        `${r.marginPct}%`,
-        <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="View offer packet"
-            onClick={() => {}}
-          >
-            <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </button>
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="Edit offer packet"
-            onClick={() => {}}
-          >
-            <img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </button>
-          <button
-            type="button"
-            className={actionIconBtn}
-            aria-label="Delete offer packet"
-            onClick={() => setPackets((prev) => prev.filter((row) => row.id !== r.id))}
-          >
-            <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          </button>
-        </div>,
-      ];
-    });
-  }, [paginatedRows]);
+    return paginatedRows.map((r) => [
+      r.ownRefNo,
+      r.supplierRefNo,
+      r.barcode,
+      <span key={`sd-${r.id}`} className="block w-full text-left">{r.shortDescription}</span>,
+      <span key={`sn-${r.id}`} className="block w-full text-left">{r.supplierName}</span>,
+      r.productBrand,
+      r.pktQty,
+      r.pktDetails,
+      r.unitCost,
+      r.lastPurchase,
+      r.unitPrice,
+      r.sellingPrice,
+      r.productType,
+      r.location,
+      r.marginPct ? `${r.marginPct}%` : '',
+      <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+        <button type="button" className={actionIconBtn} aria-label="View offer packet" onClick={() => {}}>
+          <img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        </button>
+        <button type="button" className={actionIconBtn} aria-label="Delete offer packet" onClick={() => handleDeletePacket(r.id)}>
+          <img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        </button>
+      </div>,
+    ]);
+  }, [paginatedRows, handleDeletePacket]);
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -214,12 +148,13 @@ export default function OfferPacketList() {
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1
-          className="shrink-0 text-base font-bold sm:text-lg xl:text-xl"
-          style={{ color: primary }}
-        >
-          OFFER PACKET LIST
-        </h1>
+        <div className="flex min-w-0 shrink-0 flex-col gap-1">
+          <h1 className="shrink-0 text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
+            OFFER PACKET LIST
+          </h1>
+          {loadError && <p className="text-[10px] font-semibold text-red-600">{loadError}</p>}
+          {loading && <p className="text-[10px] font-semibold text-gray-500">Loading…</p>}
+        </div>
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
             to="/deals-offers/offer-packet-creation"
@@ -272,25 +207,6 @@ export default function OfferPacketList() {
             </span>
           </div>
 
-          <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
-            <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
-            <select
-              value={brandFilter}
-              onChange={(e) => setBrandFilter(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[12rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
-              aria-label="Filter"
-            >
-              <option value="all">Filter: All</option>
-              {BRANDS.map((brand) => (
-                <option key={brand} value={brand.toLowerCase()}>
-                  Filter: {brand}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
-              <ToolbarChevron />
-            </span>
-          </div>
         </div>
       </div>
 

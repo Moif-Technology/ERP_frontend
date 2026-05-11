@@ -1,29 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InputField, CommonTable, ConfirmDialog } from '../../../shared/components/ui';
+import {
+  listLeadSources, createLeadSource, updateLeadSource, deleteLeadSource,
+} from '../api/crmLeadSources.api';
 
 const primary = '#790728';
 
-const INITIAL_ROWS = [
-  { source_id: 1, source_name: 'Direct Visit',           description: 'Customer visits the office directly',              is_active: true  },
-  { source_id: 2, source_name: 'Referral',               description: 'Lead referred by an existing customer or contact', is_active: true  },
-  { source_id: 3, source_name: 'Website Enquiry',        description: 'Enquiry submitted through the company website',    is_active: true  },
-  { source_id: 4, source_name: 'Cold Call',              description: 'Outbound call initiated by the sales team',        is_active: true  },
-  { source_id: 5, source_name: 'Exhibition / Trade Show','description': 'Lead acquired at an exhibition or trade event',  is_active: true  },
-  { source_id: 6, source_name: 'Social Media',           description: 'Lead from LinkedIn, Instagram, or similar',       is_active: true  },
-  { source_id: 7, source_name: 'Email Campaign',         description: 'Response to a bulk email marketing campaign',     is_active: false },
-  { source_id: 8, source_name: 'Partner / Agent',        description: 'Lead introduced by a business partner or agent',  is_active: true  },
-];
-
 const EMPTY_FORM = { source_name: '', description: '', is_active: true };
 
+function mapApiRow(r) {
+  return {
+    source_id: r.id,
+    source_name: r.sourceName,
+    description: r.description || '',
+    is_active: r.isActive,
+  };
+}
+
 export default function LeadSourceMasterPage() {
-  const navigate = useNavigate(); // available for future routing
-  const [rows, setRows]               = useState(INITIAL_ROWS);
+  const navigate = useNavigate();
+  const [rows, setRows]               = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState('');
   const [dialogOpen, setDialogOpen]   = useState(false);
   const [editItem, setEditItem]       = useState(null);
   const [form, setForm]               = useState(EMPTY_FORM);
+  const [saving, setSaving]           = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
+
+  const loadRows = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const items = await listLeadSources();
+      setRows(items.map(mapApiRow));
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not load lead sources');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadRows(); }, [loadRows]);
 
   /* ── dialog helpers ── */
   const openAdd = () => {
@@ -44,27 +62,41 @@ export default function LeadSourceMasterPage() {
     setForm(EMPTY_FORM);
   };
 
-  const handleSave = () => {
-    if (!form.source_name.trim()) return;
-    if (editItem) {
-      const updated = { ...editItem, ...form };
-      console.log('[LeadSourceMaster] update', updated);
-      setRows((prev) => prev.map((r) => (r.source_id === editItem.source_id ? updated : r)));
-    } else {
-      const newRow = { source_id: Date.now(), ...form };
-      console.log('[LeadSourceMaster] insert', newRow);
-      setRows((prev) => [...prev, newRow]);
+  const handleSave = async () => {
+    if (!form.source_name.trim() || saving) return;
+    const payload = {
+      sourceName: form.source_name.trim(),
+      description: form.description?.trim() || null,
+      isActive: !!form.is_active,
+    };
+    setSaving(true);
+    try {
+      if (editItem) {
+        await updateLeadSource(editItem.source_id, payload);
+      } else {
+        await createLeadSource(payload);
+      }
+      closeDialog();
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
-    closeDialog();
   };
 
   /* ── delete helpers ── */
   const handleDelete = (id) => setDeleteConfirm({ open: true, id });
 
-  const confirmDelete = () => {
-    console.log('[LeadSourceMaster] delete id:', deleteConfirm.id);
-    setRows((prev) => prev.filter((r) => r.source_id !== deleteConfirm.id));
+  const confirmDelete = async () => {
+    const { id } = deleteConfirm;
     setDeleteConfirm({ open: false, id: null });
+    try {
+      await deleteLeadSource(id);
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Delete failed');
+    }
   };
 
   /* ── table data ── */
@@ -206,10 +238,11 @@ export default function LeadSourceMasterPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity"
+                disabled={saving}
+                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
                 style={{ backgroundColor: primary }}
               >
-                Save
+                {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

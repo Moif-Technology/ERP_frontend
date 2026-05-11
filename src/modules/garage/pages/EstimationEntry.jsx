@@ -1,10 +1,15 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { colors, inputField } from '../../../shared/constants/theme';
 import { DropdownInput, SubInputField, DateInputField, Switch, CommonTable, TabsBar } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 import PostIcon from '../../../shared/assets/icons/post.svg';
 import UnpostIcon from '../../../shared/assets/icons/unpost.svg';
+import { createEstimation, getEstimation, postEstimation, unpostEstimation, updateEstimation } from '../api/estimation.api';
+import { listJobCards } from '../api/jobCard.api';
+import CustomerPicker from '../../../shared/components/ui/CustomerPicker';
+import VehiclePicker from '../../../shared/components/ui/VehiclePicker';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -79,10 +84,34 @@ function TInp({ value, onChange, placeholder, inputMode, readOnly, className }) 
 function parseNum(v) { const n = Number(String(v ?? '').replace(/,/g, '')); return Number.isFinite(n) ? n : 0; }
 function fmt2(n) { return parseNum(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
+function isoDate(v, fallback = new Date().toISOString().slice(0, 10)) {
+  if (!v) return fallback;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? fallback : d.toISOString().slice(0, 10);
+}
+
 export default function EstimationEntry() {
   const today = new Date().toISOString().slice(0, 10);
+  const [searchParams] = useSearchParams();
+  const urlId = searchParams.get('id');
   const [activeInfoTab, setActiveInfoTab] = useState('basic');
   const [activeTableTab, setActiveTableTab] = useState('repairs');
+  const [savedId, setSavedId] = useState(null);
+  const [savedStatus, setSavedStatus] = useState('OPEN');
+  const [jobCardId, setJobCardId] = useState(null);
+  const [jobCardNo, setJobCardNo] = useState('');
+  const [vehicleId, setVehicleId] = useState(null);
+  const [customerId, setCustomerId] = useState(null);
+  const [jobCardSearch, setJobCardSearch] = useState('');
+  const [jobCardResults, setJobCardResults] = useState([]);
+  const [jobCardLoading, setJobCardLoading] = useState(false);
+  const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
+  const [vehiclePickerOpen, setVehiclePickerOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [loadingRecord, setLoadingRecord] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   /* header */
   const [quotationNo, setQuotationNo] = useState('');
@@ -103,23 +132,12 @@ export default function EstimationEntry() {
   const [kmReading, setKmReading] = useState('');
 
   /* repairs table */
-  const [repairLines, setRepairLines] = useState([
-    { id: 'r-1', repairs: 'Front bumper dent repair & repaint', amount: '350.00' },
-    { id: 'r-2', repairs: 'Right door panel straightening', amount: '220.00' },
-    { id: 'r-3', repairs: 'Windshield replacement', amount: '480.00' },
-    { id: 'r-4', repairs: 'Engine oil leak fix', amount: '150.00' },
-  ]);
+  const [repairLines, setRepairLines] = useState([]);
   const [repairDesc, setRepairDesc] = useState('');
   const [repairAmt, setRepairAmt] = useState('');
 
   /* spare parts table */
-  const [spareLines, setSpareLines] = useState([
-    { id: 's-1', sparePart: 'Front Bumper Assembly', qty: '1', amount: '620.00', total: '620.00', type: 'OEM' },
-    { id: 's-2', sparePart: 'Door Hinge Set', qty: '2', amount: '85.00', total: '170.00', type: 'AFTERMARKET' },
-    { id: 's-3', sparePart: 'Windshield Glass', qty: '1', amount: '310.00', total: '310.00', type: 'OEM' },
-    { id: 's-4', sparePart: 'Oil Seal Kit', qty: '1', amount: '45.00', total: '45.00', type: 'RECON' },
-    { id: 's-5', sparePart: 'Headlamp Assembly (LH)', qty: '1', amount: '275.00', total: '275.00', type: 'OEM' },
-  ]);
+  const [spareLines, setSpareLines] = useState([]);
   const [sparePart, setSparePart] = useState('');
   const [spareQty, setSpareQty] = useState('');
   const [spareAmt, setSpareAmt] = useState('');
@@ -134,8 +152,112 @@ export default function EstimationEntry() {
   const [additionalEstimation, setAdditionalEstimation] = useState(false);
   const [totalLoss, setTotalLoss] = useState(false);
   const [lpoClaimNo, setLpoClaimNo] = useState('');
-  const [estimationStatus, setEstimationStatus] = useState('');
+  const [estimationStatus, setEstimationStatus] = useState('PENDING');
   const [approvalAmount, setApprovalAmount] = useState('');
+
+  const applyEstimation = useCallback((data) => {
+    const item = data.estimation || data;
+    const lines = item.lines || [];
+    setSavedId(item.id || null);
+    setSavedStatus(item.status || 'OPEN');
+    setJobCardId(item.jobCardId || null);
+    setJobCardNo(item.jobCardNo || '');
+    setVehicleId(item.vehicleId || null);
+    setCustomerId(item.customerId || null);
+    setQuotationNo(item.estimationNo || '');
+    setQuotationDate(isoDate(item.estimationDate, today));
+    setCustomerName(item.customerName || '');
+    setContactPerson(item.contactPerson || '');
+    setCustomerRefNo(item.customerRefNo || '');
+    setClaimType(item.claimType || 'OWN CLAIM');
+    setEstimator(item.estimator || 'INVENT');
+    setRegNo(item.regNo || '');
+    setVehicleBrand('');
+    setVehicleType('');
+    setChassisNo(item.chassisNo || '');
+    setModel(item.model || '');
+    setBodyColour(item.bodyColour || '');
+    setKmReading(item.kmReading != null ? String(item.kmReading) : '');
+    setRepairLines(lines.filter((l) => l.lineType === 'REPAIR').map((l) => ({
+      id: `r-${l.id}`,
+      repairs: l.description || '',
+      amount: String(l.amount ?? 0),
+    })));
+    setSpareLines(lines.filter((l) => l.lineType === 'SPARE').map((l) => ({
+      id: `s-${l.id}`,
+      sparePart: l.description || '',
+      qty: String(l.qty ?? 0),
+      amount: String(l.rate ?? 0),
+      total: String(l.amount ?? 0),
+      type: l.spareType || '',
+    })));
+    setDiscount(item.discount != null ? String(item.discount) : '');
+    setVat(item.vat != null ? String(item.vat) : '');
+    setRemark(item.remark || '');
+    setAdditionalEstimation(!!item.additionalEstimation);
+    setTotalLoss(!!item.totalLoss);
+    setLpoClaimNo(item.lpoClaimNo || '');
+    setEstimationStatus(item.estimationStatus || 'PENDING');
+    setApprovalAmount(item.approvalAmount != null ? String(item.approvalAmount) : '');
+  }, [today]);
+
+  useEffect(() => {
+    if (!urlId) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingRecord(true);
+      setError('');
+      setSuccessMsg('');
+      try {
+        const data = await getEstimation(urlId);
+        if (!cancelled) applyEstimation(data);
+      } catch (err) {
+        if (!cancelled) setError(err?.response?.data?.message || 'Could not load estimation.');
+      } finally {
+        if (!cancelled) setLoadingRecord(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [urlId, applyEstimation]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const q = jobCardSearch.trim();
+    if (q.length < 2) {
+      setJobCardResults([]);
+      return undefined;
+    }
+    const timer = setTimeout(async () => {
+      setJobCardLoading(true);
+      try {
+        const rows = await listJobCards({ search: q });
+        if (!cancelled) setJobCardResults(rows.slice(0, 6));
+      } catch {
+        if (!cancelled) setJobCardResults([]);
+      } finally {
+        if (!cancelled) setJobCardLoading(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [jobCardSearch]);
+
+  const applyJobCard = useCallback((card) => {
+    setJobCardId(card.id || null);
+    setJobCardNo(card.jcNo || '');
+    setVehicleId(card.vehicleId || null);
+    setCustomerId(card.customerId || null);
+    setRegNo(card.regNo || '');
+    setChassisNo(card.chassisNo || '');
+    setCustomerName(card.customerName || card.vehOwnerName || '');
+    setKmReading(card.kmReadingIn != null ? String(card.kmReadingIn) : '');
+    setClaimType(card.customerType === 'INSURANCE' ? 'COMPREHENSIVE' : claimType);
+    setLpoClaimNo(card.claimNo || card.lpoNo || '');
+    setJobCardSearch('');
+    setJobCardResults([]);
+  }, [claimType]);
 
   /* repair line ops */
   const handleAddRepair = useCallback(() => {
@@ -187,6 +309,8 @@ export default function EstimationEntry() {
   ]), [spareLines, deleteSpareRow]);
 
   const reset = useCallback(() => {
+    setSavedId(null); setSavedStatus('OPEN'); setJobCardId(null); setJobCardNo('');
+    setVehicleId(null); setCustomerId(null); setJobCardSearch(''); setJobCardResults([]);
     setQuotationNo(''); setQuotationDate(today); setCustomerName(''); setContactPerson('');
     setCustomerRefNo(''); setClaimType('OWN CLAIM'); setEstimator('INVENT');
     setRegNo(''); setVehicleBrand(''); setVehicleType(''); setChassisNo('');
@@ -195,12 +319,109 @@ export default function EstimationEntry() {
     setSpareLines([]); setSparePart(''); setSpareQty(''); setSpareAmt(''); setSpareType('');
     setDiscount(''); setVat('');
     setRemark(''); setAdditionalEstimation(false); setTotalLoss(false);
-    setLpoClaimNo(''); setEstimationStatus(''); setApprovalAmount('');
+    setLpoClaimNo(''); setEstimationStatus('PENDING'); setApprovalAmount('');
+    setError(''); setSuccessMsg('');
   }, [today]);
 
-  const handleSave = useCallback(() => console.log('Save estimation entry'), []);
-  const handlePost = useCallback(() => console.log('Post estimation entry'), []);
-  const handleUnpost = useCallback(() => console.log('Unpost estimation entry'), []);
+  const buildPayload = useCallback(() => ({
+    jobCardId,
+    vehicleId,
+    customerId,
+    estimationDate: quotationDate,
+    regNo,
+    chassisNo,
+    customerName,
+    contactPerson,
+    customerRefNo,
+    claimType,
+    estimator,
+    model,
+    bodyColour,
+    kmReading,
+    discount,
+    vat,
+    remark,
+    additionalEstimation,
+    totalLoss,
+    lpoClaimNo,
+    estimationStatus,
+    approvalAmount,
+    lines: [
+      ...repairLines.map((line) => ({
+        lineType: 'REPAIR',
+        description: line.repairs,
+        qty: 1,
+        rate: parseNum(line.amount),
+        amount: parseNum(line.amount),
+      })),
+      ...spareLines.map((line) => ({
+        lineType: 'SPARE',
+        description: line.sparePart,
+        qty: parseNum(line.qty),
+        rate: parseNum(line.amount),
+        amount: parseNum(line.total),
+        spareType: line.type || null,
+      })),
+    ],
+  }), [
+    jobCardId, vehicleId, customerId, quotationDate, regNo, chassisNo, customerName,
+    contactPerson, customerRefNo, claimType, estimator, model, bodyColour, kmReading,
+    discount, vat, remark, additionalEstimation, totalLoss, lpoClaimNo, estimationStatus,
+    approvalAmount, repairLines, spareLines,
+  ]);
+
+  const handleSave = useCallback(async () => {
+    if (!regNo.trim()) { setError('Reg. No. is required.'); return; }
+    if (!customerName.trim() && !customerId) { setError('Customer is required.'); return; }
+    if (repairLines.length === 0 && spareLines.length === 0) { setError('Add at least one repair or spare line.'); return; }
+    setSaving(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const payload = buildPayload();
+      const result = savedId
+        ? await updateEstimation(savedId, payload)
+        : await createEstimation(payload);
+      applyEstimation(result);
+      setSuccessMsg(`Estimation saved (${result.estimationNo})`);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }, [regNo, customerName, customerId, repairLines.length, spareLines.length, buildPayload, savedId, applyEstimation]);
+
+  const handlePost = useCallback(async () => {
+    if (!savedId) { setError('Save the estimation first before posting.'); return; }
+    setPosting(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const result = await postEstimation(savedId);
+      setSavedStatus(result.status || 'POSTED');
+      setSuccessMsg(`Estimation posted (${quotationNo || result.estimationNo})`);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Post failed.');
+    } finally {
+      setPosting(false);
+    }
+  }, [savedId, quotationNo]);
+
+  const handleUnpost = useCallback(async () => {
+    if (!savedId) { setError('Save the estimation first before unposting.'); return; }
+    setPosting(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const result = await unpostEstimation(savedId);
+      setSavedStatus(result.status || 'OPEN');
+      setSuccessMsg(`Estimation unposted (${quotationNo || result.estimationNo})`);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unpost failed.');
+    } finally {
+      setPosting(false);
+    }
+  }, [savedId, quotationNo]);
 
   return (
     <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
@@ -209,22 +430,25 @@ export default function EstimationEntry() {
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
         <h1 className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl" style={{ color: primary }}>
           ESTIMATION ENTRY
+          <span className="ml-2 rounded bg-slate-100 px-2 py-0.5 align-middle text-[9px] font-semibold text-slate-600">
+            {savedStatus}
+          </span>
         </h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaBtn} px-2`} aria-label="Print">
             <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
           </button>
-          <button type="button" className={figmaBtn} onClick={handlePost} aria-label="Post">
+          <button type="button" className={figmaBtn} onClick={handlePost} disabled={posting || loadingRecord} aria-label="Post">
             <img src={PostIcon} alt="" className="h-3.5 w-3.5" /> Post
           </button>
-          <button type="button" className={figmaBtn} onClick={handleUnpost} aria-label="Unpost">
+          <button type="button" className={figmaBtn} onClick={handleUnpost} disabled={posting || loadingRecord} aria-label="Unpost">
             <img src={UnpostIcon} alt="" className="h-3.5 w-3.5" /> Unpost
           </button>
           <button type="button" className={`${figmaBtn} font-semibold text-black`} onClick={reset} aria-label="Delete">
             <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 brightness-0" /> Delete
           </button>
-          <button type="button" className={figmaBtn} onClick={handleSave} aria-label="Save">
-            <SaveDiskIcon className="h-3.5 w-3.5 shrink-0" /> Save
+          <button type="button" className={figmaBtn} onClick={handleSave} disabled={saving || loadingRecord} aria-label="Save">
+            <SaveDiskIcon className="h-3.5 w-3.5 shrink-0" /> {saving ? 'Saving...' : 'Save'}
           </button>
           <button type="button" className={primaryBtn} style={{ backgroundColor: primary, borderColor: primary }} onClick={reset}>
             <PlusIcon className="h-3.5 w-3.5 shrink-0 text-white" />
@@ -237,6 +461,11 @@ export default function EstimationEntry() {
       {/* ── scrollable body ── */}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-w-0 flex-col gap-3">
+          {(error || successMsg || loadingRecord) && (
+            <div className={`rounded-md border px-3 py-2 text-[11px] font-semibold ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+              {loadingRecord ? 'Loading estimation...' : (error || successMsg)}
+            </div>
+          )}
 
           {/* ── Top: Info tabs (left) + Summary/Notes (right) ── */}
           <div className="flex min-w-0 gap-3">
@@ -255,6 +484,26 @@ export default function EstimationEntry() {
                 <div className="min-w-0 rounded-lg border border-gray-200 bg-white p-2 sm:p-3">
                   <p className="mb-2 text-[9px] font-semibold uppercase tracking-wide text-gray-400 sm:text-[10px]">Quotation &amp; Customer Details</p>
                   <div className="flex min-w-0 flex-wrap items-end gap-2 sm:gap-3">
+                    <div className="relative shrink-0">
+                      <SubInputField label="Job Card No" value={jobCardSearch || jobCardNo} onChange={(e) => { setJobCardSearch(e.target.value); setJobCardNo(''); }} placeholder="Search JC" />
+                      {(jobCardLoading || jobCardResults.length > 0) && (
+                        <div className="absolute left-0 top-full z-30 mt-1 max-h-48 w-64 overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+                          {jobCardLoading ? (
+                            <div className="px-3 py-2 text-[10px] text-slate-400">Loading...</div>
+                          ) : jobCardResults.map((card) => (
+                            <button
+                              key={card.id}
+                              type="button"
+                              onClick={() => applyJobCard(card)}
+                              className="flex w-full flex-col border-b border-slate-100 px-3 py-2 text-left hover:bg-slate-50"
+                            >
+                              <span className="text-[11px] font-bold text-slate-800">{card.jcNo}</span>
+                              <span className="text-[10px] text-slate-500">{card.regNo || '-'} / {card.customerName || card.vehOwnerName || '-'}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div className="shrink-0">
                       <SubInputField label="Quotation No" value={quotationNo} onChange={(e) => setQuotationNo(e.target.value)} placeholder="Auto" />
                     </div>
@@ -262,7 +511,12 @@ export default function EstimationEntry() {
                       <DateInputField label="Quotation Date" value={quotationDate} onChange={setQuotationDate} />
                     </div>
                     <div className="shrink-0">
-                      <SubInputField label="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer name" widthPx={140} />
+                      <div className="flex items-end gap-1">
+                        <SubInputField label="Customer Name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer name" widthPx={140} />
+                        <button type="button" onClick={() => setCustomerPickerOpen(true)} className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" aria-label="Search customer">
+                          <SearchIcon className="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
                     <div className="shrink-0">
                       <SubInputField label="Contact Person" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} placeholder="Contact person" widthPx={130} />
@@ -296,7 +550,7 @@ export default function EstimationEntry() {
                           className="box-border min-w-0 flex-1 border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none focus:border-gray-400 sm:px-2 sm:text-[9px]"
                           style={{ height: inputField.box.height, minHeight: inputField.box.height, borderRadius: inputField.box.borderRadius, background: colors.input?.background ?? '#fff', borderColor: '#e2e8f0' }}
                         />
-                        <button type="button" className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" style={{ borderRadius: inputField.box.borderRadius }} aria-label="Search reg no">
+                        <button type="button" onClick={() => setVehiclePickerOpen(true)} className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:bg-gray-50" style={{ borderRadius: inputField.box.borderRadius }} aria-label="Search reg no">
                           <SearchIcon className="h-3 w-3" />
                         </button>
                       </div>
@@ -497,6 +751,28 @@ export default function EstimationEntry() {
 
         </div>
       </div>
+      <CustomerPicker
+        open={customerPickerOpen}
+        onClose={() => setCustomerPickerOpen(false)}
+        allowCreate
+        onSelect={(c) => {
+          setCustomerId(c.customerId || null);
+          setCustomerName(c.customerName || '');
+          setContactPerson((prev) => prev || c.customerName || '');
+        }}
+      />
+      <VehiclePicker
+        open={vehiclePickerOpen}
+        onClose={() => setVehiclePickerOpen(false)}
+        onSelect={(v) => {
+          setVehicleId(v.vehicleId || null);
+          setRegNo(v.regNo || '');
+          setChassisNo(v.chassisNo || '');
+          setModel(v.model || '');
+          setCustomerId(v.customerId || customerId);
+          setCustomerName(v.linkedCustomerName || customerName);
+        }}
+      />
     </div>
   );
 }

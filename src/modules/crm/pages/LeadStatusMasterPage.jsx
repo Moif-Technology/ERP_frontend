@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CommonTable, ConfirmDialog } from '../../../shared/components/ui';
+import {
+  listLeadStatuses, createLeadStatus, updateLeadStatus, deleteLeadStatus,
+} from '../api/crmLeadStatuses.api';
 
 const primary = '#790728';
-
-const INITIAL_ROWS = [
-  { status_id: 1, status_name: 'New',           color_code: '#FCD34D', description: 'Freshly received lead, not yet contacted',   display_order: 1, is_active: true },
-  { status_id: 2, status_name: 'Contacted',     color_code: '#60A5FA', description: 'Initial contact has been made',               display_order: 2, is_active: true },
-  { status_id: 3, status_name: 'Qualified',     color_code: '#818CF8', description: 'Lead has been qualified as a prospect',       display_order: 3, is_active: true },
-  { status_id: 4, status_name: 'Proposal Sent', color_code: '#F97316', description: 'A formal proposal has been sent to the lead', display_order: 4, is_active: true },
-  { status_id: 5, status_name: 'Negotiation',   color_code: '#8B5CF6', description: 'In active negotiation with the lead',         display_order: 5, is_active: true },
-  { status_id: 6, status_name: 'Converted',     color_code: '#22C55E', description: 'Lead has been converted to a customer',      display_order: 6, is_active: true },
-  { status_id: 7, status_name: 'Lost',          color_code: '#EF4444', description: 'Lead did not proceed; opportunity lost',      display_order: 7, is_active: true },
-];
 
 const EMPTY_FORM = {
   status_name: '',
@@ -22,13 +15,41 @@ const EMPTY_FORM = {
   is_active: true,
 };
 
+function mapApiRow(r) {
+  return {
+    status_id: r.id,
+    status_name: r.statusName,
+    color_code: r.colorCode || '#60A5FA',
+    description: r.description || '',
+    display_order: r.displayOrder ?? 0,
+    is_active: r.isActive,
+  };
+}
+
 export default function LeadStatusMasterPage() {
-  const navigate = useNavigate(); // available for future routing
-  const [rows, setRows]               = useState(INITIAL_ROWS);
+  const navigate = useNavigate();
+  const [rows, setRows]               = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState('');
   const [dialogOpen, setDialogOpen]   = useState(false);
   const [editItem, setEditItem]       = useState(null);
   const [form, setForm]               = useState(EMPTY_FORM);
+  const [saving, setSaving]           = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
+
+  const loadRows = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const items = await listLeadStatuses();
+      setRows(items.map(mapApiRow));
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not load lead statuses');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadRows(); }, [loadRows]);
 
   /* ── dialog helpers ── */
   const openAdd = () => {
@@ -55,27 +76,43 @@ export default function LeadStatusMasterPage() {
     setForm(EMPTY_FORM);
   };
 
-  const handleSave = () => {
-    if (!form.status_name.trim()) return;
-    if (editItem) {
-      const updated = { ...editItem, ...form, display_order: Number(form.display_order) || editItem.display_order };
-      console.log('[LeadStatusMaster] update', updated);
-      setRows((prev) => prev.map((r) => (r.status_id === editItem.status_id ? updated : r)));
-    } else {
-      const newRow = { status_id: Date.now(), ...form, display_order: Number(form.display_order) || rows.length + 1 };
-      console.log('[LeadStatusMaster] insert', newRow);
-      setRows((prev) => [...prev, newRow]);
+  const handleSave = async () => {
+    if (!form.status_name.trim() || saving) return;
+    const payload = {
+      statusName: form.status_name.trim(),
+      colorCode: form.color_code || null,
+      description: form.description?.trim() || null,
+      displayOrder: Number(form.display_order) || 0,
+      isActive: !!form.is_active,
+    };
+    setSaving(true);
+    try {
+      if (editItem) {
+        await updateLeadStatus(editItem.status_id, payload);
+      } else {
+        await createLeadStatus(payload);
+      }
+      closeDialog();
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
-    closeDialog();
   };
 
   /* ── delete helpers ── */
   const handleDelete = (id) => setDeleteConfirm({ open: true, id });
 
-  const confirmDelete = () => {
-    console.log('[LeadStatusMaster] delete id:', deleteConfirm.id);
-    setRows((prev) => prev.filter((r) => r.status_id !== deleteConfirm.id));
+  const confirmDelete = async () => {
+    const { id } = deleteConfirm;
     setDeleteConfirm({ open: false, id: null });
+    try {
+      await deleteLeadStatus(id);
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Delete failed');
+    }
   };
 
   /* ── hex sync helper (color picker → hex input) ── */
@@ -230,10 +267,11 @@ export default function LeadStatusMasterPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity"
+                disabled={saving}
+                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
                 style={{ backgroundColor: primary }}
               >
-                Save
+                {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

@@ -1,446 +1,260 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
 import { InputField, DropdownInput, CommonTable } from '../../../shared/components/ui';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
-import CalendarIcon from '../../../shared/assets/icons/calendar.svg';
+import { listFollowups, createFollowup, updateFollowup, deleteFollowup, completeFollowup } from '../api/crmFollowups.api';
+import { listCustomers } from '../../../services/customerEntry.api';
+import { listLeads } from '../api/crmLeads.api';
+import { listOpportunities } from '../api/crmOpportunities.api';
+import { listStaffMembers } from '../../../services/staffEntry.api';
 
 const primary = '#790728';
+const FOLLOW_COL_PCT = [14, 8, 18, 20, 8, 10, 12, 10];
+const PRIORITY_OPTIONS = ['High', 'Medium', 'Low'];
+const STATUS_OPTIONS = ['Pending', 'Completed', 'Cancelled'];
+const LINKED_TYPE_OPT = ['Lead', 'Opportunity', 'Customer'];
 
-// ─── Sample data ────────────────────────────────────────────────────────────
-const SAMPLE_FOLLOWUPS = [
-  { id: 1,  dueDate: '2026-04-22', time: '09:00', subject: 'Discuss renewal terms',    linkedType: 'Customer',     linkedName: 'Al Noor Trading',     priority: 'High',   status: 'Overdue',   assignedTo: 'Ahmed',  mode: 'Call' },
-  { id: 2,  dueDate: '2026-04-22', time: '11:30', subject: 'Send product catalogue',   linkedType: 'Lead',         linkedName: 'Blue Star Garage',    priority: 'Medium', status: 'Overdue',   assignedTo: 'Priya',  mode: 'Email' },
-  { id: 3,  dueDate: '2026-04-23', time: '10:00', subject: 'Demo walkthrough call',    linkedType: 'Opportunity',  linkedName: 'Gulf Auto Parts',     priority: 'High',   status: 'Pending',   assignedTo: 'Ahmed',  mode: 'Call' },
-  { id: 4,  dueDate: '2026-04-23', time: '14:00', subject: 'Proposal follow-up',       linkedType: 'Lead',         linkedName: 'TechWave Solutions',  priority: 'High',   status: 'Pending',   assignedTo: 'Ravi',    mode: 'Email' },
-  { id: 5,  dueDate: '2026-04-23', time: '15:30', subject: 'Confirm meeting slot',     linkedType: 'Customer',     linkedName: 'Prime Logistics',     priority: 'Low',    status: 'Pending',   assignedTo: 'Priya',  mode: 'Meeting' },
-  { id: 6,  dueDate: '2026-04-24', time: '09:30', subject: 'Quarterly review prep',    linkedType: 'Customer',     linkedName: 'Al Rawabi Group',     priority: 'Medium', status: 'Pending',   assignedTo: 'Ahmed',  mode: 'Meeting' },
-  { id: 7,  dueDate: '2026-04-24', time: '12:00', subject: 'Budget discussion',        linkedType: 'Opportunity',  linkedName: 'Skyline Contracting', priority: 'High',   status: 'Pending',   assignedTo: 'Priya',  mode: 'Call' },
-  { id: 8,  dueDate: '2026-04-25', time: '10:00', subject: 'Site visit scheduling',    linkedType: 'Lead',         linkedName: 'Falcon Industries',   priority: 'Medium', status: 'Pending',   assignedTo: 'Ravi',    mode: 'Visit' },
-  { id: 9,  dueDate: '2026-04-27', time: '11:00', subject: 'Contract finalisation',    linkedType: 'Opportunity',  linkedName: 'Horizon Real Estate', priority: 'High',   status: 'Pending',   assignedTo: 'Ahmed',  mode: 'Meeting' },
-  { id: 10, dueDate: '2026-04-29', time: '14:30', subject: 'Check payment status',     linkedType: 'Customer',     linkedName: 'Nova Electronics',    priority: 'Low',    status: 'Cancelled', assignedTo: 'Priya',  mode: 'Email' },
-];
-
-const SAMPLE_LINKED = {
-  Lead:        ['Blue Star Garage', 'TechWave Solutions', 'Falcon Industries'],
-  Opportunity: ['Gulf Auto Parts', 'Skyline Contracting', 'Horizon Real Estate'],
-  Customer:    ['Al Noor Trading', 'Prime Logistics', 'Al Rawabi Group', 'Nova Electronics'],
-};
-
-const ASSIGNED_OPTIONS  = ['Ahmed', 'Priya', 'Ravi'];
-const PRIORITY_OPTIONS  = ['High', 'Medium', 'Low'];
-const STATUS_OPTIONS    = ['Pending', 'Completed', 'Cancelled'];
-const MODE_OPTIONS      = ['Call', 'Email', 'Meeting', 'Visit'];
-const LINKED_TYPE_OPT   = ['Lead', 'Opportunity', 'Customer'];
-const DATE_FILTER_OPT   = ['Today', 'Tomorrow', 'This Week', 'Custom Range'];
-
-const TODAY = '2026-04-23';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function priorityBadge(val) {
-  if (val === 'High')   return { background: '#FEE2E2', color: '#991B1B' };
-  if (val === 'Medium') return { background: '#FEF3C7', color: '#92400E' };
-  return                       { background: '#E5E7EB', color: '#374151' };
-}
-
-function statusBadge(val) {
-  if (val === 'Completed')  return { background: '#DCFCE7', color: '#166534' };
-  if (val === 'Overdue')    return { background: '#FEE2E2', color: '#991B1B' };
-  if (val === 'Cancelled')  return { background: '#F3F4F6', color: '#6B7280' };
-  return                           { background: '#DBEAFE', color: '#1D4ED8' };
-}
-
-function typeBadge(val) {
-  if (val === 'Lead')        return { background: '#EDE9FE', color: '#5B21B6' };
-  if (val === 'Opportunity') return { background: '#FEF3C7', color: '#92400E' };
-  return                            { background: '#DCFCE7', color: '#166534' };
-}
-
-function Badge({ label, style }) {
-  return (
-    <span className="inline-flex whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-semibold" style={style}>
-      {label}
-    </span>
-  );
-}
-
-// ─── Dialog ──────────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
-  subject: '', linkedType: 'Lead', linkedTo: '', dueDate: '', time: '',
-  priority: 'Medium', assignedTo: '', mode: 'Call', notes: '',
+  subject: '',
+  linkedType: 'Lead',
+  linkedTo: '',
+  dueDate: '',
+  time: '',
+  priority: 'Medium',
+  assignedTo: '',
+  mode: 'Call',
+  notes: '',
 };
 
-function FollowUpDialog({ open, editItem, onClose, onSave }) {
-  const [form, setForm] = useState(editItem ?? EMPTY_FORM);
+function Badge({ label, color }) {
+  return <span className="inline-flex rounded px-1.5 py-0.5 text-[9px] font-semibold" style={color}>{label}</span>;
+}
 
-  React.useEffect(() => {
-    setForm(editItem ?? EMPTY_FORM);
-  }, [editItem, open]);
+function FollowUpDialog({ open, editItem, onClose, onSave, linkedOptionsByType, staffOptions }) {
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    setForm(editItem || EMPTY_FORM);
+  }, [editItem]);
 
   if (!open) return null;
 
-  const set = (key, val) => setForm((p) => ({ ...p, [key]: val }));
-
-  const linkedOptions = SAMPLE_LINKED[form.linkedType] ?? [];
-
-  const handleSave = () => {
-    console.log('[FollowUpListPage] Save follow-up:', form);
-    onSave(form);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-2xl rounded-lg bg-white shadow-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-        {/* Dialog header */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-2xl rounded-lg bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
-          <h2 className="text-sm font-bold" style={{ color: primary }}>
-            {editItem ? 'Edit Follow-up' : 'Add Follow-up'}
-          </h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+          <h2 className="text-sm font-bold" style={{ color: primary }}>{editItem ? 'Edit Follow-up' : 'Add Follow-up'}</h2>
+          <button type="button" onClick={onClose} className="text-lg leading-none text-gray-400 hover:text-gray-600">×</button>
         </div>
-
-        {/* Dialog body */}
-        <div className="px-5 py-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {/* Subject – full width */}
-            <div className="sm:col-span-2">
-              <InputField
-                label="Subject"
-                fullWidth
-                value={form.subject}
-                onChange={(e) => set('subject', e.target.value)}
-                placeholder="Enter follow-up subject"
-              />
-            </div>
-
-            <DropdownInput
-              label="Linked To Type"
-              fullWidth
-              value={form.linkedType}
-              onChange={(v) => set('linkedType', v)}
-              options={LINKED_TYPE_OPT}
-            />
-
-            <DropdownInput
-              label="Linked To"
-              fullWidth
-              value={form.linkedTo}
-              onChange={(v) => set('linkedTo', v)}
-              options={linkedOptions}
-              placeholder="Select…"
-            />
-
-            <InputField
-              label="Follow-up Date"
-              type="date"
-              fullWidth
-              value={form.dueDate}
-              onChange={(e) => set('dueDate', e.target.value)}
-            />
-
-            <InputField
-              label="Follow-up Time"
-              type="time"
-              fullWidth
-              value={form.time}
-              onChange={(e) => set('time', e.target.value)}
-            />
-
-            <DropdownInput
-              label="Priority"
-              fullWidth
-              value={form.priority}
-              onChange={(v) => set('priority', v)}
-              options={PRIORITY_OPTIONS}
-            />
-
-            <DropdownInput
-              label="Assigned To"
-              fullWidth
-              value={form.assignedTo}
-              onChange={(v) => set('assignedTo', v)}
-              options={ASSIGNED_OPTIONS}
-              placeholder="Select user"
-            />
-
-            <DropdownInput
-              label="Mode"
-              fullWidth
-              value={form.mode}
-              onChange={(v) => set('mode', v)}
-              options={MODE_OPTIONS}
-            />
-
-            {/* Notes – full width */}
-            <div className="sm:col-span-2">
-              <label className="mb-0.5 block text-[9px] leading-tight text-gray-600 sm:text-[11px]">Notes</label>
-              <textarea
-                rows={3}
-                className="w-full rounded border border-gray-200 px-2 py-1.5 text-[9px] outline-none sm:text-[10px]"
-                placeholder="Add any notes…"
-                value={form.notes}
-                onChange={(e) => set('notes', e.target.value)}
-              />
-            </div>
+        <div className="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-2">
+          <InputField label="Subject" fullWidth value={form.subject} onChange={(e) => setForm((p) => ({ ...p, subject: e.target.value }))} />
+          <DropdownInput label="Linked Type" fullWidth value={form.linkedType} onChange={(v) => setForm((p) => ({ ...p, linkedType: v, linkedTo: '' }))} options={LINKED_TYPE_OPT} />
+          <DropdownInput label="Linked To" fullWidth value={form.linkedTo} onChange={(v) => setForm((p) => ({ ...p, linkedTo: v }))} options={linkedOptionsByType[form.linkedType] || []} placeholder="Select..." />
+          <InputField label="Follow-up Date" type="date" fullWidth value={form.dueDate} onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))} />
+          <InputField label="Follow-up Time" type="time" fullWidth value={form.time} onChange={(e) => setForm((p) => ({ ...p, time: e.target.value }))} />
+          <DropdownInput label="Priority" fullWidth value={form.priority} onChange={(v) => setForm((p) => ({ ...p, priority: v }))} options={PRIORITY_OPTIONS} />
+          <DropdownInput label="Assigned To" fullWidth value={form.assignedTo} onChange={(v) => setForm((p) => ({ ...p, assignedTo: v }))} options={staffOptions} placeholder="Select user" />
+          <InputField label="Mode" fullWidth value={form.mode} onChange={(e) => setForm((p) => ({ ...p, mode: e.target.value }))} />
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-[11px] font-medium text-gray-600">Notes</label>
+            <textarea rows={3} value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} className="w-full rounded border border-gray-300 px-3 py-2 text-xs text-gray-800" />
           </div>
         </div>
-
-        {/* Dialog footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-gray-300 px-4 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="rounded px-4 py-1.5 text-[11px] font-semibold text-white"
-            style={{ backgroundColor: primary }}
-          >
-            Save
-          </button>
+        <div className="flex justify-end gap-2 border-t border-gray-200 px-5 py-3">
+          <button type="button" onClick={onClose} className="rounded border border-gray-300 px-4 py-1.5 text-[11px] font-semibold text-gray-600">Cancel</button>
+          <button type="button" onClick={() => onSave(form)} className="rounded px-4 py-1.5 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Save</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-const FOLLOW_COL_PCT = [14, 7, 17, 18, 8, 10, 13, 13];
-
 export default function FollowUpListPage() {
-  const navigate = useNavigate();
-
-  const [rows, setRows]           = useState(SAMPLE_FOLLOWUPS);
+  const [rows, setRows] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editItem, setEditItem]   = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
-
-  const [filters, setFilters] = useState({
-    dateFilter: 'Today',
-    dateFrom: '',
-    dateTo: '',
-    linkedType: '',
-    priority: '',
-    status: '',
-    assignedTo: '',
-  });
+  const [editItem, setEditItem] = useState(null);
+  const [filters, setFilters] = useState({ search: '', linkedType: '', priority: '', status: '', assignedTo: '', dateFrom: '', dateTo: '' });
 
   const setF = (k, v) => setFilters((p) => ({ ...p, [k]: v }));
+  const today = new Date().toISOString().slice(0, 10);
 
-  // ── Stat cards ──
-  const todayFollowups  = rows.filter((r) => r.dueDate === TODAY && r.status !== 'Cancelled').length;
-  const overdueCount    = rows.filter((r) => r.status === 'Overdue').length;
-  const upcomingCount   = rows.filter((r) => r.dueDate > TODAY && r.status === 'Pending').length;
+  const linkedOptionsByType = useMemo(() => ({
+    Lead: leads.map((x) => `${x.leadId || x.id}|${x.leadCode} - ${x.companyName || x.leadName}`),
+    Opportunity: opportunities.map((x) => `${x.opportunityId || x.id}|${x.opportunityCode} - ${x.opportunityName}`),
+    Customer: customers.map((x) => `${x.customerId}|${x.customerName}`),
+  }), [customers, leads, opportunities]);
+  const staffOptions = useMemo(() => staff.map((x) => `${x.staffId}|${x.staffName}`), [staff]);
 
-  // ── Filtered rows ──
-  const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
-      if (filters.linkedType && r.linkedType !== filters.linkedType) return false;
-      if (filters.priority   && r.priority   !== filters.priority)   return false;
-      if (filters.status     && r.status     !== filters.status)     return false;
-      if (filters.assignedTo && r.assignedTo !== filters.assignedTo) return false;
-
-      if (filters.dateFilter === 'Today'    && r.dueDate !== TODAY)  return false;
-      if (filters.dateFilter === 'Tomorrow' && r.dueDate !== '2026-04-24') return false;
-      if (filters.dateFilter === 'This Week') {
-        if (r.dueDate < TODAY || r.dueDate > '2026-04-29') return false;
-      }
-      if (filters.dateFilter === 'Custom Range') {
-        if (filters.dateFrom && r.dueDate < filters.dateFrom) return false;
-        if (filters.dateTo   && r.dueDate > filters.dateTo)   return false;
-      }
-      return true;
-    });
-  }, [rows, filters]);
-
-  // ── Dialog handlers ──
-  const openAdd  = () => { setEditItem(null); setDialogOpen(true); };
-  const openEdit = (row) => { setEditItem(row); setDialogOpen(true); };
-  const closeDialog = () => { setDialogOpen(false); setEditItem(null); };
-
-  const handleSave = (form) => {
-    if (editItem) {
-      setRows((prev) => prev.map((r) => (r.id === editItem.id ? { ...r, ...form } : r)));
-    } else {
-      setRows((prev) => [...prev, { ...form, id: Date.now(), status: 'Pending' }]);
+  async function loadAll() {
+    try {
+      const [followupItems, customerRes, leadItems, opportunityItems, staffRes] = await Promise.all([
+        listFollowups({
+          search: filters.search || undefined,
+          status: filters.status ? filters.status.toUpperCase() : undefined,
+          priority: filters.priority ? filters.priority.toUpperCase() : undefined,
+          assignedTo: filters.assignedTo ? Number(String(filters.assignedTo).split('|')[0]) : undefined,
+          from: filters.dateFrom || undefined,
+          to: filters.dateTo || undefined,
+        }),
+        listCustomers({ limit: 500 }),
+        listLeads(),
+        listOpportunities(),
+        listStaffMembers({ limit: 500 }),
+      ]);
+      setRows(followupItems);
+      setCustomers(customerRes.data?.customers || []);
+      setLeads(leadItems);
+      setOpportunities(opportunityItems);
+      setStaff(staffRes.data?.staff || []);
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message);
     }
-    closeDialog();
-    setSuccessMsg(editItem ? 'Follow-up updated.' : 'Follow-up added.');
-    setTimeout(() => setSuccessMsg(''), 3000);
-  };
+  }
 
-  const handleDelete = (id) => {
-    console.log('[FollowUpListPage] Delete follow-up id:', id);
-    setRows((prev) => prev.filter((r) => r.id !== id));
-  };
+  useEffect(() => { loadAll(); /* eslint-disable-next-line */ }, []);
 
-  const handleMarkDone = (id) => {
-    console.log('[FollowUpListPage] Mark done id:', id);
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'Completed' } : r)));
-  };
+  function toDisplay(row) {
+    let linkedType = '—';
+    let linkedName = '—';
+    if (row.customerId) {
+      linkedType = 'Customer';
+      linkedName = customers.find((x) => x.customerId === row.customerId)?.customerName || `Customer #${row.customerId}`;
+    } else if (row.leadId) {
+      linkedType = 'Lead';
+      const item = leads.find((x) => (x.leadId || x.id) === row.leadId);
+      linkedName = item ? `${item.leadCode} - ${item.companyName || item.leadName}` : `Lead #${row.leadId}`;
+    } else if (row.opportunityId) {
+      linkedType = 'Opportunity';
+      const item = opportunities.find((x) => (x.opportunityId || x.id) === row.opportunityId);
+      linkedName = item ? `${item.opportunityCode} - ${item.opportunityName}` : `Opportunity #${row.opportunityId}`;
+    }
+    const status = row.status === 'PENDING' && String(row.followupDate || '').slice(0, 10) < today ? 'Overdue' : (row.status ? `${row.status[0]}${row.status.slice(1).toLowerCase()}` : 'Pending');
+    return {
+      id: row.id,
+      dueDate: String(row.followupDate || '').slice(0, 10),
+      time: String(row.followupDate || '').slice(11, 16),
+      subject: row.subject,
+      linkedType,
+      linkedName,
+      priority: row.priority ? `${row.priority[0]}${row.priority.slice(1).toLowerCase()}` : 'Medium',
+      status,
+      assignedTo: row.assignedToStaffId ? (staff.find((x) => x.staffId === row.assignedToStaffId)?.staffName || String(row.assignedToStaffId)) : '—',
+      mode: row.followupType,
+      raw: row,
+    };
+  }
 
-  // ── Table rows ──
-  const tableBodyRows = filteredRows.map((row) => {
-    const isOverdue = row.status === 'Overdue';
-    return [
-      <span key={`date-${row.id}`} className={`font-medium ${isOverdue ? 'text-red-600' : ''}`} style={{ fontSize: 'clamp(8px,1vw,10px)' }}>
-        {row.dueDate}
-      </span>,
-      <span key={`time-${row.id}`} style={{ fontSize: 'clamp(8px,1vw,10px)' }}>{row.time}</span>,
-      <span key={`subj-${row.id}`} className="font-medium" style={{ fontSize: 'clamp(8px,1vw,10px)' }}>{row.subject}</span>,
-      <div key={`linked-${row.id}`} className="flex flex-col gap-0.5">
-        <span style={{ fontSize: 'clamp(8px,1vw,10px)', fontWeight: 500 }}>{row.linkedName}</span>
-        <Badge label={row.linkedType} style={typeBadge(row.linkedType)} />
-      </div>,
-      <Badge key={`pri-${row.id}`}    label={row.priority} style={priorityBadge(row.priority)} />,
-      <Badge key={`sts-${row.id}`}    label={row.status}   style={statusBadge(row.status)} />,
-      <span key={`asgn-${row.id}`} style={{ fontSize: 'clamp(8px,1vw,10px)' }}>{row.assignedTo}</span>,
-      <div key={`act-${row.id}`} className="flex items-center justify-center gap-1.5 whitespace-nowrap">
-        <button type="button" onClick={() => openEdit(row)} title="Edit"
-          className="flex h-6 w-6 items-center justify-center rounded bg-white hover:bg-gray-50">
-          <img src={EditActionIcon} alt="Edit" className="h-3 w-3" />
-        </button>
-        <button type="button" onClick={() => handleDelete(row.id)} title="Delete"
-          className="flex h-6 w-6 items-center justify-center rounded bg-white hover:bg-gray-50">
-          <img src={DeleteActionIcon} alt="Delete" className="h-3 w-3" />
-        </button>
-        {row.status === 'Pending' && (
-          <button type="button" onClick={() => handleMarkDone(row.id)}
-            className="rounded px-1.5 py-0.5 text-[9px] font-semibold text-white"
-            style={{ backgroundColor: '#166534', fontSize: '9px' }}>
-            Done
-          </button>
-        )}
-      </div>,
-    ];
+  const displayRows = rows.map(toDisplay).filter((row) => {
+    if (filters.linkedType && row.linkedType !== filters.linkedType) return false;
+    return true;
   });
+
+  const todayCount = displayRows.filter((x) => x.dueDate === today && x.status !== 'Cancelled').length;
+  const overdueCount = displayRows.filter((x) => x.status === 'Overdue').length;
+  const upcomingCount = displayRows.filter((x) => x.dueDate > today && x.status === 'Pending').length;
+
+  const openAdd = () => { setEditItem(null); setDialogOpen(true); };
+  const openEdit = (row) => {
+    const linkedId = row.raw.customerId || row.raw.leadId || row.raw.opportunityId || '';
+    setEditItem({
+      subject: row.subject,
+      linkedType: row.linkedType,
+      linkedTo: `${linkedId}|${row.linkedName}`,
+      dueDate: row.dueDate,
+      time: row.time,
+      priority: row.priority,
+      assignedTo: row.raw.assignedToStaffId ? `${row.raw.assignedToStaffId}|${row.assignedTo}` : '',
+      mode: row.mode,
+      notes: row.raw.notes || '',
+      id: row.id,
+      raw: row.raw,
+    });
+    setDialogOpen(true);
+  };
+
+  const saveDialog = async (form) => {
+    try {
+      const [linkedId] = String(form.linkedTo || '').split('|');
+      const payload = {
+        subject: form.subject,
+        followupDate: form.time ? `${form.dueDate}T${form.time}:00` : form.dueDate,
+        followupType: form.mode.toUpperCase(),
+        priority: form.priority.toUpperCase(),
+        assignedToStaffId: form.assignedTo ? Number(String(form.assignedTo).split('|')[0]) : null,
+        notes: form.notes || null,
+        customerId: form.linkedType === 'Customer' ? Number(linkedId) : null,
+        leadId: form.linkedType === 'Lead' ? Number(linkedId) : null,
+        opportunityId: form.linkedType === 'Opportunity' ? Number(linkedId) : null,
+        status: editItem?.raw?.status || 'PENDING',
+      };
+      if (editItem?.id) await updateFollowup(editItem.id, payload);
+      else await createFollowup(payload);
+      setDialogOpen(false);
+      setEditItem(null);
+      await loadAll();
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message);
+    }
+  };
+
+  const tableRows = displayRows.map((row) => [
+    row.dueDate,
+    row.time || '—',
+    row.subject,
+    <div key={`linked-${row.id}`} className="flex flex-col gap-0.5">
+      <span className="text-[10px] font-medium">{row.linkedName}</span>
+      <span className="text-[9px] text-gray-500">{row.linkedType}</span>
+    </div>,
+    <Badge key={`pri-${row.id}`} label={row.priority} color={row.priority === 'High' ? { background: '#FEE2E2', color: '#991B1B' } : row.priority === 'Medium' ? { background: '#FEF3C7', color: '#92400E' } : { background: '#E5E7EB', color: '#374151' }} />,
+    <Badge key={`sts-${row.id}`} label={row.status} color={row.status === 'Completed' ? { background: '#DCFCE7', color: '#166534' } : row.status === 'Overdue' ? { background: '#FEE2E2', color: '#991B1B' } : { background: '#DBEAFE', color: '#1D4ED8' }} />,
+    row.assignedTo,
+    <div key={`act-${row.id}`} className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+      <button type="button" onClick={() => openEdit(row)} className="flex h-6 w-6 items-center justify-center rounded bg-white hover:bg-gray-50"><img src={EditActionIcon} alt="Edit" className="h-3 w-3" /></button>
+      <button type="button" onClick={() => deleteFollowup(row.id).then(loadAll).catch((err) => alert(err?.response?.data?.message || err.message))} className="flex h-6 w-6 items-center justify-center rounded bg-white hover:bg-gray-50"><img src={DeleteActionIcon} alt="Delete" className="h-3 w-3" /></button>
+      {row.status !== 'Completed' && (
+        <button type="button" onClick={() => completeFollowup(row.id).then(loadAll).catch((err) => alert(err?.response?.data?.message || err.message))} className="rounded bg-green-700 px-1.5 py-0.5 text-[9px] font-semibold text-white">Done</button>
+      )}
+    </div>,
+  ]);
 
   return (
     <>
-      <FollowUpDialog open={dialogOpen} editItem={editItem} onClose={closeDialog} onSave={handleSave} />
+      <FollowUpDialog open={dialogOpen} editItem={editItem} onClose={() => { setDialogOpen(false); setEditItem(null); }} onSave={saveDialog} linkedOptionsByType={linkedOptionsByType} staffOptions={staffOptions} />
 
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 -mx-[13px] w-[calc(100%+26px)]">
-        {/* ── Header ── */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
-              FOLLOW-UP LIST
-            </h1>
+            <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>FOLLOW-UP LIST</h1>
             <p className="mt-1 text-xs text-gray-500">Track and manage all scheduled follow-ups</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {successMsg && (
-              <span className="rounded bg-green-100 px-3 py-1 text-[11px] font-semibold text-green-700">{successMsg}</span>
-            )}
-            <button
-              type="button"
-              onClick={openAdd}
-              className="flex items-center gap-1 rounded px-4 py-2 text-[11px] font-semibold text-white"
-              style={{ backgroundColor: primary }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Add Follow-up
-            </button>
-          </div>
+          <button type="button" onClick={openAdd} className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Add Follow-up</button>
         </div>
 
-        {/* ── Stat cards ── */}
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <div className="text-[11px] text-gray-500">Today's Follow-ups</div>
-            <div className="mt-1 text-lg font-bold" style={{ color: primary }}>{todayFollowups}</div>
-          </div>
-          <div className="rounded-lg border border-red-100 bg-red-50 p-3">
-            <div className="text-[11px] text-red-500">Overdue</div>
-            <div className="mt-1 text-lg font-bold text-red-600">{overdueCount}</div>
-          </div>
-          <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-            <div className="text-[11px] text-blue-500">Upcoming (7 days)</div>
-            <div className="mt-1 text-lg font-bold text-blue-700">{upcomingCount}</div>
-          </div>
+          <StatCard label="Today's Follow-ups" value={todayCount} />
+          <StatCard label="Overdue" value={overdueCount} danger />
+          <StatCard label="Upcoming" value={upcomingCount} info />
         </div>
 
-        {/* ── Filter panel ── */}
         <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-3">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            <DropdownInput
-              label="Date"
-              fullWidth
-              value={filters.dateFilter}
-              onChange={(v) => setF('dateFilter', v)}
-              options={DATE_FILTER_OPT}
-            />
-
-            {filters.dateFilter === 'Custom Range' && (
-              <>
-                {/* Date From */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-medium text-gray-500">Date From</label>
-                  <input
-                    type="date"
-                    value={filters.dateFrom}
-                    onChange={(e) => setF('dateFrom', e.target.value)}
-                    className="w-full rounded border border-gray-300 bg-white px-2.5 py-1.5 text-[11px] text-gray-800 focus:border-blue-400 focus:outline-none"
-                  />
-                </div>
-                {/* Date To */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-medium text-gray-500">Date To</label>
-                  <input
-                    type="date"
-                    value={filters.dateTo}
-                    onChange={(e) => setF('dateTo', e.target.value)}
-                    className="w-full rounded border border-gray-300 bg-white px-2.5 py-1.5 text-[11px] text-gray-800 focus:border-blue-400 focus:outline-none"
-                  />
-                </div>
-              </>
-            )}
-
-            <DropdownInput
-              label="Linked To Type"
-              fullWidth
-              value={filters.linkedType}
-              onChange={(v) => setF('linkedType', v)}
-              options={LINKED_TYPE_OPT}
-              placeholder="All"
-            />
-
-            <DropdownInput
-              label="Priority"
-              fullWidth
-              value={filters.priority}
-              onChange={(v) => setF('priority', v)}
-              options={PRIORITY_OPTIONS}
-              placeholder="All"
-            />
-
-            <DropdownInput
-              label="Status"
-              fullWidth
-              value={filters.status}
-              onChange={(v) => setF('status', v)}
-              options={STATUS_OPTIONS}
-              placeholder="All"
-            />
-
-            <DropdownInput
-              label="Assigned To"
-              fullWidth
-              value={filters.assignedTo}
-              onChange={(v) => setF('assignedTo', v)}
-              options={ASSIGNED_OPTIONS}
-              placeholder="All users"
-            />
+            <InputField label="Search" fullWidth value={filters.search} onChange={(e) => setF('search', e.target.value)} />
+            <DropdownInput label="Linked Type" fullWidth value={filters.linkedType} onChange={(v) => setF('linkedType', v)} options={LINKED_TYPE_OPT} placeholder="All" />
+            <DropdownInput label="Priority" fullWidth value={filters.priority} onChange={(v) => setF('priority', v)} options={PRIORITY_OPTIONS} placeholder="All" />
+            <DropdownInput label="Status" fullWidth value={filters.status} onChange={(v) => setF('status', v)} options={STATUS_OPTIONS} placeholder="All" />
+            <DropdownInput label="Assigned To" fullWidth value={filters.assignedTo} onChange={(v) => setF('assignedTo', v)} options={staffOptions} placeholder="All users" />
+            <InputField label="Date From" type="date" fullWidth value={filters.dateFrom} onChange={(e) => setF('dateFrom', e.target.value)} />
+            <InputField label="Date To" type="date" fullWidth value={filters.dateTo} onChange={(e) => setF('dateTo', e.target.value)} />
+            <div className="flex items-end">
+              <button type="button" onClick={loadAll} className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Apply Filters</button>
+            </div>
           </div>
         </div>
 
-        {/* ── Table ── */}
         <div className="mt-5 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <CommonTable
             fitParentWidth
@@ -457,13 +271,20 @@ export default function FollowUpListPage() {
             bodyRowHeightRem={2.6}
             maxVisibleRows={10}
             headers={['Due Date', 'Time', 'Subject', 'Linked To', 'Priority', 'Status', 'Assigned To', 'Action']}
-            rows={tableBodyRows}
+            rows={tableRows}
           />
-          {filteredRows.length === 0 && (
-            <div className="mt-4 text-center text-[12px] text-gray-400">No follow-ups match the selected filters.</div>
-          )}
         </div>
       </div>
     </>
+  );
+}
+
+function StatCard({ label, value, danger = false, info = false }) {
+  const style = danger ? 'border-red-100 bg-red-50 text-red-600' : info ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-gray-50';
+  return (
+    <div className={`rounded-lg border p-3 ${style}`}>
+      <div className="text-[11px]">{label}</div>
+      <div className="mt-1 text-lg font-bold">{value}</div>
+    </div>
   );
 }

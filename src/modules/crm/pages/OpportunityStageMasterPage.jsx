@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CommonTable, ConfirmDialog } from '../../../shared/components/ui';
+import {
+  listOpportunityStages, createOpportunityStage, updateOpportunityStage, deleteOpportunityStage,
+} from '../api/crmOpportunityStages.api';
 
 const primary = '#790728';
-
-const INITIAL_ROWS = [
-  { stage_id: 1, stage_name: 'Prospect',    color_code: '#94A3B8', probability_percent: 10,  description: 'Initial stage; potential opportunity identified',    display_order: 1, is_active: true },
-  { stage_id: 2, stage_name: 'Qualified',   color_code: '#60A5FA', probability_percent: 25,  description: 'Opportunity qualified; budget and need confirmed',    display_order: 2, is_active: true },
-  { stage_id: 3, stage_name: 'Proposal',    color_code: '#FBBF24', probability_percent: 50,  description: 'Proposal or quotation submitted to the customer',    display_order: 3, is_active: true },
-  { stage_id: 4, stage_name: 'Negotiation', color_code: '#F97316', probability_percent: 75,  description: 'Terms being negotiated; close to agreement',         display_order: 4, is_active: true },
-  { stage_id: 5, stage_name: 'Won',         color_code: '#22C55E', probability_percent: 100, description: 'Deal closed successfully',                          display_order: 5, is_active: true },
-  { stage_id: 6, stage_name: 'Lost',        color_code: '#EF4444', probability_percent: 0,   description: 'Opportunity lost to competitor or dropped',         display_order: 6, is_active: true },
-  { stage_id: 7, stage_name: 'On Hold',     color_code: '#A78BFA', probability_percent: 50,  description: 'Opportunity paused; pending decision from customer', display_order: 7, is_active: true },
-];
 
 const EMPTY_FORM = {
   stage_name: '',
@@ -23,13 +16,42 @@ const EMPTY_FORM = {
   is_active: true,
 };
 
+function mapApiRow(r) {
+  return {
+    stage_id: r.id,
+    stage_name: r.stageName,
+    probability_percent: r.probabilityPercent ?? 0,
+    color_code: r.colorCode || '#60A5FA',
+    description: r.description || '',
+    display_order: r.displayOrder ?? 0,
+    is_active: r.isActive,
+  };
+}
+
 export default function OpportunityStageMasterPage() {
-  const navigate = useNavigate(); // available for future routing
-  const [rows, setRows]               = useState(INITIAL_ROWS);
+  const navigate = useNavigate();
+  const [rows, setRows]               = useState([]);
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState('');
   const [dialogOpen, setDialogOpen]   = useState(false);
   const [editItem, setEditItem]       = useState(null);
   const [form, setForm]               = useState(EMPTY_FORM);
+  const [saving, setSaving]           = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
+
+  const loadRows = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const items = await listOpportunityStages();
+      setRows(items.map(mapApiRow));
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Could not load opportunity stages');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadRows(); }, [loadRows]);
 
   /* ── dialog helpers ── */
   const openAdd = () => {
@@ -57,37 +79,44 @@ export default function OpportunityStageMasterPage() {
     setForm(EMPTY_FORM);
   };
 
-  const handleSave = () => {
-    if (!form.stage_name.trim()) return;
-    if (editItem) {
-      const updated = {
-        ...editItem,
-        ...form,
-        probability_percent: Number(form.probability_percent) ?? editItem.probability_percent,
-        display_order:       Number(form.display_order)       || editItem.display_order,
-      };
-      console.log('[OpportunityStageMaster] update', updated);
-      setRows((prev) => prev.map((r) => (r.stage_id === editItem.stage_id ? updated : r)));
-    } else {
-      const newRow = {
-        stage_id:            Date.now(),
-        ...form,
-        probability_percent: Number(form.probability_percent) ?? 0,
-        display_order:       Number(form.display_order)       || rows.length + 1,
-      };
-      console.log('[OpportunityStageMaster] insert', newRow);
-      setRows((prev) => [...prev, newRow]);
+  const handleSave = async () => {
+    if (!form.stage_name.trim() || saving) return;
+    const payload = {
+      stageName: form.stage_name.trim(),
+      probabilityPercent: form.probability_percent === '' ? 0 : Number(form.probability_percent),
+      colorCode: form.color_code || null,
+      description: form.description?.trim() || null,
+      displayOrder: Number(form.display_order) || 0,
+      isActive: !!form.is_active,
+    };
+    setSaving(true);
+    try {
+      if (editItem) {
+        await updateOpportunityStage(editItem.stage_id, payload);
+      } else {
+        await createOpportunityStage(payload);
+      }
+      closeDialog();
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Save failed');
+    } finally {
+      setSaving(false);
     }
-    closeDialog();
   };
 
   /* ── delete helpers ── */
   const handleDelete = (id) => setDeleteConfirm({ open: true, id });
 
-  const confirmDelete = () => {
-    console.log('[OpportunityStageMaster] delete id:', deleteConfirm.id);
-    setRows((prev) => prev.filter((r) => r.stage_id !== deleteConfirm.id));
+  const confirmDelete = async () => {
+    const { id } = deleteConfirm;
     setDeleteConfirm({ open: false, id: null });
+    try {
+      await deleteOpportunityStage(id);
+      await loadRows();
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Delete failed');
+    }
   };
 
   /* ── probability clamp ── */
@@ -262,10 +291,11 @@ export default function OpportunityStageMasterPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity"
+                disabled={saving}
+                className="rounded px-4 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-60"
                 style={{ backgroundColor: primary }}
               >
-                Save
+                {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>

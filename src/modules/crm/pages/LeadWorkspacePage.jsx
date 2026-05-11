@@ -1,117 +1,144 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
+import { getLead } from '../api/crmLeads.api';
+import { listLeadSources } from '../api/crmLeadSources.api';
+import { listLeadStatuses } from '../api/crmLeadStatuses.api';
+import { listInteractions, createInteraction } from '../api/crmInteractions.api';
+import { listFollowups, createFollowup, completeFollowup } from '../api/crmFollowups.api';
+import { listNotes, createNote } from '../api/crmNotes.api';
+import { listOpportunities } from '../api/crmOpportunities.api';
+import { listStaffMembers } from '../../../services/staffEntry.api';
 
 export default function LeadWorkspacePage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const primary = colors.primary?.main || '#790728';
 
   const [activeTab, setActiveTab] = useState('Summary');
+  const [lead, setLead] = useState(null);
+  const [sources, setSources] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [interactions, setInteractions] = useState([]);
+  const [followups, setFollowups] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [interactionForm, setInteractionForm] = useState({ subject: '', interactionType: 'CALL', interactionMode: 'OUTBOUND', interactionSummary: '', outcome: '' });
+  const [followupForm, setFollowupForm] = useState({ subject: '', followupDate: '', followupType: 'CALL', priority: 'MEDIUM' });
+  const [noteForm, setNoteForm] = useState({ noteTitle: '', noteText: '' });
 
-  const tabs = [
-    'Summary',
-    'Interactions',
-    'Follow-ups',
-    'Notes',
-    'Linked Opportunity',
-    'Conversion History',
-  ];
+  const tabs = ['Summary', 'Interactions', 'Follow-ups', 'Notes', 'Linked Opportunity', 'Conversion History'];
 
-  const interactions = [
-    {
-      id: 1,
-      date: '2026-04-20',
-      type: 'Call',
-      mode: 'Phone',
-      subject: 'Initial discussion',
-      outcome: 'Interested in demo',
-      by: 'Ahmed',
-    },
-  ];
+  useEffect(() => {
+    (async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const leadRow = await getLead(id);
+        const [src, st, opps, staffRes, interactionItems, followupItems, noteItems] = await Promise.all([
+          listLeadSources(),
+          listLeadStatuses(),
+          listOpportunities(),
+          listStaffMembers({ limit: 500 }),
+          listInteractions({ leadId: leadRow.leadId }),
+          listFollowups({ leadId: leadRow.leadId }),
+          listNotes({ leadId: leadRow.leadId }),
+        ]);
+        setLead(leadRow);
+        setSources(src);
+        setStatuses(st);
+        setOpportunities(opps);
+        setStaff(staffRes.data?.staff || []);
+        setInteractions(interactionItems);
+        setFollowups(followupItems);
+        setNotes(noteItems);
+      } catch (err) {
+        alert(err?.response?.data?.message || err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
 
-  const followups = [
-    {
-      id: 1,
-      dueDate: '2026-04-23',
-      subject: 'Send proposal',
-      assignedTo: 'Priya',
-      priority: 'High',
-      status: 'Pending',
-    },
-  ];
+  const sourceName = useMemo(() => {
+    if (!lead?.leadSourceId) return '—';
+    const item = sources.find((x) => x.id === lead.leadSourceId);
+    return item ? (item.sourceName || item.source_name) : '—';
+  }, [lead, sources]);
 
-  const notes = [
-    {
-      id: 1,
-      title: 'Requirement Note',
-      note: 'Customer interested in ERP + POS package.',
-      createdBy: 'Ahmed',
-      createdOn: '2026-04-21',
-    },
-  ];
+  const statusName = useMemo(() => {
+    if (!lead?.leadStatusId) return '—';
+    const item = statuses.find((x) => x.id === lead.leadStatusId);
+    return item ? (item.statusName || item.status_name) : '—';
+  }, [lead, statuses]);
+
+  const linkedOpportunity = useMemo(
+    () => opportunities.find((x) => (x.opportunityId || x.id) === lead?.convertedOpportunityId) || null,
+    [opportunities, lead]
+  );
+  const assignedTo = lead?.assignedToStaffId ? (staff.find((x) => x.staffId === lead.assignedToStaffId)?.staffName || String(lead.assignedToStaffId)) : '—';
+
+  const saveInteraction = async () => {
+    try {
+      await createInteraction({ ...interactionForm, leadId: lead?.leadId || null, staffId: lead?.assignedToStaffId || null });
+      setInteractionForm({ subject: '', interactionType: 'CALL', interactionMode: 'OUTBOUND', interactionSummary: '', outcome: '' });
+      setInteractions(await listInteractions({ leadId: lead?.leadId }));
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message);
+    }
+  };
+
+  const saveFollowup = async () => {
+    try {
+      await createFollowup({ ...followupForm, leadId: lead?.leadId || null, assignedToStaffId: lead?.assignedToStaffId || null });
+      setFollowupForm({ subject: '', followupDate: '', followupType: 'CALL', priority: 'MEDIUM' });
+      setFollowups(await listFollowups({ leadId: lead?.leadId }));
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message);
+    }
+  };
+
+  const saveNote = async () => {
+    try {
+      await createNote({ ...noteForm, leadId: lead?.leadId || null, staffId: lead?.assignedToStaffId || null });
+      setNoteForm({ noteTitle: '', noteText: '' });
+      setNotes(await listNotes({ leadId: lead?.leadId }));
+    } catch (err) {
+      alert(err?.response?.data?.message || err.message);
+    }
+  };
+
+  const nextFollowup = lead?.nextFollowupAt ? String(lead.nextFollowupAt).slice(0, 10) : '—';
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-      <button
-        type="button"
-        onClick={() => navigate('/crm/leads')}
-        className="mb-3 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-800"
-      >
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m15 18-6-6 6-6" />
-        </svg>
+      <button type="button" onClick={() => navigate('/crm/leads')} className="mb-3 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-800">
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
         Back to Lead List
       </button>
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
-            LEAD WORKSPACE
-          </h1>
+          <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>LEAD WORKSPACE</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-gray-800">Al Noor Trading</span>
-            <span className="rounded px-2 py-1 text-[10px] font-semibold" style={{ background: '#FEF3C7', color: '#92400E' }}>
-              New
-            </span>
-            <span className="rounded px-2 py-1 text-[10px] font-semibold" style={{ background: '#FEE2E2', color: '#991B1B' }}>
-              High Priority
-            </span>
+            <span className="text-sm font-semibold text-gray-800">{lead?.companyName || lead?.leadName || '—'}</span>
+            {statusName !== '—' && <span className="rounded bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-800">{statusName}</span>}
+            {lead?.priority && <span className="rounded bg-red-100 px-2 py-1 text-[10px] font-semibold text-red-700">{lead.priority}</span>}
           </div>
-          <p className="mt-1 text-xs text-gray-500">Lead No: LD-0001 | Assigned to: Ahmed</p>
+          <p className="mt-1 text-xs text-gray-500">{loading ? 'Loading...' : `Lead No: ${lead?.leadCode || '—'} | Assigned to: ${assignedTo}`}</p>
         </div>
-
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>
-            Add Interaction
-          </button>
-          <button type="button" className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700">
-            Add Follow-up
-          </button>
-          <button type="button" className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700">
-            Edit Lead
-          </button>
-          <button type="button" className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700">
-            Convert
-          </button>
+          <button type="button" onClick={() => navigate(`/crm/lead-entry/${id}`)} className="rounded border border-gray-300 px-4 py-2 text-[11px] font-semibold text-gray-700">Edit Lead</button>
         </div>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] text-gray-500">Source</div>
-          <div className="mt-1 text-sm font-semibold text-gray-800">Website</div>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] text-gray-500">Last Interaction</div>
-          <div className="mt-1 text-sm font-semibold text-gray-800">2026-04-20</div>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] text-gray-500">Next Follow-up</div>
-          <div className="mt-1 text-sm font-semibold text-gray-800">2026-04-23</div>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <div className="text-[11px] text-gray-500">Linked Opportunity</div>
-          <div className="mt-1 text-sm font-semibold text-gray-800">Not Linked</div>
-        </div>
+        <SummaryCard label="Source" value={sourceName} />
+        <SummaryCard label="Status" value={statusName} />
+        <SummaryCard label="Next Follow-up" value={nextFollowup} />
+        <SummaryCard label="Linked Opportunity" value={linkedOpportunity ? linkedOpportunity.opportunityCode : 'Not Linked'} />
       </div>
 
       <div className="mt-5 border-b border-gray-200">
@@ -119,16 +146,7 @@ export default function LeadWorkspacePage() {
           {tabs.map((tab) => {
             const active = activeTab === tab;
             return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className="rounded-t px-4 py-2 text-[11px] font-semibold"
-                style={{
-                  backgroundColor: active ? primary : '#F3F4F6',
-                  color: active ? '#fff' : '#374151',
-                }}
-              >
+              <button key={tab} type="button" onClick={() => setActiveTab(tab)} className="rounded-t px-4 py-2 text-[11px] font-semibold" style={{ backgroundColor: active ? primary : '#F3F4F6', color: active ? '#fff' : '#374151' }}>
                 {tab}
               </button>
             );
@@ -138,108 +156,165 @@ export default function LeadWorkspacePage() {
 
       {activeTab === 'Summary' && (
         <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-2">
-          <div className="rounded-lg border border-gray-200 p-4">
-            <h2 className="text-sm font-bold" style={{ color: primary }}>Lead Summary</h2>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 text-xs">
-              <div><span className="font-semibold text-gray-600">Lead Name:</span> Al Noor Trading</div>
-              <div><span className="font-semibold text-gray-600">Contact Person:</span> Fahad</div>
-              <div><span className="font-semibold text-gray-600">Mobile:</span> 971500000001</div>
-              <div><span className="font-semibold text-gray-600">Email:</span> fahad@alnoor.com</div>
-              <div><span className="font-semibold text-gray-600">Status:</span> New</div>
-              <div><span className="font-semibold text-gray-600">Assigned To:</span> Ahmed</div>
-              <div><span className="font-semibold text-gray-600">Source:</span> Website</div>
-              <div><span className="font-semibold text-gray-600">Priority:</span> High</div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-gray-200 p-4">
-            <h2 className="text-sm font-bold" style={{ color: primary }}>Address & Remarks</h2>
-            <div className="mt-3 space-y-3 text-xs">
-              <div><span className="font-semibold text-gray-600">Address:</span> Dubai, UAE</div>
-              <div><span className="font-semibold text-gray-600">Interested Product:</span> ERP + POS</div>
-              <div><span className="font-semibold text-gray-600">Remarks:</span> Interested in complete business software package.</div>
-            </div>
-          </div>
+          <Panel title="Lead Summary" primary={primary}>
+            {[
+              ['Lead Name', lead?.companyName || '—'],
+              ['Contact Person', lead?.leadName || '—'],
+              ['Mobile', lead?.mobileNo || '—'],
+              ['WhatsApp', lead?.whatsappNo || '—'],
+              ['Email', lead?.email || '—'],
+              ['Status', statusName],
+              ['Source', sourceName],
+              ['Priority', lead?.priority || '—'],
+              ['Expected Value', lead?.expectedValue ?? '—'],
+              ['Probability %', lead?.probabilityPercent ?? '—'],
+            ].map(([label, value]) => <InfoRow key={label} label={label} value={value} />)}
+          </Panel>
+          <Panel title="Address & Remarks" primary={primary}>
+            {[
+              ['Address', lead?.address || '—'],
+              ['City', lead?.city || '—'],
+              ['Country', lead?.country || '—'],
+              ['Remarks', lead?.remarks || '—'],
+            ].map(([label, value]) => <InfoRow key={label} label={label} value={value} />)}
+          </Panel>
         </div>
       )}
 
       {activeTab === 'Interactions' && (
-        <div className="mt-5 overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full border-collapse text-left">
-            <thead style={{ backgroundColor: '#F9FAFB' }}>
-              <tr>
-                {['Date', 'Type', 'Mode', 'Subject', 'Outcome', 'By'].map((head) => (
-                  <th key={head} className="border-b border-gray-200 px-3 py-3 text-[11px] font-semibold text-gray-600">{head}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {interactions.map((row) => (
-                <tr key={row.id}>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.date}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.type}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.mode}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.subject}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.outcome}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.by}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTab
+          title="Add Interaction"
+          primary={primary}
+          form={
+            <>
+              <TabInput label="Subject" value={interactionForm.subject} onChange={(v) => setInteractionForm((p) => ({ ...p, subject: v }))} />
+              <TabInput label="Type" value={interactionForm.interactionType} onChange={(v) => setInteractionForm((p) => ({ ...p, interactionType: v.toUpperCase() }))} />
+              <TabText label="Summary" value={interactionForm.interactionSummary} onChange={(v) => setInteractionForm((p) => ({ ...p, interactionSummary: v }))} />
+              <button type="button" onClick={saveInteraction} className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Save Interaction</button>
+            </>
+          }
+          items={interactions.map((item) => ({
+            key: item.id,
+            title: item.subject,
+            meta: `${String(item.interactionDate || '').slice(0, 10)} · ${item.interactionType} · ${item.outcome || '—'}`,
+            body: item.interactionSummary || '—',
+          }))}
+        />
       )}
 
       {activeTab === 'Follow-ups' && (
-        <div className="mt-5 overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full border-collapse text-left">
-            <thead style={{ backgroundColor: '#F9FAFB' }}>
-              <tr>
-                {['Due Date', 'Subject', 'Assigned To', 'Priority', 'Status'].map((head) => (
-                  <th key={head} className="border-b border-gray-200 px-3 py-3 text-[11px] font-semibold text-gray-600">{head}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {followups.map((row) => (
-                <tr key={row.id}>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.dueDate}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.subject}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.assignedTo}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.priority}</td>
-                  <td className="border-b border-gray-100 px-3 py-3 text-xs">{row.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTab
+          title="Add Follow-up"
+          primary={primary}
+          form={
+            <>
+              <TabInput label="Subject" value={followupForm.subject} onChange={(v) => setFollowupForm((p) => ({ ...p, subject: v }))} />
+              <TabInput label="Date" type="date" value={followupForm.followupDate} onChange={(v) => setFollowupForm((p) => ({ ...p, followupDate: v }))} />
+              <button type="button" onClick={saveFollowup} className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Save Follow-up</button>
+            </>
+          }
+          items={followups.map((item) => ({
+            key: item.id,
+            title: item.subject,
+            meta: `${String(item.followupDate || '').slice(0, 10)} · ${item.priority} · ${item.status}`,
+            body: <button type="button" onClick={() => completeFollowup(item.id).then(() => listFollowups({ leadId: lead?.leadId }).then(setFollowups)).catch((err) => alert(err?.response?.data?.message || err.message))} className="rounded border border-gray-300 px-3 py-1 text-[10px] font-semibold text-gray-700">Complete</button>,
+          }))}
+        />
       )}
 
       {activeTab === 'Notes' && (
-        <div className="mt-5 space-y-3">
-          {notes.map((note) => (
-            <div key={note.id} className="rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold" style={{ color: primary }}>{note.title}</h3>
-                <span className="text-[11px] text-gray-500">{note.createdOn}</span>
-              </div>
-              <p className="mt-2 text-xs text-gray-700">{note.note}</p>
-              <div className="mt-2 text-[11px] text-gray-500">By: {note.createdBy}</div>
-            </div>
-          ))}
-        </div>
+        <DataTab
+          title="Add Note"
+          primary={primary}
+          form={
+            <>
+              <TabInput label="Title" value={noteForm.noteTitle} onChange={(v) => setNoteForm((p) => ({ ...p, noteTitle: v }))} />
+              <TabText label="Note" value={noteForm.noteText} onChange={(v) => setNoteForm((p) => ({ ...p, noteText: v }))} />
+              <button type="button" onClick={saveNote} className="rounded px-4 py-2 text-[11px] font-semibold text-white" style={{ backgroundColor: primary }}>Save Note</button>
+            </>
+          }
+          items={notes.map((item) => ({
+            key: item.id,
+            title: item.noteTitle || 'Note',
+            meta: String(item.noteDate || '').slice(0, 10),
+            body: item.noteText,
+          }))}
+        />
       )}
 
       {activeTab === 'Linked Opportunity' && (
         <div className="mt-5 rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-          No linked opportunity found
+          {linkedOpportunity ? `${linkedOpportunity.opportunityCode} - ${linkedOpportunity.opportunityName}` : 'No linked opportunity found'}
         </div>
       )}
 
       {activeTab === 'Conversion History' && (
         <div className="mt-5 rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-          No conversion history available
+          {lead?.convertedAt ? `Converted at ${String(lead.convertedAt).slice(0, 10)}` : (lead?.lostAt ? `Lost at ${String(lead.lostAt).slice(0, 10)}` : 'No conversion history available')}
         </div>
       )}
+    </div>
+  );
+}
+
+function SummaryCard({ label, value }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="text-[11px] text-gray-500">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-gray-800">{value}</div>
+    </div>
+  );
+}
+
+function Panel({ title, primary, children }) {
+  return (
+    <div className="rounded-lg border border-gray-200 p-4">
+      <h2 className="text-sm font-bold" style={{ color: primary }}>{title}</h2>
+      <div className="mt-3 space-y-2 text-xs">{children}</div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div>
+      <span className="font-semibold text-gray-600">{label}: </span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function TabInput({ label, value, onChange, type = 'text' }) {
+  return (
+    <label className="flex flex-col gap-1 text-[11px] font-medium text-gray-600">
+      {label}
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="rounded border border-gray-300 px-3 py-2 text-xs text-gray-800" />
+    </label>
+  );
+}
+
+function TabText({ label, value, onChange }) {
+  return (
+    <label className="flex flex-col gap-1 text-[11px] font-medium text-gray-600">
+      {label}
+      <textarea rows={3} value={value} onChange={(e) => onChange(e.target.value)} className="rounded border border-gray-300 px-3 py-2 text-xs text-gray-800" />
+    </label>
+  );
+}
+
+function DataTab({ title, primary, form, items }) {
+  return (
+    <div className="mt-5 space-y-4">
+      <Panel title={title} primary={primary}><div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{form}</div></Panel>
+      <Panel title="Records" primary={primary}>
+        {items.length === 0 ? <div className="text-sm text-gray-500">No records yet.</div> : items.map((item) => (
+          <div key={item.key} className="border-b border-gray-100 py-2 last:border-b-0">
+            <div className="font-semibold text-gray-800">{item.title}</div>
+            <div className="text-gray-500">{item.meta}</div>
+            <div className="text-gray-600">{item.body}</div>
+          </div>
+        ))}
+      </Panel>
     </div>
   );
 }

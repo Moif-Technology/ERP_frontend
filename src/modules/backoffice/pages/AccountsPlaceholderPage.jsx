@@ -8,8 +8,6 @@ const TITLES = {
   '/payment-voucher-list': 'PAYMENT VOUCHER LIST',
   '/receipt-voucher-list': 'RECEIPT VOUCHER LIST',
   '/contra-journal-voucher-list': 'CONTRA / JOURNAL VOUCHER LIST',
-  '/financials/profit-and-loss-account': 'PROFIT AND LOSS ACCOUNT',
-  '/financials/balance-sheet': 'BALANCE SHEET',
   '/statement-of-accounts-list': 'STATEMENT OF ACCOUNTS — LIST',
 };
 

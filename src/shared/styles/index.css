@@ -31,12 +31,14 @@ body {
   margin: 0;
   height: 100%;
   background-color: #E5E5E5;
-  font-size: 15px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-    'Helvetica Neue', Arial, sans-serif;
+
+  background-color: #E5E5E5;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 code {
@@ -44,86 +46,16 @@ code {
     monospace;
 }
 
-/* All form elements inherit the app font */
-input, select, textarea, button {
-  font-family: inherit;
-}
-
-/* Dropdown selected option highlight — primary color */
-select {
-  accent-color: #790728;
-}
-
-select option:checked,
-select option:hover {
-  background: #790728;
-  color: #ffffff;
-}
-
-/* Textarea matches input font size (uiFontSizes.input = 12px) */
-textarea {
-  font-size: 12px;
-}
-
-/* ── Native date / time input picker ── */
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-input[type="week"] {
-  accent-color: #790728;   /* selected day highlight in the popup */
-  color-scheme: light;     /* force light calendar on dark OS themes */
-}
-
-/* Calendar / clock icon — tint to primary maroon */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  border-radius: 3px;
-  padding: 2px;
-  /* converts default black icon → #790728 maroon */
-  filter: invert(11%) sepia(90%) saturate(3000%) hue-rotate(318deg) brightness(75%) contrast(110%);
-  opacity: 0.85;
-  transition: opacity 0.15s, background 0.15s;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="time"]::-webkit-calendar-picker-indicator:hover,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
-  background-color: #f2e6ea;  /* primary-50 tint on hover */
-}
-
-/* Editable date parts (day / month / year text) */
-input[type="date"]::-webkit-datetime-edit-day-field:focus,
-input[type="date"]::-webkit-datetime-edit-month-field:focus,
-input[type="date"]::-webkit-datetime-edit-year-field:focus,
-input[type="time"]::-webkit-datetime-edit-hour-field:focus,
-input[type="time"]::-webkit-datetime-edit-minute-field:focus,
-input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
-  background-color: #790728;
-  color: #ffffff;
-  border-radius: 2px;
-  outline: none;
-}
-
-/* ── Sidebar scrollbar (subtle, modern) ── */
+/* Sidebar: keep scroll, hide visible scrollbar (Firefox / WebKit / legacy Edge) */
 .sidebar-scroll {
-  scrollbar-width: none; /* Firefox - hide */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
-  width: 0px;
-  height: 0px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: transparent;
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Switch - From Uiverse.io by namecho */

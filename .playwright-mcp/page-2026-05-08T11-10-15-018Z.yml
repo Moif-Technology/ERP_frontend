@@ -1,0 +1,421 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic "Pattambi Restaurant" [ref=e5]
+    - generic [ref=e7]:
+      - img "Search" [ref=e8]
+      - textbox "Search here" [ref=e9]
+    - generic [ref=e10]:
+      - generic "Head Office" [ref=e11]: "Station: Head Office"
+      - button "Pattambi Restaurant" [ref=e12]:
+        - img [ref=e13]
+        - generic [ref=e14]: Pattambi Restaurant
+      - button "Menu" [ref=e16] [cursor=pointer]: ⋮
+  - generic [ref=e17]:
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - button "CUSTOMER" [ref=e22] [cursor=pointer]
+          - button "SUPPLIER" [ref=e25] [cursor=pointer]
+          - button "ACCOUNTS" [ref=e28] [cursor=pointer]
+          - button "GARAGE" [ref=e31] [cursor=pointer]
+          - button "HR" [ref=e34] [cursor=pointer]
+        - button "Hide toolbars" [expanded] [ref=e36]:
+          - img [ref=e38]
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Product
+          - generic [ref=e43]:
+            - button "Product entry" [ref=e44] [cursor=pointer]:
+              - generic [ref=e45]: Product entry
+            - button "List" [ref=e46] [cursor=pointer]:
+              - generic [ref=e47]: List
+        - generic [ref=e48]:
+          - generic [ref=e49]: Quotation
+          - generic [ref=e50]:
+            - button "Quotation" [ref=e51] [cursor=pointer]:
+              - generic [ref=e52]: Quotation
+            - button "List" [ref=e53] [cursor=pointer]:
+              - generic [ref=e54]: List
+        - generic [ref=e55]:
+          - generic [ref=e56]: Delivery Order
+          - generic [ref=e57]:
+            - button "Delivery" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]: Delivery
+            - button "List" [ref=e60] [cursor=pointer]:
+              - generic [ref=e61]: List
+        - generic [ref=e62]:
+          - generic [ref=e63]: Sale
+          - generic [ref=e64]:
+            - button "Sales" [ref=e65] [cursor=pointer]:
+              - generic [ref=e66]: Sales
+            - button "List" [ref=e67] [cursor=pointer]:
+              - generic [ref=e68]: List
+        - generic [ref=e69]:
+          - generic [ref=e70]: Sale Return
+          - generic [ref=e71]:
+            - button "Returns" [ref=e72] [cursor=pointer]:
+              - generic [ref=e73]: Returns
+            - button "List" [ref=e74] [cursor=pointer]:
+              - generic [ref=e75]: List
+    - generic [ref=e76]:
+      - generic [ref=e77]:
+        - button "Multi vendors" [ref=e78]:
+          - generic [ref=e79]: Multi vendors
+        - button "Item Ledger" [ref=e80]:
+          - generic [ref=e81]: Item Ledger
+        - button "Pricing" [ref=e82]:
+          - generic [ref=e83]: Pricing
+        - button "Alternative" [ref=e84]:
+          - generic [ref=e85]: Alternative
+      - generic [ref=e86]:
+        - button [ref=e87]
+        - button [ref=e88]
+        - button [ref=e89]
+        - button [ref=e90]
+  - generic [ref=e91]:
+    - complementary [ref=e92]:
+      - generic [ref=e94]:
+        - img "Search" [ref=e95]
+        - textbox "Search..." [ref=e96]
+      - navigation [ref=e97]:
+        - link "Dashboard" [ref=e99] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e100]: Dashboard
+        - link "Home" [ref=e102] [cursor=pointer]:
+          - /url: /home
+          - generic [ref=e103]: Home
+        - generic [ref=e105] [cursor=pointer]:
+          - generic [ref=e107]: Data Entry
+          - img "toggle" [ref=e108]
+        - generic [ref=e109]:
+          - generic [ref=e110] [cursor=pointer]:
+            - generic [ref=e112]: List
+            - img "toggle" [ref=e113]
+          - generic [ref=e114]:
+            - link "Product list" [ref=e115] [cursor=pointer]:
+              - /url: /products
+              - generic [ref=e116]: Product list
+            - link "Product price list" [ref=e117] [cursor=pointer]:
+              - /url: /lists/product-price-list
+              - generic [ref=e118]: Product price list
+            - link "Customer list" [ref=e119] [cursor=pointer]:
+              - /url: /lists/customer-list
+              - generic [ref=e120]: Customer list
+            - link "Supplier list" [ref=e121] [cursor=pointer]:
+              - /url: /lists/supplier-list
+              - generic [ref=e122]: Supplier list
+            - link "Agent list" [ref=e123] [cursor=pointer]:
+              - /url: /lists/agent-list
+              - generic [ref=e124]: Agent list
+        - generic [ref=e126] [cursor=pointer]:
+          - generic [ref=e128]: Stock Hub
+          - img "toggle" [ref=e129]
+        - generic [ref=e131] [cursor=pointer]:
+          - generic [ref=e133]: Exchange Hub
+          - img "toggle" [ref=e134]
+        - generic [ref=e136] [cursor=pointer]:
+          - generic [ref=e138]: Sales Activities
+          - img "toggle" [ref=e139]
+        - generic [ref=e141] [cursor=pointer]:
+          - generic [ref=e143]: Procurement
+          - img "toggle" [ref=e144]
+        - generic [ref=e146] [cursor=pointer]:
+          - generic [ref=e148]: Financials
+          - img "toggle" [ref=e149]
+        - generic [ref=e151] [cursor=pointer]:
+          - generic [ref=e153]: Manufacturing
+          - img "toggle" [ref=e154]
+        - generic [ref=e156] [cursor=pointer]:
+          - generic [ref=e158]: Deals & Offers
+          - img "toggle" [ref=e159]
+        - generic [ref=e161] [cursor=pointer]:
+          - generic [ref=e163]: Logistics
+          - img "toggle" [ref=e164]
+        - link "Point of Sale" [ref=e166] [cursor=pointer]:
+          - /url: /point-of-sale
+          - generic [ref=e167]: Point of Sale
+        - generic [ref=e169] [cursor=pointer]:
+          - generic [ref=e171]: Human Resources
+          - img "toggle" [ref=e172]
+        - generic [ref=e174] [cursor=pointer]:
+          - generic [ref=e176]: CRM
+          - img "toggle" [ref=e177]
+        - generic [ref=e178]:
+          - generic [ref=e179] [cursor=pointer]:
+            - generic [ref=e181]: Garage
+            - img "toggle" [ref=e182]
+          - generic [ref=e183]:
+            - link "Home" [ref=e184] [cursor=pointer]:
+              - /url: /garage/home
+              - generic [ref=e185]: Home
+            - link "Dashboard" [ref=e186] [cursor=pointer]:
+              - /url: /garage/dashboard
+              - generic [ref=e187]: Dashboard
+            - link "Job card entry" [ref=e188] [cursor=pointer]:
+              - /url: /garage/job-card-entry
+              - generic [ref=e189]: Job card entry
+            - link "Job card list" [ref=e190] [cursor=pointer]:
+              - /url: /garage/job-card-list
+              - generic [ref=e191]: Job card list
+            - link "Vehicle list" [ref=e192] [cursor=pointer]:
+              - /url: /garage/vehicle-list
+              - generic [ref=e193]: Vehicle list
+            - link "Vehicle entry" [ref=e194] [cursor=pointer]:
+              - /url: /garage/vehicle-entry
+              - generic [ref=e195]: Vehicle entry
+            - link "Color entry" [ref=e196] [cursor=pointer]:
+              - /url: /garage/color-entry
+              - generic [ref=e197]: Color entry
+            - link "Car group entry" [ref=e198] [cursor=pointer]:
+              - /url: /garage/car-group-entry
+              - generic [ref=e199]: Car group entry
+            - link "Car sub group entry" [ref=e200] [cursor=pointer]:
+              - /url: /garage/car-sub-group-entry
+              - generic [ref=e201]: Car sub group entry
+            - link "Technician entry" [ref=e202] [cursor=pointer]:
+              - /url: /garage/technician-entry
+              - generic [ref=e203]: Technician entry
+            - link "Job description entry" [ref=e204] [cursor=pointer]:
+              - /url: /garage/job-description-entry
+              - generic [ref=e205]: Job description entry
+            - link "Branch entry" [ref=e206] [cursor=pointer]:
+              - /url: /garage/branch-entry
+              - generic [ref=e207]: Branch entry
+            - link "Part request" [ref=e208] [cursor=pointer]:
+              - /url: /garage/part-request
+              - generic [ref=e209]: Part request
+            - link "Sublet jobs" [ref=e210] [cursor=pointer]:
+              - /url: /garage/sublet-jobs
+              - generic [ref=e211]: Sublet jobs
+            - link "Gate pass viewer" [ref=e212] [cursor=pointer]:
+              - /url: /garage/gate-pass-viewer
+              - generic [ref=e213]: Gate pass viewer
+            - link "Punching entry" [ref=e214] [cursor=pointer]:
+              - /url: /garage/punching-entry
+              - generic [ref=e215]: Punching entry
+            - link "Job code punching" [ref=e216] [cursor=pointer]:
+              - /url: /garage/job-code-punching
+              - generic [ref=e217]: Job code punching
+            - link "Punching list" [ref=e218] [cursor=pointer]:
+              - /url: /garage/punching-list
+              - generic [ref=e219]: Punching list
+            - link "Pre job card entry" [ref=e220] [cursor=pointer]:
+              - /url: /garage/pre-job-card-entry
+              - generic [ref=e221]: Pre job card entry
+            - link "Additional vehicle history" [ref=e222] [cursor=pointer]:
+              - /url: /garage/additional-vehicle-history
+              - generic [ref=e223]: Additional vehicle history
+            - link "Sublet LPO" [ref=e224] [cursor=pointer]:
+              - /url: /garage/sublet-lpo
+              - generic [ref=e225]: Sublet LPO
+            - link "Consumable entry" [ref=e226] [cursor=pointer]:
+              - /url: /garage/consumable-entry
+              - generic [ref=e227]: Consumable entry
+            - link "Lubricant monitor" [ref=e228] [cursor=pointer]:
+              - /url: /garage/lubricant-monitor
+              - generic [ref=e229]: Lubricant monitor
+            - link "Consumable monitor" [ref=e230] [cursor=pointer]:
+              - /url: /garage/consumable-monitor
+              - generic [ref=e231]: Consumable monitor
+            - link "Sublet monitor" [ref=e232] [cursor=pointer]:
+              - /url: /garage/sublet-monitor
+              - generic [ref=e233]: Sublet monitor
+        - generic [ref=e235] [cursor=pointer]:
+          - generic [ref=e237]: Reports
+          - img "toggle" [ref=e238]
+        - generic [ref=e240] [cursor=pointer]:
+          - generic [ref=e242]: Tools
+          - img "toggle" [ref=e243]
+        - generic [ref=e245] [cursor=pointer]:
+          - generic [ref=e247]: Management
+          - img "toggle" [ref=e248]
+        - generic [ref=e250] [cursor=pointer]:
+          - generic [ref=e252]: Configuration
+          - img "toggle" [ref=e253]
+      - button "Log out" [ref=e255]
+    - main [ref=e256]:
+      - generic [ref=e396]:
+        - generic [ref=e398]:
+          - generic [ref=e399]:
+            - heading "Job Card Entry" [level=1] [ref=e401]
+            - generic [ref=e402]:
+              - button "Print" [ref=e403]
+              - button "Post" [ref=e404]
+              - button "Unpost" [disabled] [ref=e405]
+              - button "Delete" [ref=e406]
+              - button "Save" [ref=e407]:
+                - img [ref=e408]
+                - text: Save
+              - button "New job card" [ref=e412]:
+                - img [ref=e413]
+                - text: New Job Card
+          - generic [ref=e415]:
+            - generic [ref=e416]:
+              - generic [ref=e417]: Job Card No
+              - generic [ref=e418]: JC-00002
+            - generic [ref=e419]:
+              - generic [ref=e420]: Reg No
+              - generic [ref=e421]: "54321"
+            - generic [ref=e422]:
+              - generic [ref=e423]: Customer
+              - generic [ref=e424]: Mohammed Sabeeh
+            - generic [ref=e425]:
+              - generic [ref=e426]: Advisor
+              - generic [ref=e427]: Unassigned
+            - generic [ref=e428]:
+              - generic [ref=e429]: Booking
+              - generic [ref=e430]: 2026-05-07
+            - generic [ref=e431]:
+              - generic [ref=e432]: Job Lines
+              - generic [ref=e433]: 0 items
+        - generic [ref=e435]:
+          - generic [ref=e436]:
+            - generic [ref=e437]:
+              - generic [ref=e438]:
+                - heading "Core Intake" [level=2] [ref=e439]
+                - paragraph [ref=e440]: Keep the high-frequency intake fields always visible for fast job creation.
+              - generic [ref=e441]:
+                - generic [ref=e442]:
+                  - generic [ref=e443]: Job Card No
+                  - textbox "Auto" [ref=e445]: JC-00002
+                - generic [ref=e446]:
+                  - generic [ref=e447]: Reg. No.
+                  - generic [ref=e448]:
+                    - textbox "Reg. no." [ref=e449]: "54321"
+                    - button "Search vehicle" [ref=e450]:
+                      - img [ref=e451]
+                - generic [ref=e454]:
+                  - generic [ref=e455]: Station Code
+                  - generic [ref=e456]:
+                    - combobox [ref=e457] [cursor=pointer]:
+                      - option "Select station" [disabled]
+                      - option "Main Workshop" [selected]
+                      - option "Branch A"
+                      - option "Branch B"
+                      - option "Branch C"
+                    - img
+                - generic [ref=e458]:
+                  - generic [ref=e459]: Chassis No
+                  - textbox "Chassis no." [ref=e461]: "98765"
+                - generic [ref=e462]:
+                  - generic [ref=e463]: Customer Type
+                  - generic [ref=e464]:
+                    - combobox [ref=e465] [cursor=pointer]:
+                      - option "Select type" [disabled]
+                      - option "CASH" [selected]
+                      - option "CREDIT"
+                      - option "INSURANCE"
+                      - option "CORPORATE"
+                      - option "WARRANTY"
+                    - img
+                - generic [ref=e466]:
+                  - generic [ref=e467]: Veh. Owner Name
+                  - textbox "Owner name" [ref=e469]: Mohammed Sabeeh
+                - generic [ref=e470]:
+                  - generic [ref=e471]: Customer Name
+                  - generic [ref=e472]:
+                    - textbox "Customer name" [ref=e473]: Mohammed Sabeeh
+                    - button "Search customer" [ref=e474]:
+                      - img [ref=e475]
+                - generic [ref=e478]:
+                  - generic [ref=e479]: Job Brought By
+                  - generic [ref=e480]:
+                    - combobox [ref=e481] [cursor=pointer]:
+                      - option "Select" [disabled] [selected]
+                      - option "Owner"
+                      - option "Driver"
+                      - option "Agent"
+                      - option "Walk-in"
+                      - option "Other"
+                    - img
+                - generic [ref=e482]:
+                  - generic [ref=e483]: Driver
+                  - generic [ref=e484]:
+                    - combobox [ref=e485] [cursor=pointer]:
+                      - option "Select driver" [disabled] [selected]
+                      - option "Driver 1"
+                      - option "Driver 2"
+                      - option "Driver 3"
+                      - option "Driver 4"
+                    - img
+                - generic [ref=e486]:
+                  - generic [ref=e487]: Service Advisor
+                  - generic [ref=e488]:
+                    - combobox [ref=e489] [cursor=pointer]:
+                      - option "Select advisor" [disabled] [selected]
+                      - option "Ahmed Al-Rashidi"
+                      - option "Fatima Hassan"
+                      - option "Omar Khalid"
+                      - option "Sara Al-Mutairi"
+                    - img
+            - generic [ref=e490]:
+              - generic [ref=e491]:
+                - heading "Quick Timing" [level=2] [ref=e492]
+                - paragraph [ref=e493]: Dates and immediate workshop readiness details that matter during intake.
+              - generic [ref=e494]:
+                - generic [ref=e495]:
+                  - generic [ref=e496]: Booking Date
+                  - generic [ref=e497]:
+                    - textbox "DD/MM/YYYY" [ref=e498]: 07/05/2026
+                    - button "Open Booking Date picker" [ref=e499]:
+                      - img [ref=e500]
+                - generic [ref=e502]:
+                  - generic [ref=e503]: Promise Date
+                  - generic [ref=e504]:
+                    - textbox "DD/MM/YYYY" [ref=e505]: 07/05/2026
+                    - button "Open Promise Date picker" [ref=e506]:
+                      - img [ref=e507]
+                - generic [ref=e509]:
+                  - generic [ref=e510]: KM Reading (IN)
+                  - textbox "KM" [ref=e512]: "0"
+                - generic [ref=e513]:
+                  - generic [ref=e514]: Job Type
+                  - generic [ref=e515]:
+                    - combobox [ref=e516] [cursor=pointer]:
+                      - option "Select type" [disabled]
+                      - option "BODYSHOP" [selected]
+                      - option "MECHANICAL"
+                      - option "ELECTRICAL"
+                      - option "GENERAL SERVICE"
+                      - option "AC SERVICE"
+                      - option "TYRES"
+                      - option "OTHER"
+                    - img
+          - generic [ref=e517]:
+            - tablist [ref=e518]:
+              - tab "Commercial" [selected] [ref=e519]
+              - tab "Concern & Flags" [ref=e520]
+              - tab "Job Lines" [ref=e521]
+              - tab "QC / Warranty" [ref=e522]
+            - generic [ref=e524]:
+              - generic [ref=e525]:
+                - heading "Commercial and Claim Details" [level=2] [ref=e526]
+                - paragraph [ref=e527]: Insurance, claim, LPO, and commercial values grouped together.
+              - generic [ref=e528]:
+                - generic [ref=e529]:
+                  - generic [ref=e530]: Estimation No
+                  - textbox "Est. no." [ref=e532]
+                - generic [ref=e533]:
+                  - generic [ref=e534]: Estimation Amount
+                  - textbox "0.00" [ref=e536]: "0"
+                - generic [ref=e537]:
+                  - generic [ref=e538]: LPO No.
+                  - textbox "LPO no." [ref=e540]
+                - generic [ref=e541]:
+                  - generic [ref=e542]: Claim No.
+                  - textbox "Claim no." [ref=e544]
+                - generic [ref=e545]:
+                  - generic [ref=e546]: LPO Date
+                  - generic [ref=e547]:
+                    - textbox "DD/MM/YYYY" [ref=e548]: 07/05/2026
+                    - button "Open LPO Date picker" [ref=e549]:
+                      - img [ref=e550]
+                - generic [ref=e552]:
+                  - generic [ref=e553]: Excess Amt.
+                  - textbox "0.00" [ref=e555]: "0"
+                - generic [ref=e556]:
+                  - generic [ref=e557]: Advance Received
+                  - textbox "0.00" [ref=e559]: "0"
+                - generic [ref=e560]:
+                  - generic [ref=e561]: Invoice Party
+                  - textbox "Invoice party" [ref=e563]
