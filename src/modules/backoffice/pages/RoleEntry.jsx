@@ -17,7 +17,6 @@ const blankForm = {
 
 export default function RoleEntry() {
   const primary = colors.primary?.main || '#790728';
-  const surfaceTint = colors.primary?.[50] || '#F2E6EA';
   const [roles, setRoles] = useState([]);
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [form, setForm] = useState(blankForm);
@@ -146,10 +145,20 @@ export default function RoleEntry() {
     }
   };
 
-  const fieldHeight = 36;
+  const fieldHeight = 34;
   const inputClass =
-    '!text-base placeholder:text-gray-400 transition-[box-shadow] focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#790728]/25 focus-visible:ring-offset-1 disabled:opacity-60';
-  const labelClassName = '!text-sm !font-medium !text-gray-700 !leading-snug sm:!text-[0.9375rem]';
+    'rounded-md px-2.5 !text-[14px] font-medium text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#79072820] disabled:cursor-not-allowed disabled:opacity-60';
+  const labelClassName =
+    '!flex !h-4 !items-center !truncate !text-[11px] !font-bold !uppercase !leading-4 !tracking-[0.12em] !text-slate-500';
+  const cardStyle = 'rounded-lg border border-slate-200 bg-white shadow-sm';
+  const sectionTitle = 'text-[12px] font-bold uppercase tracking-[0.16em] text-slate-700';
+  const sectionSubtle = 'text-[11px] font-medium text-slate-500';
+  const primaryButton =
+    'inline-flex h-8 cursor-pointer items-center justify-center rounded-md px-4 text-[12px] font-bold uppercase tracking-[0.08em] text-white shadow-sm transition duration-200 ease-out hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[#79072830] disabled:cursor-not-allowed disabled:opacity-60';
+  const secondaryButton =
+    'inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white px-4 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-700 shadow-sm transition duration-200 ease-out hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#79072820] disabled:cursor-not-allowed disabled:opacity-60';
+  const dangerButton =
+    'inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-red-200 bg-white px-4 text-[12px] font-bold uppercase tracking-[0.08em] text-red-700 shadow-sm transition duration-200 ease-out hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:opacity-60';
 
   const req = (text) => (
     <span className="inline-flex items-center gap-1">
@@ -161,75 +170,139 @@ export default function RoleEntry() {
   );
 
   return (
-    <div className="flex w-full flex-col">
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
-        <div className="border-b border-gray-100 bg-gradient-to-br from-white via-white to-slate-50/60 px-4 py-4 sm:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <nav className="text-xs font-medium text-gray-500" aria-label="Breadcrumb">
-                <span>Data entry</span>
-                <span className="mx-2 text-gray-300">/</span>
-                <span style={{ color: primary }}>Role</span>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 sm:px-5">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <nav className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                <span>Data Entry</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-slate-700">Roles</span>
               </nav>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900">Role entry</h1>
+              <h1 className="mt-1 text-[18px] font-bold leading-tight text-slate-900">Role Entry</h1>
             </div>
-            <button
-              type="button"
-              onClick={handleNew}
-              className="h-10 rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50"
-            >
-              New role
-            </button>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {error ? (
+                <span
+                  className="rounded-md border border-red-100 bg-red-50 px-2.5 py-1 text-[12px] font-semibold text-red-700"
+                  role="alert"
+                >
+                  {error}
+                </span>
+              ) : null}
+              {success ? (
+                <span
+                  className="rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {success}
+                </span>
+              ) : null}
+              <button type="button" onClick={handleNew} className={secondaryButton}>
+                New role
+              </button>
+              {selectedRoleId ? (
+                <button
+                  type="button"
+                  onClick={handleDeactivate}
+                  disabled={saving || deactivating}
+                  className={dangerButton}
+                >
+                  {deactivating ? 'Deactivating...' : 'Deactivate'}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || deactivating}
+                className={primaryButton}
+                style={{ backgroundColor: primary }}
+              >
+                {saving ? 'Saving...' : selectedRoleId ? 'Update role' : 'Save role'}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="grid gap-0 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="border-b border-gray-200 bg-slate-50/60 p-4 lg:border-b-0 lg:border-r">
-            <div className="rounded-xl border border-gray-200 bg-white p-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Roles</p>
-              {loading ? (
-                <p className="px-2 py-3 text-sm text-gray-600">Loading...</p>
-              ) : (
-                <div className="space-y-1">
-                  {roles.map((role) => (
-                    <button
-                      key={role.roleId}
-                      type="button"
-                      onClick={() => handleSelectRole(String(role.roleId))}
-                      className={`w-full rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
-                        String(role.roleId) === String(selectedRoleId)
-                          ? 'text-white'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                      style={String(role.roleId) === String(selectedRoleId) ? { backgroundColor: primary } : undefined}
-                    >
-                      {role.roleName}
-                    </button>
-                  ))}
+        <div className="min-h-0 flex-1 overflow-auto bg-[#faf8f9] p-3">
+          <div className="grid min-h-full grid-cols-1 gap-3 lg:grid-cols-[300px_minmax(0,1fr)]">
+            <aside className={`${cardStyle} flex min-h-[220px] flex-col overflow-hidden`}>
+              <div className="border-b border-slate-200 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className={sectionTitle}>Roles</p>
+                    <p className={sectionSubtle}>Select a role to edit existing access settings.</p>
+                  </div>
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600">
+                    {roles.length}
+                  </span>
                 </div>
-              )}
-            </div>
-          </aside>
-
-          <main className="bg-white p-4 sm:p-6">
-            <section className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-              <div className="border-b border-gray-200 px-5 py-4" style={{ backgroundColor: surfaceTint }}>
-                <h2 className="text-base font-semibold text-gray-900">
-                  {selectedRole ? `Edit ${selectedRole.roleName}` : 'Create role'}
-                </h2>
               </div>
-              <div className="space-y-4 p-5">
-                <InputField
-                  label={req('Role name')}
-                  fullWidth
-                  heightPx={fieldHeight}
-                  className={inputClass}
-                  labelClassName={labelClassName}
-                  value={form.roleName}
-                  onChange={(event) => update('roleName', event.target.value)}
-                />
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="min-h-0 flex-1 overflow-auto p-2">
+                {loading ? (
+                  <div className="space-y-2 p-2">
+                    {[0, 1, 2].map((item) => (
+                      <div key={item} className="h-9 animate-pulse rounded-md bg-slate-100" />
+                    ))}
+                  </div>
+                ) : roles.length ? (
+                  <div className="space-y-1">
+                    {roles.map((role) => {
+                      const active = String(role.roleId) === String(selectedRoleId);
+                      return (
+                        <button
+                          key={role.roleId}
+                          type="button"
+                          onClick={() => handleSelectRole(String(role.roleId))}
+                          className={`flex min-h-[36px] w-full cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-[13px] font-semibold transition duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-[#79072820] ${
+                            active
+                              ? 'text-white shadow-sm'
+                              : 'border border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50'
+                          }`}
+                          style={active ? { backgroundColor: primary } : undefined}
+                        >
+                          <span className="min-w-0 truncate">{role.roleName}</span>
+                          <span className={active ? 'text-[11px] text-white/75' : 'text-[11px] text-slate-400'}>
+                            {role.softwareType || 'ERP'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-[12px] font-medium text-slate-500">
+                    No roles found.
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <main className={`${cardStyle} overflow-hidden`}>
+              <div className="border-b border-slate-200 px-4 py-3">
+                <p className={sectionTitle}>{selectedRole ? 'Edit Role' : 'New Role'}</p>
+                <p className={sectionSubtle}>
+                  Maintain role name, discount limit, and the software area where this role applies.
+                </p>
+              </div>
+
+              <div className="p-4">
+                <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="md:col-span-2 xl:col-span-2">
+                    <InputField
+                      label={req('Role name')}
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      value={form.roleName}
+                      onChange={(event) => update('roleName', event.target.value)}
+                    />
+                  </div>
+
                   <InputField
                     label="Discount allowed %"
                     fullWidth
@@ -243,6 +316,7 @@ export default function RoleEntry() {
                     value={form.discountPercentAllowed}
                     onChange={(event) => update('discountPercentAllowed', event.target.value)}
                   />
+
                   <DropdownInput
                     label="Software type"
                     fullWidth
@@ -255,41 +329,14 @@ export default function RoleEntry() {
                   />
                 </div>
 
-                {error ? (
-                  <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
-                    {error}
+                <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[12px] font-semibold leading-5 text-slate-600">
+                    Required fields are marked with an asterisk. Discount allowed must stay between 0 and 100.
                   </p>
-                ) : null}
-                {success ? (
-                  <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-900" role="status">
-                    {success}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                  {selectedRoleId ? (
-                    <button
-                      type="button"
-                      onClick={handleDeactivate}
-                      disabled={saving || deactivating}
-                      className="h-10 rounded-lg border border-red-200 bg-white px-5 text-sm font-semibold text-red-700 shadow-sm transition hover:bg-red-50 disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      {deactivating ? 'Deactivating...' : 'Deactivate'}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving || deactivating}
-                    className="h-10 min-w-[140px] rounded-lg px-5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:pointer-events-none disabled:opacity-50"
-                    style={{ backgroundColor: primary }}
-                  >
-                    {saving ? 'Saving...' : selectedRoleId ? 'Update role' : 'Save role'}
-                  </button>
                 </div>
               </div>
-            </section>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </div>

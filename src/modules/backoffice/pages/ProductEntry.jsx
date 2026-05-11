@@ -774,35 +774,33 @@ export default function ProductEntry() {
   const saveLabel = saving ? (isEditMode ? "Updating…" : "Saving…") : (isEditMode ? "Update Product" : "Save Product");
 
   return (
-    <div className="pe2" style={{ margin: "-24px -28px -32px" }}>
+    <div className="pe2">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap');
-
         .pe2 {
           --red: ${primary};
-          --red-l: #941236;
+          --red-l: #8f0a31;
           --red-bg: rgba(121, 7, 40, 0.08);
           --red-brd: rgba(121, 7, 40, 0.18);
-          --green: #0f6b3c;
-          --amber: #9a6700;
+          --green: #047857;
+          --amber: #b45309;
 
-          --bg: #f7f4f1;
+          --bg: #faf8f9;
           --surface: #ffffff;
-          --surface-2: #fcf9f7;
-          --surface-3: #f3ece7;
+          --surface-2: #f8fafc;
+          --surface-3: #f1f5f9;
 
-          --border: #e6ddd6;
-          --border2: #f1e8e1;
+          --border: #d1d5db;
+          --border2: #e5e7eb;
 
-          --ink: #2f2926;
-          --muted: #766963;
-          --faint: #a5958d;
-          --panel-shadow: 0 6px 18px rgba(33, 26, 23, 0.04);
+          --ink: #1e293b;
+          --muted: #64748b;
+          --faint: #94a3b8;
+          --panel-shadow: 0 1px 2px 0 rgba(15,23,42,0.06);
 
-          --radius: 12px;
-          --radius-lg: 20px;
+          --radius: 6px;
+          --radius-lg: 8px;
 
-          font-family: 'IBM Plex Sans', sans-serif;
+          font-family: "Open Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
           background: var(--bg);
           display: flex;
           flex-direction: column;
@@ -810,14 +808,17 @@ export default function ProductEntry() {
           flex: 1;
           overflow: hidden;
           color: var(--ink);
+          border: 1px solid #e5e7eb;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px 0 rgba(15,23,42,0.08);
         }
 
         .pe2-header {
           position: relative;
           flex-shrink: 0;
-          padding: 12px 16px 10px;
-          border-bottom: 1px solid var(--border2);
-          background: #fbf8f5;
+          padding: 10px 20px;
+          border-bottom: 1px solid #f3f4f6;
+          background: #f8fafc;
         }
 
         .pe2-header-top {
@@ -828,35 +829,26 @@ export default function ProductEntry() {
           flex-wrap: wrap;
         }
 
-        .pe2-breadcrumb,
-        .pe2-edit-badge,
-        .pe2-card-title,
-        .pe2-label,
-        .pe2-img-sub,
-        .pe2-line-label,
-        .pe2-mono {
-          font-family: 'IBM Plex Mono', monospace;
-        }
-
         .pe2-breadcrumb {
           font-size: 9px;
-          color: var(--faint);
-          letter-spacing: .14em;
+          color: #94a3b8;
+          letter-spacing: .2em;
           text-transform: uppercase;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
+          font-weight: 600;
         }
 
         .pe2-breadcrumb span {
-          color: #c694aa;
+          color: #cbd5e1;
         }
 
         .pe2-title {
-          font-family: 'IBM Plex Sans', sans-serif;
-          font-size: 30px;
+          font-family: inherit;
+          font-size: 13px;
           font-weight: 700;
           color: var(--ink);
-          letter-spacing: -.02em;
-          line-height: 1.05;
+          letter-spacing: 0;
+          line-height: 1.2;
         }
 
         .pe2-title em {
@@ -889,11 +881,11 @@ export default function ProductEntry() {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          font-size: 9px;
-          font-weight: 500;
+          font-size: 10px;
+          font-weight: 700;
           color: var(--amber);
-          background: #fff8e7;
-          border: 1px solid #f6d98b;
+          background: #fffbeb;
+          border: 1px solid #fde68a;
           border-radius: 999px;
           padding: 4px 9px;
           letter-spacing: .08em;
@@ -906,66 +898,67 @@ export default function ProductEntry() {
           justify-content: center;
           gap: 6px;
           border-radius: var(--radius);
-          font-family: 'IBM Plex Sans', sans-serif;
-          font-size: 12px;
+          font-family: inherit;
+          font-size: 11px;
           font-weight: 600;
           cursor: pointer;
-          transition: all .15s;
+          transition: opacity .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
           border: 1px solid transparent;
           padding: 0 14px;
-          height: 36px;
-          letter-spacing: .01em;
+          height: 32px;
+          min-height: 32px;
+          letter-spacing: 0;
           white-space: nowrap;
         }
 
         .pe2-btn--sm {
-          height: 34px;
+          height: 32px;
           font-size: 11px;
           padding: 0 12px;
         }
 
         .pe2-btn--ghost {
           background: #ffffff;
-          border-color: var(--border);
+          border-color: #e5e7eb;
           color: var(--ink);
-          box-shadow: 0 1px 2px rgba(121, 7, 40, 0.04);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
         }
 
         .pe2-btn--ghost:hover {
-          background: var(--surface-3);
-          border-color: #dcb4c4;
+          opacity: .9;
+          border-color: #d1d5db;
         }
 
         .pe2-btn--primary {
           background: var(--red);
-          border-color: var(--red);
+          border-color: rgba(121, 7, 40, .6);
           color: #fff;
-          box-shadow: 0 10px 22px rgba(121, 7, 40, .20);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
         }
 
         .pe2-btn--primary:hover {
-          background: var(--red-l);
-          box-shadow: 0 12px 24px rgba(121, 7, 40, .24);
+          opacity: .9;
+          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
         }
 
         .pe2-btn--danger {
-          background: #fff1f3;
-          border-color: #f3c6cf;
-          color: #b4233c;
+          background: #fff;
+          border-color: #fecdd3;
+          color: #dc2626;
         }
 
         .pe2-btn--danger:hover {
-          background: #ffe7eb;
+          opacity: .9;
         }
 
         .pe2-btn--surface {
           background: var(--surface);
-          border-color: var(--border);
+          border-color: #e5e7eb;
           color: var(--ink);
         }
 
         .pe2-btn--surface:hover {
-          border-color: #dcb4c4;
+          border-color: #d1d5db;
         }
 
         .pe2-btn--disabled {
@@ -988,24 +981,24 @@ export default function ProductEntry() {
 
         .pe2-branch-select {
           appearance: none;
-          height: 36px;
+          height: 34px;
           min-width: 220px;
           border: 1px solid var(--border);
-          border-radius: 12px;
+          border-radius: var(--radius);
           background: #ffffff;
           color: var(--ink);
-          font-family: 'IBM Plex Sans', sans-serif;
-          font-size: 12px;
+          font-family: inherit;
+          font-size: 14px;
           font-weight: 600;
           padding: 0 34px 0 12px;
           cursor: pointer;
           outline: none;
-          box-shadow: 0 1px 2px rgba(121, 7, 40, 0.04);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
         }
 
         .pe2-branch-select:focus {
-          border-color: var(--red);
-          box-shadow: 0 0 0 3px var(--red-bg);
+          border-color: #d1d5db;
+          box-shadow: 0 0 0 2px rgba(121, 7, 40, 0.13);
         }
 
         .pe2-branch-select:disabled {
@@ -1030,7 +1023,7 @@ export default function ProductEntry() {
         }
 
         .pe2-alert {
-          border-radius: 14px;
+          border-radius: 8px;
           padding: 9px 12px;
           font-size: 12px;
           font-weight: 500;
@@ -1043,7 +1036,7 @@ export default function ProductEntry() {
         }
 
         .pe2-alert--warn {
-          background: #fff8eb;
+          background: #fffbeb;
           border: 1px solid #fde3a7;
           color: #9a6700;
         }
@@ -1067,10 +1060,10 @@ export default function ProductEntry() {
         }
 
         .pe2-workspace {
-          padding: 14px 18px 18px;
+          padding: 12px;
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
           min-height: 100%;
         }
 
@@ -1097,27 +1090,27 @@ export default function ProductEntry() {
           align-items: center;
           justify-content: center;
           min-width: 110px;
-          padding: 9px 14px;
-          border-radius: 12px;
-          border: 1px solid #e8e0da;
+          padding: 8px 14px;
+          border-radius: 6px;
+          border: 1px solid #e5e7eb;
           background: #fff;
           cursor: pointer;
-          transition: all .12s ease;
+          transition: opacity .15s ease, border-color .15s ease, background .15s ease;
           text-align: center;
         }
 
         .pe2-tab-btn:hover {
-          border-color: rgba(121, 7, 40, 0.18);
+          border-color: #d1d5db;
         }
 
         .pe2-tab-btn[data-active="true"] {
           border-color: rgba(121, 7, 40, 0.22);
-          background: #fff7fa;
+          background: rgba(121, 7, 40, 0.06);
           box-shadow: none;
         }
 
         .pe2-tab-title {
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           color: var(--ink);
         }
@@ -1125,55 +1118,55 @@ export default function ProductEntry() {
         .pe2-layout {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 300px;
-          gap: 16px;
+          gap: 12px;
           align-items: start;
         }
 
         .pe2-layout--general {
           display: grid;
           grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.05fr) 300px;
-          gap: 16px;
+          gap: 12px;
           align-items: start;
         }
 
         .pe2-layout--split {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 16px;
+          gap: 12px;
           align-items: start;
         }
 
         .pe2-layout--single {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
         }
 
         .pe2-inventory-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-          gap: 16px;
+          gap: 12px;
           align-items: start;
         }
 
         .pe2-trading-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.82fr);
-          gap: 16px;
+          gap: 12px;
           align-items: start;
         }
 
         .pe2-main-col {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
           min-width: 0;
         }
 
         .pe2-side-col {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
           min-width: 0;
           position: sticky;
           top: 0;
@@ -1182,14 +1175,14 @@ export default function ProductEntry() {
         .pe2-col {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
           min-width: 0;
         }
 
         .pe2-panel-stack {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 12px;
           min-width: 0;
         }
 
@@ -1207,7 +1200,7 @@ export default function ProductEntry() {
         .pe2-subtitle {
           font-size: 10px;
           font-weight: 700;
-          color: var(--ink);
+          color: var(--muted);
           text-transform: uppercase;
           letter-spacing: .12em;
         }
@@ -1263,7 +1256,7 @@ export default function ProductEntry() {
         .pe2-card {
           background: var(--surface);
           border: 1px solid var(--border2);
-          border-radius: 14px;
+          border-radius: 8px;
           overflow: hidden;
           box-shadow: var(--panel-shadow);
         }
@@ -1279,9 +1272,9 @@ export default function ProductEntry() {
           align-items: center;
           justify-content: space-between;
           gap: 8px;
-          padding: 12px 14px 10px;
-          border-bottom: 1px solid var(--border2);
-          background: #fcfaf8;
+          padding: 12px 16px 10px;
+          border-bottom: 1px solid #f1f5f9;
+          background: #fff;
         }
 
         .pe2-card-headline {
@@ -1291,16 +1284,16 @@ export default function ProductEntry() {
         }
 
         .pe2-card-dot {
-          width: 6px;
-          height: 6px;
+          width: 0;
+          height: 0;
           border-radius: 50%;
           background: var(--red);
           flex-shrink: 0;
         }
 
         .pe2-card-title {
-          font-size: 8px;
-          font-weight: 500;
+          font-size: 10px;
+          font-weight: 700;
           color: var(--muted);
           text-transform: uppercase;
           letter-spacing: .18em;
@@ -1312,21 +1305,21 @@ export default function ProductEntry() {
         }
 
         .pe2-card-body {
-          padding: 14px;
+          padding: 12px 16px 14px;
         }
 
         .pe2-card-body--compact {
-          padding: 12px;
+          padding: 12px 16px 14px;
         }
 
         .pe2-grid {
           display: grid;
-          gap: 12px;
+          gap: 12px 16px;
           grid-template-columns: repeat(12, minmax(0, 1fr));
         }
 
         .pe2-grid--tight {
-          gap: 10px;
+          gap: 12px;
         }
 
         .pe2-grid-3 {
@@ -1360,33 +1353,38 @@ export default function ProductEntry() {
         .pe2-field {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 2px;
           min-width: 0;
         }
 
         .pe2-label {
-          font-size: 9px;
-          font-weight: 500;
-          color: var(--faint);
+          min-height: 16px;
+          font-size: 11px;
+          line-height: 16px;
+          font-weight: 700;
+          color: #64748b;
           text-transform: uppercase;
-          letter-spacing: .14em;
+          letter-spacing: .12em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .pe2-input,
         .pe2-select,
         .pe2-textarea {
-          font-family: 'IBM Plex Sans', sans-serif;
+          font-family: inherit;
         }
 
         .pe2-input {
-          height: 40px;
+          height: 34px;
           border: 1px solid var(--border);
-          border-radius: 12px;
+          border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 500;
-          padding: 0 12px;
+          padding: 0 10px;
           transition: border-color .15s, box-shadow .15s, background .15s;
           width: 100%;
           outline: none;
@@ -1397,19 +1395,20 @@ export default function ProductEntry() {
         .pe2-textarea:focus,
         .pe2-line-input:focus,
         .pe2-branch-select:focus {
-          border-color: var(--red);
-          box-shadow: 0 0 0 3px var(--red-bg);
+          border-color: #d1d5db;
+          box-shadow: 0 0 0 2px rgba(121, 7, 40, 0.13);
           background: #fff;
         }
 
         .pe2-input--disabled {
-          background: #faf5f7;
+          background: #f1f5f9;
           color: var(--faint);
           cursor: not-allowed;
         }
 
         .pe2-mono {
-          font-size: 11.5px;
+          font-size: 14px;
+          font-family: inherit;
         }
 
         .pe2-select-wrap {
@@ -1419,14 +1418,14 @@ export default function ProductEntry() {
         .pe2-select {
           appearance: none;
           width: 100%;
-          height: 40px;
+          height: 34px;
           border: 1px solid var(--border);
-          border-radius: 12px;
+          border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 500;
-          padding: 0 30px 0 12px;
+          padding: 0 30px 0 10px;
           cursor: pointer;
           outline: none;
           transition: border-color .15s, box-shadow .15s;
@@ -1446,11 +1445,12 @@ export default function ProductEntry() {
         .pe2-textarea {
           width: 100%;
           border: 1px solid var(--border);
-          border-radius: 12px;
+          border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 13px;
-          padding: 11px 12px;
+          font-size: 14px;
+          font-weight: 500;
+          padding: 8px 10px;
           resize: vertical;
           min-height: 96px;
           outline: none;
@@ -1465,9 +1465,9 @@ export default function ProductEntry() {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 8.5px;
+          font-size: 10px;
           font-weight: 500;
-          padding: 5px 10px;
+          padding: 3px 9px;
           border-radius: 999px;
           cursor: pointer;
           border: 1px solid;
@@ -1478,7 +1478,7 @@ export default function ProductEntry() {
 
         .pe2-barcode-toggle--off {
           border-color: var(--border);
-          background: #faf5f7;
+          background: #f8fafc;
           color: var(--muted);
         }
 
@@ -1505,14 +1505,14 @@ export default function ProductEntry() {
           flex-direction: column;
           gap: 10px;
           height: 100%;
-          min-height: 320px;
+          min-height: 280px;
         }
 
         .pe2-img-drop {
           flex: 1;
-          border: 1px dashed #e1d4db;
+          border: 1px dashed #cbd5e1;
           border-radius: var(--radius-lg);
-          background: #fcfaf8;
+          background: #f8fafc;
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -1526,7 +1526,7 @@ export default function ProductEntry() {
         .pe2-img-drop:hover,
         .pe2-img-drop.drag {
           border-color: var(--red);
-          background: #fff8fb;
+          background: #fff;
         }
 
         .pe2-img-preview {
@@ -1594,7 +1594,7 @@ export default function ProductEntry() {
           cursor: pointer;
           overflow: hidden;
           position: relative;
-          border: 1.5px solid var(--border2);
+          border: 1px solid var(--border2);
           transition: border-color .15s, box-shadow .15s;
           background: #fff;
         }
@@ -1633,8 +1633,8 @@ export default function ProductEntry() {
           border-radius: 10px;
           flex-shrink: 0;
           cursor: pointer;
-          border: 1.5px dashed #e7ccd6;
-          background: #fffafb;
+          border: 1px dashed #cbd5e1;
+          background: #f8fafc;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1652,15 +1652,15 @@ export default function ProductEntry() {
 
         .pe2-table-wrap {
           border: 1px solid var(--border2);
-          border-radius: 16px;
+          border-radius: 8px;
           overflow: hidden;
           background: #fff;
         }
 
         .pe2-table-wrap--sub {
-          border-radius: 14px;
-          border-color: #eadfe6;
-          background: linear-gradient(180deg, #fff 0%, #fdfafb 100%);
+          border-radius: 8px;
+          border-color: var(--border2);
+          background: #fff;
           box-shadow: inset 0 1px 0 #fff;
         }
 
@@ -1680,7 +1680,7 @@ export default function ProductEntry() {
         .pe2-line-shell {
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 12px;
         }
 
         .pe2-line-groups {
@@ -1691,9 +1691,9 @@ export default function ProductEntry() {
 
         .pe2-line-group {
           border: 1px solid var(--border2);
-          border-radius: 18px;
-          background: linear-gradient(180deg, #fff 0%, #fcfaf8 100%);
-          padding: 14px;
+          border-radius: 8px;
+          background: #fff;
+          padding: 12px;
           display: flex;
           flex-direction: column;
           gap: 12px;
@@ -1702,7 +1702,7 @@ export default function ProductEntry() {
         .pe2-line-group-title {
           font-size: 10px;
           font-weight: 700;
-          color: var(--faint);
+          color: var(--muted);
           text-transform: uppercase;
           letter-spacing: .16em;
         }
@@ -1716,7 +1716,7 @@ export default function ProductEntry() {
         .pe2-line-field {
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 2px;
           min-width: 0;
         }
 
@@ -1725,19 +1725,23 @@ export default function ProductEntry() {
         }
 
         .pe2-line-label {
-          font-size: 8.5px;
-          color: var(--faint);
+          min-height: 16px;
+          font-size: 11px;
+          line-height: 16px;
+          color: #64748b;
+          font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: .1em;
+          letter-spacing: .12em;
         }
 
         .pe2-line-input {
-          height: 38px;
+          height: 34px;
           border: 1px solid var(--border);
-          border-radius: 10px;
+          border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 12px;
+          font-size: 14px;
+          font-weight: 500;
           padding: 0 10px;
           outline: none;
           width: 100%;
@@ -1745,22 +1749,22 @@ export default function ProductEntry() {
         }
 
         .pe2-line-add-btn {
-          height: 38px;
+          height: 34px;
           min-width: 156px;
           border: none;
-          border-radius: 10px;
+          border-radius: var(--radius);
           background: var(--red);
           color: #fff;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           cursor: pointer;
           padding: 0 14px;
           transition: background .15s, box-shadow .15s;
-          box-shadow: 0 6px 14px rgba(121, 7, 40, 0.16);
+          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
         }
 
         .pe2-line-add-btn:hover {
-          background: var(--red-l);
+          opacity: .9;
         }
 
         .pe2-line-actions {
@@ -1812,7 +1816,7 @@ export default function ProductEntry() {
         .pe2-side-stack {
           display: flex;
           flex-direction: column;
-          gap: 14px;
+          gap: 12px;
         }
 
         /* Scrollbar */
@@ -1826,7 +1830,7 @@ export default function ProductEntry() {
         }
 
         .pe2-canvas::-webkit-scrollbar-thumb {
-          background: #d8c6ce;
+          background: #cbd5e1;
           border-radius: 10px;
         }
       `}</style>

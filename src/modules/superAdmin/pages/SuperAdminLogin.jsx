@@ -24,105 +24,171 @@ export default function SuperAdminLogin() {
   }
 
   return (
-    <div style={page}>
-      <div style={panel}>
-        <div style={left}>
-          <div style={brand}>Moifone</div>
-          <div style={sub}>Control Center</div>
-          <p style={desc}>Manage tenants, subscriptions, features, and limits from one secure admin workspace.</p>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        .sal * { box-sizing: border-box; }
+        .sal input, .sal button { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .sal input { transition: border-color 150ms, box-shadow 150ms; }
+        .sal input:focus {
+          outline: none;
+          border-color: #4f46e5 !important;
+          box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+        }
+        .sal .sa-submit { transition: background 150ms; }
+        .sal .sa-submit:hover:not(:disabled) { background: #4338ca !important; }
+        .sal .sa-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+      `}</style>
+
+      <div
+        className="sal"
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+          background: '#f8fafc',
+        }}
+      >
+        {/* Left: dark intro panel */}
+        <div style={{
+          flex: '0 0 400px',
+          background: '#0f172a',
+          padding: '52px 44px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            {/* Brand */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 52 }}>
+              <div style={{
+                width: 34, height: 34,
+                background: '#4f46e5',
+                borderRadius: 8,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: 15, fontFamily: "'JetBrains Mono', monospace" }}>M</span>
+              </div>
+              <div>
+                <div style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 15, letterSpacing: '-0.2px' }}>Moifone</div>
+                <div style={{ color: '#475569', fontSize: 11 }}>Control Center</div>
+              </div>
+            </div>
+
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', margin: '0 0 10px', letterSpacing: '-0.5px' }}>
+              Platform admin.
+            </h1>
+            <p style={{ fontSize: 14, color: '#475569', margin: '0 0 40px', lineHeight: 1.65 }}>
+              Manage tenants, subscriptions, features, and usage limits from one place.
+            </p>
+
+            <div style={{ display: 'grid', gap: 20 }}>
+              {[
+                ['Tenants', 'Subscription state, overrides, and audit log per company.'],
+                ['Plans', 'Pricing tiers and the features each tier includes.'],
+                ['Catalog', 'Define features and limits available to plans.'],
+              ].map(([label, desc]) => (
+                <div key={label} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 3, background: '#4f46e5', borderRadius: 2, alignSelf: 'stretch', flexShrink: 0, minHeight: 20 }} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: '#e2e8f0', marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.5 }}>{desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ fontSize: 11, color: '#334155', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            Restricted access · MOIF ERP v2
+          </div>
         </div>
-        <div style={right}>
-          <h2 style={title}>Super Admin Login</h2>
-          <form onSubmit={onSubmit} style={form}>
-            <label style={label}>Email</label>
-            <input
-              style={input}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
-              required
-            />
-            <label style={label}>Password</label>
-            <input
-              style={input}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              required
-            />
-            {error && <div style={errorStyle}>{error}</div>}
-            <button style={button} type="submit" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
+
+        {/* Right: login form */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
+          <div style={{ width: '100%', maxWidth: 340 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+              Sign in
+            </h2>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px' }}>
+              Super admin credentials required.
+            </p>
+
+            <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={LABEL}>Email address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@moiftech.com"
+                  required
+                  style={INPUT}
+                />
+              </div>
+
+              <div>
+                <label style={LABEL}>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  style={INPUT}
+                />
+              </div>
+
+              {error && (
+                <div style={{ padding: '9px 12px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13 }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="sa-submit"
+                disabled={loading}
+                style={{
+                  marginTop: 4,
+                  height: 42,
+                  background: '#4f46e5',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  letterSpacing: '-0.1px',
+                }}
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
-const page = {
-  minHeight: '100vh',
-  display: 'grid',
-  placeItems: 'center',
-  background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 40%, #dbeafe 100%)',
-  padding: 20,
+const LABEL = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#374151',
+  marginBottom: 6,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
 };
-const panel = {
-  width: 'min(980px, 96vw)',
-  minHeight: 520,
-  borderRadius: 14,
-  overflow: 'hidden',
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  background: '#fff',
-  boxShadow: '0 30px 60px rgba(15,23,42,0.35)',
-};
-const left = {
-  background: 'linear-gradient(160deg, #0b1d45 0%, #133d8f 100%)',
-  color: '#e8f0ff',
-  padding: '56px 48px',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-};
-const right = {
-  padding: '56px 48px',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-};
-const brand = { fontSize: 34, fontWeight: 700, letterSpacing: 0 };
-const sub = { marginTop: 8, fontSize: 16, color: '#bfd4ff' };
-const desc = { marginTop: 24, lineHeight: 1.6, color: '#d6e3ff', maxWidth: 360 };
-const title = { margin: 0, marginBottom: 20, color: '#0f1f43' };
-const form = { display: 'flex', flexDirection: 'column', gap: 10 };
-const label = { fontSize: 13, color: '#455578', fontWeight: 600 };
-const input = {
-  height: 42,
-  border: '1px solid #cbd5e1',
-  borderRadius: 10,
+
+const INPUT = {
+  width: '100%',
+  height: 40,
+  border: '1.5px solid #e2e8f0',
+  borderRadius: 8,
   padding: '0 12px',
   fontSize: 14,
-};
-const errorStyle = {
-  color: '#b42318',
-  background: '#fee4e2',
-  border: '1px solid #fecdca',
-  borderRadius: 8,
-  padding: '8px 10px',
-  fontSize: 13,
-};
-const button = {
-  marginTop: 8,
-  height: 44,
-  border: 'none',
-  borderRadius: 10,
-  background: '#143d8e',
-  color: '#fff',
-  fontSize: 15,
-  fontWeight: 600,
-  cursor: 'pointer',
+  color: '#0f172a',
+  background: '#fff',
 };

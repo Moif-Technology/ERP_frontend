@@ -11,7 +11,27 @@
       "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; Test-Path graphify-out/graph.json; Test-Path graphify-out/GRAPH_REPORT.md; Test-Path graphify-out/graph.html; Test-Path graphify-out/cost.json)",
       "PowerShell(python -c \"import json; from graphify.detect import detect_incremental; from pathlib import Path; result = detect_incremental\\(Path\\('.'\\)\\); Path\\('.graphify_incremental.json'\\).write_text\\(json.dumps\\(result\\)\\); print\\('new_total=', result.get\\('new_total', 0\\)\\); print\\('files keys:', list\\(result.get\\('new_files',{}\\).keys\\(\\)\\)\\)\")",
       "Bash(python *)",
-      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python *)"
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python *)",
+      "Bash(graphify --version)",
+      "Bash(where graphify *)",
+      "Bash(graphify *)",
+      "Bash(xargs grep -l \"entitlement\\\\|plan\\\\|feature.*override\\\\|limit.*override\")",
+      "Bash(xargs -0 grep -l \"entitlement\\\\|plan\\\\|feature.*override\\\\|limit.*override\")",
+      "Bash(dir /s /b \"D:\\\\ERP SOFTWARE DESKTOP\\\\ERP new version\\\\api\\\\src\\\\admin\\\\*.js\")",
+      "Bash(del *)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":5000\")",
+      "Bash(psql *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe\" \"postgresql://postgres:admin@localhost:5432/MOiFOnE\" -c \"DELETE FROM garage.job_cards WHERE id IN \\(2, 3\\); SELECT id, jc_no, status FROM garage.job_cards ORDER BY id;\")",
+      "PowerShell(Get-Command *)",
+      "PowerShell(node -e \"const { Pool } = require\\('pg'\\); const pool = new Pool\\({ connectionString: 'postgresql://postgres:admin@localhost:5432/MOiFOnE' }\\); pool.query\\('DELETE FROM garage.job_cards WHERE id IN \\(2,3\\)', \\(err, res\\) => { console.log\\(err ? err.message : 'Deleted: ' + res.rowCount + ' rows'\\); pool.end\\(\\); }\\);\")"
     ]
   }
 }

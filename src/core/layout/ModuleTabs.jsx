@@ -438,7 +438,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
 
   return (
     <div
-      className={`sticky top-0 left-0 z-40 min-w-0 overflow-hidden rounded-lg bg-[#fde8e8] shadow-sm ring-1 ring-rose-200/60 box-border my-2 sm:my-[15px] mx-[15px] ${
+      className={`sticky top-0 left-0 z-40 min-w-0 overflow-hidden rounded-lg bg-[#fde8e8] shadow-sm ring-1 ring-rose-200/60 box-border mx-[15px] mb-0 mt-2 sm:mt-[15px] ${
         expanded ? 'min-h-[90px] sm:min-h-[105px]' : ''
       }`}
     >

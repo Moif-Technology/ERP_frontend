@@ -18,6 +18,8 @@ const DropdownInput = React.forwardRef(function DropdownInput(
     fullWidth = false,
     className,
     labelClassName,
+    inputStyle,
+    boxStyle,
     ...props
   },
   ref,
@@ -30,7 +32,7 @@ const DropdownInput = React.forwardRef(function DropdownInput(
       style={{ width: boxWidth }}
     >
       {label && (
-        <label style={inputField.label} className={labelClassName}>
+        <label style={labelClassName ? undefined : inputField.label} className={labelClassName}>
           {label}
         </label>
       )}
@@ -44,6 +46,7 @@ const DropdownInput = React.forwardRef(function DropdownInput(
           borderRadius: inputField.dropdown.borderRadius,
           background: colors.input?.background ?? '#fff',
           border: '1px solid #e2e8f0',
+          ...boxStyle,
         }}
       >
         <select
@@ -56,6 +59,7 @@ const DropdownInput = React.forwardRef(function DropdownInput(
             boxSizing: 'border-box',
             color: '#000',
             accentColor: '#BB8295',
+            ...inputStyle,
           }}
           {...props}
         >

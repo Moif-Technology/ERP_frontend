@@ -1,0 +1,1555 @@
+[
+  {
+    "label": "Mobile Portrait",
+    "width": 390,
+    "height": 844,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\mobile-portrait-390x844.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scrollWidth": 390,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "button",
+          "text": "Pattambi Restaurant",
+          "x": 316,
+          "y": 4,
+          "width": 120,
+          "height": 22,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "⋮",
+          "x": 444,
+          "y": 6,
+          "width": 6,
+          "height": 18,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "y": 46,
+          "width": 50,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "GARAGE",
+          "x": 413,
+          "y": 46,
+          "width": 37,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "HR",
+          "x": 467,
+          "y": 46,
+          "width": 13,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Home",
+          "x": 8,
+          "y": 849,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard",
+          "x": 8,
+          "y": 885,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card entry",
+          "x": 8,
+          "y": 921,
+          "width": 184,
+          "height": 38,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card list",
+          "x": 8,
+          "y": 958,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [
+        {
+          "tag": "input",
+          "text": "Reg. no.",
+          "x": 257,
+          "y": 1478,
+          "width": 30,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Customer name",
+          "x": 257,
+          "y": 1560,
+          "width": 30,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Auto",
+          "x": 257,
+          "y": 1621,
+          "width": 72,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select station\nMain Workshop\nBranch A\nBranch B\nBranch C",
+          "x": 271,
+          "y": 1897,
+          "width": 44,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Chassis no.",
+          "x": 270,
+          "y": 1950,
+          "width": 46,
+          "height": 30,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Owner name",
+          "x": 270,
+          "y": 2014,
+          "width": 46,
+          "height": 30,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select\nOwner\nDriver\nAgent\nWalk-in\nOther",
+          "x": 271,
+          "y": 2102,
+          "width": 44,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select driver\nDriver 1\nDriver 2\nDriver 3\nDriver 4",
+          "x": 271,
+          "y": 2159,
+          "width": 44,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "text": "Describe customer concern...",
+          "x": 257,
+          "y": 2390,
+          "width": 72,
+          "height": 68,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "text": "Short internal summary...",
+          "x": 257,
+          "y": 2487,
+          "width": 72,
+          "height": 68,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Code",
+          "x": 268,
+          "y": 2727,
+          "width": 50,
+          "height": 26,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Description",
+          "x": 268,
+          "y": 2789,
+          "width": 50,
+          "height": 26,
+          "visible": true
+        }
+      ],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 814,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 689,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 240,
+          "y": 3030,
+          "width": 106,
+          "height": 657,
+          "visible": true
+        }
+      ],
+      "overflowers": [
+        {
+          "tag": "div",
+          "className": "flex min-w-0 flex-shrink-0 items-center gap-2 sm:gap-2.5",
+          "text": "Pattambi Restaurant ⋮",
+          "x": 316,
+          "width": 134,
+          "right": 450
+        },
+        {
+          "tag": "button",
+          "className": "flex max-w-[120px] items-center gap-1 truncate rounded-full border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-m",
+          "text": "Pattambi Restaurant",
+          "x": 316,
+          "width": 120,
+          "right": 436
+        },
+        {
+          "tag": "span",
+          "className": "truncate",
+          "text": "Pattambi Restaurant",
+          "x": 343,
+          "width": 84,
+          "right": 427
+        },
+        {
+          "tag": "div",
+          "className": "relative shrink-0",
+          "text": "⋮",
+          "x": 444,
+          "width": 6,
+          "right": 450
+        },
+        {
+          "tag": "button",
+          "className": "cursor-pointer select-none text-lg leading-none text-gray-700",
+          "text": "⋮",
+          "x": 444,
+          "width": 6,
+          "right": 450
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "button",
+          "className": "border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "div",
+          "className": "h-0.5 w-full rounded-full bg-transparent",
+          "text": "h-0.5 w-full rounded-full bg-transparent",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "GARAGE",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "button",
+          "className": "border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer",
+          "text": "GARAGE",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "div",
+          "className": "h-0.5 w-full rounded-full bg-transparent",
+          "text": "h-0.5 w-full rounded-full bg-transparent",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "HR",
+          "x": 467,
+          "width": 13,
+          "right": 480
+        }
+      ],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Mobile Landscape",
+    "width": 844,
+    "height": 390,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\mobile-landscape-844x390.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "scrollWidth": 844,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "a",
+          "text": "Agent list",
+          "x": 8,
+          "y": 381,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Point of Sale",
+          "x": 4,
+          "y": 705,
+          "width": 192,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Home",
+          "x": 8,
+          "y": 849,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard",
+          "x": 8,
+          "y": 885,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card entry",
+          "x": 8,
+          "y": 921,
+          "width": 184,
+          "height": 38,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card list",
+          "x": 8,
+          "y": 958,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car group entry",
+          "x": 8,
+          "y": 1102,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car sub group entry",
+          "x": 8,
+          "y": 1137,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Technician entry",
+          "x": 8,
+          "y": 1173,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 360,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 235,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 244,
+          "y": 1665,
+          "width": 552,
+          "height": 494,
+          "visible": true
+        }
+      ],
+      "overflowers": [],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Small Android",
+    "width": 360,
+    "height": 780,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\small-android-360x780.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 360,
+        "height": 780
+      },
+      "scrollWidth": 360,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "button",
+          "text": "Pattambi Restaurant",
+          "x": 316,
+          "y": 4,
+          "width": 120,
+          "height": 22,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "⋮",
+          "x": 444,
+          "y": 6,
+          "width": 6,
+          "height": 18,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "y": 46,
+          "width": 50,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "GARAGE",
+          "x": 413,
+          "y": 46,
+          "width": 37,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "HR",
+          "x": 467,
+          "y": 46,
+          "width": 13,
+          "height": 14,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "text": "List",
+          "x": 301,
+          "y": 104,
+          "width": 70,
+          "height": 27,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Home",
+          "x": 8,
+          "y": 849,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard",
+          "x": 8,
+          "y": 885,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card entry",
+          "x": 8,
+          "y": 921,
+          "width": 184,
+          "height": 38,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card list",
+          "x": 8,
+          "y": 958,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [
+        {
+          "tag": "input",
+          "text": "Reg. no.",
+          "x": 257,
+          "y": 1598,
+          "width": 26,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Customer name",
+          "x": 257,
+          "y": 1695,
+          "width": 26,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Auto",
+          "x": 257,
+          "y": 1767,
+          "width": 42,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select station\nMain Workshop\nBranch A\nBranch B\nBranch C",
+          "x": 271,
+          "y": 2044,
+          "width": 32,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Chassis no.",
+          "x": 270,
+          "y": 2107,
+          "width": 16,
+          "height": 30,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Owner name",
+          "x": 270,
+          "y": 2183,
+          "width": 16,
+          "height": 30,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select\nOwner\nDriver\nAgent\nWalk-in\nOther",
+          "x": 271,
+          "y": 2271,
+          "width": 32,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "text": "Select driver\nDriver 1\nDriver 2\nDriver 3\nDriver 4",
+          "x": 271,
+          "y": 2328,
+          "width": 32,
+          "height": 28,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "text": "Describe customer concern...",
+          "x": 257,
+          "y": 2589,
+          "width": 55,
+          "height": 68,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "text": "Short internal summary...",
+          "x": 257,
+          "y": 2699,
+          "width": 55,
+          "height": 68,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Code",
+          "x": 268,
+          "y": 2984,
+          "width": 45,
+          "height": 26,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "text": "Description",
+          "x": 268,
+          "y": 3046,
+          "width": 45,
+          "height": 26,
+          "visible": true
+        }
+      ],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 750,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 625,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 240,
+          "y": 3298,
+          "width": 76,
+          "height": 687,
+          "visible": true
+        }
+      ],
+      "overflowers": [
+        {
+          "tag": "div",
+          "className": "flex min-w-0 flex-shrink-0 items-center gap-2 sm:gap-2.5",
+          "text": "Pattambi Restaurant ⋮",
+          "x": 316,
+          "width": 134,
+          "right": 450
+        },
+        {
+          "tag": "button",
+          "className": "flex max-w-[120px] items-center gap-1 truncate rounded-full border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-m",
+          "text": "Pattambi Restaurant",
+          "x": 316,
+          "width": 120,
+          "right": 436
+        },
+        {
+          "tag": "span",
+          "className": "truncate",
+          "text": "Pattambi Restaurant",
+          "x": 343,
+          "width": 84,
+          "right": 427
+        },
+        {
+          "tag": "div",
+          "className": "relative shrink-0",
+          "text": "⋮",
+          "x": 444,
+          "width": 6,
+          "right": 450
+        },
+        {
+          "tag": "button",
+          "className": "cursor-pointer select-none text-lg leading-none text-gray-700",
+          "text": "⋮",
+          "x": 444,
+          "width": 6,
+          "right": 450
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "button",
+          "className": "border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer",
+          "text": "ACCOUNTS",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "div",
+          "className": "h-0.5 w-full rounded-full bg-transparent",
+          "text": "h-0.5 w-full rounded-full bg-transparent",
+          "x": 348,
+          "width": 50,
+          "right": 397
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "GARAGE",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "button",
+          "className": "border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer",
+          "text": "GARAGE",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "div",
+          "className": "h-0.5 w-full rounded-full bg-transparent",
+          "text": "h-0.5 w-full rounded-full bg-transparent",
+          "x": 413,
+          "width": 37,
+          "right": 451
+        },
+        {
+          "tag": "div",
+          "className": "flex flex-shrink-0 flex-col items-stretch gap-0.5",
+          "text": "HR",
+          "x": 467,
+          "width": 13,
+          "right": 480
+        }
+      ],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Tablet Portrait",
+    "width": 768,
+    "height": 1024,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\tablet-portrait-768x1024.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "scrollWidth": 768,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car group entry",
+          "x": 8,
+          "y": 1102,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car sub group entry",
+          "x": 8,
+          "y": 1137,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Technician entry",
+          "x": 8,
+          "y": 1173,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job description entry",
+          "x": 8,
+          "y": 1209,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Branch entry",
+          "x": 8,
+          "y": 1245,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Part request",
+          "x": 8,
+          "y": 1281,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Sublet jobs",
+          "x": 8,
+          "y": 1316,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Gate pass viewer",
+          "x": 8,
+          "y": 1352,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Punching entry",
+          "x": 8,
+          "y": 1388,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 994,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 869,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 244,
+          "y": 1665,
+          "width": 476,
+          "height": 494,
+          "visible": true
+        }
+      ],
+      "overflowers": [
+        {
+          "tag": "table",
+          "className": "w-full border-collapse table-fixed min-w-[36rem] w-full",
+          "text": "Sl No Job Code Description Std Time Cost Price",
+          "x": 263,
+          "width": 576,
+          "right": 839
+        },
+        {
+          "tag": "colgroup",
+          "className": "",
+          "text": "COLGROUP",
+          "x": 263,
+          "width": 576,
+          "right": 839
+        },
+        {
+          "tag": "col",
+          "className": "",
+          "text": "COL",
+          "x": 758,
+          "width": 81,
+          "right": 839
+        },
+        {
+          "tag": "thead",
+          "className": "",
+          "text": "Sl No Job Code Description Std Time Cost Price",
+          "x": 263,
+          "width": 576,
+          "right": 839
+        },
+        {
+          "tag": "tr",
+          "className": "",
+          "text": "Sl No Job Code Description Std Time Cost Price",
+          "x": 263,
+          "width": 576,
+          "right": 839
+        },
+        {
+          "tag": "th",
+          "className": "px-0.5 py-1 sm:px-1 sm:py-1.5 text-center align-middle min-w-0 max-w-0 truncate",
+          "text": "px-0.5 py-1 sm:px-1 sm:py-1.5 text-center align-middle min-w-0 max-w-0 truncate",
+          "x": 758,
+          "width": 81,
+          "right": 839
+        }
+      ],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Tablet Landscape",
+    "width": 1024,
+    "height": 768,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\tablet-landscape-1024x768.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "scrollWidth": 1024,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "a",
+          "text": "Home",
+          "x": 8,
+          "y": 849,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard",
+          "x": 8,
+          "y": 885,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card entry",
+          "x": 8,
+          "y": 921,
+          "width": 184,
+          "height": 38,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card list",
+          "x": 8,
+          "y": 958,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car group entry",
+          "x": 8,
+          "y": 1102,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car sub group entry",
+          "x": 8,
+          "y": 1137,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Technician entry",
+          "x": 8,
+          "y": 1173,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job description entry",
+          "x": 8,
+          "y": 1209,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Branch entry",
+          "x": 8,
+          "y": 1245,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 738,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 613,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 244,
+          "y": 1362,
+          "width": 732,
+          "height": 494,
+          "visible": true
+        }
+      ],
+      "overflowers": [],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Laptop",
+    "width": 1366,
+    "height": 768,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\laptop-1366x768.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "scrollWidth": 1366,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "a",
+          "text": "Home",
+          "x": 8,
+          "y": 849,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard",
+          "x": 8,
+          "y": 885,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card entry",
+          "x": 8,
+          "y": 921,
+          "width": 184,
+          "height": 38,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job card list",
+          "x": 8,
+          "y": 958,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle list",
+          "x": 8,
+          "y": 994,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Vehicle entry",
+          "x": 8,
+          "y": 1030,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car group entry",
+          "x": 8,
+          "y": 1102,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car sub group entry",
+          "x": 8,
+          "y": 1137,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Technician entry",
+          "x": 8,
+          "y": 1173,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job description entry",
+          "x": 8,
+          "y": 1209,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Branch entry",
+          "x": 8,
+          "y": 1245,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 738,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 613,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 978,
+          "y": 363,
+          "width": 340,
+          "height": 494,
+          "visible": true
+        }
+      ],
+      "overflowers": [],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  },
+  {
+    "label": "Desktop",
+    "width": 1920,
+    "height": 1080,
+    "screenshot": "D:\\ERP SOFTWARE DESKTOP\\ERP new version\\ERP_frontend\\responsive-screenshots\\desktop-1920x1080.png",
+    "metrics": {
+      "url": "http://localhost:5173/garage/job-card-entry",
+      "title": "ERP Frontend",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "scrollWidth": 1920,
+      "hasHorizontalScrollbar": false,
+      "clippedControls": [
+        {
+          "tag": "a",
+          "text": "Color entry",
+          "x": 8,
+          "y": 1066,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car group entry",
+          "x": 8,
+          "y": 1102,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Car sub group entry",
+          "x": 8,
+          "y": 1137,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Technician entry",
+          "x": 8,
+          "y": 1173,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job description entry",
+          "x": 8,
+          "y": 1209,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Branch entry",
+          "x": 8,
+          "y": 1245,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Part request",
+          "x": 8,
+          "y": 1281,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Sublet jobs",
+          "x": 8,
+          "y": 1316,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Gate pass viewer",
+          "x": 8,
+          "y": 1352,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Punching entry",
+          "x": 8,
+          "y": 1388,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Job code punching",
+          "x": 8,
+          "y": 1424,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "text": "Punching list",
+          "x": 8,
+          "y": 1460,
+          "width": 184,
+          "height": 36,
+          "visible": true
+        }
+      ],
+      "tinyInputs": [],
+      "nav": [
+        {
+          "tag": "aside",
+          "x": 0,
+          "y": 30,
+          "width": 200,
+          "height": 1050,
+          "visible": true
+        },
+        {
+          "tag": "nav",
+          "x": 0,
+          "y": 94,
+          "width": 200,
+          "height": 925,
+          "visible": true
+        },
+        {
+          "tag": "aside",
+          "x": 1532,
+          "y": 363,
+          "width": 340,
+          "height": 494,
+          "visible": true
+        }
+      ],
+      "overflowers": [],
+      "fieldCount": 19,
+      "buttonCount": 93
+    }
+  }
+]

@@ -1,8 +1,41 @@
+/**
+ * SupplierEntry - B2B ERP backoffice supplier data entry form
+ *
+ * Visual source of truth: CustomerEntry.jsx
+ *  - Style    : Minimalism/flat enterprise data-entry surface
+ *  - Colors   : Slate neutrals + single primary accent #790728
+ *  - Type     : Open Sans / system-ui; 10px uppercase labels; 13px inputs
+ *  - Layout   : 2-panel grid (lg+); compact section cards; no nested page scroll
+ *  - Density  : gap-x-4 gap-y-3 within sections; space-y-3 between cards
+ */
+
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { colors, inputField } from '../../../shared/constants/theme';
-import { DropdownInput, InputField } from '../../../shared/components/ui';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as supplierEntryApi from '../../../services/supplierEntry.api.js';
+import { DropdownInput, SubInputField } from '../../../shared/components/ui';
+import { colors } from '../../../shared/constants/theme';
+
+// Design tokens copied from CustomerEntry.jsx.
+const primary = colors.primary?.main || '#790728';
+
+const LBL =
+  'flex h-4 items-center truncate text-[11px] font-bold uppercase leading-4 tracking-[0.12em] text-slate-500';
+
+const IN_CLS =
+  'rounded-md px-2.5 !text-[14px] font-medium text-slate-800 placeholder:font-normal ' +
+  'placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#79072820]';
+
+const CTRL = { borderRadius: 6, background: '#fff', borderColor: '#d1d5db' };
+
+const H = 34;
+
+const primaryBtn =
+  'inline-flex h-8 min-h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border px-4 ' +
+  'text-[11px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+
+const secondaryBtn =
+  'inline-flex h-8 min-h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 ' +
+  'text-[11px] font-semibold text-slate-600 shadow-sm transition-opacity hover:opacity-90';
 
 const COUNTRIES = ['UNITED ARAB EMIRATES', 'KSA', 'Qatar', 'Oman', 'Bahrain', 'India'];
 const CITIES = ['Abu Dhabi', 'Dubai', 'Sharjah', 'Riyadh', 'Doha', 'Muscat'];
@@ -16,12 +49,86 @@ function digitsOnly(v) {
   return String(v ?? '').replace(/[^\d]/g, '');
 }
 
+function SectionCard({ title, children, accent = false }) {
+  return (
+    <section
+      className="rounded-lg border bg-white"
+      style={{
+        borderColor: accent ? `${primary}28` : '#e5e7eb',
+        boxShadow: '0 1px 2px 0 rgba(15,23,42,0.06)',
+      }}
+    >
+      <div
+        className="px-4 pb-2.5 pt-3"
+        style={{ borderBottom: '1px solid #f1f5f9' }}
+      >
+        <h2
+          className="text-[10px] font-bold uppercase tracking-[0.18em]"
+          style={{ color: accent ? primary : '#64748b' }}
+        >
+          {title}
+        </h2>
+      </div>
+
+      <div className="px-4 pb-3.5 pt-3">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SupplierInput({ disabled: dis, ...props }) {
+  return (
+    <SubInputField
+      fullWidth
+      heightPx={H}
+      labelClassName={LBL}
+      className={IN_CLS + (dis ? ' cursor-not-allowed' : '')}
+      inputStyle={CTRL}
+      disabled={dis}
+      {...props}
+    />
+  );
+}
+
+function SupplierDropdown(props) {
+  return (
+    <DropdownInput
+      fullWidth
+      heightPx={H}
+      labelClassName={LBL}
+      className={IN_CLS}
+      boxStyle={CTRL}
+      {...props}
+    />
+  );
+}
+
+function SupplierTextarea({ label, id, rows = 2, ...props }) {
+  return (
+    <div className="flex w-full flex-col gap-0.5">
+      {label && <label htmlFor={id} className={LBL}>{label}</label>}
+      <textarea
+        id={id}
+        rows={rows}
+        className={
+          'w-full resize-none border bg-white px-2.5 py-1.5 text-[14px] font-medium ' +
+          'leading-5 text-slate-800 outline-none placeholder:font-normal ' +
+          'placeholder:text-slate-400 transition-colors focus:border-slate-300 ' +
+          'focus:ring-2 focus:ring-[#79072820]'
+        }
+        style={{ borderRadius: 6, borderColor: '#d1d5db', minHeight: `${H + 10}px` }}
+        {...props}
+      />
+    </div>
+  );
+}
+
 /**
  * Supplier master currently persists code, name, mobile, and email (see API).
  * Extra fields are captured for display / future columns only.
  */
 export default function SupplierEntry() {
-  const primary = colors.primary?.main || '#790728';
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -67,12 +174,6 @@ export default function SupplierEntry() {
   const cityOptions = useMemo(() => toOptions(CITIES), []);
   const paymentModeOptions = useMemo(() => toOptions(PAYMENT_MODES), []);
 
-  const boxRadius = inputField.box.borderRadius;
-  const fieldHeight = 32;
-  const inputClass =
-    '!text-[13px] placeholder:text-gray-400 focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#790728]/25';
-  const labelClassName = '!text-[11px] !font-medium !text-gray-600 !leading-tight';
-
   const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setSaveError('');
@@ -106,7 +207,7 @@ export default function SupplierEntry() {
         : await supplierEntryApi.createSupplier(payload);
       const sid = data?.supplierId;
       setLastSaved({ supplierId: sid, supplierName: data.supplierName, supplierCode: data.supplierCode });
-      setSuccess(`${isEditMode ? 'Updated' : 'Saved'} “${data.supplierName}” (code ${data.supplierCode}, id ${sid}).`);
+      setSuccess(`${isEditMode ? 'Updated' : 'Saved'} "${data.supplierName}" (code ${data.supplierCode}, id ${sid}).`);
       setForm((prev) => ({
         ...prev,
         supplierCode: '',
@@ -143,289 +244,230 @@ export default function SupplierEntry() {
     navigate('/purchase', { state: { selectSupplierId: supplierId } });
   };
 
+  const g2 = 'grid grid-cols-2 gap-x-4 gap-y-3';
+  const g3 = 'grid grid-cols-3 gap-x-3 gap-y-3';
+
   return (
-    <div className="min-h-0 rounded-xl border border-stone-200/90 bg-gradient-to-br from-white via-stone-50/40 to-white p-4 shadow-sm sm:p-7">
-      <div className="flex flex-col gap-1 border-b border-stone-200/80 pb-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-stone-500">Procurement</p>
-          <h1 className="text-xl font-semibold tracking-tight text-stone-900 sm:text-2xl">New supplier</h1>
-          <p className="mt-1 max-w-xl text-[13px] leading-snug text-stone-600">
-            Register a vendor before recording purchases. Code and name are required; mobile and email sync to the ledger.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 pt-2 sm:pt-0">
-          <Link
-            to="/purchase"
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-stone-300 bg-white px-3 text-[12px] font-medium text-stone-800 transition hover:border-stone-400 hover:bg-stone-50"
-          >
-            Back to purchase
-          </Link>
-          <Link
-            to="/lists/supplier-list"
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-transparent px-3 text-[12px] font-medium text-stone-600 underline-offset-4 hover:text-stone-900 hover:underline"
-          >
-            Supplier list
-          </Link>
-        </div>
-      </div>
-
-      {saveError ? (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-800" role="alert">
-          {saveError}
-        </div>
-      ) : null}
-      {success ? (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
+        style={{ boxShadow: '0 1px 3px 0 rgba(15,23,42,0.08)' }}
+      >
         <div
-          className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-900"
-          role="status"
+          className="flex shrink-0 items-center justify-between gap-4 border-b border-gray-100 px-5 py-2.5"
+          style={{ background: '#f8fafc' }}
         >
-          <p>{success}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-md px-3 py-1.5 text-[12px] font-semibold text-white"
-              style={{ backgroundColor: primary }}
-              onClick={() => {
-                if (lastSaved?.supplierId != null) goToPurchaseWithLastSaved(lastSaved.supplierId);
-                else goToPurchase();
-              }}
-            >
-              Use on purchase
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-[12px] font-medium text-stone-800"
-              onClick={goToPurchase}
-            >
-              Open purchase screen
-            </button>
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Data Entry / Suppliers
+            </p>
+            <h1 className="text-[13px] font-bold leading-tight text-slate-800">
+              {isEditMode ? 'Edit Supplier' : 'New Supplier'}
+            </h1>
           </div>
-        </div>
-      ) : null}
 
-      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="space-y-6">
-          <section className="rounded-xl border border-stone-200 bg-white/90 p-4 shadow-sm sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Identity</h2>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <InputField
-                label={
-                  <span>
-                    Supplier code <span className="text-red-500">*</span>
-                  </span>
-                }
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.supplierCode}
-                onChange={(e) => update('supplierCode', e.target.value)}
-                maxLength={25}
-              />
-              <InputField
-                label={
-                  <span>
-                    Supplier name <span className="text-red-500">*</span>
-                  </span>
-                }
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.supplierName}
-                onChange={(e) => update('supplierName', e.target.value)}
-              />
-              <InputField
-                label="Tax registration no."
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.taxRegNo}
-                onChange={(e) => update('taxRegNo', e.target.value)}
-              />
-              <InputField
-                label="Contact person"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.contactPerson}
-                onChange={(e) => update('contactPerson', e.target.value)}
-              />
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-stone-200 bg-white/90 p-4 shadow-sm sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Contact & location</h2>
-            <p className="mt-1 text-[11px] text-stone-500">Saved to server today: mobile and email only (other fields stay on this form for your records).</p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label className="mb-0.5 block text-[11px] font-medium leading-tight text-gray-600" htmlFor="sup-address">
-                  Address
-                </label>
-                <textarea
-                  id="sup-address"
-                  rows={2}
-                  value={form.address}
-                  onChange={(e) => update('address', e.target.value)}
-                  className="box-border w-full resize-none border border-gray-200 px-2 py-1.5 text-[13px] leading-snug text-gray-900 outline-none focus-visible:ring-1 focus-visible:ring-[#790728]/25"
-                  style={{ borderRadius: boxRadius, minHeight: '48px' }}
-                />
-              </div>
-              <InputField
-                label="P.O. box"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.poBox}
-                onChange={(e) => update('poBox', e.target.value)}
-              />
-              <DropdownInput
-                label="Country"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.country}
-                onChange={(v) => update('country', v)}
-                options={countryOptions}
-                placeholder="Select"
-              />
-              <DropdownInput
-                label="City"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.city}
-                onChange={(v) => update('city', v)}
-                options={cityOptions}
-                placeholder="Select"
-              />
-              <InputField
-                label="Telephone"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.telephone}
-                onChange={(e) => update('telephone', e.target.value)}
-              />
-              <InputField
-                label="Mobile (saved)"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                inputMode="numeric"
-                value={form.mobileNo}
-                onChange={(e) => update('mobileNo', digitsOnly(e.target.value))}
-              />
-              <InputField
-                label="Fax"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.fax}
-                onChange={(e) => update('fax', e.target.value)}
-              />
-              <InputField
-                label="Email (saved)"
-                fullWidth
-                type="email"
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.email}
-                onChange={(e) => update('email', e.target.value)}
-              />
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-stone-200 bg-white/90 p-4 shadow-sm sm:p-5">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Terms (local notes)</h2>
-            <p className="mt-1 text-[11px] text-stone-500">Not stored in supplier_master yet — use for desk notes until finance extends the schema.</p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <DropdownInput
-                label="Payment mode"
-                fullWidth
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.paymentMode}
-                onChange={(v) => update('paymentMode', v)}
-                options={paymentModeOptions}
-                placeholder="Select"
-              />
-              <InputField
-                label="Credit limit"
-                fullWidth
-                type="number"
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.creditLimit}
-                onChange={(e) => update('creditLimit', e.target.value)}
-              />
-              <InputField
-                label="Credit balance"
-                fullWidth
-                type="number"
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.creditBalance}
-                onChange={(e) => update('creditBalance', e.target.value)}
-              />
-              <InputField
-                label="Credit period (days)"
-                fullWidth
-                type="number"
-                heightPx={fieldHeight}
-                className={inputClass}
-                labelClassName={labelClassName}
-                value={form.creditPeriodDays}
-                onChange={(e) => update('creditPeriodDays', e.target.value)}
-              />
-              <div className="sm:col-span-2">
-                <label className="mb-0.5 block text-[11px] font-medium leading-tight text-gray-600" htmlFor="sup-remark">
-                  Remark
-                </label>
-                <textarea
-                  id="sup-remark"
-                  rows={2}
-                  value={form.remark}
-                  onChange={(e) => update('remark', e.target.value)}
-                  className="box-border w-full resize-none border border-gray-200 px-2 py-1.5 text-[13px] leading-snug text-gray-900 outline-none focus-visible:ring-1 focus-visible:ring-[#790728]/25"
-                  style={{ borderRadius: boxRadius, minHeight: '44px' }}
-                />
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <aside className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-stone-900 p-4 text-stone-100 shadow-inner sm:p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Checklist</p>
-          <ul className="list-inside list-disc space-y-2 text-[12px] leading-relaxed text-stone-200">
-            <li>Unique supplier code per company (max 25 characters).</li>
-            <li>Name prints on purchase documents and ageing.</li>
-            <li>After saving, jump to Purchase and pick this vendor from the list.</li>
-          </ul>
-          <div className="mt-auto border-t border-stone-700 pt-4">
+          <div className="flex shrink-0 items-center gap-3">
+            {saveError && (
+              <p className="max-w-xs truncate text-[11px] font-medium text-red-600" role="alert">
+                {saveError}
+              </p>
+            )}
+            {success && (
+              <p className="max-w-70 truncate text-[11px] font-medium text-emerald-600" role="status">
+                {success}
+              </p>
+            )}
+            <Link
+              to="/lists/supplier-list"
+              className={secondaryBtn}
+            >
+              Supplier list
+            </Link>
             <button
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="w-full rounded-lg py-2.5 text-[13px] font-semibold text-white shadow-md transition enabled:hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ backgroundColor: primary }}
+              className={primaryBtn}
+              style={{ backgroundColor: primary, borderColor: `${primary}99` }}
             >
-              {saving ? (isEditMode ? 'Updating…' : 'Saving…') : (isEditMode ? 'Update supplier' : 'Save supplier')}
+              {saving
+                ? (isEditMode ? 'Updating...' : 'Saving...')
+                : (isEditMode ? 'Update supplier' : 'Save supplier')}
             </button>
           </div>
-        </aside>
+        </div>
+
+        <div className="flex-1 bg-[#faf8f9] p-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
+            <div className="space-y-3">
+              <SectionCard title="Basic info" accent>
+                <div className={g2}>
+                  <SupplierInput
+                    label={<span>Supplier code <span style={{ color: '#dc2626' }}>*</span></span>}
+                    value={form.supplierCode}
+                    onChange={(e) => update('supplierCode', e.target.value)}
+                    placeholder="e.g. SUP-001"
+                    maxLength={25}
+                  />
+                  <SupplierInput
+                    label={<span>Supplier name <span style={{ color: '#dc2626' }}>*</span></span>}
+                    value={form.supplierName}
+                    onChange={(e) => update('supplierName', e.target.value)}
+                    placeholder="Full name or business name"
+                  />
+                  <SupplierInput
+                    label="Tax registration no."
+                    value={form.taxRegNo}
+                    onChange={(e) => update('taxRegNo', e.target.value)}
+                    placeholder="TRN / VAT number"
+                  />
+                  <SupplierInput
+                    label="Contact person"
+                    value={form.contactPerson}
+                    onChange={(e) => update('contactPerson', e.target.value)}
+                  />
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Contact details">
+                <div className={g2}>
+                  <SupplierInput
+                    label="Telephone"
+                    value={form.telephone}
+                    onChange={(e) => update('telephone', e.target.value)}
+                    placeholder="+971 xx xxx xxxx"
+                  />
+                  <SupplierInput
+                    label="Mobile no."
+                    inputMode="numeric"
+                    value={form.mobileNo}
+                    onChange={(e) => update('mobileNo', digitsOnly(e.target.value))}
+                    placeholder="Numbers only"
+                  />
+                  <SupplierInput
+                    label="Fax"
+                    value={form.fax}
+                    onChange={(e) => update('fax', e.target.value)}
+                  />
+                  <SupplierInput
+                    label="Email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => update('email', e.target.value)}
+                    placeholder="name@company.com"
+                  />
+                </div>
+              </SectionCard>
+            </div>
+
+            <div className="space-y-3">
+              <SectionCard title="Address">
+                <div className="space-y-3">
+                  <SupplierTextarea
+                    id="sup-address"
+                    label="Street address"
+                    value={form.address}
+                    onChange={(e) => update('address', e.target.value)}
+                    placeholder="Building, street, district..."
+                  />
+                  <div className={g3}>
+                    <SupplierInput
+                      label="P.O. box"
+                      value={form.poBox}
+                      onChange={(e) => update('poBox', e.target.value)}
+                    />
+                    <SupplierDropdown
+                      label="Country"
+                      value={form.country}
+                      onChange={(v) => update('country', v)}
+                      options={countryOptions}
+                      placeholder="Select"
+                    />
+                    <SupplierDropdown
+                      label="City"
+                      value={form.city}
+                      onChange={(v) => update('city', v)}
+                      options={cityOptions}
+                      placeholder="Select"
+                    />
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Payment &amp; credit">
+                <div className={g3}>
+                  <SupplierDropdown
+                    label="Payment mode"
+                    value={form.paymentMode}
+                    onChange={(v) => update('paymentMode', v)}
+                    options={paymentModeOptions}
+                    placeholder="Select"
+                  />
+                  <SupplierInput
+                    label="Credit limit"
+                    type="number"
+                    value={form.creditLimit}
+                    onChange={(e) => update('creditLimit', e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <SupplierInput
+                    label="Credit balance"
+                    type="number"
+                    value={form.creditBalance}
+                    onChange={(e) => update('creditBalance', e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <SupplierInput
+                    label="Credit period (days)"
+                    type="number"
+                    value={form.creditPeriodDays}
+                    onChange={(e) => update('creditPeriodDays', e.target.value)}
+                    placeholder="e.g. 30"
+                  />
+                </div>
+              </SectionCard>
+
+              <SectionCard title="Remarks">
+                <SupplierTextarea
+                  id="sup-remark"
+                  value={form.remark}
+                  onChange={(e) => update('remark', e.target.value)}
+                  placeholder="Any additional notes about this supplier..."
+                  rows={2}
+                />
+              </SectionCard>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="flex shrink-0 items-center justify-between gap-3 border-t border-gray-100 px-5 py-2"
+          style={{ background: '#f8fafc' }}
+        >
+          <span className="text-[11px] text-slate-400">
+            Fields marked <span style={{ color: '#dc2626' }}>*</span> are required.
+          </span>
+          {success && (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                className={secondaryBtn}
+                onClick={() => {
+                  if (lastSaved?.supplierId != null) goToPurchaseWithLastSaved(lastSaved.supplierId);
+                  else goToPurchase();
+                }}
+              >
+                Use on purchase
+              </button>
+              <Link
+                to="/purchase"
+                className={secondaryBtn}
+              >
+                Open purchase screen
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

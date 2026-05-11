@@ -1,11 +1,11 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { hasAnyFeature } from './access.service.js';
+import { hasAllFeatures, hasAnyFeature } from './access.service.js';
 
-export default function FeatureGuard({ feature, any, children }) {
+export default function FeatureGuard({ feature, any, all, children }) {
   const location = useLocation();
-  const featureCodes = any ?? feature;
+  const featureCodes = all ?? any ?? feature;
 
-  if (hasAnyFeature(featureCodes)) {
+  if (all ? hasAllFeatures(featureCodes) : hasAnyFeature(featureCodes)) {
     return children;
   }
 

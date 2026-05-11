@@ -2,6 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { colors, itemDetailsTablePreset } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import { DropdownInput, InputField, SubInputField } from '../../../shared/components/ui';
+import SearchIcon from '../../../shared/assets/icons/search3.svg';
+import RefreshIcon from '../../../shared/assets/icons/refresh.svg';
+import EditIcon from '../../../shared/assets/icons/edit2.svg';
+import DeleteIcon from '../../../shared/assets/icons/delete.svg';
+import VendorIcon from '../../../shared/assets/icons/vendor.svg';
+import LedgerIcon from '../../../shared/assets/icons/ledger.svg';
+import PricingIcon from '../../../shared/assets/icons/pricing.svg';
+import AltIcon from '../../../shared/assets/icons/alternative.svg';
 
 const primary = colors.primary?.main || '#790728';
 
@@ -49,6 +57,19 @@ const PROCUREMENT_HEADERS = ['GRN No', 'Purchase Date', 'Supplier', 'Qty', 'Unit
 const REVENUE_HEADERS = ['Bill no', 'Bill Date', 'Customer', 'Unit', 'Total'];
 const PO_HEADERS = ['LPO No', 'LPO Date', 'Supplier', 'Qty', 'Unit price', 'Total'];
 
+const HOME_TOOL_ITEMS = [
+  { label: 'Multi vendors', icon: VendorIcon },
+  { label: 'Item Ledger', icon: LedgerIcon },
+  { label: 'Pricing', icon: PricingIcon },
+  { label: 'Alternative', icon: AltIcon },
+];
+
+const HOME_ACTION_ITEMS = [
+  { label: 'Search', icon: SearchIcon },
+  { label: 'Refresh', icon: RefreshIcon },
+  { label: 'Edit', icon: EditIcon },
+];
+
 const altProductRows = [
   ['ALT-1001', 'Mfg A'],
   ['ALT-1002', 'Mfg B'],
@@ -83,6 +104,7 @@ function ItemDetailsPanelTable({ title, headers, rows, columnWidthPercents }) {
 
 export default function Home() {
   const [dailyTxn, setDailyTxn] = useState(false);
+  const [activeTool, setActiveTool] = useState('Multi vendors');
 
   const multiLocRows = useMemo(
     () => [
@@ -207,6 +229,54 @@ export default function Home() {
   return (
     <div className={shellClass}>
       <div className={itemDetailsRootClass}>
+        <div className="mb-2 flex min-w-0 flex-col gap-2 rounded-md border border-gray-200 bg-white p-1.5 sm:flex-row sm:items-center sm:justify-between sm:p-2">
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            {HOME_TOOL_ITEMS.map((item) => {
+              const isActive = activeTool === item.label;
+
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => setActiveTool(item.label)}
+                  className={`flex h-7 flex-shrink-0 items-center gap-1 rounded-md border px-2 text-[9px] font-medium transition-colors sm:text-[10px] ${
+                    isActive ? 'bg-white shadow-sm' : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                  }`}
+                  style={{
+                    borderColor: isActive ? primary : undefined,
+                    color: isActive ? primary : '#334155',
+                  }}
+                >
+                  <img src={item.icon} alt="" className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-shrink-0 gap-1.5">
+            {HOME_ACTION_ITEMS.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                aria-label={item.label}
+                title={item.label}
+                className="flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white transition-colors hover:border-slate-300 hover:bg-slate-50"
+              >
+                <img src={item.icon} alt="" className="h-3 w-3" />
+              </button>
+            ))}
+            <button
+              type="button"
+              aria-label="Delete"
+              title="Delete"
+              className="flex h-7 w-7 items-center justify-center rounded bg-red-600 transition-colors hover:bg-red-700"
+            >
+              <img src={DeleteIcon} alt="" className="h-3 w-3 brightness-0 invert" />
+            </button>
+          </div>
+        </div>
+
         <div className="flex min-w-0 flex-col gap-2 pb-1 mb-2 sm:flex-row sm:items-start sm:justify-between">
           <h1
             className="shrink-0 text-sm font-bold leading-tight sm:text-base md:text-lg"

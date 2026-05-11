@@ -25,166 +25,198 @@ export default function TenantsListPage() {
   }
 
   useEffect(() => { load(); }, [status]);
-  const summary = summarize(rows);
+
+  const total = rows.length;
+  const active = rows.filter((r) => r.status === 'active').length;
+  const trial = rows.filter((r) => r.status === 'trial').length;
+  const suspended = rows.filter((r) => r.status === 'suspended').length;
 
   return (
-    <div style={wrap}>
-      <section style={statsRow}>
-        <StatCard label="Total" value={summary.total} />
-        <StatCard label="Active" value={summary.active} />
-        <StatCard label="Trial" value={summary.trial} />
-        <StatCard label="Suspended" value={summary.suspended} />
-      </section>
-
-      <section style={panel}>
-        <div style={panelHeader}>
-          <h2 style={h2}>Tenants</h2>
-          <button onClick={load} style={refreshBtn}>Refresh</button>
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={H1}>Tenants</h1>
+          <p style={SUBTITLE}>All companies on the platform.</p>
         </div>
+        <button onClick={load} className="sa-btn-ghost" style={BTN_GHOST}>
+          <RefreshIcon />
+          Refresh
+        </button>
+      </div>
 
-        <div style={filters}>
-          <select style={select} value={status} onChange={(e) => setStatus(e.target.value)}>
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        {[
+          { label: 'Total', value: total, color: '#0f172a' },
+          { label: 'Active', value: active, color: '#15803d' },
+          { label: 'Trial', value: trial, color: '#4338ca' },
+          { label: 'Suspended', value: suspended, color: '#7c3aed' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{label}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, color, letterSpacing: '-0.5px', lineHeight: 1 }}>{value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table panel */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden' }}>
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 10, padding: '12px 16px', borderBottom: '1px solid #f1f5f9', alignItems: 'center' }}>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{ ...CONTROL, minWidth: 160 }}
+          >
             {STATUSES.map((s) => <option key={s} value={s}>{s || 'All statuses'}</option>)}
           </select>
           <input
-            style={input}
-            placeholder="Search by company name or ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load()}
+            placeholder="Search by company name or ID…"
+            style={{ ...CONTROL, flex: 1 }}
           />
+          <button onClick={load} className="sa-btn-primary" style={BTN_PRIMARY}>
+            Search
+          </button>
         </div>
 
-        {error && <div style={errorStyle}>{error}</div>}
-        {loading ? <div style={{ padding: 16 }}>Loading tenants...</div> : (
-          <table style={table}>
+        {error && (
+          <div style={ERROR_BOX}>{error}</div>
+        )}
+
+        {loading ? (
+          <div style={{ padding: '32px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+            Loading tenants…
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#eef2fb' }}>
-                <th style={th}>ID</th>
-                <th style={th}>Company</th>
-                <th style={th}>Plan</th>
-                <th style={th}>Status</th>
-                <th style={th}>Trial Ends</th>
-                <th style={th}>Period Ends</th>
-                <th style={th}></th>
+              <tr style={{ background: '#f8fafc' }}>
+                {['ID', 'Company', 'Plan', 'Status', 'Trial ends', 'Period ends', ''].map((h) => (
+                  <th key={h} style={TH}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.company_id}>
-                  <td style={td}>{r.company_id}</td>
-                  <td style={td}>{r.company_name}</td>
-                  <td style={td}>{r.plan_code || '—'}</td>
-                  <td style={td}><StatusPill status={r.status} /></td>
-                  <td style={td}>{fmt(r.trial_ends_at)}</td>
-                  <td style={td}>{fmt(r.current_period_ends_at)}</td>
-                  <td style={td}>
-                    <Link to={`/super-admin/tenants/${r.company_id}`} style={openLink}>Open</Link>
+                <tr key={r.company_id} className="sa-tr">
+                  <td style={TD}>
+                    <span style={MONO}>{r.company_id}</span>
+                  </td>
+                  <td style={{ ...TD, fontWeight: 500, color: '#0f172a' }}>{r.company_name}</td>
+                  <td style={TD}>
+                    {r.plan_code ? <span style={CODE}>{r.plan_code}</span> : <span style={{ color: '#cbd5e1' }}>—</span>}
+                  </td>
+                  <td style={TD}><StatusPill status={r.status} /></td>
+                  <td style={{ ...TD, color: '#64748b', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{fmt(r.trial_ends_at)}</td>
+                  <td style={{ ...TD, color: '#64748b', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{fmt(r.current_period_ends_at)}</td>
+                  <td style={TD}>
+                    <Link
+                      to={`/super-admin/tenants/${r.company_id}`}
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 500,
+                        color: '#4f46e5',
+                        textDecoration: 'none',
+                        padding: '4px 10px',
+                        border: '1px solid #c7d2fe',
+                        borderRadius: 6,
+                        background: '#eef2ff',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      View →
+                    </Link>
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && (
-                <tr><td colSpan={7} style={{ ...td, textAlign: 'center', padding: 24 }}>No tenants found</td></tr>
+              {rows.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                    No tenants found.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         )}
-      </section>
-    </div>
-  );
-}
-
-function StatCard({ label, value }) {
-  return (
-    <div style={statCard}>
-      <div style={statLabel}>{label}</div>
-      <div style={statValue}>{value}</div>
+      </div>
     </div>
   );
 }
 
 function StatusPill({ status }) {
-  const normalized = status || 'unset';
-  return <span style={{ ...pill, ...statusColor[normalized] }}>{normalized}</span>;
+  const s = status || 'unset';
+  const C = {
+    active:    { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+    trial:     { bg: '#eef2ff', color: '#4338ca', border: '#c7d2fe' },
+    grace:     { bg: '#fffbeb', color: '#b45309', border: '#fde68a' },
+    expired:   { bg: '#fef2f2', color: '#dc2626', border: '#fecaca' },
+    suspended: { bg: '#faf5ff', color: '#7c3aed', border: '#e9d5ff' },
+    cancelled: { bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
+    unset:     { bg: '#f8fafc', color: '#94a3b8', border: '#e2e8f0' },
+  };
+  const c = C[s] || C.unset;
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 8px',
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 600,
+      textTransform: 'capitalize',
+      background: c.bg,
+      color: c.color,
+      border: `1px solid ${c.border}`,
+      letterSpacing: '0.02em',
+    }}>
+      {s}
+    </span>
+  );
 }
 
-function summarize(rows) {
-  const data = { total: rows.length, active: 0, trial: 0, suspended: 0 };
-  rows.forEach((r) => {
-    if (r.status === 'active') data.active += 1;
-    if (r.status === 'trial') data.trial += 1;
-    if (r.status === 'suspended') data.suspended += 1;
-  });
-  return data;
+function RefreshIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+    </svg>
+  );
 }
 
 function fmt(v) { return v ? new Date(v).toISOString().slice(0, 10) : '—'; }
 
-const wrap = { display: 'grid', gap: 16 };
-const statsRow = { display: 'grid', gridTemplateColumns: 'repeat(4, minmax(120px, 1fr))', gap: 10 };
-const statCard = { background: '#fff', border: '1px solid #d9e3f4', borderRadius: 10, padding: 12 };
-const statLabel = { color: '#5f7199', fontSize: 12 };
-const statValue = { color: '#11213f', fontWeight: 700, fontSize: 22, marginTop: 2 };
-const panel = { background: '#fff', border: '1px solid #d9e3f4', borderRadius: 12, overflow: 'hidden' };
-const panelHeader = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '14px 16px',
-  borderBottom: '1px solid #e2e8f0',
+const H1 = { margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.3px' };
+const SUBTITLE = { margin: '3px 0 0', fontSize: 13, color: '#64748b' };
+const CONTROL = { height: 36, border: '1px solid #e2e8f0', borderRadius: 8, padding: '0 12px', fontSize: 13, color: '#374151', background: '#fff' };
+const BTN_GHOST = {
+  padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+  background: '#fff', color: '#475569', fontSize: 13, fontWeight: 500,
+  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
 };
-const h2 = { margin: 0, fontSize: 20, color: '#132749' };
-const refreshBtn = {
-  border: '1px solid #c7d4ec',
-  background: '#f8fbff',
-  color: '#17386f',
-  borderRadius: 8,
-  padding: '8px 12px',
-  cursor: 'pointer',
+const BTN_PRIMARY = {
+  padding: '0 16px', height: 36, borderRadius: 8,
+  background: '#4f46e5', color: '#fff', border: 'none',
+  fontSize: 13, fontWeight: 500, cursor: 'pointer',
 };
-const filters = {
-  display: 'grid',
-  gridTemplateColumns: '220px 1fr',
-  gap: 10,
-  padding: '12px 16px',
-  borderBottom: '1px solid #e2e8f0',
+const ERROR_BOX = {
+  margin: '12px 16px', padding: '9px 12px', borderRadius: 8,
+  background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13,
 };
-const select = { height: 38, border: '1px solid #c7d4ec', borderRadius: 8, padding: '0 10px' };
-const input = { height: 38, border: '1px solid #c7d4ec', borderRadius: 8, padding: '0 10px' };
-const errorStyle = {
-  color: '#b42318',
-  background: '#fee4e2',
-  border: '1px solid #fecdca',
-  borderRadius: 8,
-  margin: '0 16px 12px',
-  padding: '8px 10px',
-  fontSize: 13,
+const TH = {
+  textAlign: 'left', padding: '9px 14px',
+  fontSize: 11, fontWeight: 700, color: '#94a3b8',
+  textTransform: 'uppercase', letterSpacing: '0.06em',
+  borderBottom: '1px solid #f1f5f9',
 };
-const table = { width: '100%', borderCollapse: 'collapse', background: '#fff' };
-const th = { textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid #cbd5e1' };
-const td = { padding: '10px 12px', borderBottom: '1px solid #e2e8f0' };
-const openLink = {
-  border: '1px solid #b7c7e8',
-  borderRadius: 7,
-  padding: '4px 8px',
-  textDecoration: 'none',
-  color: '#123a78',
-  fontSize: 13,
-};
-const pill = {
-  display: 'inline-block',
-  borderRadius: 999,
-  padding: '3px 8px',
-  fontSize: 12,
-  border: '1px solid transparent',
-  textTransform: 'capitalize',
-};
-const statusColor = {
-  active: { background: '#dcfce7', color: '#166534', borderColor: '#bbf7d0' },
-  trial: { background: '#dbeafe', color: '#1d4ed8', borderColor: '#bfdbfe' },
-  grace: { background: '#fef3c7', color: '#92400e', borderColor: '#fde68a' },
-  expired: { background: '#fee2e2', color: '#991b1b', borderColor: '#fecaca' },
-  suspended: { background: '#f3e8ff', color: '#6b21a8', borderColor: '#e9d5ff' },
-  cancelled: { background: '#f1f5f9', color: '#334155', borderColor: '#cbd5e1' },
-  unset: { background: '#f8fafc', color: '#475569', borderColor: '#e2e8f0' },
+const TD = { padding: '11px 14px', borderBottom: '1px solid #f8fafc', fontSize: 13 };
+const MONO = { fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#94a3b8' };
+const CODE = {
+  fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+  background: '#f1f5f9', border: '1px solid #e2e8f0',
+  borderRadius: 4, padding: '1px 6px', color: '#475569',
 };

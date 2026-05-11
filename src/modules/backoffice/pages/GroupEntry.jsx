@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { colors, inputField } from '../../../shared/constants/theme';
+import { colors } from '../../../shared/constants/theme';
 import { DropdownInput, InputField } from '../../../shared/components/ui';
 import { getSessionCompany, getSessionUser } from '../../../core/auth/auth.service.js';
 import * as groupEntryApi from '../../../services/groupEntry.api.js';
@@ -19,11 +19,14 @@ export default function GroupEntry() {
     keyShift: '',
   });
   const [branches, setBranches] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loadError, setLoadError] = useState('');
+  const [groupsError, setGroupsError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState(false);
 
   const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -63,10 +66,38 @@ export default function GroupEntry() {
     () =>
       branches.map((b) => ({
         value: String(b.branchId),
-        label: `${b.branchCode} — ${b.branchName}`,
+        label: `${b.branchCode} - ${b.branchName}`,
       })),
     [branches]
   );
+
+  useEffect(() => {
+    const bid = form.branchId;
+    if (!bid) {
+      setGroups([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingGroups(true);
+      setGroupsError('');
+      try {
+        const { data } = await groupEntryApi.fetchGroups(Number(bid));
+        if (cancelled) return;
+        setGroups(data.groups || []);
+      } catch {
+        if (!cancelled) {
+          setGroups([]);
+          setGroupsError('Could not load groups for this branch.');
+        }
+      } finally {
+        if (!cancelled) setLoadingGroups(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.branchId]);
 
   const handleSave = async () => {
     const code = form.groupCode.trim();
@@ -91,6 +122,7 @@ export default function GroupEntry() {
         keyShift: form.keyShift.trim() || undefined,
       });
       setSuccess(`Saved group ${data.groupCode} (branch ${data.branchId}, id ${data.groupId}).`);
+      setGroups((prev) => [...prev, data]);
       setForm((prev) => ({
         ...prev,
         groupCode: '',
@@ -106,12 +138,16 @@ export default function GroupEntry() {
     }
   };
 
-  const boxRadius = inputField.box.borderRadius;
-  const surfaceTint = colors.primary?.[50] || '#F2E6EA';
-  const fieldHeight = 36;
+  const fieldHeight = 34;
   const inputClass =
-    '!text-base placeholder:text-gray-400 transition-[box-shadow] focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#790728]/25 focus-visible:ring-offset-1 disabled:opacity-60';
-  const labelClassName = '!text-sm !font-medium !text-gray-700 !leading-snug sm:!text-[0.9375rem]';
+    'rounded-md px-2.5 !text-[14px] font-medium text-slate-800 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#79072820] disabled:cursor-not-allowed disabled:opacity-60';
+  const labelClassName =
+    '!flex !h-4 !items-center !truncate !text-[11px] !font-bold !uppercase !leading-4 !tracking-[0.12em] !text-slate-500';
+  const cardStyle = 'rounded-lg border border-slate-200 bg-white shadow-sm';
+  const sectionTitle = 'text-[12px] font-bold uppercase tracking-[0.16em] text-slate-700';
+  const sectionSubtle = 'text-[11px] font-medium text-slate-500';
+  const primaryButton =
+    'inline-flex h-8 cursor-pointer items-center justify-center rounded-md px-4 text-[12px] font-bold uppercase tracking-[0.08em] text-white shadow-sm transition duration-200 ease-out hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[#79072830] disabled:cursor-not-allowed disabled:opacity-60';
 
   const req = (text) => (
     <span className="inline-flex items-center gap-1">
@@ -123,132 +159,120 @@ export default function GroupEntry() {
   );
 
   return (
-    <div className="flex w-full flex-col">
-      <div className="flex w-full flex-col overflow-x-hidden rounded-2xl border border-gray-200/90 bg-white shadow-md">
-        <div className="shrink-0 border-b border-gray-100 bg-gradient-to-br from-white via-white to-slate-50/40 px-4 py-4 sm:px-8 sm:py-5">
-          <div className="flex gap-4 sm:gap-5">
-            <div
-              className="w-1 shrink-0 rounded-full sm:w-1.5"
-              style={{ backgroundColor: primary }}
-              aria-hidden
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-                <div className="min-w-0">
-                  <nav className="text-[11px] font-medium text-gray-500 sm:text-xs" aria-label="Breadcrumb">
-                    <span>Data entry</span>
-                    <span className="mx-2 text-gray-300" aria-hidden>
-                      /
-                    </span>
-                    <span style={{ color: primary }}>Group</span>
-                  </nav>
-                  <h1 className="mt-1.5 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">Add product group</h1>
-                  <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-600 sm:text-sm">
-                    Add a product/item group for a <span className="font-medium text-gray-800">branch</span>. The same group
-                    code can exist in another branch. Company comes from your login token; choose the branch this group
-                    belongs to.
-                  </p>
-                </div>
-                <div
-                  className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600 sm:text-[11px]"
-                  style={{ borderColor: `${primary}66`, backgroundColor: surfaceTint }}
-                >
-                  New group
-                </div>
-              </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 sm:px-5">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <nav className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                <span>Data Entry</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-slate-700">Groups</span>
+              </nav>
+              <h1 className="mt-1 text-[18px] font-bold leading-tight text-slate-900">Group Entry</h1>
+            </div>
 
-              {company ? (
-                <p className="mt-4 rounded-lg border border-gray-200/80 bg-slate-50/80 px-3 py-2 text-[10px] text-slate-700 sm:text-xs">
-                  <span className="font-semibold text-gray-800">Company:</span> {company.companyName}{' '}
-                  <span className="text-slate-500">(id {company.companyId})</span>
-                  {user?.stationId != null ? (
-                    <>
-                      {' '}
-                      · <span className="font-semibold text-gray-800">Your branch:</span> {company.stationName}{' '}
-                      <span className="text-slate-500">(branch id {user.stationId})</span>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-
+            <div className="flex flex-wrap items-center gap-2">
               {loadError ? (
-                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                <span
+                  className="rounded-md border border-amber-100 bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800"
+                  role="alert"
+                >
                   {loadError}
-                </p>
+                </span>
               ) : null}
+              {groupsError ? (
+                <span
+                  className="rounded-md border border-amber-100 bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800"
+                  role="alert"
+                >
+                  {groupsError}
+                </span>
+              ) : null}
+              {saveError ? (
+                <span
+                  className="rounded-md border border-red-100 bg-red-50 px-2.5 py-1 text-[12px] font-semibold text-red-700"
+                  role="alert"
+                >
+                  {saveError}
+                </span>
+              ) : null}
+              {success ? (
+                <span
+                  className="rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {success}
+                </span>
+              ) : null}
+              <button
+                type="button"
+                disabled={saving || loadingBranches || !branches.length || !form.branchId}
+                onClick={handleSave}
+                className={primaryButton}
+                style={{ backgroundColor: primary }}
+              >
+                {saving ? 'Saving...' : 'Save group'}
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-50/40 px-4 py-5 sm:px-8 sm:py-6">
-          <div className="mx-auto flex max-w-6xl flex-col gap-8 xl:flex-row xl:items-start xl:gap-10">
-            <div className="min-w-0 flex-1">
-              <section
-                className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-sm ring-1 ring-black/[0.02]"
-                aria-labelledby="group-entry-form-heading"
-              >
-                <div
-                  className="flex items-center gap-3 border-b border-gray-200/90 px-4 py-3 sm:px-5 sm:py-3.5"
-                  style={{ backgroundColor: surfaceTint }}
-                >
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm"
-                    style={{ backgroundColor: primary }}
-                    aria-hidden
-                  >
-                    1
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">Step</p>
-                    <h2 id="group-entry-form-heading" className="text-sm font-semibold text-gray-900 sm:text-base">
-                      Group details
-                    </h2>
-                  </div>
+        <div className="min-h-0 flex-1 overflow-auto bg-[#faf8f9] p-3">
+          <div className="grid min-h-full grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <main className="space-y-3">
+              <section className={`${cardStyle} overflow-hidden`}>
+                <div className="border-b border-slate-200 px-4 py-3">
+                  <p className={sectionTitle}>Group Details</p>
+                  <p className={sectionSubtle}>Create a product group for the selected branch.</p>
                 </div>
-                <div className="space-y-3.5 p-4 sm:space-y-4 sm:p-5">
-                  <div className="mx-auto max-w-xl space-y-3.5 sm:space-y-4">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                      <DropdownInput
-                        label={req('Branch')}
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        value={form.branchId}
-                        onChange={(v) => update('branchId', v)}
-                        options={branchOptions}
-                        placeholder={
-                          loadingBranches ? 'Loading branches…' : branches.length ? 'Select branch' : 'No branches'
-                        }
-                      />
-                      <InputField
-                        label={req('Group code')}
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        value={form.groupCode}
-                        onChange={(e) => update('groupCode', e.target.value)}
-                      />
-                      <InputField
-                        label="Key code (optional)"
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        value={form.keyCode}
-                        onChange={(e) => update('keyCode', e.target.value)}
-                      />
-                    </div>
-                    <InputField
-                      label="Key shift (optional)"
-                      fullWidth
-                      heightPx={fieldHeight}
-                      className={inputClass}
-                      labelClassName={labelClassName}
-                      value={form.keyShift}
-                      onChange={(e) => update('keyShift', e.target.value)}
-                    />
+
+                <div className="p-4">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
+                  <DropdownInput
+                    label={req('Branch')}
+                    fullWidth
+                    heightPx={fieldHeight}
+                    className={inputClass}
+                    labelClassName={labelClassName}
+                    value={form.branchId}
+                    onChange={(v) => update('branchId', v)}
+                    options={branchOptions}
+                    placeholder={loadingBranches ? 'Loading branches...' : branches.length ? 'Select branch' : 'No branches'}
+                  />
+
+                  <InputField
+                    label={req('Group code')}
+                    fullWidth
+                    heightPx={fieldHeight}
+                    className={inputClass}
+                    labelClassName={labelClassName}
+                    value={form.groupCode}
+                    onChange={(e) => update('groupCode', e.target.value)}
+                  />
+
+                  <InputField
+                    label="Key code"
+                    fullWidth
+                    heightPx={fieldHeight}
+                    className={inputClass}
+                    labelClassName={labelClassName}
+                    value={form.keyCode}
+                    onChange={(e) => update('keyCode', e.target.value)}
+                  />
+
+                  <InputField
+                    label="Key shift"
+                    fullWidth
+                    heightPx={fieldHeight}
+                    className={inputClass}
+                    labelClassName={labelClassName}
+                    value={form.keyShift}
+                    onChange={(e) => update('keyShift', e.target.value)}
+                  />
+
+                  <div className="md:col-span-2">
                     <InputField
                       label="Description"
                       fullWidth
@@ -258,102 +282,117 @@ export default function GroupEntry() {
                       value={form.groupDescription}
                       onChange={(e) => update('groupDescription', e.target.value)}
                     />
-                    <div className="flex min-w-0 w-full max-w-full flex-col gap-1">
-                      <label
-                        className="text-sm font-medium leading-snug text-gray-700 sm:text-[0.9375rem]"
-                        style={{ color: inputField.label.color }}
-                        htmlFor="group-desc-ar"
-                      >
-                        Description (Arabic)
-                      </label>
-                      <textarea
-                        id="group-desc-ar"
-                        rows={3}
-                        value={form.groupDescriptionArabic}
-                        onChange={(e) => update('groupDescriptionArabic', e.target.value)}
-                        className="box-border w-full max-w-full resize-y border border-gray-200 px-2.5 py-2 !text-base leading-normal text-gray-900 outline-none transition-[box-shadow] placeholder:text-gray-400 placeholder:text-base focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#790728]/25 focus-visible:ring-offset-1"
-                        style={{
-                          background: colors.input?.background ?? '#fff',
-                          borderColor: '#e2e8f0',
-                          borderRadius: boxRadius,
-                        }}
-                      />
-                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 xl:col-span-3">
+                    <label
+                      className="mb-1 flex h-4 items-center truncate text-[11px] font-bold uppercase leading-4 tracking-[0.12em] text-slate-500"
+                      htmlFor="group-desc-ar"
+                    >
+                      Description (Arabic)
+                    </label>
+                    <textarea
+                      id="group-desc-ar"
+                      rows={3}
+                      value={form.groupDescriptionArabic}
+                      onChange={(e) => update('groupDescriptionArabic', e.target.value)}
+                      className="box-border w-full max-w-full resize-y rounded-md border border-slate-200 bg-white px-2.5 py-2 !text-[14px] font-medium leading-5 text-slate-800 outline-none transition duration-200 ease-out placeholder:font-normal placeholder:text-slate-400 focus:border-transparent focus:ring-2 focus:ring-[#79072820] disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+                  </div>
+                  </div>
+
+                  <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <p className="text-[12px] font-semibold leading-5 text-slate-600">
+                      Required fields are marked with an asterisk. Group code must be unique within the selected branch.
+                    </p>
                   </div>
                 </div>
               </section>
-            </div>
 
-            <aside className="w-full shrink-0 xl:w-[min(100%,320px)] xl:pt-1" aria-label="Group entry tips">
-              <div
-                className="rounded-2xl border border-gray-200 p-5 shadow-md ring-1 ring-black/[0.04] sm:p-6 xl:sticky xl:top-2"
-                style={{
-                  background: `linear-gradient(165deg, #ffffff 0%, ${surfaceTint} 88%)`,
-                }}
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: primary }} aria-hidden />
-                  <p className="text-sm font-semibold text-gray-900">Before you save</p>
+              {form.branchId ? (
+                <section className={`${cardStyle} overflow-hidden`}>
+                  <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+                    <div>
+                      <p className={sectionTitle}>Groups In This Branch</p>
+                      <p className={sectionSubtle}>Existing and newly added product groups.</p>
+                    </div>
+                    <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-600">
+                      {loadingGroups ? 'Loading' : `${groups.length} group${groups.length !== 1 ? 's' : ''}`}
+                    </span>
+                  </div>
+
+                  {!loadingGroups && groups.length === 0 ? (
+                    <p className="px-5 py-6 text-center text-[13px] font-medium text-slate-400">
+                      No groups yet for this branch. Add one above.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[620px] text-[13px]">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50">
+                            <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Code</th>
+                            <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Description</th>
+                            <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Arabic</th>
+                            <th className="px-4 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Key</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {groups.map((group) => (
+                            <tr key={group.groupId ?? group.groupCode} className="transition duration-200 ease-out hover:bg-slate-50">
+                              <td className="px-4 py-2.5 font-semibold text-slate-800">{group.groupCode}</td>
+                              <td className="px-4 py-2.5 font-medium text-slate-700">{group.groupDescription || '-'}</td>
+                              <td className="px-4 py-2.5 text-slate-500" dir="rtl">{group.groupDescriptionArabic || '-'}</td>
+                              <td className="px-4 py-2.5 text-slate-500">{[group.keyCode, group.keyShift].filter(Boolean).join(' / ') || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              ) : null}
+            </main>
+
+            <aside className={`${cardStyle} overflow-hidden`} aria-label="Group entry context">
+              <div className="border-b border-slate-200 px-4 py-3">
+                <p className={sectionTitle}>Context</p>
+                <p className={sectionSubtle}>Company and branch defaults from your login.</p>
+              </div>
+
+              <div className="space-y-3 p-4">
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Company</p>
+                  <p className="mt-1 text-[13px] font-semibold text-slate-800">
+                    {company?.companyName || 'Current company'}
+                  </p>
+                  {company?.companyId != null ? (
+                    <p className="mt-0.5 text-[12px] font-medium text-slate-500">ID {company.companyId}</p>
+                  ) : null}
                 </div>
-                <p className="text-xs leading-relaxed text-gray-600 sm:text-sm">
-                  <span className="font-medium text-gray-800">Branch</span> and{' '}
-                  <span className="font-medium text-gray-800">group code</span> are required. Group code must be unique
-                  within the selected branch. Descriptions and shortcut keys are optional.
-                </p>
-                <ul className="mt-4 space-y-2.5 border-t border-gray-200/80 pt-4 text-xs text-gray-700 sm:text-sm">
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    The green confirmation shows the new group code and id from the server.
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    Arabic description is stored for bilingual labels where your app uses it.
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    Groups are stored per branch so each location can have its own catalog structure.
-                  </li>
-                </ul>
+
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Your branch</p>
+                  <p className="mt-1 text-[13px] font-semibold text-slate-800">
+                    {company?.stationName || 'Branch from login'}
+                  </p>
+                  {user?.stationId != null ? (
+                    <p className="mt-0.5 text-[12px] font-medium text-slate-500">Branch ID {user.stationId}</p>
+                  ) : null}
+                </div>
+
+                <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[12px] font-semibold leading-5 text-slate-600">
+                    Descriptions and shortcut keys are optional. Arabic description is stored for bilingual labels.
+                  </p>
+                </div>
+
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Loaded groups</p>
+                  <p className="mt-1 text-[13px] font-semibold text-slate-800">{groups.length}</p>
+                  <p className="mt-0.5 text-[12px] font-medium text-slate-500">Groups are loaded from the selected branch.</p>
+                </div>
               </div>
             </aside>
-          </div>
-        </div>
-
-        <div
-          className="shrink-0 border-t border-gray-200/80 bg-white px-4 py-3 sm:flex sm:items-center sm:justify-between sm:px-8 sm:py-3.5"
-          style={{ boxShadow: `inset 0 3px 0 0 ${surfaceTint}` }}
-        >
-          <p className="mb-3 hidden text-xs text-gray-500 sm:mb-0 sm:block lg:max-w-md">
-            <span className="font-medium text-gray-700">Required:</span> branch and group code (
-            <span className="text-red-600">*</span>). Other fields are optional.
-          </p>
-          <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:max-w-md sm:items-end">
-            {saveError ? (
-              <p
-                className="w-full rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-800 sm:text-sm"
-                role="alert"
-              >
-                {saveError}
-              </p>
-            ) : null}
-            {success ? (
-              <p
-                className="w-full rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 sm:text-sm"
-                role="status"
-                aria-live="polite"
-              >
-                {success}
-              </p>
-            ) : null}
-            <button
-              type="button"
-              disabled={saving || loadingBranches || !branches.length || !form.branchId}
-              onClick={handleSave}
-              className="inline-flex w-full items-center justify-center rounded-xl px-8 py-2.5 text-sm font-semibold text-white shadow-md transition-[opacity,transform,box-shadow] hover:opacity-95 hover:shadow-lg active:scale-[0.99] active:opacity-90 disabled:pointer-events-none disabled:opacity-50 sm:w-auto sm:min-w-[168px]"
-              style={{ backgroundColor: primary }}
-            >
-              {saving ? 'Saving…' : 'Save group'}
-            </button>
           </div>
         </div>
       </div>

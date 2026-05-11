@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import httpClient from '../../../services/http/httpClient';
+import CustomerPicker from '../../../shared/components/ui/CustomerPicker';
 
 const P   = colors.primary?.main || '#790728';
 const Plt = colors.primary?.[50] || '#F2E6EA';
@@ -141,6 +142,7 @@ const CAR_CATEGORIES = ['OUTSIDE','INSIDE','FLEET','RENTAL','DEALER'];
 
 const today    = () => new Date().toISOString().slice(0, 10);
 const emptyForm = () => ({
+  customerId: null,
   regNo: '', plateCode: '', plateColor: '', emirates: 'ABU DHABI',
   bodyColor: '', engineNo: '',
   model: '', chassisNo: '', carCategory: 'OUTSIDE', carGroup: '', carSubGroup: '', doorIgKey: '',
@@ -158,6 +160,7 @@ function toDateInput(value) {
 
 function mapVehicleToForm(vehicle) {
   return {
+    customerId: vehicle.customerId || null,
     regNo: vehicle.regNo || '',
     plateCode: vehicle.plateCode || '',
     plateColor: vehicle.plateColor || '',
@@ -193,6 +196,7 @@ export default function VehicleEntry() {
   const [carGroups, setCarGroups] = useState([]);
   const [carSubGroups, setCarSubGroups] = useState([]);
   const [vehicleColors, setVehicleColors] = useState([]);
+  const [customerPickerOpen, setCustomerPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
@@ -371,6 +375,40 @@ export default function VehicleEntry() {
         <div className="flex-1 min-w-0 flex flex-col gap-5 px-4 py-3 border-r border-slate-100">
 
           <div>
+            <SectionHead>Owner / Customer</SectionHead>
+            <Row>
+              <Field label="Linked Customer">
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <input
+                    readOnly
+                    value={form.linkedCustomerName || (form.customerId ? `ID: ${form.customerId}` : '')}
+                    placeholder="No customer linked"
+                    style={{ ...BASE, width: 160, cursor: 'default', background: '#f8fafc', color: '#475569' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCustomerPickerOpen(true)}
+                    title="Select customer"
+                    style={{ ...BASE, width: 26, height: 26, padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  </button>
+                  {form.customerId && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((p) => ({ ...p, customerId: null, linkedCustomerName: '' }))}
+                      title="Clear customer"
+                      style={{ ...BASE, width: 26, height: 26, padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#94a3b8' }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                  )}
+                </div>
+              </Field>
+            </Row>
+          </div>
+
+          <div>
             <SectionHead>Identification</SectionHead>
             <Row>
               <Input label="Reg No" widthPx={110} value={form.regNo} onChange={set('regNo')} placeholder="e.g. AB-12345" />
@@ -460,6 +498,19 @@ export default function VehicleEntry() {
 
         </div>
       </div>
+
+      <CustomerPicker
+        open={customerPickerOpen}
+        onClose={() => setCustomerPickerOpen(false)}
+        allowCreate
+        onSelect={(c) => {
+          setForm((p) => ({
+            ...p,
+            customerId: c.customerId,
+            linkedCustomerName: c.customerName,
+          }));
+        }}
+      />
     </div>
   );
 }

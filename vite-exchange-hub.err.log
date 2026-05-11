@@ -1,0 +1,10 @@
+[2m3:32:40 PM[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: [33mDuplicate key "fontSize" in object literal[33m
+206 |                    }}>
+207 |                    
+208 |  ...olor: '#0f172a', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{f.feature_code}</span>
+    |                                                                 ^
+209 |                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+210 |                            <span style={{ fontSize: 12, color: f.is_enabled ? '#15803d' : '#94a3b8', fontWeight: 600 }}>
+[39m
+  Plugin: [35mvite:esbuild[39m
+  File: [36mD:/ERP SOFTWARE DESKTOP/ERP new version/ERP_frontend/src/modules/superAdmin/pages/PlanCatalogPage.jsx[39m

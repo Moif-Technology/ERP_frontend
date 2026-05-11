@@ -85,7 +85,7 @@ export default function StaffEntry() {
     () =>
       branches.map((b) => ({
         value: String(b.branchId),
-        label: `${b.branchCode} — ${b.branchName}`,
+        label: `${b.branchCode} - ${b.branchName}`,
       })),
     [branches]
   );
@@ -169,7 +169,7 @@ export default function StaffEntry() {
         mobileNo: form.mobileNo.trim() || undefined,
       });
       setSuccess(
-        `Saved: ${data.staffName} (${data.staffCode}) — they can sign in with this email and password.`
+        `Saved: ${data.staffName} (${data.staffCode}) - they can sign in with this email and password.`
       );
       setForm((prev) => ({
         ...prev,
@@ -187,10 +187,30 @@ export default function StaffEntry() {
     }
   };
 
-  const fieldHeight = 36;
+  const fieldHeight = 34;
   const inputClass =
-    '!text-base placeholder:text-gray-400 transition-[box-shadow] focus-visible:border-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#790728]/25 focus-visible:ring-offset-1 disabled:opacity-60';
-  const labelClassName = '!text-sm !font-medium !text-gray-700 !leading-snug sm:!text-[0.9375rem]';
+    'rounded-md px-2.5 !text-[14px] font-medium text-slate-800 placeholder:font-normal ' +
+    'placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#79072820] ' +
+    'disabled:cursor-not-allowed disabled:opacity-60';
+  const labelClassName =
+    '!flex !h-4 !items-center !truncate !text-[11px] !font-bold !uppercase ' +
+    '!leading-4 !tracking-[0.12em] !text-slate-500';
+
+  const primaryBtn =
+    'inline-flex h-8 min-h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-4 ' +
+    'text-[11px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50';
+  const secondaryBtn =
+    'inline-flex h-8 min-h-8 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 ' +
+    'text-[11px] font-semibold text-slate-600 shadow-sm transition-opacity hover:opacity-90';
+
+  const cardStyle = {
+    borderColor: '#e5e7eb',
+    boxShadow: '0 1px 2px 0 rgba(15,23,42,0.06)',
+  };
+  const accentCardStyle = {
+    borderColor: `${primary}28`,
+    boxShadow: '0 1px 2px 0 rgba(15,23,42,0.06)',
+  };
 
   const req = (text) => (
     <span className="inline-flex items-center gap-1">
@@ -201,82 +221,67 @@ export default function StaffEntry() {
     </span>
   );
 
-  const surfaceTint = colors.primary?.[50] || '#F2E6EA';
-
   return (
-    /* Single scroll on <main> (Layout): avoid nested overflow-y-auto here — it breaks mouse wheel in many browsers. */
-    <div className="flex w-full flex-col">
-      <div className="flex w-full flex-col overflow-x-hidden rounded-2xl border border-gray-200/90 bg-white shadow-md">
-        <div className="shrink-0 border-b border-gray-100 bg-gradient-to-br from-white via-white to-slate-50/40 px-4 py-4 sm:px-8 sm:py-5">
-          <div className="flex gap-4 sm:gap-5">
-            <div
-              className="w-1 shrink-0 rounded-full sm:w-1.5"
-              style={{ backgroundColor: primary }}
-              aria-hidden
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-                <div className="min-w-0">
-                  <nav className="text-[11px] font-medium text-gray-500 sm:text-xs" aria-label="Breadcrumb">
-                    <span>Data entry</span>
-                    <span className="mx-2 text-gray-300" aria-hidden>
-                      /
-                    </span>
-                    <span style={{ color: primary }}>Staff</span>
-                  </nav>
-                  <h1 className="mt-1.5 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">Add staff member</h1>
-                  <p className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-600 sm:text-sm">
-                    Add a user for your company. They sign in to this ERP with the email and password you set (same rules
-                    as Moifone registration).
-                  </p>
-                </div>
-                <div
-                  className="shrink-0 rounded-full border border-gray-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600 sm:text-[11px]"
-                  style={{ borderColor: `${primary}66`, backgroundColor: surfaceTint }}
-                >
-                  New user
-                </div>
-              </div>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className="flex flex-1 flex-col overflow-hidden rounded-xl border border-gray-200"
+        style={{ boxShadow: '0 1px 3px 0 rgba(15,23,42,0.08)' }}
+      >
+        <div
+          className="flex shrink-0 items-center justify-between gap-4 border-b border-gray-100 px-5 py-2.5"
+          style={{ background: '#f8fafc' }}
+        >
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Data Entry / Staff
+            </p>
+            <h1 className="text-[13px] font-bold leading-tight text-slate-800">
+              New Staff Member
+            </h1>
+          </div>
 
-              {loadError ? (
-                <p
-                  className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 sm:text-sm"
-                  role="alert"
-                >
-                  {loadError}
-                </p>
-              ) : null}
-            </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {loadError ? (
+              <p className="max-w-xs truncate text-[11px] font-medium text-amber-700" role="alert">
+                {loadError}
+              </p>
+            ) : null}
+            {saveError ? (
+              <p className="max-w-xs truncate text-[11px] font-medium text-red-600" role="alert">
+                {saveError}
+              </p>
+            ) : null}
+            {success ? (
+              <p className="max-w-70 truncate text-[11px] font-medium text-emerald-600" role="status" aria-live="polite">
+                {success}
+              </p>
+            ) : null}
+            <button type="button" onClick={reloadStaffRows} className={secondaryBtn}>
+              Refresh
+            </button>
+            <button
+              type="button"
+              disabled={saving || loadingBranches || !branches.length || !roles.length}
+              onClick={handleSave}
+              className={primaryBtn}
+              style={{ backgroundColor: primary, borderColor: `${primary}99` }}
+            >
+              {saving ? 'Saving...' : 'Save staff'}
+            </button>
           </div>
         </div>
 
-        <div className="bg-slate-50/40 px-4 py-5 sm:px-8 sm:py-6">
-          <div className="mx-auto flex max-w-6xl flex-col gap-8 xl:flex-row xl:items-start xl:gap-10">
-            <div className="min-w-0 flex-1 space-y-6">
-              <section
-                className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-sm ring-1 ring-black/[0.02]"
-                aria-labelledby="staff-entry-details-heading"
-              >
-                <div
-                  className="flex items-center gap-3 border-b border-gray-200/90 px-4 py-3 sm:px-5 sm:py-3.5"
-                  style={{ backgroundColor: surfaceTint }}
-                >
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm"
-                    style={{ backgroundColor: primary }}
-                    aria-hidden
-                  >
-                    1
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">Step</p>
-                    <h2 id="staff-entry-details-heading" className="text-sm font-semibold text-gray-900 sm:text-base">
-                      Staff details
-                    </h2>
-                  </div>
+        <div className="flex-1 bg-[#faf8f9] p-3">
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)] xl:items-start">
+            <div className="space-y-3">
+              <section className="rounded-lg border bg-white" style={accentCardStyle}>
+                <div className="px-4 pb-2.5 pt-3" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: primary }}>
+                    Staff details
+                  </h2>
                 </div>
-                <div className="space-y-3.5 p-4 sm:space-y-4 sm:p-5">
-                  <div className="mx-auto max-w-xl space-y-3.5 sm:space-y-4">
+                <div className="px-4 pb-3.5 pt-3">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-2">
                     <InputField
                       label={req('Staff name')}
                       fullWidth
@@ -286,7 +291,6 @@ export default function StaffEntry() {
                       value={form.staffName}
                       onChange={(e) => update('staffName', e.target.value)}
                     />
-
                     <DropdownInput
                       label={req('Designation')}
                       fullWidth
@@ -296,32 +300,28 @@ export default function StaffEntry() {
                       value={form.designation}
                       onChange={(v) => update('designation', v)}
                       options={designationChoices}
-                      placeholder={loadingBranches ? 'Loading…' : 'Select'}
+                      placeholder={loadingBranches ? 'Loading...' : 'Select'}
                     />
-
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                      <InputField
-                        label={req('Email (login)')}
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        type="email"
-                        autoComplete="off"
-                        value={form.email}
-                        onChange={(e) => update('email', e.target.value)}
-                      />
-                      <InputField
-                        label="Mobile no."
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        value={form.mobileNo}
-                        onChange={(e) => update('mobileNo', e.target.value)}
-                      />
-                    </div>
-
+                    <InputField
+                      label={req('Email (login)')}
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      type="email"
+                      autoComplete="off"
+                      value={form.email}
+                      onChange={(e) => update('email', e.target.value)}
+                    />
+                    <InputField
+                      label="Mobile no."
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      value={form.mobileNo}
+                      onChange={(e) => update('mobileNo', e.target.value)}
+                    />
                     <DropdownInput
                       label={req('Branch')}
                       fullWidth
@@ -331,9 +331,8 @@ export default function StaffEntry() {
                       value={form.branchId}
                       onChange={(v) => update('branchId', v)}
                       options={branchOptions}
-                      placeholder={loadingBranches ? 'Loading branches…' : branches.length ? 'Select branch' : 'No branches'}
+                      placeholder={loadingBranches ? 'Loading branches...' : branches.length ? 'Select branch' : 'No branches'}
                     />
-
                     <DropdownInput
                       label={req('Role')}
                       fullWidth
@@ -349,202 +348,118 @@ export default function StaffEntry() {
                 </div>
               </section>
 
-              <section
-                className="overflow-hidden rounded-2xl border border-gray-200/90 bg-white shadow-sm ring-1 ring-black/[0.02]"
-                aria-labelledby="staff-entry-access-heading"
-              >
-                <div
-                  className="flex items-center gap-3 border-b border-gray-200/90 px-4 py-3 sm:px-5 sm:py-3.5"
-                  style={{ backgroundColor: surfaceTint }}
-                >
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm"
-                    style={{ backgroundColor: primary }}
-                    aria-hidden
-                  >
-                    2
-                  </span>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">Step</p>
-                    <h2 id="staff-entry-access-heading" className="text-sm font-semibold text-gray-900 sm:text-base">
-                      Sign-in &amp; access
-                    </h2>
-                  </div>
+              <section className="rounded-lg border bg-white" style={cardStyle}>
+                <div className="px-4 pb-2.5 pt-3" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Sign-in &amp; access
+                  </h2>
                 </div>
-                <div className="p-4 sm:p-5">
-                  <div className="mx-auto max-w-xl">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                      <InputField
-                        label={req('Password')}
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        type="password"
-                        autoComplete="new-password"
-                        value={form.password}
-                        onChange={(e) => update('password', e.target.value)}
-                      />
-                      <InputField
-                        label={req('Confirm password')}
-                        fullWidth
-                        heightPx={fieldHeight}
-                        className={inputClass}
-                        labelClassName={labelClassName}
-                        type="password"
-                        autoComplete="new-password"
-                        value={form.confirmPassword}
-                        onChange={(e) => update('confirmPassword', e.target.value)}
-                      />
-                    </div>
+                <div className="px-4 pb-3.5 pt-3">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-2">
+                    <InputField
+                      label={req('Password')}
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.password}
+                      onChange={(e) => update('password', e.target.value)}
+                    />
+                    <InputField
+                      label={req('Confirm password')}
+                      fullWidth
+                      heightPx={fieldHeight}
+                      className={inputClass}
+                      labelClassName={labelClassName}
+                      type="password"
+                      autoComplete="new-password"
+                      value={form.confirmPassword}
+                      onChange={(e) => update('confirmPassword', e.target.value)}
+                    />
                   </div>
                 </div>
               </section>
             </div>
 
-            <aside
-              className="w-full shrink-0 xl:w-[min(100%,320px)] xl:pt-1"
-              aria-label="Account setup tips"
-            >
-              <div
-                className="rounded-2xl border border-gray-200 p-5 shadow-md ring-1 ring-black/[0.04] sm:p-6 xl:sticky xl:top-2"
-                style={{
-                  background: `linear-gradient(165deg, #ffffff 0%, ${surfaceTint} 88%)`,
-                }}
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: primary }} aria-hidden />
-                  <p className="text-sm font-semibold text-gray-900">Account setup</p>
-                </div>
-                <p className="text-xs leading-relaxed text-gray-600 sm:text-sm">
-                  The staff member will use <span className="font-medium text-gray-800">email + password</span> to sign in.
-                  Choose a branch and role. The role controls what pages and actions they can use after sign-in.
-                </p>
-                <ul className="mt-4 space-y-2.5 border-t border-gray-200/80 pt-4 text-xs text-gray-700 sm:text-sm">
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    Password at least 8 characters; must match confirmation.
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    Use a work email they check — it is their login username.
-                  </li>
-                  <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: primary }} />
-                    Mobile is optional; add it if you use it for contact on file.
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm ring-1 ring-black/[0.03] sm:p-5">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">Existing staff</p>
-                    <h3 className="text-sm font-semibold text-gray-900">Role assignment</h3>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={reloadStaffRows}
-                    className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                  >
+            <div className="space-y-3">
+              <section className="rounded-lg border bg-white" style={cardStyle}>
+                <div className="flex items-center justify-between gap-3 px-4 pb-2.5 pt-3" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    Role assignment
+                  </h2>
+                  <button type="button" onClick={reloadStaffRows} className={secondaryBtn}>
                     Refresh
                   </button>
                 </div>
-
-                {roleMessage ? (
-                  <p className="mb-3 rounded-lg border border-gray-100 bg-slate-50 px-3 py-2 text-xs text-gray-700">
-                    {roleMessage}
-                  </p>
-                ) : null}
-
-                <div className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
-                  {staffRows.length ? (
-                    staffRows.map((staff) => {
-                      const draft = roleDrafts[String(staff.staffId)] ?? '';
-                      const changed = String(staff.roleId ?? '') !== String(draft);
-                      return (
-                        <div key={staff.staffId} className="rounded-xl border border-gray-200 bg-slate-50/70 p-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-gray-900">{staff.staffName}</p>
-                            <p className="truncate text-xs text-gray-500">
-                              {staff.staffCode || `U${staff.staffId}`} {staff.email ? `- ${staff.email}` : ''}
-                            </p>
-                          </div>
-                          <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                            <select
-                              value={draft}
-                              onChange={(event) => handleStaffRoleChange(staff.staffId, event.target.value)}
-                              className="h-9 min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-xs font-medium text-gray-900 outline-none focus:ring-2 focus:ring-[#790728]/20"
-                            >
-                              <option value="" disabled>
-                                Select role
-                              </option>
-                              {roles.map((role) => (
-                                <option key={role.roleId} value={role.roleId}>
-                                  {role.roleName}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              type="button"
-                              disabled={!changed || roleSavingId === staff.staffId}
-                              onClick={() => handleUpdateStaffRole(staff)}
-                              className="h-9 rounded-lg px-3 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:pointer-events-none disabled:opacity-40"
-                              style={{ backgroundColor: primary }}
-                            >
-                              {roleSavingId === staff.staffId ? 'Saving' : 'Apply'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="rounded-xl border border-gray-200 bg-slate-50 px-3 py-4 text-sm text-gray-600">
-                      No staff loaded.
+                <div className="px-4 pb-3.5 pt-3">
+                  {roleMessage ? (
+                    <p className="mb-3 rounded-md border border-gray-100 bg-slate-50 px-3 py-2 text-[11px] font-medium text-slate-600">
+                      {roleMessage}
                     </p>
-                  )}
+                  ) : null}
+
+                  <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1">
+                    {staffRows.length ? (
+                      staffRows.map((staff) => {
+                        const draft = roleDrafts[String(staff.staffId)] ?? '';
+                        const changed = String(staff.roleId ?? '') !== String(draft);
+                        return (
+                          <div key={staff.staffId} className="rounded-md border border-gray-200 bg-slate-50/70 p-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-[13px] font-semibold text-slate-800">{staff.staffName}</p>
+                              <p className="truncate text-[11px] text-slate-500">
+                                {staff.staffCode || `U${staff.staffId}`} {staff.email ? `- ${staff.email}` : ''}
+                              </p>
+                            </div>
+                            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                              <select
+                                value={draft}
+                                onChange={(event) => handleStaffRoleChange(staff.staffId, event.target.value)}
+                                className="h-[34px] min-w-0 cursor-pointer rounded-md border border-gray-300 bg-white px-2 text-[13px] font-medium text-slate-800 outline-none focus:ring-2 focus:ring-[#790728]/20"
+                              >
+                                <option value="" disabled>
+                                  Select role
+                                </option>
+                                {roles.map((role) => (
+                                  <option key={role.roleId} value={role.roleId}>
+                                    {role.roleName}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                disabled={!changed || roleSavingId === staff.staffId}
+                                onClick={() => handleUpdateStaffRole(staff)}
+                                className="h-[34px] cursor-pointer rounded-md px-3 text-[11px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                style={{ backgroundColor: primary }}
+                              >
+                                {roleSavingId === staff.staffId ? 'Saving' : 'Apply'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="rounded-md border border-gray-200 bg-slate-50 px-3 py-4 text-[13px] font-medium text-slate-600">
+                        No staff loaded.
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </aside>
+              </section>
+            </div>
           </div>
         </div>
 
         <div
-          className="shrink-0 border-t border-gray-200/80 bg-white px-4 py-3 sm:flex sm:items-center sm:justify-between sm:px-8 sm:py-3.5"
-          style={{ boxShadow: `inset 0 3px 0 0 ${surfaceTint}` }}
+          className="flex shrink-0 items-center justify-between gap-3 border-t border-gray-100 px-5 py-2"
+          style={{ background: '#f8fafc' }}
         >
-          <p className="mb-3 hidden text-xs text-gray-500 sm:mb-0 sm:block lg:max-w-md">
-            <span className="font-medium text-gray-700">Required:</span> fields marked with <span className="text-red-600">*</span>
-            . Password min. 8 characters.
-          </p>
-          <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:max-w-md sm:items-end">
-            {saveError ? (
-              <p
-                className="w-full rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-800 sm:text-sm"
-                role="alert"
-              >
-                {saveError}
-              </p>
-            ) : null}
-            {success ? (
-              <p
-                className="w-full rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 sm:text-sm"
-                role="status"
-                aria-live="polite"
-              >
-                {success}
-              </p>
-            ) : null}
-            <button
-              type="button"
-              disabled={saving || loadingBranches || !branches.length || !roles.length}
-              onClick={handleSave}
-              className="inline-flex w-full items-center justify-center rounded-xl px-8 py-2.5 text-sm font-semibold text-white shadow-md transition-[opacity,transform,box-shadow] hover:opacity-95 hover:shadow-lg active:scale-[0.99] active:opacity-90 disabled:pointer-events-none disabled:opacity-50 sm:w-auto sm:min-w-[168px]"
-              style={{ backgroundColor: primary }}
-            >
-              {saving ? 'Saving…' : 'Save staff'}
-            </button>
-          </div>
+          <span className="text-[11px] text-slate-400">
+            Fields marked <span style={{ color: '#dc2626' }}>*</span> are required. Password minimum is 8 characters.
+          </span>
         </div>
       </div>
     </div>

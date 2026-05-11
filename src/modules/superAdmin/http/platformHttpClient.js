@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { routeHref } from '../../../app/router/routerMode';
 
 const PLATFORM_KEYS = {
   access: 'platform_access_token',
@@ -28,7 +29,7 @@ platformHttpClient.interceptors.response.use(
       const refreshToken = sessionStorage.getItem(PLATFORM_KEYS.refresh);
       if (!refreshToken) {
         clearPlatformSession();
-        window.location.href = '/#/super-admin/login';
+        window.location.href = routeHref('/super-admin/login');
         return Promise.reject(error);
       }
       try {
@@ -41,7 +42,7 @@ platformHttpClient.interceptors.response.use(
         return platformHttpClient(original);
       } catch {
         clearPlatformSession();
-        window.location.href = '/#/super-admin/login';
+        window.location.href = routeHref('/super-admin/login');
         return Promise.reject(error);
       }
     }

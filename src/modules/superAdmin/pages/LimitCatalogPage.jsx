@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { listCatalogLimits, upsertCatalogLimit } from '../api/admin.api';
 
-const empty = { limit_code: '', limit_name: '', description: '', unit: '', is_active: true };
+const EMPTY = { limit_code: '', limit_name: '', description: '', unit: '', is_active: true };
 
 export default function LimitCatalogPage() {
   const [rows, setRows] = useState([]);
-  const [draft, setDraft] = useState(empty);
+  const [draft, setDraft] = useState(EMPTY);
+  const [selected, setSelected] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -19,12 +20,24 @@ export default function LimitCatalogPage() {
 
   useEffect(() => { load(); }, []);
 
+  function select(r) {
+    setSelected(r.limit_code);
+    setDraft({ ...EMPTY, ...r, description: r.description || '', unit: r.unit || '' });
+    setError(null);
+  }
+
+  function reset() {
+    setSelected(null);
+    setDraft(EMPTY);
+    setError(null);
+  }
+
   async function save() {
     setBusy(true);
     setError(null);
     try {
       await upsertCatalogLimit(draft);
-      setDraft(empty);
+      reset();
       await load();
     } catch (e) {
       setError(e.response?.data?.message || e.message);
@@ -33,74 +46,139 @@ export default function LimitCatalogPage() {
     }
   }
 
-  return (
-    <div style={wrap}>
-      <div style={header}>
-        <h2 style={title}>Limit Catalog</h2>
-        <button style={ghostBtn} onClick={load}>Refresh</button>
-      </div>
-      {error && <div style={errorStyle}>{error}</div>}
+  const isEditing = selected !== null;
 
-      <div style={grid}>
-        <section style={card}>
-          <h3 style={cardTitle}>Available Limits</h3>
-          <table style={table}>
+  return (
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={H1}>Limit catalog</h1>
+          <p style={SUBTITLE}>Define usage caps available to plans. Click a row to edit.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {isEditing && (
+            <button onClick={reset} className="sa-btn-ghost" style={BTN_GHOST}>
+              New limit
+            </button>
+          )}
+          <button onClick={load} className="sa-btn-ghost" style={BTN_GHOST}>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {error && <div style={ERROR_BOX}>{error}</div>}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 16, alignItems: 'start' }}>
+        {/* Left: limit list */}
+        <div style={PANEL}>
+          <h3 style={PANEL_TITLE}>
+            {rows.length} limit{rows.length === 1 ? '' : 's'}
+          </h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th style={th}>Code</th>
-                <th style={th}>Name</th>
-                <th style={th}>Unit</th>
-                <th style={th}>Active</th>
+              <tr style={{ background: '#f8fafc' }}>
+                {['Code', 'Name', 'Unit', 'Active'].map((h) => (
+                  <th key={h} style={TH}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
                 <tr
                   key={r.limit_code}
-                  onClick={() => setDraft({ ...r, description: r.description || '', unit: r.unit || '' })}
-                  style={{ cursor: 'pointer' }}
+                  className="sa-tr"
+                  onClick={() => select(r)}
+                  style={{ cursor: 'pointer', background: selected === r.limit_code ? '#eef2ff' : undefined }}
                 >
-                  <td style={td}>{r.limit_code}</td>
-                  <td style={td}>{r.limit_name}</td>
-                  <td style={td}>{r.unit || '-'}</td>
-                  <td style={td}>{r.is_active ? 'Yes' : 'No'}</td>
+                  <td style={TD}><code style={CODE}>{r.limit_code}</code></td>
+                  <td style={{ ...TD, fontWeight: 500, color: '#0f172a' }}>{r.limit_name}</td>
+                  <td style={{ ...TD, color: '#64748b' }}>{r.unit || '—'}</td>
+                  <td style={TD}>
+                    <span style={{ color: r.is_active ? '#15803d' : '#dc2626', fontWeight: 600, fontSize: 12 }}>
+                      {r.is_active ? 'Yes' : 'No'}
+                    </span>
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} style={{ ...td, textAlign: 'center' }}>No limits found.</td>
+                  <td colSpan={4} style={{ ...TD, textAlign: 'center', color: '#94a3b8', padding: 28 }}>
+                    No limits found.
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
-        </section>
+        </div>
 
-        <section style={card}>
-          <h3 style={cardTitle}>Create or Update Limit</h3>
-          <div style={formGrid}>
+        {/* Right: form */}
+        <div style={PANEL}>
+          <h3 style={PANEL_TITLE}>{isEditing ? 'Edit limit' : 'New limit'}</h3>
+          {isEditing && (
+            <div style={{ marginBottom: 14, padding: '8px 10px', background: '#eef2ff', borderRadius: 7, fontSize: 12, color: '#4338ca', border: '1px solid #c7d2fe' }}>
+              Editing <strong>{selected}</strong>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             <Field label="Limit code">
-              <input style={input} value={draft.limit_code} onChange={(e) => setDraft({ ...draft, limit_code: e.target.value })} />
+              <input
+                style={INPUT}
+                value={draft.limit_code}
+                disabled={isEditing}
+                placeholder="e.g. max_users"
+                onChange={(e) => setDraft({ ...draft, limit_code: e.target.value })}
+              />
             </Field>
             <Field label="Limit name">
-              <input style={input} value={draft.limit_name} onChange={(e) => setDraft({ ...draft, limit_name: e.target.value })} />
+              <input
+                style={INPUT}
+                value={draft.limit_name}
+                placeholder="Display name"
+                onChange={(e) => setDraft({ ...draft, limit_name: e.target.value })}
+              />
             </Field>
             <Field label="Unit">
-              <input style={input} value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} />
+              <input
+                style={INPUT}
+                value={draft.unit}
+                placeholder="e.g. users, GB, records"
+                onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
+              />
             </Field>
             <Field label="Description">
-              <input style={input} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+              <input
+                style={INPUT}
+                value={draft.description}
+                placeholder="Optional"
+                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              />
             </Field>
-            <label style={checkWrap}>
-              <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} />
-              <span>Limit is active</span>
-            </label>
           </div>
-          <div style={{ marginTop: 12 }}>
-            <button style={primaryBtn} disabled={busy} onClick={save}>
-              {busy ? 'Saving...' : 'Save Limit'}
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>
+            <input
+              type="checkbox"
+              checked={draft.is_active}
+              onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
+              style={{ width: 15, height: 15, accentColor: '#4f46e5' }}
+            />
+            Limit is active
+          </label>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="sa-btn-primary" style={BTN_PRIMARY} disabled={busy || !draft.limit_code} onClick={save}>
+              {busy ? 'Saving…' : isEditing ? 'Save changes' : 'Create limit'}
             </button>
+            {isEditing && (
+              <button className="sa-btn-ghost" style={BTN_GHOST} onClick={reset}>
+                Cancel
+              </button>
+            )}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
@@ -108,27 +186,44 @@ export default function LimitCatalogPage() {
 
 function Field({ label, children }) {
   return (
-    <label style={field}>
-      <span style={fieldLabel}>{label}</span>
+    <label style={{ display: 'grid', gap: 5 }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{label}</span>
       {children}
     </label>
   );
 }
 
-const wrap = { display: 'grid', gap: 12 };
-const header = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 };
-const title = { margin: 0, color: '#10284c' };
-const grid = { display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 };
-const card = { border: '1px solid #d9e3f4', borderRadius: 12, background: '#fff', padding: 12 };
-const cardTitle = { margin: '0 0 10px', color: '#17335f' };
-const table = { width: '100%', borderCollapse: 'collapse' };
-const th = { textAlign: 'left', padding: 8, borderBottom: '1px solid #cbd5e1' };
-const td = { padding: 8, borderBottom: '1px solid #e2e8f0' };
-const formGrid = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
-const field = { display: 'grid', gap: 6 };
-const fieldLabel = { fontSize: 12, color: '#5f7398', fontWeight: 600 };
-const input = { width: '100%', height: 36, border: '1px solid #c8d5eb', borderRadius: 8, padding: '0 10px' };
-const checkWrap = { display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 4 };
-const primaryBtn = { border: '1px solid #174393', background: '#174393', color: '#fff', borderRadius: 8, padding: '8px 12px', cursor: 'pointer' };
-const ghostBtn = { border: '1px solid #c8d5eb', background: '#fff', color: '#173f8f', borderRadius: 8, padding: '8px 12px', cursor: 'pointer' };
-const errorStyle = { color: '#b42318', background: '#fee4e2', border: '1px solid #fecdca', borderRadius: 8, padding: '8px 10px', fontSize: 13 };
+const H1 = { margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.3px' };
+const SUBTITLE = { margin: '3px 0 0', fontSize: 13, color: '#64748b' };
+const PANEL = { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, overflow: 'hidden' };
+const PANEL_TITLE = { margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#0f172a' };
+const TH = {
+  textAlign: 'left', padding: '8px 12px',
+  fontSize: 11, fontWeight: 700, color: '#94a3b8',
+  textTransform: 'uppercase', letterSpacing: '0.06em',
+  borderBottom: '1px solid #f1f5f9',
+};
+const TD = { padding: '9px 12px', borderBottom: '1px solid #f8fafc', fontSize: 13 };
+const INPUT = {
+  width: '100%', height: 36, border: '1px solid #e2e8f0',
+  borderRadius: 8, padding: '0 10px', fontSize: 13, color: '#374151',
+  background: '#fff', boxSizing: 'border-box',
+};
+const CODE = {
+  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+  background: '#f1f5f9', border: '1px solid #e2e8f0',
+  borderRadius: 4, padding: '1px 5px', color: '#475569',
+};
+const BTN_PRIMARY = {
+  padding: '0 16px', height: 36, borderRadius: 8,
+  background: '#4f46e5', color: '#fff', border: 'none',
+  fontSize: 13, fontWeight: 500, cursor: 'pointer',
+};
+const BTN_GHOST = {
+  padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+  background: '#fff', color: '#475569', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+};
+const ERROR_BOX = {
+  padding: '9px 12px', borderRadius: 8,
+  background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13,
+};

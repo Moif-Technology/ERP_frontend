@@ -89,9 +89,9 @@ const menuItems = [
     icon: DataEntryIcon,
     features: ['backoffice', 'core'],
     subItems: [
-      { label: 'Customer entry', to: '/data-entry/customer-entry', icon: ManagementIcon, features: ['core.customers', 'backoffice.customers'] },
-      { label: 'Supplier entry', to: '/data-entry/supplier-entry', icon: VendorIcon, features: ['core.suppliers', 'backoffice.suppliers'] },
-      { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon, feature: 'backoffice.product_master' },
+      { label: 'Customer entry', to: '/data-entry/customer-entry', icon: ManagementIcon, feature: 'backoffice.customers' },
+      { label: 'Supplier entry', to: '/data-entry/supplier-entry', icon: VendorIcon, feature: 'backoffice.suppliers' },
+      { label: 'Product entry', to: '/data-entry/product-entry', icon: ProductEntryIcon, features: ['backoffice.product_master', 'core.products'] },
       { label: 'Staff entry', to: '/data-entry/staff-entry', icon: ToolsIcon, features: ['core.users', 'backoffice.staff'] },
       { label: 'Role entry', to: '/data-entry/role-entry', icon: ConfigIcon, feature: 'core.roles' },
       { label: 'Group entry', to: '/data-entry/group-entry', icon: ProductEntryIcon, feature: 'backoffice.product_group' },
@@ -105,10 +105,10 @@ const menuItems = [
     icon: ListIcon,
     features: ['backoffice', 'core'],
     subItems: [
-      { label: 'Product list', to: '/products', icon: ProductListIcon, features: ['backoffice.product_master', 'pos.product_search'] },
+      { label: 'Product list', to: '/products', icon: ProductListIcon, features: ['backoffice.product_master', 'pos.product_search', 'core.products'] },
       { label: 'Product price list', to: '/lists/product-price-list', icon: ProductPriceListIcon, feature: 'backoffice.product_master' },
-      { label: 'Customer list', to: '/lists/customer-list', icon: CustomerListIcon, features: ['core.customers', 'backoffice.customers', 'crm'] },
-      { label: 'Supplier list', to: '/lists/supplier-list', icon: SupplierListIcon, features: ['core.suppliers', 'backoffice.suppliers', 'backoffice.purchase'] },
+      { label: 'Customer list', to: '/lists/customer-list', icon: CustomerListIcon, feature: 'backoffice.customers' },
+      { label: 'Supplier list', to: '/lists/supplier-list', icon: SupplierListIcon, feature: 'backoffice.suppliers' },
       { label: 'Agent list', to: '/lists/agent-list', icon: AgentListIcon, feature: 'backoffice.staff' },
     ],
   },
@@ -145,11 +145,150 @@ const menuItems = [
       { label: 'Product movement', to: '/stock-hub/product-movement', icon: ProductMovementIcon, feature: 'backoffice.product_movement' },
     ],
   },
-  { label: 'Exchange Hub', to: '/exchange-hub', icon: ExchangeIcon, feature: 'backoffice.exchange' },
-  { label: 'Sales Activities', to: '/delivery-order', icon: SalesIcon, features: ['backoffice.sales', 'backoffice.delivery_order', 'backoffice.sales_quotation'] },
-  { label: 'Procurement', to: '/procurement', icon: ProcurementIcon, features: ['backoffice.purchase', 'backoffice.purchase_order', 'backoffice.grn'] },
-  { label: 'Trial Balance', to: '/trial-balance', icon: FinancialsIcon, feature: 'backoffice.accounts' },
-  { label: 'Manufacturing', to: '/manufacturing', icon: ManufacturingIcon, feature: 'backoffice.manufacturing' },
+  {
+    label: 'Exchange Hub',
+    icon: ExchangeIcon,
+    feature: 'backoffice.exchange',
+    subItems: [
+      { label: 'Currency Master', to: '/exchange-hub/currency-master', icon: ExchangeIcon, feature: 'backoffice.exchange' },
+      { label: 'Rate Entry', to: '/exchange-hub/rate-entry', icon: ExchangeIcon, feature: 'backoffice.exchange' },
+      { label: 'Rate List', to: '/exchange-hub/rate-list', icon: ExchangeIcon, feature: 'backoffice.exchange' },
+    ],
+  },
+  {
+    label: 'Sales Activities',
+    icon: SalesIcon,
+    features: ['backoffice.sales', 'backoffice.delivery_order', 'backoffice.sales_quotation', 'backoffice.vouchers', 'backoffice.accounts'],
+    subItems: [
+      { label: 'New Sale', to: '/sales', icon: SalesIcon, feature: 'backoffice.sales' },
+      { label: 'Sales List', to: '/sales-list', icon: StockAdjustmentListIcon, feature: 'backoffice.sales' },
+      { label: 'Sales Return', to: '/sales-return', icon: DamageEntryIcon, feature: 'backoffice.sales' },
+      {
+        label: 'Quotations',
+        icon: CrmOpportunitiesIcon,
+        subItems: [
+          { label: 'New Quotation', to: '/quotation', icon: CrmOpportunitiesIcon, feature: 'backoffice.sales_quotation' },
+          { label: 'Quotation List', to: '/quotation-list', icon: StockAdjustmentListIcon, feature: 'backoffice.sales_quotation' },
+        ],
+      },
+      {
+        label: 'Delivery Orders',
+        icon: CrmStageIcon,
+        subItems: [
+          { label: 'New DO', to: '/delivery-order', icon: CrmStageIcon, feature: 'backoffice.delivery_order' },
+          { label: 'DO List', to: '/delivery-order-list', icon: StockAdjustmentListIcon, feature: 'backoffice.delivery_order' },
+        ],
+      },
+      {
+        label: 'Sales Vouchers',
+        icon: CrmInteractionsIcon,
+        subItems: [
+          { label: 'New Voucher', to: '/sales-voucher-entry', icon: CrmInteractionsIcon, feature: 'backoffice.vouchers' },
+          { label: 'Voucher List', to: '/sales-voucher-list', icon: StockAdjustmentListIcon, feature: 'backoffice.vouchers' },
+        ],
+      },
+      {
+        label: 'Credit Notes',
+        icon: CrmLeadSourceIcon,
+        subItems: [
+          { label: 'New Credit Note', to: '/credit-note-entry', icon: CrmLeadSourceIcon, feature: 'backoffice.vouchers' },
+          { label: 'Credit Note List', to: '/credit-note-list', icon: StockAdjustmentListIcon, feature: 'backoffice.vouchers' },
+        ],
+      },
+      { label: 'Outstanding Receivables', to: '/statement-receivable-summary', icon: CrmLeadStatusIcon, feature: 'backoffice.accounts' },
+      { label: 'Customer Statement', to: '/statement-of-accounts-list', icon: CustomerListIcon, feature: 'backoffice.accounts' },
+    ],
+  },
+  {
+    label: 'Procurement',
+    icon: ProcurementIcon,
+    features: ['backoffice.purchase', 'backoffice.purchase_order', 'backoffice.grn', 'backoffice.vouchers', 'backoffice.accounts'],
+    subItems: [
+      { label: 'New Purchase', to: '/purchase', icon: ProcurementIcon, feature: 'backoffice.purchase' },
+      { label: 'Purchase List', to: '/purchase-list', icon: StockAdjustmentListIcon, feature: 'backoffice.purchase' },
+      {
+        label: 'Purchase Orders',
+        icon: VendorIcon,
+        subItems: [
+          { label: 'New PO', to: '/purchase-order', icon: VendorIcon, feature: 'backoffice.purchase_order' },
+          { label: 'PO List', to: '/purchase-order-list', icon: StockAdjustmentListIcon, feature: 'backoffice.purchase_order' },
+        ],
+      },
+      {
+        label: 'Goods Receive Notes',
+        icon: CrmLeadStatusIcon,
+        subItems: [
+          { label: 'New GRN', to: '/goods-receive-note', icon: CrmLeadStatusIcon, feature: 'backoffice.grn' },
+          { label: 'GRN List', to: '/goods-receive-note-list', icon: StockAdjustmentListIcon, feature: 'backoffice.grn' },
+        ],
+      },
+      {
+        label: 'Purchase Vouchers',
+        icon: CrmInteractionsIcon,
+        subItems: [
+          { label: 'New Voucher', to: '/purchase-voucher-entry', icon: CrmInteractionsIcon, feature: 'backoffice.vouchers' },
+          { label: 'Voucher List', to: '/purchase-voucher-list', icon: StockAdjustmentListIcon, feature: 'backoffice.vouchers' },
+        ],
+      },
+      {
+        label: 'Debit Notes',
+        icon: DamageEntryIcon,
+        subItems: [
+          { label: 'New Debit Note', to: '/debit-note-entry', icon: DamageEntryIcon, feature: 'backoffice.vouchers' },
+          { label: 'Debit Note List', to: '/debit-note-list', icon: StockAdjustmentListIcon, feature: 'backoffice.vouchers' },
+        ],
+      },
+      { label: 'Outstanding Payables', to: '/statement-payable-summary', icon: FinancialsIcon, feature: 'backoffice.accounts' },
+    ],
+  },
+  {
+    label: 'Financials',
+    icon: FinancialsIcon,
+    feature: 'backoffice.accounts',
+    subItems: [
+      { label: 'Trial Balance', to: '/trial-balance', icon: CrmOverviewIcon, feature: 'backoffice.accounts' },
+      { label: 'Profit & Loss', to: '/financials/profit-and-loss-account', icon: ReportsIcon, feature: 'backoffice.accounts' },
+      { label: 'Balance Sheet', to: '/financials/balance-sheet', icon: ManagementIcon, feature: 'backoffice.accounts' },
+      { label: 'Account Group Details', to: '/account-group-details', icon: StockAdjustmentListIcon, feature: 'backoffice.accounts' },
+      { label: 'Account Ledger Details', to: '/account-ledger-details', icon: ListIcon, feature: 'backoffice.accounts' },
+      {
+        label: 'Vouchers',
+        icon: CrmInteractionsIcon,
+        subItems: [
+          { label: 'Receipt Voucher', to: '/receipt-voucher-customer', icon: CustomerListIcon, feature: 'backoffice.vouchers' },
+          { label: 'Payment Voucher', to: '/payment-voucher-supplier', icon: VendorIcon, feature: 'backoffice.vouchers' },
+          { label: 'Income Voucher', to: '/income-voucher', icon: AdditionalStockIcon, feature: 'backoffice.vouchers' },
+          { label: 'Expense Voucher', to: '/expense-voucher', icon: DamageEntryIcon, feature: 'backoffice.vouchers' },
+          { label: 'Contra Voucher', to: '/contra-voucher-entry', icon: StockAdjustmentIcon, feature: 'backoffice.vouchers' },
+          { label: 'Journal Voucher', to: '/journal-voucher-entry', icon: ListIcon, feature: 'backoffice.vouchers' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Manufacturing',
+    icon: ManufacturingIcon,
+    feature: 'backoffice.manufacturing',
+    subItems: [
+      {
+        label: 'Recipes',
+        icon: ManufacturingIcon,
+        subItems: [
+          { label: 'Recipe Entry', to: '/manufacturing/recipe-entry', icon: ManufacturingIcon, feature: 'backoffice.manufacturing' },
+          { label: 'Recipe List', to: '/manufacturing/recipe-list', icon: StockAdjustmentListIcon, feature: 'backoffice.manufacturing' },
+        ],
+      },
+      {
+        label: 'Production Orders',
+        icon: StockAdjustmentIcon,
+        subItems: [
+          { label: 'New Production Order', to: '/manufacturing/production-order', icon: StockAdjustmentIcon, feature: 'backoffice.manufacturing' },
+          { label: 'Production Order List', to: '/manufacturing/production-order-list', icon: StockAdjustmentListIcon, feature: 'backoffice.manufacturing' },
+        ],
+      },
+      { label: 'Material Requisition', to: '/manufacturing/material-requisition', icon: ProductMovementIcon, feature: 'backoffice.manufacturing' },
+    ],
+  },
   {
     label: 'Deals & Offers',
     icon: DealsIcon,
@@ -164,7 +303,31 @@ const menuItems = [
       { label: 'Offer Packet List', to: '/deals-offers/offer-packet-list', icon: OfferPacketListIcon },
     ],
   },
-  { label: 'Logistics', to: '/logistics', icon: LogisticsIcon, feature: 'backoffice.logistics' },
+  {
+    label: 'Logistics',
+    icon: LogisticsIcon,
+    feature: 'backoffice.logistics',
+    subItems: [
+      {
+        label: 'Delivery Scheduling',
+        icon: LogisticsIcon,
+        subItems: [
+          { label: 'New Schedule', to: '/logistics/delivery-schedule', icon: LogisticsIcon, feature: 'backoffice.logistics' },
+          { label: 'Schedule List', to: '/logistics/delivery-schedule-list', icon: StockAdjustmentListIcon, feature: 'backoffice.logistics' },
+        ],
+      },
+      { label: 'Dispatch Entry', to: '/logistics/dispatch-entry', icon: AdditionalStockIcon, feature: 'backoffice.logistics' },
+      { label: 'Delivery Tracking', to: '/logistics/delivery-tracking', icon: ProductMovementIcon, feature: 'backoffice.logistics' },
+      {
+        label: 'Masters',
+        icon: ConfigIcon,
+        subItems: [
+          { label: 'Driver Entry', to: '/logistics/driver-entry', icon: EmployeeDirectoryIcon, feature: 'backoffice.logistics' },
+          { label: 'Vehicle Entry', to: '/logistics/vehicle-entry', icon: LogisticsIcon, feature: 'backoffice.logistics' },
+        ],
+      },
+    ],
+  },
   { label: 'Point of Sale', to: '/point-of-sale', icon: POSIcon, feature: 'pos' },
   {
     label: 'Human Resources',
@@ -198,9 +361,12 @@ const menuItems = [
   {
     label: 'Garage',
     icon: GarageModuleIcon,
+    feature: 'garage',
     subItems: [
       { label: 'Home', to: '/garage/home', icon: GarageHomeIcon },
       { label: 'Dashboard', to: '/garage/dashboard', icon: GarageDashboardIcon },
+      { label: 'Job card entry', to: '/garage/job-card-entry', icon: GaragePreJobCardEntryIcon },
+      { label: 'Job card list', to: '/garage/job-card-list', icon: GaragePunchingListIcon },
       { label: 'Vehicle list', to: '/garage/vehicle-list', icon: GarageVehicleEntryIcon },
       { label: 'Vehicle entry', to: '/garage/vehicle-entry', icon: GarageVehicleEntryIcon },
       { label: 'Color entry', to: '/garage/color-entry', icon: GarageVehicleEntryIcon },
@@ -224,9 +390,81 @@ const menuItems = [
       { label: 'Sublet monitor', to: '/garage/sublet-monitor', icon: GarageSubletMonitorIcon },
     ],
   },
-  { label: 'Reports', to: '/reports', icon: ReportsIcon, features: ['backoffice.reports', 'hr.reports', 'crm.reports'] },
-  { label: 'Tools', to: '/tools', icon: ToolsIcon, feature: 'core.settings' },
-  { label: 'Management', to: '/management', icon: ManagementIcon, feature: 'core.users' },
+  {
+    label: 'Reports',
+    icon: ReportsIcon,
+    features: ['backoffice.reports', 'hr.reports', 'crm.reports'],
+    subItems: [
+      {
+        label: 'Sales Reports',
+        icon: SalesIcon,
+        allFeatures: ['backoffice.reports', 'backoffice.sales'],
+        subItems: [
+          { label: 'Daily Sales Summary', to: '/reports/sales-summary', icon: StockAdjustmentListIcon, allFeatures: ['backoffice.reports', 'backoffice.sales'] },
+          { label: 'Sales by Customer', to: '/reports/sales-by-customer', icon: CustomerListIcon, allFeatures: ['backoffice.reports', 'backoffice.sales'] },
+          { label: 'Sales by Product', to: '/reports/sales-by-product', icon: ProductListIcon, allFeatures: ['backoffice.reports', 'backoffice.sales'] },
+          { label: 'Sales by Agent', to: '/reports/sales-by-agent', icon: AgentListIcon, allFeatures: ['backoffice.reports', 'backoffice.sales'] },
+        ],
+      },
+      {
+        label: 'Purchase Reports',
+        icon: ProcurementIcon,
+        allFeatures: ['backoffice.reports', 'backoffice.purchase'],
+        subItems: [
+          { label: 'Purchase Summary', to: '/reports/purchase-summary', icon: StockAdjustmentListIcon, allFeatures: ['backoffice.reports', 'backoffice.purchase'] },
+          { label: 'Supplier-wise Purchase', to: '/reports/supplier-purchase', icon: SupplierListIcon, allFeatures: ['backoffice.reports', 'backoffice.purchase'] },
+        ],
+      },
+      {
+        label: 'Stock Reports',
+        icon: StockIcon,
+        allFeatures: ['backoffice.reports', 'backoffice.inventory'],
+        subItems: [
+          { label: 'Stock Summary', to: '/reports/stock-summary', icon: StockAdjustmentListIcon, allFeatures: ['backoffice.reports', 'backoffice.inventory'] },
+          { label: 'Product Movement', to: '/reports/product-movement-report', icon: ProductMovementIcon, allFeatures: ['backoffice.reports', 'backoffice.inventory'] },
+          { label: 'Reorder Report', to: '/reports/reorder-report', icon: ReorderListIcon, allFeatures: ['backoffice.reports', 'backoffice.inventory'] },
+        ],
+      },
+      {
+        label: 'Financial Reports',
+        icon: FinancialsIcon,
+        allFeatures: ['backoffice.reports', 'backoffice.accounts'],
+        subItems: [
+          { label: 'Receivables', to: '/reports/receivables-report', icon: CrmLeadStatusIcon, allFeatures: ['backoffice.reports', 'backoffice.accounts'] },
+          { label: 'Payables', to: '/reports/payables-report', icon: FinancialsIcon, allFeatures: ['backoffice.reports', 'backoffice.accounts'] },
+        ],
+      },
+      {
+        label: 'HR Reports',
+        icon: HrModuleIcon,
+        feature: 'hr.reports',
+        subItems: [
+          { label: 'Attendance Report', to: '/reports/attendance-report', icon: CrmFollowupsIcon, feature: 'hr.reports' },
+          { label: 'Leave Report', to: '/reports/leave-report', icon: LeaveTypeMasterIcon, feature: 'hr.reports' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Tools',
+    icon: ToolsIcon,
+    feature: 'core.settings',
+    subItems: [
+      { label: 'Data Import', to: '/tools/data-import', icon: AdditionalStockIcon, feature: 'core.settings' },
+      { label: 'Data Export', to: '/tools/data-export', icon: ProductMovementIcon, feature: 'core.settings' },
+      { label: 'System Logs', to: '/tools/system-logs', icon: ListIcon, feature: 'core.settings' },
+    ],
+  },
+  {
+    label: 'Management',
+    icon: ManagementIcon,
+    feature: 'core.users',
+    subItems: [
+      { label: 'Company Settings', to: '/management/company-settings', icon: ConfigIcon, feature: 'core.users' },
+      { label: 'Branch Management', to: '/management/branch-management', icon: ManagementIcon, feature: 'core.users' },
+      { label: 'User Management', to: '/management/user-management', icon: ManagementIcon, feature: 'core.users' },
+    ],
+  },
   {
     label: 'Configuration',
     icon: ConfigIcon,
@@ -243,7 +481,7 @@ export default function Sidebar() {
 
   const location = useLocation();
   /** List expanded by default; also open when a list sub-route is active */
-  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false, 'Stock Adjustment': false, 'Damage Entry': false, 'Additional Stock': false, 'Human Resources': false, CRM: false, Garage: false });
+  const [openMenus, setOpenMenus] = useState({ List: true, 'Stock Hub': false, 'Deals & Offers': false, 'Stock Adjustment': false, 'Damage Entry': false, 'Additional Stock': false, 'Human Resources': false, CRM: false, Garage: false, 'Sales Activities': false, Quotations: false, 'Delivery Orders': false, 'Sales Vouchers': false, Procurement: false, 'Purchase Orders': false, 'Goods Receive Notes': false, 'Purchase Vouchers': false, 'Debit Notes': false, Financials: false, Manufacturing: false, Recipes: false, 'Production Orders': false, 'Credit Notes': false, Vouchers: false, Logistics: false, 'Delivery Scheduling': false, 'Logistics Masters': false, Reports: false, 'Sales Reports': false, 'Purchase Reports': false, 'Stock Reports': false, 'Financial Reports': false, 'HR Reports': false, Tools: false, Management: false });
 
   useEffect(() => {
     const onListSection =
@@ -277,6 +515,108 @@ export default function Sidebar() {
     }
     if (location.pathname.startsWith('/crm')) {
       setOpenMenus((prev) => ({ ...prev, 'CRM': true }));
+    }
+    if (
+      location.pathname.startsWith('/sales') ||
+      location.pathname.startsWith('/quotation') ||
+      location.pathname.startsWith('/delivery-order') ||
+      location.pathname.startsWith('/sales-voucher') ||
+      location.pathname === '/statement-receivable-summary' ||
+      location.pathname === '/statement-of-accounts-list'
+    ) {
+      setOpenMenus((prev) => ({ ...prev, 'Sales Activities': true }));
+    }
+    if (location.pathname.startsWith('/quotation')) {
+      setOpenMenus((prev) => ({ ...prev, Quotations: true }));
+    }
+    if (location.pathname.startsWith('/delivery-order')) {
+      setOpenMenus((prev) => ({ ...prev, 'Delivery Orders': true }));
+    }
+    if (location.pathname.startsWith('/sales-voucher')) {
+      setOpenMenus((prev) => ({ ...prev, 'Sales Vouchers': true }));
+    }
+    if (
+      location.pathname.startsWith('/purchase') ||
+      location.pathname.startsWith('/goods-receive-note') ||
+      location.pathname.startsWith('/debit-note') ||
+      location.pathname === '/statement-payable-summary'
+    ) {
+      setOpenMenus((prev) => ({ ...prev, Procurement: true }));
+    }
+    if (location.pathname.startsWith('/purchase-order')) {
+      setOpenMenus((prev) => ({ ...prev, 'Purchase Orders': true }));
+    }
+    if (location.pathname.startsWith('/goods-receive-note')) {
+      setOpenMenus((prev) => ({ ...prev, 'Goods Receive Notes': true }));
+    }
+    if (location.pathname.startsWith('/purchase-voucher')) {
+      setOpenMenus((prev) => ({ ...prev, 'Purchase Vouchers': true }));
+    }
+    if (location.pathname.startsWith('/debit-note')) {
+      setOpenMenus((prev) => ({ ...prev, 'Debit Notes': true }));
+    }
+    if (
+      location.pathname.startsWith('/trial-balance') ||
+      location.pathname.startsWith('/financials') ||
+      location.pathname.startsWith('/account-group') ||
+      location.pathname.startsWith('/account-ledger')
+    ) {
+      setOpenMenus((prev) => ({ ...prev, Financials: true }));
+    }
+    if (location.pathname.startsWith('/manufacturing')) {
+      setOpenMenus((prev) => ({ ...prev, Manufacturing: true }));
+    }
+    if (location.pathname.startsWith('/manufacturing/recipe')) {
+      setOpenMenus((prev) => ({ ...prev, Recipes: true }));
+    }
+    if (location.pathname.startsWith('/manufacturing/production')) {
+      setOpenMenus((prev) => ({ ...prev, 'Production Orders': true }));
+    }
+    if (location.pathname.startsWith('/credit-note')) {
+      setOpenMenus((prev) => ({ ...prev, 'Credit Notes': true, 'Sales Activities': true }));
+    }
+    if (
+      location.pathname.startsWith('/receipt-voucher') ||
+      location.pathname.startsWith('/payment-voucher') ||
+      location.pathname.startsWith('/income-voucher') ||
+      location.pathname.startsWith('/expense-voucher') ||
+      location.pathname.startsWith('/contra-voucher') ||
+      location.pathname.startsWith('/journal-voucher')
+    ) {
+      setOpenMenus((prev) => ({ ...prev, Vouchers: true, Financials: true }));
+    }
+    if (location.pathname.startsWith('/logistics')) {
+      setOpenMenus((prev) => ({ ...prev, Logistics: true }));
+    }
+    if (location.pathname.startsWith('/logistics/delivery-schedule')) {
+      setOpenMenus((prev) => ({ ...prev, 'Delivery Scheduling': true }));
+    }
+    if (location.pathname.startsWith('/logistics/driver-entry') || location.pathname.startsWith('/logistics/vehicle-entry')) {
+      setOpenMenus((prev) => ({ ...prev, 'Logistics Masters': true }));
+    }
+    if (location.pathname.startsWith('/reports')) {
+      setOpenMenus((prev) => ({ ...prev, Reports: true }));
+    }
+    if (location.pathname.startsWith('/reports/sales')) {
+      setOpenMenus((prev) => ({ ...prev, 'Sales Reports': true }));
+    }
+    if (location.pathname.startsWith('/reports/purchase') || location.pathname.startsWith('/reports/supplier')) {
+      setOpenMenus((prev) => ({ ...prev, 'Purchase Reports': true }));
+    }
+    if (location.pathname.startsWith('/reports/stock') || location.pathname.startsWith('/reports/product-movement') || location.pathname.startsWith('/reports/reorder')) {
+      setOpenMenus((prev) => ({ ...prev, 'Stock Reports': true }));
+    }
+    if (location.pathname.startsWith('/reports/receivables') || location.pathname.startsWith('/reports/payables')) {
+      setOpenMenus((prev) => ({ ...prev, 'Financial Reports': true }));
+    }
+    if (location.pathname.startsWith('/reports/attendance') || location.pathname.startsWith('/reports/leave')) {
+      setOpenMenus((prev) => ({ ...prev, 'HR Reports': true }));
+    }
+    if (location.pathname.startsWith('/tools')) {
+      setOpenMenus((prev) => ({ ...prev, Tools: true }));
+    }
+    if (location.pathname.startsWith('/management')) {
+      setOpenMenus((prev) => ({ ...prev, Management: true }));
     }
   }, [location.pathname]);
 
@@ -365,7 +705,15 @@ export default function Sidebar() {
                       item.label === 'List' ||
                       item.label === 'Stock Hub' ||
                       item.label === 'Deals & Offers' ||
-                      item.label === 'Garage'
+                      item.label === 'Garage' ||
+                      item.label === 'Sales Activities' ||
+                      item.label === 'Procurement' ||
+                      item.label === 'Financials' ||
+                      item.label === 'Manufacturing' ||
+                      item.label === 'Logistics' ||
+                      item.label === 'Reports' ||
+                      item.label === 'Tools' ||
+                      item.label === 'Management'
                         ? 'filter brightness-0 invert'
                         : ''
                     }`.trim();
@@ -394,7 +742,7 @@ export default function Sidebar() {
                                   key={`${sub.label}-${leaf.label}`}
                                   to={leaf.to}
                                   className={({ isActive }) =>
-                                    `mx-3 flex items-center gap-2 p-1.5 rounded-[8px] text-white text-[0.775rem] no-underline transition ${
+                                    `mx-3 flex items-center gap-2 p-1.5 rounded-lg text-white text-[0.775rem] no-underline transition ${
                                       isActive
                                         ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                                         : 'hover:bg-white/8 font-light'

@@ -73,6 +73,16 @@ export function hasAnyFeature(featureCodes) {
   return codes.some((code) => features[code] === true);
 }
 
+export function hasAllFeatures(featureCodes) {
+  const codes = Array.isArray(featureCodes) ? featureCodes.filter(Boolean) : [featureCodes].filter(Boolean);
+  if (!codes.length) return isSubscriptionUsable();
+  if (!isSubscriptionUsable()) return false;
+
+  const features = getSessionFeatures();
+  if (!hasKnownFeatureCatalog(features)) return true;
+  return codes.every((code) => features[code] === true);
+}
+
 export function hasFeature(featureCode) {
   return hasAnyFeature([featureCode]);
 }
@@ -93,8 +103,14 @@ export function getLimit(limitCode) {
 export function filterByAccess(items = []) {
   return items
     .map((item) => {
+      const hasFeatGate = item.features != null || item.feature != null;
+      const hasAllFeatGate = item.allFeatures != null;
+      const allowed = hasAllFeatGate
+        ? hasAllFeatures(item.allFeatures)
+        : hasAnyFeature(item.features ?? item.feature);
+      // Explicit feature gate on parent → hard block; skip sub-item processing entirely
+      if (!allowed && (hasFeatGate || hasAllFeatGate)) return null;
       const subItems = item.subItems ? filterByAccess(item.subItems) : undefined;
-      const allowed = hasAnyFeature(item.features ?? item.feature);
       if (!allowed && (!subItems || subItems.length === 0)) return null;
       if (subItems && subItems.length === 0 && !item.to) return null;
       return { ...item, ...(subItems ? { subItems } : {}) };

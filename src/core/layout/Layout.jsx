@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import ModuleTabs from './ModuleTabs';
-import MiniToolbar from './MiniToolbar';
 import { isLoggedIn, syncAccessIfChanged } from '../auth/auth.service.js';
 
 const HEADER_HEIGHT = 30;
@@ -12,6 +11,9 @@ const SIDEBAR_WIDTH = 200;
 export default function Layout({ children }) {
   const [headerToolsExpanded, setHeaderToolsExpanded] = useState(true);
   const [accessTick, setAccessTick] = useState(0);
+  const mainRef = useRef(null);
+  const lastMainScrollTopRef = useRef(0);
+  const lastWindowScrollTopRef = useRef(0);
 
   useEffect(() => {
     if (!isLoggedIn()) return undefined;
@@ -50,6 +52,41 @@ export default function Layout({ children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const main = mainRef.current;
+
+    const collapseOnDownScroll = (scrollTop, lastScrollTopRef) => {
+      const scrollingDown = scrollTop > lastScrollTopRef.current + 8;
+
+      if (scrollTop > 12 && scrollingDown) {
+        setHeaderToolsExpanded(false);
+      }
+
+      lastScrollTopRef.current = Math.max(0, scrollTop);
+    };
+
+    const handleMainScroll = () => {
+      const scrollTop = main.scrollTop;
+      collapseOnDownScroll(scrollTop, lastMainScrollTopRef);
+    };
+
+    const handleWindowScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      collapseOnDownScroll(scrollTop, lastWindowScrollTopRef);
+    };
+
+    lastWindowScrollTopRef.current = window.scrollY || document.documentElement.scrollTop || 0;
+    lastMainScrollTopRef.current = main?.scrollTop || 0;
+
+    main?.addEventListener('scroll', handleMainScroll, { passive: true });
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+
+    return () => {
+      main?.removeEventListener('scroll', handleMainScroll);
+      window.removeEventListener('scroll', handleWindowScroll);
+    };
+  }, []);
+
   return (
     <div
       style={{
@@ -71,7 +108,6 @@ export default function Layout({ children }) {
         }}
       >
         <ModuleTabs expanded={headerToolsExpanded} onExpandedChange={setHeaderToolsExpanded} />
-        {headerToolsExpanded ? <MiniToolbar /> : null}
       </div>
       <div
         style={{
@@ -82,12 +118,13 @@ export default function Layout({ children }) {
       >
         <Sidebar key={`sidebar-${accessTick}`} />
         <main
+          ref={mainRef}
           style={{
             flex: 1,
             minWidth: 0,
             minHeight: 0,
             marginLeft: SIDEBAR_WIDTH,
-            padding: '24px 28px 32px',
+            padding: '10px 28px 32px',
             display: 'flex',
             flexDirection: 'column',
             overflowY: 'auto',

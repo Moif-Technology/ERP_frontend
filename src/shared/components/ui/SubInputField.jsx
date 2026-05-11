@@ -5,7 +5,7 @@ import { inputField, colors } from '../../constants/theme';
  * Sub input field — fixed width/height; parent gap controls spacing.
  */
 const SubInputField = React.forwardRef(function SubInputField(
-  { label, suffix, type = 'text', widthPx, heightPx, className, fullWidth, ...props },
+  { label, suffix, type = 'text', widthPx, heightPx, className, labelClassName, inputStyle, fullWidth, ...props },
   ref,
 ) {
   const boxWidth = widthPx != null ? `${widthPx}px` : inputField.subBox.width;
@@ -16,7 +16,12 @@ const SubInputField = React.forwardRef(function SubInputField(
       style={fullWidth ? { width: '100%' } : { width: boxWidth }}
     >
       {label && (
-        <label className="text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]" style={{ color: inputField.label.color }}>{label}</label>
+        <label
+          className={labelClassName || 'text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]'}
+          style={labelClassName ? undefined : { color: inputField.label.color }}
+        >
+          {label}
+        </label>
       )}
       <div className="relative w-full">
         <input
@@ -33,6 +38,7 @@ const SubInputField = React.forwardRef(function SubInputField(
             background: colors.input?.background ?? '#fff',
             borderColor: '#e2e8f0',
             paddingRight: suffix ? '16px' : undefined,
+            ...inputStyle,
           }}
           {...props}
         />

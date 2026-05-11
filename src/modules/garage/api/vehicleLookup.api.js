@@ -7,3 +7,9 @@ export async function getVehicleByRegNo(regNo) {
   const vehicles = data.vehicles || [];
   return vehicles.find((v) => v.regNo?.toUpperCase() === regNo.toUpperCase()) || null;
 }
+
+export async function listVehicles(search = '') {
+  const params = search ? { q: search } : {};
+  const { data } = await httpClient.get(BASE, { params });
+  return data.vehicles || [];
+}

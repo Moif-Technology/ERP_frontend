@@ -108,127 +108,158 @@ export default function PlanCatalogPage() {
   }
 
   return (
-    <div style={layout}>
-      <div style={leftPanel}>
-        <div style={leftHead}>
-          <h3 style={sectionTitle}>Plans</h3>
-          <button
-            style={primaryBtnSmall}
-            onClick={() => { setActivePlan(null); setCreating(true); setError(null); }}
-          >
-            + New
-          </button>
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* Page header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={H1}>Plan catalog</h1>
+          <p style={SUBTITLE}>Pricing tiers, features, and limits. Select a plan to manage.</p>
         </div>
-        <div style={hint}>Click a plan to edit name, price, features, limits.</div>
-        {error && <div style={errorBox}>{error}</div>}
-        {plans.map((p) => (
-          <div
-            key={p.plan_code}
-            onClick={() => openPlan(p)}
-            style={{
-              ...planItem,
-              ...(activePlan?.plan_code === p.plan_code ? planItemActive : null),
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div style={{ fontWeight: 700 }}>{p.plan_name || p.display_name}</div>
-              {!p.is_active && <span style={inactivePill}>inactive</span>}
-              {p.is_popular && <span style={popularPill}>popular</span>}
-            </div>
-            <div style={codeLine}>{p.plan_code}</div>
-            <div style={priceLine}>
-              {formatPrice(p.price_monthly_display)} / {p.period_label || 'month'}
-              {p.price_yearly_display ? (
-                <span style={yearlyHint}> · yearly {formatPrice(p.price_yearly_display)}</span>
-              ) : null}
-            </div>
-          </div>
-        ))}
       </div>
 
-      <div style={rightPanel}>
-        {creating ? (
-          <PlanEditor
-            initial={EMPTY_DRAFT}
-            isNew
-            busy={busy}
-            onSave={savePlan}
-            onCancel={() => setCreating(false)}
-          />
-        ) : activePlan ? (
-          <>
+      {error && <div style={ERROR_BOX}>{error}</div>}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, alignItems: 'start' }}>
+        {/* Left: plan list */}
+        <div style={PANEL}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#0f172a' }}>Plans</h3>
+            <button
+              className="sa-btn-primary"
+              style={{ ...BTN_PRIMARY, fontSize: 12, padding: '4px 10px', height: 'auto' }}
+              onClick={() => { setActivePlan(null); setCreating(true); setError(null); }}
+            >
+              + New
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            {plans.map((p) => (
+              <div
+                key={p.plan_code}
+                className={`sa-plan-item${activePlan?.plan_code === p.plan_code ? ' sa-plan-item-active' : ''}`}
+                onClick={() => openPlan(p)}
+                style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 9,
+                  padding: '10px 12px',
+                  cursor: 'pointer',
+                  background: activePlan?.plan_code === p.plan_code ? '#eef2ff' : '#fafafa',
+                  borderColor: activePlan?.plan_code === p.plan_code ? '#4f46e5' : '#e2e8f0',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{p.plan_name || p.display_name}</div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {!p.is_active && <span style={BADGE_INACTIVE}>off</span>}
+                    {p.is_popular && <span style={BADGE_POPULAR}>popular</span>}
+                  </div>
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{p.plan_code}</div>
+                <div style={{ fontSize: 12, color: '#4f46e5', fontWeight: 600 }}>
+                  {fmtPrice(p.price_monthly_display)}
+                  <span style={{ color: '#94a3b8', fontWeight: 400 }}>/{p.period_label || 'month'}</span>
+                </div>
+              </div>
+            ))}
+            {plans.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>No plans yet.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: editor */}
+        <div style={{ display: 'grid', gap: 14 }}>
+          {creating && (
             <PlanEditor
-              key={activePlan.plan_code}
-              initial={activePlan}
+              initial={EMPTY_DRAFT}
+              isNew
               busy={busy}
               onSave={savePlan}
+              onCancel={() => setCreating(false)}
             />
-            <div style={card}>
-              <h4 style={subTitle}>Feature Matrix</h4>
-              <table style={table}>
-                <thead>
-                  <tr>
-                    <th style={th}>Feature</th>
-                    <th style={th}>Enabled</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {features.map((f) => (
-                    <tr key={f.feature_code}>
-                      <td style={td}>{f.feature_code}</td>
-                      <td style={td}>
-                        <label style={toggleRow}>
+          )}
+
+          {!creating && activePlan && (
+            <>
+              <PlanEditor
+                key={activePlan.plan_code}
+                initial={activePlan}
+                busy={busy}
+                onSave={savePlan}
+              />
+
+              {/* Feature matrix */}
+              <div style={PANEL}>
+                <h4 style={PANEL_TITLE}>Feature matrix</h4>
+                {features.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>No feature rows available.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {features.map((f) => (
+                      <label
+                        key={f.feature_code}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '8px 12px', border: '1px solid #f1f5f9', borderRadius: 8,
+                          cursor: 'pointer', background: f.is_enabled ? '#f0fdf4' : '#fff',
+                        }}
+                      >
+                        <span style={{ fontSize: 13, color: '#0f172a', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{f.feature_code}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 12, color: f.is_enabled ? '#15803d' : '#94a3b8', fontWeight: 600 }}>
+                            {f.is_enabled ? 'Enabled' : 'Disabled'}
+                          </span>
                           <input
                             type="checkbox"
                             checked={Boolean(f.is_enabled)}
                             onChange={(e) => toggleFeature(f.feature_code, e.target.checked)}
+                            style={{ width: 14, height: 14, accentColor: '#4f46e5' }}
                           />
-                          <span>{f.is_enabled ? 'Enabled' : 'Disabled'}</span>
-                        </label>
-                      </td>
-                    </tr>
-                  ))}
-                  {features.length === 0 && (
-                    <tr>
-                      <td colSpan={2} style={{ ...td, textAlign: 'center' }}>No feature rows available.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div style={card}>
-              <h4 style={subTitle}>Limit Matrix</h4>
-              <table style={table}>
-                <thead>
-                  <tr>
-                    <th style={th}>Limit</th>
-                    <th style={th}>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {limits.map((l) => (
-                    <tr key={l.limit_code}>
-                      <td style={td}>{l.limit_code}</td>
-                      <td style={td}>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Limit matrix */}
+              <div style={PANEL}>
+                <h4 style={PANEL_TITLE}>Limit matrix</h4>
+                {limits.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>No limit rows available.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 4 }}>
+                    {limits.map((l) => (
+                      <div key={l.limit_code} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                        padding: '8px 12px', border: '1px solid #f1f5f9', borderRadius: 8, background: '#fff',
+                      }}>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#475569' }}>{l.limit_code}</span>
                         <input
-                          style={input}
+                          style={{ ...INPUT, width: 120, textAlign: 'right' }}
                           type="number"
                           defaultValue={l.limit_value}
                           onBlur={(e) => changeLimit(l.limit_code, Number(e.target.value))}
                         />
-                      </td>
-                    </tr>
-                  ))}
-                  {limits.length === 0 && (
-                    <tr>
-                      <td colSpan={2} style={{ ...td, textAlign: 'center' }}>No limit rows available.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {!creating && !activePlan && (
+            <div style={{
+              border: '1px dashed #e2e8f0', borderRadius: 12,
+              padding: 32, textAlign: 'center',
+              color: '#94a3b8', fontSize: 13, lineHeight: 1.6,
+            }}>
+              Select a plan from the left, or click <strong>+ New</strong> to create one.
             </div>
-          </>
-        ) : <div style={empty}>Select a plan from the left, or click + New to create one.</div>}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -244,34 +275,37 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
   function set(k, v) { setDraft((d) => ({ ...d, [k]: v })); }
 
   const codeLocked = !isNew;
+  const canSave = draft.plan_code && (draft.display_name || draft.plan_name);
 
   return (
-    <div style={card}>
-      <div style={headRow}>
-        <h4 style={subTitle}>{isNew ? 'New Plan' : 'Edit Plan'}</h4>
-        {busy && <span style={savingPill}>Saving...</span>}
+    <div style={PANEL}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.2px' }}>
+          {isNew ? 'New plan' : `Edit · ${initial.plan_code}`}
+        </h4>
+        {busy && <span style={SAVING_PILL}>Saving…</span>}
       </div>
 
-      <div style={grid2}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
         <Field label="Plan code (immutable)">
           <input
-            style={input}
+            style={{ ...INPUT, ...(codeLocked ? { background: '#f8fafc', color: '#94a3b8' } : {}) }}
             value={draft.plan_code || ''}
             disabled={codeLocked}
-            placeholder="e.g. starter, pro, enterprise"
+            placeholder="e.g. starter, pro"
             onChange={(e) => set('plan_code', e.target.value.trim().toLowerCase())}
           />
         </Field>
         <Field label="Display name">
           <input
-            style={input}
+            style={INPUT}
             value={draft.display_name || draft.plan_name || ''}
             onChange={(e) => set('display_name', e.target.value)}
           />
         </Field>
         <Field label="Audience label">
           <input
-            style={input}
+            style={INPUT}
             placeholder="e.g. Best for small teams"
             value={draft.audience_label || ''}
             onChange={(e) => set('audience_label', e.target.value)}
@@ -279,23 +313,22 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
         </Field>
         <Field label="Description">
           <input
-            style={input}
+            style={INPUT}
             value={draft.description || ''}
             onChange={(e) => set('description', e.target.value)}
           />
         </Field>
-
-        <Field label="Monthly price (display)">
+        <Field label="Monthly price">
           <input
-            style={input}
+            style={INPUT}
             placeholder="e.g. ₹999 or $29"
             value={draft.price_monthly_display ?? ''}
             onChange={(e) => set('price_monthly_display', e.target.value)}
           />
         </Field>
-        <Field label="Yearly price (display)">
+        <Field label="Yearly price">
           <input
-            style={input}
+            style={INPUT}
             placeholder="optional"
             value={draft.price_yearly_display ?? ''}
             onChange={(e) => set('price_yearly_display', e.target.value)}
@@ -303,7 +336,7 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
         </Field>
         <Field label="Period label">
           <select
-            style={input}
+            style={INPUT}
             value={draft.period_label || 'month'}
             onChange={(e) => set('period_label', e.target.value)}
           >
@@ -315,23 +348,22 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
         </Field>
         <Field label="Trial days">
           <input
-            style={input}
+            style={INPUT}
             type="number"
             value={draft.trial_days ?? 0}
             onChange={(e) => set('trial_days', Number(e.target.value) || 0)}
           />
         </Field>
-
         <Field label="Card note">
           <input
-            style={input}
+            style={INPUT}
             value={draft.card_note || ''}
             onChange={(e) => set('card_note', e.target.value)}
           />
         </Field>
         <Field label="CTA label">
           <input
-            style={input}
+            style={INPUT}
             placeholder="e.g. Start free trial"
             value={draft.cta_label || ''}
             onChange={(e) => set('cta_label', e.target.value)}
@@ -339,44 +371,49 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
         </Field>
         <Field label="Sort order">
           <input
-            style={input}
+            style={INPUT}
             type="number"
             value={draft.sort_order ?? 0}
             onChange={(e) => set('sort_order', Number(e.target.value) || 0)}
           />
         </Field>
         <Field label="Flags">
-          <div style={{ display: 'flex', gap: 14, alignItems: 'center', height: 34 }}>
-            <label style={toggleRow}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', height: 36 }}>
+            <label style={{ display: 'flex', gap: 6, alignItems: 'center', cursor: 'pointer', fontSize: 13, color: '#374151' }}>
               <input
                 type="checkbox"
                 checked={!!draft.is_active}
                 onChange={(e) => set('is_active', e.target.checked)}
+                style={{ width: 14, height: 14, accentColor: '#4f46e5' }}
               />
-              <span>Active</span>
+              Active
             </label>
-            <label style={toggleRow}>
+            <label style={{ display: 'flex', gap: 6, alignItems: 'center', cursor: 'pointer', fontSize: 13, color: '#374151' }}>
               <input
                 type="checkbox"
                 checked={!!draft.is_popular}
                 onChange={(e) => set('is_popular', e.target.checked)}
+                style={{ width: 14, height: 14, accentColor: '#4f46e5' }}
               />
-              <span>Popular</span>
+              Popular
             </label>
           </div>
         </Field>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 8, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
         <button
-          style={primaryBtn}
-          disabled={busy || !draft.plan_code || !(draft.display_name || draft.plan_name)}
+          className="sa-btn-primary"
+          style={BTN_PRIMARY}
+          disabled={busy || !canSave}
           onClick={() => onSave(draft)}
         >
           {isNew ? 'Create plan' : 'Save changes'}
         </button>
         {isNew && (
-          <button style={ghostBtn} disabled={busy} onClick={onCancel}>Cancel</button>
+          <button className="sa-btn-ghost" style={BTN_GHOST} disabled={busy} onClick={onCancel}>
+            Cancel
+          </button>
         )}
       </div>
     </div>
@@ -385,48 +422,49 @@ function PlanEditor({ initial, isNew, busy, onSave, onCancel }) {
 
 function Field({ label, children }) {
   return (
-    <label style={fieldWrap}>
-      <span style={fieldLabel}>{label}</span>
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{label}</span>
       {children}
     </label>
   );
 }
 
-function formatPrice(v) {
+function fmtPrice(v) {
   if (v == null || v === '') return '—';
-  const s = String(v).trim();
-  if (!s) return '—';
-  if (/^[\d.]+$/.test(s)) return s;
-  return s;
+  return String(v).trim() || '—';
 }
 
-const layout = { display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16 };
-const leftPanel = { border: '1px solid #d8e2f4', borderRadius: 12, background: '#fff', padding: 14 };
-const leftHead = { display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
-const rightPanel = { display: 'grid', gap: 12 };
-const sectionTitle = { margin: 0, color: '#112a4e' };
-const subTitle = { margin: '0 0 10px', color: '#1b355d' };
-const hint = { fontSize: 13, color: '#65799f', margin: '6px 0 10px' };
-const errorBox = { color: '#b42318', background: '#fee4e2', border: '1px solid #fecdca', borderRadius: 8, padding: '8px 10px', marginBottom: 8 };
-const planItem = { border: '1px solid #d9e3f4', borderRadius: 10, padding: 10, cursor: 'pointer', marginBottom: 8, background: '#fdfefe' };
-const planItemActive = { background: '#e8f1ff', borderColor: '#1f5bb8' };
-const codeLine = { fontSize: 12, color: '#61759c', marginTop: 2 };
-const priceLine = { fontSize: 12, color: '#1f3d71', marginTop: 4, fontWeight: 600 };
-const yearlyHint = { color: '#65799f', fontWeight: 400 };
-const headRow = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 };
-const savingPill = { fontSize: 12, color: '#1d4ed8', background: '#dbeafe', border: '1px solid #bfdbfe', borderRadius: 999, padding: '3px 9px' };
-const inactivePill = { fontSize: 10, color: '#991b1b', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 999, padding: '1px 7px', marginLeft: 6 };
-const popularPill = { fontSize: 10, color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 999, padding: '1px 7px', marginLeft: 6 };
-const card = { border: '1px solid #d8e2f4', borderRadius: 12, background: '#fff', padding: 12 };
-const table = { width: '100%', borderCollapse: 'collapse' };
-const th = { textAlign: 'left', padding: 8, borderBottom: '1px solid #cbd5e1' };
-const td = { padding: 8, borderBottom: '1px solid #e2e8f0' };
-const toggleRow = { display: 'inline-flex', gap: 8, alignItems: 'center' };
-const input = { width: '100%', height: 34, border: '1px solid #c8d5eb', borderRadius: 8, padding: '0 10px', boxSizing: 'border-box' };
-const empty = { border: '1px dashed #c8d5eb', borderRadius: 12, background: '#fff', padding: 18, color: '#556b94' };
-const grid2 = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(220px, 1fr))', gap: 10 };
-const fieldWrap = { display: 'flex', flexDirection: 'column', gap: 4 };
-const fieldLabel = { fontSize: 12, fontWeight: 600, color: '#4b5f85' };
-const primaryBtn = { border: '1px solid #174393', background: '#174393', color: '#fff', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' };
-const primaryBtnSmall = { border: '1px solid #174393', background: '#174393', color: '#fff', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12 };
-const ghostBtn = { border: '1px solid #c8d5eb', background: '#fff', color: '#173f8f', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' };
+const H1 = { margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.3px' };
+const SUBTITLE = { margin: '3px 0 0', fontSize: 13, color: '#64748b' };
+const PANEL = { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 };
+const PANEL_TITLE = { margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#0f172a' };
+const INPUT = {
+  width: '100%', height: 36, border: '1px solid #e2e8f0',
+  borderRadius: 8, padding: '0 10px', fontSize: 13, color: '#374151',
+  background: '#fff', boxSizing: 'border-box',
+};
+const BTN_PRIMARY = {
+  padding: '0 16px', height: 36, borderRadius: 8,
+  background: '#4f46e5', color: '#fff', border: 'none',
+  fontSize: 13, fontWeight: 500, cursor: 'pointer',
+};
+const BTN_GHOST = {
+  padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+  background: '#fff', color: '#475569', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+};
+const ERROR_BOX = {
+  padding: '9px 12px', borderRadius: 8,
+  background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 13,
+};
+const SAVING_PILL = {
+  fontSize: 11, color: '#4338ca', background: '#eef2ff',
+  border: '1px solid #c7d2fe', borderRadius: 999, padding: '2px 9px',
+};
+const BADGE_INACTIVE = {
+  fontSize: 10, color: '#dc2626', background: '#fef2f2',
+  border: '1px solid #fecaca', borderRadius: 999, padding: '1px 5px',
+};
+const BADGE_POPULAR = {
+  fontSize: 10, color: '#b45309', background: '#fffbeb',
+  border: '1px solid #fde68a', borderRadius: 999, padding: '1px 5px',
+};
