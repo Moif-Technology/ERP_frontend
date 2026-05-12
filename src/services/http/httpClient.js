@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { routeHref } from '../../app/router/routerMode';
+import { redirectToRoute } from '../../app/router/routerMode';
 
 const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -24,7 +24,7 @@ httpClient.interceptors.response.use(
       const refreshToken = sessionStorage.getItem('refresh_token');
       if (!refreshToken) {
         sessionStorage.clear();
-        window.location.href = routeHref('/login');
+        redirectToRoute('/login');
         return Promise.reject(error);
       }
 
@@ -38,7 +38,7 @@ httpClient.interceptors.response.use(
         return httpClient(original);
       } catch {
         sessionStorage.clear();
-        window.location.href = routeHref('/login');
+        redirectToRoute('/login');
         return Promise.reject(error);
       }
     }
