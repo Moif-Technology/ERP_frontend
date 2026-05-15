@@ -7,22 +7,29 @@ import * as productEntryApi from '../../../services/productEntry.api.js';
 import * as purchaseEntryApi from '../../../services/purchaseEntry.api.js';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
+import EditIcon from '../../../shared/assets/icons/edit.svg';
+import PostIcon from '../../../shared/assets/icons/post.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
 import {
-  InputField,
   SubInputField,
   DropdownInput,
+  DatePickerInput,
   Switch,
   CommonTable,
-  ConfirmDialog, 
+  ConfirmDialog,
+  TableTotalsBar,
+  TabsBar,
 } from '../../../shared/components/ui';
 
 const UOM_OPTIONS = ['PCS', 'BOX', 'CTN', 'KG', 'LTR'];
 const VAT_OPTIONS = ['0', '5', '10', '15'];
 const DISCOUNT_OPTIONS = ['None', 'Flat', 'Percentage'];
+const GRN_LINE_ENTRY_H = 26;
+const GRN_LINE_ENTRY_LBL = 'text-[9px] font-semibold text-gray-500 sm:text-[10px]';
+const GRN_LINE_ENTRY_INP = 'text-[10px] tabular-nums';
 
 const ITEM_INITIAL = {
   productId: '',
@@ -152,11 +159,19 @@ export default function GoodsReceiveNote() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
+  const [productComboOpen, setProductComboOpen] = useState(false);
+  const [productComboQuery, setProductComboQuery] = useState('');
+  const [productCodeComboOpen, setProductCodeComboOpen] = useState(false);
+  const [productCodeComboQuery, setProductCodeComboQuery] = useState('');
+  const [productDescComboOpen, setProductDescComboOpen] = useState(false);
+  const [productDescComboQuery, setProductDescComboQuery] = useState('');
 
-  const productDropdownRef = useRef(null);
+  const productComboRef = useRef(null);
+  const productCodeComboRef = useRef(null);
+  const productDescComboRef = useRef(null);
 
   const focusProductDropdown = useCallback(() => {
-    window.setTimeout(() => productDropdownRef.current?.focus(), 0);
+    window.setTimeout(() => productComboRef.current?.querySelector('input')?.focus(), 0);
   }, []);
 
   const liveItem = useMemo(() => normalizeItemForm(itemForm), [itemForm]);
@@ -204,6 +219,48 @@ export default function GoodsReceiveNote() {
     for (const p of productsCatalog) m.set(Number(p.productId), p);
     return m;
   }, [productsCatalog]);
+
+  const pickerProducts = useMemo(
+    () =>
+      productsCatalog.map((p) => ({
+        productId: p.productId,
+        barCode: p.productCode || '',
+        shortDescription: (p.shortName || p.productName || '').trim() || '-',
+        lastPurchaseCost: p.lastPurchaseCost,
+      })),
+    [productsCatalog],
+  );
+
+  const filterProductsByQuery = useCallback((qRaw) => {
+    const q = String(qRaw ?? '').trim().toLowerCase();
+    const rows = q
+      ? pickerProducts.filter((p) =>
+          String(p.barCode || '').toLowerCase().includes(q) ||
+          String(p.shortDescription || '').toLowerCase().includes(q)
+        )
+      : pickerProducts;
+    return rows.slice(0, 15);
+  }, [pickerProducts]);
+
+  const productComboFiltered = useMemo(() => filterProductsByQuery(productComboQuery), [filterProductsByQuery, productComboQuery]);
+  const productCodeComboFiltered = useMemo(() => filterProductsByQuery(productCodeComboQuery), [filterProductsByQuery, productCodeComboQuery]);
+  const productDescComboFiltered = useMemo(() => filterProductsByQuery(productDescComboQuery), [filterProductsByQuery, productDescComboQuery]);
+
+  const selectedProductDisplay = useMemo(() => {
+    if (!liveItem.productId) return '';
+    const p = productById.get(Number(liveItem.productId));
+    if (p) return `${p.productCode || ''} - ${(p.shortName || p.productName || '').trim()}`.replace(/^- /, '');
+    return liveItem.barCode || String(liveItem.productId);
+  }, [liveItem.productId, liveItem.barCode, productById]);
+
+  const closeLineEntryCombos = useCallback(() => {
+    setProductComboOpen(false);
+    setProductCodeComboOpen(false);
+    setProductDescComboOpen(false);
+    setProductComboQuery('');
+    setProductCodeComboQuery('');
+    setProductDescComboQuery('');
+  }, []);
 
   const tableTotals = useMemo(() => {
     const qty = lineRows.reduce((s, r) => s + num(r.qty), 0);
@@ -325,6 +382,18 @@ export default function GoodsReceiveNote() {
     if (s?.supplierName) setGrnInfo((p) => ({ ...p, supplierName: s.supplierName }));
   }, [supplierId, suppliers]);
 
+  useEffect(() => {
+    const onMouseDown = (e) => {
+      const t = e.target;
+      if (productComboRef.current?.contains(t)) return;
+      if (productCodeComboRef.current?.contains(t)) return;
+      if (productDescComboRef.current?.contains(t)) return;
+      closeLineEntryCombos();
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [closeLineEntryCombos]);
+
   const mergeItemForm = useCallback((patch) => {
     setItemForm((prev) => normalizeItemForm({ ...prev, ...patch }));
     setLineEntryError('');
@@ -351,8 +420,9 @@ export default function GoodsReceiveNote() {
         baseCost: cost,
         unitCost: cost,
       });
+      closeLineEntryCombos();
     },
-    [mergeItemForm, productById],
+    [mergeItemForm, productById, closeLineEntryCombos],
   );
 
   const handleAddOrUpdateLine = useCallback(() => {
@@ -376,10 +446,11 @@ export default function GoodsReceiveNote() {
       setLineRows((prev) => [...prev, row]);
     }
     setItemForm(ITEM_INITIAL);
+    closeLineEntryCombos();
     setLineEntryError('');
     setSaveError('');
     focusProductDropdown();
-  }, [itemForm, editingRowIndex, focusProductDropdown]);
+  }, [itemForm, editingRowIndex, closeLineEntryCombos, focusProductDropdown]);
 
   const startEditRow = useCallback(
     (idx) => {
@@ -411,9 +482,10 @@ export default function GoodsReceiveNote() {
   const cancelLineEdit = useCallback(() => {
     setEditingRowIndex(null);
     setItemForm(ITEM_INITIAL);
+    closeLineEntryCombos();
     setLineEntryError('');
     focusProductDropdown();
-  }, [focusProductDropdown]);
+  }, [closeLineEntryCombos, focusProductDropdown]);
 
   const handleDeleteRow = useCallback(
     (idx) => {
@@ -435,11 +507,12 @@ export default function GoodsReceiveNote() {
     setItemForm(ITEM_INITIAL);
     setSummaryInfo(SUMMARY_INITIAL);
     setGrnInfo(freshGrnInfo());
+    closeLineEntryCombos();
     setLineEntryError('');
     setSaveError('');
     setSaveSuccess('');
     focusProductDropdown();
-  }, [focusProductDropdown]);
+  }, [closeLineEntryCombos, focusProductDropdown]);
 
   const handleSaveGrn = useCallback(async () => {
     setSaveError('');
@@ -592,7 +665,7 @@ export default function GoodsReceiveNote() {
   ];
 
   return (
-    <div className="grn-page flex h-full flex-1 min-h-0 flex-col overflow-hidden">
+    <div className="grn-page box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         .grn-page {
@@ -622,16 +695,15 @@ export default function GoodsReceiveNote() {
         .grn-tab-on { color:var(--pr); border-bottom-color:var(--pr); font-weight:700; }
         .grn-bar { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 14px; border-top:2px solid var(--bd);
           background:linear-gradient(180deg,#f8f7f6 0%,#f0efed 100%); flex-shrink:0; flex-wrap:wrap; min-height:38px; }
-        .grn-bb { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:5px; border:1px solid var(--bd); background:#fff;
-          font-size:10.5px; font-weight:500; color:var(--txt); cursor:pointer; transition:all .15s; font-family:'Outfit',sans-serif; white-space:nowrap; }
-        .grn-bb:hover { border-color:var(--pr); background:var(--pr50); color:var(--pr); }
-        .grn-bb:active { background:var(--pr100); }
-        .grn-bb-save { border:none; background:linear-gradient(135deg,${primary} 0%,#85203E 100%); color:#fff; font-weight:600;
-          box-shadow:0 1px 3px rgba(121,7,40,.25); padding:5px 14px; }
-        .grn-bb-save:hover { background:linear-gradient(135deg,#85203E 0%,#923A53 100%); color:#fff; border-color:transparent; }
-        .grn-bb-save:disabled { opacity:.5; cursor:not-allowed; box-shadow:none; }
-        .grn-bb-cancel { color:#b91c1c; border-color:#fca5a5; }
-        .grn-bb-cancel:hover { background:#fef2f2; border-color:#b91c1c; color:#b91c1c; }
+        .grn-bb { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border-radius:6px;
+          border:1px solid #e5e5e5; background:#fff; color:#171717; font-size:11px; font-weight:500; cursor:pointer;
+          white-space:nowrap; transition:border-color .15s,background .15s; }
+        .grn-bb:hover { border-color:#d4d4d4; background:#fafafa; }
+        .grn-bb-save { background:var(--pr); color:#fff; border-color:var(--pr); font-weight:600; }
+        .grn-bb-save:hover { opacity:0.92; color:#fff; border-color:var(--pr); background:var(--pr); }
+        .grn-bb-save:disabled { opacity:.5; cursor:not-allowed; }
+        .grn-bb-cancel { color:#171717; border-color:#e5e5e5; }
+        .grn-bb-cancel:hover { border-color:#d4d4d4; background:#fafafa; }
         .grn-fl { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
         @media(min-width:640px){.grn-fl{font-size:10px}}
         .grn-fi { height:26px; width:100%; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5; padding:0 8px;
@@ -648,16 +720,6 @@ export default function GoodsReceiveNote() {
         .grn-rp::-webkit-scrollbar-thumb { background:#d6d3d1; border-radius:3px; }
         .grn-tbl, .grn-tbl > div { overflow:visible !important; }
         .grn-tbl thead th { position:sticky; top:0; z-index:2; }
-        .grn-total-bar { padding:6px 8px; background:linear-gradient(180deg,#fafaf9 0%,#f5f5f4 100%); }
-        .grn-total-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
-        @media(min-width:768px){.grn-total-grid{grid-template-columns:repeat(8,minmax(0,1fr));}}
-        .grn-total-chip { min-width:0; border:1px solid #e7e5e4; border-radius:6px; background:#fff; padding:4px 6px; box-shadow:0 1px 2px rgba(28,25,23,.04); }
-        .grn-total-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; line-height:1.15; font-weight:800;
-          letter-spacing:.4px; text-transform:uppercase; color:var(--muted); }
-        .grn-total-value { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; text-align:right; font-size:10px;
-          line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:var(--txt); }
-        .grn-total-chip-strong { border-color:rgba(121,7,40,.25); background:linear-gradient(135deg,rgba(121,7,40,.06) 0%,#fff 72%); }
-        .grn-total-chip-strong .grn-total-name, .grn-total-chip-strong .grn-total-value { color:var(--pr); }
         @keyframes grn-modal-in { from{opacity:0;transform:scale(.96) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
         .grn-modal { animation:grn-modal-in .2s ease-out; }
         .grn-field-lbl { padding:0; margin:0; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif;
@@ -666,19 +728,35 @@ export default function GoodsReceiveNote() {
         .grn-field-lbl:hover { color:var(--pr); }
       `}</style>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white sm:mx-[-10px]" style={{ border: '1px solid #e2dfd9' }}>
-        <div className="shrink-0" style={{ height: 3, background: 'linear-gradient(90deg,#790728 0%,#85203E 35%,#923A53 65%,#C44972 100%)', borderRadius: '8px 8px 0 0' }} />
-
-        <div className="flex shrink-0 flex-col gap-1 px-3 py-1.5 sm:px-4 sm:py-2">
-          <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-            <div className="flex shrink-0 items-start gap-2 pt-0.5">
-              <div className="mt-0.5 shrink-0" style={{ width: 3, height: 18, borderRadius: 2, background: `linear-gradient(180deg,${primary} 0%,#C44972 100%)` }} />
-              <h1 className="text-[13px] font-bold leading-tight tracking-tight sm:text-sm" style={{ color: primary }}>GOODS RECEIVE NOTE</h1>
+        <div className="flex shrink-0 flex-col gap-2">
+          {/* Row 1: Heading + action buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>GOODS RECEIVE NOTE</h1>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button type="button" className="grn-bb">
+                <img src={EditIcon} alt="" className="h-3 w-3" /> Edit
+              </button>
+              <button type="button" className="grn-bb" onClick={resetGrn}>
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg> New
+              </button>
+              <button type="button" className="grn-bb">
+                <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+              </button>
+              <button type="button" className="grn-bb">
+                <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+              </button>
+              <button type="button" className="grn-bb cursor-not-allowed opacity-50" disabled title="Post is disabled — save first.">
+                <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+              </button>
+              <button type="button" className="grn-bb grn-bb-save" disabled={saveLoading || !branchId || !supplierId || lineRows.length === 0} onClick={() => { void handleSaveGrn(); }}>
+                {saveLoading ? 'Saving...' : 'Save GRN'}
+              </button>
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-x-2 gap-y-1.5">
-              <DropdownInput label="Branch" widthPx={180} value={branchId} onChange={(v) => setBranchId(String(v || ''))} options={branchDropdownOptions} disabled={refsLoading} />
-              <DropdownInput label="Supplier" widthPx={230} value={supplierId} onChange={(v) => setSupplierId(String(v || ''))} options={supplierDropdownOptions} disabled={suppliersLoading} />
-            </div>
+          </div>
+          {/* Row 2: Branch + Supplier on the left */}
+          <div className="flex flex-wrap items-end gap-2">
+            <DropdownInput label="Branch" widthPx={180} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={branchId} onChange={(v) => setBranchId(String(v || ''))} options={branchDropdownOptions} disabled={refsLoading} />
+            <DropdownInput label="Supplier" widthPx={230} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={supplierId} onChange={(v) => setSupplierId(String(v || ''))} options={supplierDropdownOptions} disabled={suppliersLoading} />
           </div>
           {(refsError || productsLoadError || lineEntryError || saveError || saveSuccess) && (
             <div className="flex flex-wrap gap-2 text-[10px]">
@@ -691,33 +769,113 @@ export default function GoodsReceiveNote() {
           )}
         </div>
 
-        <hr className="grn-hr" />
 
-        <div className="flex shrink-0 items-end gap-x-1.5 gap-y-1 px-3 py-1.5 sm:px-4 sm:py-2 xl:flex-nowrap">
-          <DropdownInput ref={productDropdownRef} label="Product" widthPx={135} value={liveItem.productId} options={productSelectOptions} onChange={(v) => applyProductSelection(v)} />
-          <SubInputField label="Own Ref.#" widthPx={66} value={liveItem.ownRefNo} onChange={(e) => mergeItemForm({ ownRefNo: e.target.value })} />
-          <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 82 }}>
-            <button type="button" className="grn-field-lbl" title="Barcode">
-              Barcode <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-            </button>
-            <SubInputField label="" widthPx={82} value={liveItem.barCode} onChange={(e) => mergeItemForm({ barCode: e.target.value, productId: '' })} />
+        <div className="flex min-w-0 shrink-0 flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-gray-200 bg-slate-50/70 px-3 py-2 sm:px-4">
+          <div className="shrink-0" ref={productComboRef}>
+            <label className={`mb-0.5 block ${GRN_LINE_ENTRY_LBL}`}>Product</label>
+            <div className="relative">
+              <img src={SearchIcon} alt="" className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45" />
+              <input
+                type="text"
+                className="w-[190px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: GRN_LINE_ENTRY_H, minHeight: GRN_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Search product..."
+                value={productComboOpen ? productComboQuery : selectedProductDisplay}
+                onFocus={() => { setProductComboOpen(true); setProductCodeComboOpen(false); setProductDescComboOpen(false); setProductComboQuery(''); }}
+                onChange={(e) => setProductComboQuery(e.target.value)}
+              />
+              {productComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : productComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    productComboFiltered.map((p) => (
+                      <button key={p.productId} type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50" onMouseDown={(e) => { e.preventDefault(); applyProductSelection(String(p.productId)); }}>
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '-'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                        <span className="shrink-0 tabular-nums text-[10px] text-gray-400">{Number(p.lastPurchaseCost || 0).toFixed(2)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 120 }}>
-            <button type="button" className="grn-field-lbl" title="Description">
-              Description <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-            </button>
-            <InputField label="" widthPx={120} value={liveItem.shortDescription} onChange={(e) => mergeItemForm({ shortDescription: e.target.value })} />
+          <div className="shrink-0" ref={productCodeComboRef}>
+            <label className={`mb-0.5 block ${GRN_LINE_ENTRY_LBL}`}>Product code</label>
+            <div className="relative">
+              <img src={SearchIcon} alt="" className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45" />
+              <input
+                type="text"
+                className="w-[112px] rounded border border-gray-200 bg-white pl-6 pr-2 font-mono text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: GRN_LINE_ENTRY_H, minHeight: GRN_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Code..."
+                value={productCodeComboOpen ? productCodeComboQuery : liveItem.barCode}
+                onFocus={() => { setProductCodeComboOpen(true); setProductComboOpen(false); setProductDescComboOpen(false); setProductCodeComboQuery(''); }}
+                onChange={(e) => { setProductCodeComboQuery(e.target.value); mergeItemForm({ barCode: e.target.value, productId: '' }); }}
+              />
+              {productCodeComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : productCodeComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    productCodeComboFiltered.map((p) => (
+                      <button key={p.productId} type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50" onMouseDown={(e) => { e.preventDefault(); applyProductSelection(String(p.productId)); }}>
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '-'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <SubInputField label="Qty" type="number" widthPx={50} value={liveItem.qty} onChange={(e) => mergeItemForm({ qty: e.target.value })} />
-          <DropdownInput label="UOM" options={UOM_OPTIONS} value={liveItem.uom} onChange={(val) => mergeItemForm({ uom: val })} widthPx={62} />
-          <SubInputField label="Pack" type="number" widthPx={55} value={liveItem.packQty} onChange={(e) => mergeItemForm({ packQty: e.target.value })} />
-          <SubInputField label="FOC" type="number" widthPx={48} value={liveItem.foc} onChange={(e) => mergeItemForm({ foc: e.target.value })} />
-          <SubInputField label="Base Cost" type="number" widthPx={68} value={liveItem.baseCost} onChange={(e) => mergeItemForm({ baseCost: e.target.value, unitCost: e.target.value })} />
-          <SubInputField label="Disc %" type="number" widthPx={52} value={liveItem.discPercent} onChange={(e) => mergeItemForm({ discPercent: e.target.value })} />
-          <SubInputField label="Sub.Total" type="number" widthPx={70} value={liveItem.subTotal} readOnly tabIndex={-1} />
-          <DropdownInput label="VAT %" options={VAT_OPTIONS} value={liveItem.vatPercent} onChange={(val) => mergeItemForm({ vatPercent: val })} widthPx={58} />
-          <SubInputField label="VAT Amt" type="number" widthPx={70} value={liveItem.vatAmount} readOnly tabIndex={-1} />
-          <SubInputField label="Total" type="number" widthPx={80} value={liveItem.total} readOnly tabIndex={0} />
+          <div className="shrink-0" ref={productDescComboRef}>
+            <label className={`mb-0.5 block ${GRN_LINE_ENTRY_LBL}`}>Description</label>
+            <div className="relative">
+              <img src={SearchIcon} alt="" className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45" />
+              <input
+                type="text"
+                className="w-[150px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: GRN_LINE_ENTRY_H, minHeight: GRN_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Search description..."
+                value={productDescComboOpen ? productDescComboQuery : liveItem.shortDescription}
+                onFocus={() => { setProductDescComboOpen(true); setProductComboOpen(false); setProductCodeComboOpen(false); setProductDescComboQuery(''); }}
+                onChange={(e) => { setProductDescComboQuery(e.target.value); mergeItemForm({ shortDescription: e.target.value, productId: '' }); }}
+              />
+              {productDescComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : productDescComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    productDescComboFiltered.map((p) => (
+                      <button key={p.productId} type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50" onMouseDown={(e) => { e.preventDefault(); applyProductSelection(String(p.productId)); }}>
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '-'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <SubInputField label="Own Ref.#" widthPx={86} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.ownRefNo} onChange={(e) => mergeItemForm({ ownRefNo: e.target.value })} />
+          <SubInputField label="Qty" type="number" widthPx={58} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.qty} onChange={(e) => mergeItemForm({ qty: e.target.value })} />
+          <DropdownInput label="UOM" options={UOM_OPTIONS} value={liveItem.uom} onChange={(val) => mergeItemForm({ uom: val })} widthPx={60} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} />
+          <SubInputField label="Pack" type="number" widthPx={58} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.packQty} onChange={(e) => mergeItemForm({ packQty: e.target.value })} />
+          <SubInputField label="FOC" type="number" widthPx={58} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.foc} onChange={(e) => mergeItemForm({ foc: e.target.value })} />
+          <SubInputField label="Base Cost" type="number" widthPx={76} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.baseCost} onChange={(e) => mergeItemForm({ baseCost: e.target.value, unitCost: e.target.value })} />
+          <SubInputField label="Disc %" type="number" widthPx={66} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.discPercent} onChange={(e) => mergeItemForm({ discPercent: e.target.value })} />
+          <SubInputField label="Sub.Total" type="number" widthPx={86} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.subTotal} readOnly tabIndex={-1} />
+          <DropdownInput label="VAT %" options={VAT_OPTIONS} value={liveItem.vatPercent} onChange={(val) => mergeItemForm({ vatPercent: val })} widthPx={68} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} />
+          <SubInputField label="VAT Amt" type="number" widthPx={82} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.vatAmount} readOnly tabIndex={-1} />
+          <SubInputField label="Total" type="number" widthPx={90} heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={liveItem.total} readOnly tabIndex={0} />
           <div className="flex shrink-0 items-end gap-1">
             <button type="button" className="grn-add" onClick={handleAddOrUpdateLine}>
               {editingRowIndex !== null ? 'Update' : 'Add'}
@@ -728,7 +886,6 @@ export default function GoodsReceiveNote() {
           </div>
         </div>
 
-        <hr className="grn-hr" />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden xl:flex-row">
           <div className="relative min-h-0 flex-1">
@@ -744,82 +901,55 @@ export default function GoodsReceiveNote() {
                   rows={tableBodyRows}
                 />
               </div>
-              <div className="grn-total-bar shrink-0 border-t" style={{ borderColor: '#e2dfd9' }}>
-                <div className="grn-total-grid">
-                  {[
-                    ['Qty Total', money2(tableTotals.qtySum)],
-                    ['FOC Total', money2(tableTotals.focSum)],
-                    ['Gross Total', money2(tableTotals.grossSum)],
-                    ['Discount Total', money2(tableTotals.discountSum)],
-                    ['Sub Total', money2(tableTotals.subSum)],
-                    ['VAT Total', money2(tableTotals.taxSum)],
-                    ['Header Disc', money2(num(summaryInfo.discountAmount))],
-                    ['Net Total', money2(num(summaryInfo.netAmount)), true],
-                  ].map(([label, value, strong]) => (
-                    <div key={label} className={`grn-total-chip ${strong ? 'grn-total-chip-strong' : ''}`}>
-                      <span className="grn-total-name">{label}</span>
-                      <span className="grn-total-value">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <TableTotalsBar
+                borderColor="#e2dfd9"
+                items={[
+                  ['Qty Total', money2(tableTotals.qtySum)],
+                  ['FOC Total', money2(tableTotals.focSum)],
+                  ['Gross Total', money2(tableTotals.grossSum)],
+                  ['Discount Total', money2(tableTotals.discountSum)],
+                  ['Sub Total', money2(tableTotals.subSum)],
+                  ['VAT Total', money2(tableTotals.taxSum)],
+                  ['Header Disc', money2(num(summaryInfo.discountAmount))],
+                  ['Net Total', money2(num(summaryInfo.netAmount)), true],
+                ]}
+              />
             </div>
           </div>
 
           <div className="grn-rp flex min-h-0 flex-col overflow-y-auto border-t bg-white xl:min-h-0 xl:w-80 xl:border-t-0 xl:border-l" style={{ borderColor: '#e2dfd9' }}>
-            <div className="flex shrink-0 border-b px-3 py-1.5" style={{ borderColor: '#e2dfd9' }}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`grn-tab ${rightTab === tab.key ? 'grn-tab-on' : ''}`}
-                  onClick={() => setRightTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="shrink-0 border-b px-3 py-2" style={{ borderColor: '#e2dfd9' }}>
+              <TabsBar
+                fullWidth
+                tabs={tabs.map((t) => ({ id: t.key, label: t.label }))}
+                activeTab={rightTab}
+                onChange={setRightTab}
+              />
             </div>
 
             <div className="flex-1 overflow-y-auto p-3">
               {rightTab === 'details' ? (
                 <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
+                  <div className="rounded-md border p-3" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
                     <span className="grn-lbl block mb-2">GRN Information</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">Branch</label>
-                        <select value={branchId} onChange={(e) => setBranchId(e.target.value)} className="grn-fi flex-1" disabled={refsLoading}>
-                          {branchDropdownOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">GRN No</label>
-                        <input type="text" value={grnInfo.grnNo} onChange={(e) => setGrnInfo((p) => ({ ...p, grnNo: e.target.value }))} className="grn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">Supplier</label>
-                        <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="grn-fi flex-1" disabled={suppliersLoading}>
-                          {supplierDropdownOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">Supplier Doc</label>
-                        <input type="text" value={grnInfo.supplierDocNo} onChange={(e) => setGrnInfo((p) => ({ ...p, supplierDocNo: e.target.value }))} className="grn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">GRN Date</label>
-                        <input type="date" value={grnInfo.grnDate} onChange={(e) => setGrnInfo((p) => ({ ...p, grnDate: e.target.value }))} className="grn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">Purchase No</label>
-                        <input type="text" value={grnInfo.purchaseNo} onChange={(e) => setGrnInfo((p) => ({ ...p, purchaseNo: e.target.value }))} className="grn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-24 shrink-0">Discount</label>
-                        <select value={grnInfo.discount} onChange={(e) => setGrnInfo((p) => ({ ...p, discount: e.target.value }))} className="grn-fi flex-1">
-                          {DISCOUNT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <DropdownInput label="Branch" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={branchId} onChange={(v) => setBranchId(String(v || ''))} options={branchDropdownOptions} disabled={refsLoading} />
+                      <SubInputField label="GRN No" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={grnInfo.grnNo} onChange={(e) => setGrnInfo((p) => ({ ...p, grnNo: e.target.value }))} />
+                      <DropdownInput label="Supplier" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={supplierId} onChange={(v) => setSupplierId(String(v || ''))} options={supplierDropdownOptions} disabled={suppliersLoading} />
+                      <SubInputField label="Supplier Doc" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={grnInfo.supplierDocNo} onChange={(e) => setGrnInfo((p) => ({ ...p, supplierDocNo: e.target.value }))} />
+                      <DatePickerInput
+                        fullWidth
+                        heightPx={34}
+                        borderRadius={4}
+                        placeholder="DD/MM/YYYY"
+                        displayFontSize={10}
+                        background="#fff"
+                        dropdownInViewport
+                        value={grnInfo.grnDate}
+                        onChange={(e) => setGrnInfo((p) => ({ ...p, grnDate: e.target.value }))}
+                      />
+                      <SubInputField label="Purchase No" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={grnInfo.purchaseNo} onChange={(e) => setGrnInfo((p) => ({ ...p, purchaseNo: e.target.value }))} />
+                      <DropdownInput label="Discount" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={grnInfo.discount} onChange={(v) => setGrnInfo((p) => ({ ...p, discount: v }))} options={DISCOUNT_OPTIONS} />
                     </div>
                   </div>
 
@@ -837,17 +967,10 @@ export default function GoodsReceiveNote() {
                   <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
                     <span className="grn-lbl block mb-2">Summary</span>
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-28 shrink-0">Total</label>
-                        <input type="text" value={summaryInfo.total} readOnly tabIndex={-1} className="grn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="grn-fl w-28 shrink-0">Discount Amount</label>
-                        <input type="text" value={summaryInfo.discountAmount} onChange={(e) => setSummaryInfo((p) => ({ ...p, discountAmount: e.target.value }))} className="grn-fi flex-1" />
-                      </div>
-                      <div className="grn-net flex items-center gap-2">
-                        <label className="grn-fl w-28 shrink-0" style={{ color: primary }}>Net Amount</label>
-                        <input type="text" value={summaryInfo.netAmount} readOnly tabIndex={-1} className="grn-fi flex-1" style={{ fontWeight: 700, background: '#fff' }} />
+                      <SubInputField label="Total" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={summaryInfo.total} readOnly tabIndex={-1} />
+                      <SubInputField label="Discount Amount" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={summaryInfo.discountAmount} onChange={(e) => setSummaryInfo((p) => ({ ...p, discountAmount: e.target.value }))} />
+                      <div className="grn-net">
+                        <SubInputField label="Net Amount" fullWidth heightPx={GRN_LINE_ENTRY_H} labelClassName={GRN_LINE_ENTRY_LBL} className={GRN_LINE_ENTRY_INP} value={summaryInfo.netAmount} readOnly tabIndex={-1} inputStyle={{ fontWeight: 700, background: '#fff' }} />
                       </div>
                     </div>
                   </div>
@@ -869,27 +992,10 @@ export default function GoodsReceiveNote() {
         </div>
 
         <div className="grn-bar shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-stone-500 sm:text-[11px]">
-              {lineRows.length} item{lineRows.length !== 1 ? 's' : ''} | Net: {money2(num(summaryInfo.netAmount))}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button" className="grn-bb" onClick={resetGrn}>New</button>
-            <button type="button" className="grn-bb">
-              <img src={PrinterIcon} alt="" className="h-3 w-3" />
-              Print
-            </button>
-            <button type="button" className="grn-bb grn-bb-cancel">
-              <img src={CancelIcon} alt="" className="h-3 w-3" />
-              Cancel
-            </button>
-            <button type="button" className="grn-bb grn-bb-save" disabled={saveLoading || !branchId || !supplierId || lineRows.length === 0} onClick={() => { void handleSaveGrn(); }}>
-              {saveLoading ? 'Saving...' : 'Save GRN'}
-            </button>
-          </div>
+          <span className="text-[10px] text-stone-500 sm:text-[11px]">
+            {lineRows.length} item{lineRows.length !== 1 ? 's' : ''} | Net: {money2(num(summaryInfo.netAmount))}
+          </span>
         </div>
-      </div>
 
       <ConfirmDialog
         open={pendingDeleteIndex !== null}

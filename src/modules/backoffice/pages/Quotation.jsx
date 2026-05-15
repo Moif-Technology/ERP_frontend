@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { colors } from '../../../shared/constants/theme';
-import { AppActionButton, InputField, SubInputField, CommonTable, Switch, ConfirmDialog, DropdownInput } from '../../../shared/components/ui';
+import { AppActionButton, InputField, SubInputField, CommonTable, Switch, ConfirmDialog, DropdownInput, TableTotalsBar, TabsBar, DatePickerInput } from '../../../shared/components/ui';
 import { getSessionUser } from '../../../core/auth/auth.service.js';
 import * as staffEntryApi from '../../../services/staffEntry.api.js';
 import * as customerEntryApi from '../../../services/customerEntry.api.js';
@@ -13,6 +13,7 @@ import * as quotationEntryApi from '../../../services/quotationEntry.api.js';
 import ProformaIcon from '../../../shared/assets/icons/proforma.svg';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
+import PostIcon from '../../../shared/assets/icons/post.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
@@ -464,73 +465,261 @@ export default function Quotation() {
   const totalQty = items.reduce((sum, r) => sum + Number(r.qty || 0), 0);
   const tableDiscountTotal = items.reduce((sum, r) => sum + Number(r.discAmt || 0), 0);
   const money2 = (value) => Number(value || 0).toFixed(2);
-  const rightTabs = [
-    { key: 'summary', label: 'Summary' },
-    { key: 'quote', label: 'Quote' },
-    { key: 'terms', label: 'Terms' },
-  ];
 
-  const inputBase = 'h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#790728] focus:outline-none focus:ring-2 focus:ring-[#790728]/20 transition-colors';
-
-  /** Customer block — label + gray field */
-  const quoteDetailRowLabel =
-    'min-w-0 shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:w-[120px] sm:text-[10px]';
-  const detailRowInput =
-    'min-h-[24px] min-w-0 flex-1 max-w-full rounded border border-gray-300 bg-gray-100 px-2 py-1 text-[9px] outline-none sm:min-h-[28px] sm:text-[10px]';
+  const QTN_ENTRY_H = 26;
+  const QTN_ENTRY_LBL = 'text-[9px] font-semibold text-gray-500 sm:text-[10px]';
+  const QTN_ENTRY_INP = 'text-[10px] tabular-nums';
 
   return (
-    <div className="qtn-page flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="pur-root box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-        .qtn-page {
-          --pr: ${primary}; --pr50: ${primaryHover}; --bd: #e2dfd9; --txt: #1c1917; --muted: #78716c;
-          font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        .pur-root {
+          --pr: ${primary}; --bd: #e5e5e5; --txt: #171717; --muted: #737373; --soft: #fafafa;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
-        .qtn-hr { height:1px; background:var(--bd); border:none; margin:0; flex-shrink:0; }
-        .qtn-lbl { font-size:9px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--pr); }
-        .qtn-fl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
-        @media(min-width:640px){.qtn-fl{font-size:10px}}
-        .qtn-fi { height:26px; width:100%; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5; padding:0 8px; font-size:9px; outline:none; transition:border-color .15s; }
-        @media(min-width:640px){.qtn-fi{font-size:10px}}
-        .qtn-fi:focus { border-color:var(--pr); }
-        .qtn-ta { min-height:38px; width:100%; resize:vertical; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5; padding:5px 8px; font-size:9px; outline:none; transition:border-color .15s; }
-        @media(min-width:640px){.qtn-ta{font-size:10px}}
-        .qtn-ta:focus { border-color:var(--pr); }
-        .qtn-tab { padding:6px 12px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; white-space:nowrap; }
-        .qtn-tab:hover { color:var(--txt); }
-        .qtn-tab-on { color:var(--pr); border-bottom-color:var(--pr); font-weight:800; }
-        .qtn-act { padding:3px; border-radius:4px; border:none; background:transparent; cursor:pointer; transition:all .15s; opacity:.58; display:inline-flex; align-items:center; justify-content:center; }
-        .qtn-act:hover { background:var(--pr50); opacity:1; }
-        .qtn-field-lbl { padding:0; margin:0; border:none; background:transparent; cursor:pointer; font-size:9px; font-weight:700; letter-spacing:.3px; color:var(--muted); line-height:1.2; display:inline-flex; align-items:center; gap:3px; }
-        @media(min-width:640px){.qtn-field-lbl{font-size:10px}}
-        .qtn-field-lbl:hover { color:var(--pr); }
-        .qtn-total-bar { padding:6px 8px; background:linear-gradient(180deg,#fafaf9 0%,#f5f5f4 100%); }
-        .qtn-total-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
-        @media(min-width:768px){.qtn-total-grid{grid-template-columns:repeat(8,minmax(0,1fr));}}
-        .qtn-total-chip { min-width:0; border:1px solid #e7e5e4; border-radius:6px; background:#fff; padding:4px 6px; box-shadow:0 1px 2px rgba(28,25,23,.04); }
-        .qtn-total-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; line-height:1.15; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--muted); }
-        .qtn-total-value { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; text-align:right; font-size:10px; line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:var(--txt); }
-        .qtn-total-strong { border-color:rgba(121,7,40,.25); background:linear-gradient(135deg,rgba(121,7,40,.06) 0%,#fff 72%); }
-        .qtn-total-strong .qtn-total-name, .qtn-total-strong .qtn-total-value { color:var(--pr); }
-        .qtn-net { background:linear-gradient(135deg,rgba(121,7,40,.07) 0%,rgba(121,7,40,.03) 100%); border-radius:6px; padding:3px; }
-        .qtn-rp::-webkit-scrollbar { width:3px; }
-        .qtn-rp::-webkit-scrollbar-track { background:transparent; }
-        .qtn-rp::-webkit-scrollbar-thumb { background:#d6d3d1; border-radius:3px; }
+        .pur-btn:hover { border-color: #d4d4d4; background: var(--soft); color: var(--txt); }
+        .pur-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .pur-summary-card { border-radius: 10px; border: 1px solid #e7e5e4; background: linear-gradient(165deg,#fafaf9 0%,#fff 48%,#fafaf9 100%); box-shadow: 0 1px 2px rgba(28,25,23,.05),0 0 0 1px rgba(255,255,255,.8) inset; overflow: hidden; }
+        .pur-summary-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:7px 12px; min-width:0; }
+        .pur-summary-row + .pur-summary-row { border-top:1px solid #f5f5f4; }
+        .pur-summary-row-dense { padding-top:5px; padding-bottom:5px; }
+        .pur-summary-label { font-size:11px; font-weight:600; color:#57534e; letter-spacing:.01em; line-height:1.25; }
+        .pur-summary-value { font-size:13px; font-weight:700; color:#1c1917; font-variant-numeric:tabular-nums; text-align:right; letter-spacing:-0.02em; }
+        .pur-summary-value-sm { font-size:12px; font-weight:600; }
+        .pur-summary-net { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0; padding:11px 12px 12px; border-top:1px solid rgba(121,7,40,.18); background:linear-gradient(180deg,rgba(121,7,40,.07) 0%,rgba(121,7,40,.025) 100%); }
+        .pur-summary-net .pur-summary-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--pr); }
+        .pur-summary-net .pur-summary-value { font-size:15px; font-weight:800; color:var(--pr); }
+        .pur-act { width:30px; height:30px; padding:6px; border-radius:6px; border:none; background:transparent; cursor:pointer; opacity:.5; display:inline-flex; align-items:center; justify-content:center; transition:opacity .15s,background .15s; }
+        .pur-act:hover { background:var(--soft); opacity:1; }
+        .pur-entry-bar-input { box-sizing:border-box; height:26px; min-height:26px; border-radius:3px; border:1px solid #d4d4d4; background:#fff; padding:0 6px; font-size:10px; outline:none; width:100%; }
+        .pur-entry-bar-input:focus { border-color:#a3a3a3; }
+        .pur-entry-bar-input[readonly] { background:#f5f5f5; color:#737373; }
         .qtn-tbl, .qtn-tbl > div { overflow:visible !important; }
         .qtn-tbl thead th { position:sticky; top:0; z-index:2; }
       `}</style>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white sm:mx-[-10px]" style={{ border: '1px solid #e2dfd9' }}>
-        <div className="shrink-0" style={{ height: 3, background: 'linear-gradient(90deg,#790728 0%,#85203E 35%,#923A53 65%,#C44972 100%)', borderRadius: '8px 8px 0 0' }} />
+      {/* Row 1: Title + action buttons */}
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>QUOTATION ENTRY</h1>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={EditIcon} alt="" className="h-3 w-3" /> Edit
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition" onClick={handleAddQuotation}>
+            <PlusIcon className="h-3 w-3" /> New
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 cursor-not-allowed items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 opacity-50 transition" disabled>
+            <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ backgroundColor: primary, borderColor: primary }}
+            disabled={saving || loadingRefs || loadingEdit}
+            onClick={handleSaveQuotation}
+          >
+            {saving ? 'Saving...' : <><SaveIcon className="h-3 w-3" /> Save</>}
+          </button>
+        </div>
+      </div>
 
-        <div className="flex shrink-0 flex-col gap-1 px-3 py-1.5 sm:px-4 sm:py-2">
-          <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-            <div className="flex shrink-0 items-start gap-2 pt-0.5">
-              <div className="mt-0.5 shrink-0" style={{ width: 3, height: 18, borderRadius: 2, background: `linear-gradient(180deg,${primary} 0%,#C44972 100%)` }} />
-              <h1 className="text-[13px] font-bold leading-tight tracking-tight sm:text-sm" style={{ color: primary }}>QUOTATION ENTRY</h1>
+      {/* Row 2: Branch */}
+      <div className="flex shrink-0 flex-wrap items-end gap-x-3 gap-y-2">
+        <DropdownInput
+          label="Branch"
+          placeholder={loadingRefs || loadingEdit ? 'Loading...' : 'Select branch'}
+          options={branchOptions}
+          value={branchId}
+          onChange={(v) => setBranchId(v)}
+          widthPx={170}
+          heightPx={QTN_ENTRY_H}
+          labelClassName={QTN_ENTRY_LBL}
+          className={QTN_ENTRY_INP}
+          disabled={loadingRefs || loadingEdit || !branchOptions.length}
+        />
+        {(loadingEdit || saveError || successMsg) && (
+          <div className="flex flex-wrap gap-2 text-[10px]">
+            {loadingEdit ? <span className="text-amber-700">Loading quotation details...</span> : null}
+            {saveError ? <span className="text-red-700">{saveError}</span> : null}
+            {successMsg ? <span className="text-emerald-700">{successMsg}</span> : null}
+          </div>
+        )}
+      </div>
+
+      {/* Line entry bar */}
+      <div className="flex min-w-0 shrink-0 flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
+        <div className="shrink-0">
+          <label className={`mb-0.5 block ${QTN_ENTRY_LBL}`}>Product Search</label>
+          <div className="relative" style={{ width: 160 }}>
+            <img src={SearchIcon} alt="" className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45" />
+            <input
+              type="text"
+              placeholder={branchId ? 'Search product…' : 'Select branch first'}
+              disabled={!branchId}
+              value={productSearch}
+              onChange={(e) => { const val = e.target.value; setProductSearch(val); setProductResults(getFilteredProducts(val)); setShowSearchDropdown(true); }}
+              onFocus={() => { setProductResults(getFilteredProducts(productSearch)); setShowSearchDropdown(true); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleProductSearch(); } }}
+              className="pur-entry-bar-input pl-6"
+              style={{ width: 160 }}
+            />
+            {showSearchDropdown && productResults.length > 0 && (
+              <div className="absolute left-0 top-[calc(100%+4px)] z-30 max-h-[190px] w-[300px] overflow-auto rounded-md border border-stone-200 bg-white shadow-lg">
+                <div className="border-b border-stone-100 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-stone-500">Products</div>
+                {productResults.map((p) => (
+                  <button key={p.productId} type="button" onClick={() => selectProduct(p)} className="block w-full px-2 py-1.5 text-left text-[9px] font-semibold text-stone-700 hover:bg-rose-50">
+                    {p.shortDescription} - {money2(p.unitPrice)} / {p.unit || '-'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Own Ref" widthPx={74} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={ownRefNo} onChange={(e) => setOwnRefNo(e.target.value)} />
+        </div>
+        <div className="shrink-0">
+          <InputField label="Product Code" widthPx={96} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={productCode} onChange={(e) => setProductCode(e.target.value)} />
+        </div>
+        <div className="shrink-0">
+          <InputField label="Short Desc" widthPx={150} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
+        </div>
+        <div className="shrink-0">
+          <InputField label="Location" widthPx={78} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={location} onChange={(e) => setLocation(e.target.value)} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Unit" widthPx={58} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={unit} onChange={(e) => setUnit(e.target.value)} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Qty" type="number" widthPx={56} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={qty} onChange={(e) => setQty(Number(e.target.value))} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Price" type="number" widthPx={72} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Disc %" type="number" widthPx={56} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={discPct} onChange={(e) => { const v = Number(e.target.value); setDiscPct(v); setDiscAmt(qty * unitPrice * (v / 100)); }} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Disc" type="number" widthPx={68} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} />
+        </div>
+        <div className="shrink-0">
+          <SubInputField label="Tax %" type="number" widthPx={54} heightPx={QTN_ENTRY_H} labelClassName={QTN_ENTRY_LBL} className={QTN_ENTRY_INP} value={0} readOnly title="Tax not configured" />
+        </div>
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={addItem}
+            className="inline-flex shrink-0 items-center justify-center gap-1 rounded border px-3 text-[10px] font-semibold leading-none text-white"
+            style={{ backgroundColor: primary, borderColor: primary, height: QTN_ENTRY_H, minHeight: QTN_ENTRY_H }}
+          >
+            <PlusIcon className="h-3 w-3" /> Add Line
+          </button>
+        </div>
+      </div>
+
+      {/* Main content grid */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+
+        {/* Left: line-item table */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+            <CommonTable
+              className="qtn-tbl"
+              fitParentWidth
+              stickyHeader
+              hideOuterBorder
+              maxVisibleRows={20}
+              headers={['Sl', 'Own Ref', 'Product Code', 'Description', 'Loc', 'Unit', 'Qty', 'Price', 'Disc%', 'Disc', 'Tax%', 'Tax', 'Total', 'Origin', 'Stock', 'Action']}
+              rows={items.map((r, i) => [
+                r.slNo,
+                r.ownRefNo,
+                r.productCode,
+                r.shortDescription,
+                r.location,
+                r.unit,
+                r.qty,
+                r.unitPrice?.toFixed(2),
+                r.discPct,
+                r.discAmt?.toFixed(2),
+                r.taxPct,
+                r.taxAmount?.toFixed(2),
+                r.lineTotal?.toFixed(2),
+                r.origin,
+                r.stockStatus,
+                <div key={`act-${i}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
+                  <button type="button" className="pur-act" onClick={() => setLineItemDetail(r)} aria-label="View line">
+                    <img src={ViewActionIcon} alt="" className="h-3.5 w-3.5" />
+                  </button>
+                  <button type="button" className="pur-act" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete line">
+                    <img src={DeleteActionIcon} alt="" className="h-3.5 w-3.5" />
+                  </button>
+                </div>,
+              ])}
+            />
+          </div>
+          <TableTotalsBar
+            borderColor="#e5e5e5"
+            items={[
+              ['Items', String(items.length)],
+              ['Qty Total', money2(totalQty)],
+              ['Price Sum', money2(totalPrice)],
+              ['Discount', money2(tableDiscountTotal)],
+              ['Sub Total', money2(subTotal)],
+              ['Tax Total', money2(tableTaxTotal)],
+              ['Net Amount', money2(netAmount), true],
+            ]}
+          />
+        </div>
+
+        {/* Right: Quotation Details + tabs */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200 xl:min-w-0">
+          {/* Always-visible: Quotation Details */}
+          <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-3 flex flex-col gap-2.5">
+            <span className="pur-lbl">Quotation Details</span>
+            <div className="grid grid-cols-2 gap-2">
+              <SubInputField
+                label="Quotation No"
+                fullWidth
+                heightPx={QTN_ENTRY_H}
+                labelClassName={QTN_ENTRY_LBL}
+                className={QTN_ENTRY_INP}
+                value={quotationNo}
+                onChange={() => {}}
+                placeholder="Auto on save"
+                readOnly
+              />
+              <SubInputField
+                label="Cust Ref No"
+                fullWidth
+                heightPx={QTN_ENTRY_H}
+                labelClassName={QTN_ENTRY_LBL}
+                className={QTN_ENTRY_INP}
+                value={custRefNo}
+                onChange={(e) => setCustRefNo(e.target.value)}
+              />
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-x-2 gap-y-1.5">
-              <DropdownInput label="Branch" placeholder={loadingRefs || loadingEdit ? 'Loading...' : 'Select branch'} options={branchOptions} value={branchId} onChange={(v) => setBranchId(v)} widthPx={170} disabled={loadingRefs || loadingEdit || !branchOptions.length} />
+            <div>
+              <label className={`mb-0.5 block ${QTN_ENTRY_LBL}`}>Quotation Date</label>
+              <DatePickerInput
+                fullWidth
+                heightPx={34}
+                borderRadius={4}
+                placeholder="DD/MM/YYYY"
+                displayFontSize={10}
+                background="#fff"
+                dropdownInViewport
+                value={quotationDate}
+                onChange={(e) => setQuotationDate(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className={QTN_ENTRY_LBL}>Customer</label>
               <select
                 value={customerId === '' ? '' : String(customerId)}
                 onChange={(e) => {
@@ -540,321 +729,93 @@ export default function Quotation() {
                   setCustomerAddress(row?.address || '');
                   setContactPerson(row?.contactPerson || '');
                 }}
-                className="qtn-fi max-w-[220px] shrink-0 bg-white"
+                className="pur-entry-bar-input"
                 disabled={loadingRefs || loadingEdit}
-                aria-label="Customer"
+                style={{ height: QTN_ENTRY_H }}
               >
                 <option value="">Select Customer</option>
                 {customersRows.map((c) => (
                   <option key={c.customerId} value={String(c.customerId)}>{c.customerName}</option>
                 ))}
               </select>
-              <div className="flex shrink-0 items-end gap-1.5">
-                <AppActionButton title="Print" ariaLabel="Print" icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />} className="h-7 px-2 text-[10px]">
-                  <span className="hidden sm:inline">Print</span>
-                </AppActionButton>
-                <AppActionButton title="New Quotation" ariaLabel="New Quotation" icon={<PlusIcon />} onClick={handleAddQuotation} className="h-7 px-2 text-[10px]">
-                  <span className="hidden sm:inline">New</span>
-                </AppActionButton>
-                <AppActionButton onClick={handleSaveQuotation} disabled={saving || loadingRefs || loadingEdit} title={saving ? 'Saving...' : 'Save Quotation'} ariaLabel={saving ? 'Saving...' : 'Save Quotation'} icon={<SaveIcon />} variant="primary" className="h-7 px-2 text-[10px]">
-                  {saving ? 'Saving...' : 'Save'}
-                </AppActionButton>
-              </div>
             </div>
-          </div>
-          {(loadingEdit || saveError || successMsg) && (
-            <div className="flex flex-wrap gap-2 text-[10px]">
-              {loadingEdit ? <span className="text-amber-700">Loading quotation details...</span> : null}
-              {saveError ? <span className="text-red-700">{saveError}</span> : null}
-              {successMsg ? <span className="text-emerald-700">{successMsg}</span> : null}
+            <div className="flex flex-col gap-1">
+              <label className={QTN_ENTRY_LBL}>Address</label>
+              <textarea
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                rows={2}
+                className="w-full resize-y rounded border border-neutral-200 bg-white px-2 py-1 text-[10px] outline-none focus:border-gray-400"
+              />
             </div>
-          )}
-        </div>
-
-        <hr className="qtn-hr" />
-
-        <div className="flex shrink-0 items-end gap-x-1.5 gap-y-1 overflow-x-auto px-3 py-1.5 sm:px-4 sm:py-2 xl:flex-nowrap">
-          <div className="relative shrink-0" style={{ width: 145 }}>
-            <button type="button" className="qtn-field-lbl mb-0.5" title="Search products" onClick={handleProductSearch}>
-              Product Search <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-            </button>
-            <input
-              type="text"
-              placeholder={branchId ? 'Search product' : 'Select branch first'}
-              disabled={!branchId}
-              value={productSearch}
-              onChange={(e) => {
-                const val = e.target.value;
-                setProductSearch(val);
-                setProductResults(getFilteredProducts(val));
-                setShowSearchDropdown(true);
-              }}
-              onFocus={() => {
-                setProductResults(getFilteredProducts(productSearch));
-                setShowSearchDropdown(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleProductSearch();
-                }
-              }}
-              className="qtn-fi bg-white"
+            <SubInputField
+              label="Contact Person"
+              fullWidth
+              heightPx={QTN_ENTRY_H}
+              labelClassName={QTN_ENTRY_LBL}
+              className={QTN_ENTRY_INP}
+              value={contactPerson}
+              onChange={(e) => setContactPerson(e.target.value)}
             />
-            {showSearchDropdown && productResults.length > 0 ? (
-              <div className="absolute left-0 top-[calc(100%+4px)] z-30 max-h-[190px] w-[300px] overflow-auto rounded-md border border-stone-200 bg-white shadow-lg">
-                <div className="border-b border-stone-100 px-2 py-1 text-[8px] font-bold uppercase tracking-wide text-stone-500">Products</div>
-                {productResults.map((p) => (
-                  <button key={p.productId} type="button" onClick={() => selectProduct(p)} className="block w-full px-2 py-1.5 text-left text-[9px] font-semibold text-stone-700 hover:bg-rose-50">
-                    {p.shortDescription} - {money2(p.unitPrice)} / {p.unit || '-'}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
-          <SubInputField label="Own Ref" widthPx={74} value={ownRefNo} onChange={(e) => setOwnRefNo(e.target.value)} />
-          <InputField label="Product Code" widthPx={96} value={productCode} onChange={(e) => setProductCode(e.target.value)} />
-          <InputField label="Short Desc" widthPx={150} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
-          <InputField label="Location" widthPx={78} value={location} onChange={(e) => setLocation(e.target.value)} />
-          <SubInputField label="Unit" widthPx={58} value={unit} onChange={(e) => setUnit(e.target.value)} />
-          <SubInputField label="Qty" type="number" widthPx={52} value={qty} onChange={(e) => setQty(Number(e.target.value))} />
-          <SubInputField label="Price" type="number" widthPx={72} value={unitPrice} onChange={(e) => setUnitPrice(Number(e.target.value))} />
-          <SubInputField
-            label="Disc %"
-            type="number"
-            widthPx={56}
-            value={discPct}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              setDiscPct(v);
-              setDiscAmt(qty * unitPrice * (v / 100));
-            }}
-          />
-          <SubInputField label="Disc" type="number" widthPx={68} value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} />
-          <SubInputField label="Tax %" type="number" widthPx={54} value={0} readOnly title="Tax not configured" />
-          <div className="flex shrink-0 items-end">
-            <AppActionButton onClick={addItem} title="Add" ariaLabel="Add" icon={<PlusIcon className="h-3 w-3" />} variant="primary" className="h-7 px-3 text-[9px]">
-              Add
-            </AppActionButton>
+
+          {/* TabsBar */}
+          <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-2">
+            <TabsBar
+              fullWidth
+              tabs={[{ id: 'summary', label: 'Summary' }, { id: 'terms', label: 'Terms' }]}
+              activeTab={rightTab}
+              onChange={setRightTab}
+            />
           </div>
-        </div>
 
-        <hr className="qtn-hr" />
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden xl:flex-row">
-          <div className="relative min-h-0 flex-1">
-            <div className="absolute inset-x-2 inset-y-1 flex flex-col overflow-hidden rounded-md sm:inset-x-3 sm:inset-y-1.5" style={{ border: '1px solid #e2dfd9' }}>
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-                <CommonTable
-                  className="qtn-tbl"
-                  fitParentWidth
-                  stickyHeader
-                  hideOuterBorder
-                  maxVisibleRows={20}
-                  headers={['Sl', 'Own Ref', 'Product Code', 'Description', 'Loc', 'Unit', 'Qty', 'Price', 'Disc%', 'Disc', 'Tax%', 'Tax', 'Total', 'Origin', 'Stock', 'Action']}
-                  rows={items.map((r, i) => [
-                    r.slNo,
-                    r.ownRefNo,
-                    r.productCode,
-                    r.shortDescription,
-                    r.location,
-                    r.unit,
-                    r.qty,
-                    r.unitPrice?.toFixed(2),
-                    r.discPct,
-                    r.discAmt?.toFixed(2),
-                    r.taxPct,
-                    r.taxAmount?.toFixed(2),
-                    r.lineTotal?.toFixed(2),
-                    r.origin,
-                    r.stockStatus,
-                    <div key={`act-${i}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-                      <button type="button" className="qtn-act" onClick={() => setLineItemDetail(r)} aria-label="View line">
-                        <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      </button>
-                      <button type="button" className="qtn-act" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete line">
-                        <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      </button>
-                    </div>,
-                  ])}
-                />
-              </div>
-              <div className="qtn-total-bar shrink-0 border-t" style={{ borderColor: '#e2dfd9' }}>
-                <div className="qtn-total-grid">
+          {/* Tab content */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+            {rightTab === 'summary' && (
+              <div className="flex flex-col gap-3">
+                <span className="pur-lbl">Product Info</span>
+                <div className="pur-summary-card">
                   {[
-                    ['Items', String(items.length)],
-                    ['Qty Total', money2(totalQty)],
-                    ['Unit Price Sum', money2(totalPrice)],
-                    ['Line Discount', money2(tableDiscountTotal)],
-                    ['Sub Total', money2(subTotal)],
-                    ['Tax Total', money2(tableTaxTotal)],
-                    ['Header Disc', money2(discountAmount)],
-                    ['Net Amount', money2(netAmount), true],
-                  ].map(([label, value, strong]) => (
-                    <div key={label} className={`qtn-total-chip ${strong ? 'qtn-total-strong' : ''}`}>
-                      <span className="qtn-total-name">{label}</span>
-                      <span className="qtn-total-value">{value}</span>
+                    ['Last Purchase Cost', productInfo.lastCost || '—'],
+                    ['Origin', productInfo.origin || '—'],
+                    ['Product Code', productCode || '—'],
+                    ['Min. Unit Price', productInfo.minPrice || '—'],
+                    ['Stock On Hand', productInfo.stock || '—'],
+                    ['Location', productInfo.loc || '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label" style={{ fontSize: 10 }}>{label}</span>
+                      <span className="pur-summary-value pur-summary-value-sm" style={{ fontSize: 10 }}>{value}</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="qtn-rp flex min-h-0 flex-col overflow-y-auto border-t bg-white xl:min-h-0 xl:w-80 xl:border-t-0 xl:border-l" style={{ borderColor: '#e2dfd9' }}>
-            <div className="flex shrink-0 border-b px-3 py-1" style={{ borderColor: '#e2dfd9' }}>
-              {rightTabs.map((tab) => (
-                <button key={tab.key} type="button" className={`qtn-tab ${rightTab === tab.key ? 'qtn-tab-on' : ''}`} onClick={() => setRightTab(tab.key)}>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-3">
-              {rightTab === 'summary' && (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Summary</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-28 shrink-0">Sub Total</label>
-                        <input type="text" readOnly tabIndex={-1} value={money2(subTotal)} className="qtn-fi flex-1 tabular-nums" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-28 shrink-0">Discount</label>
-                        <input type="number" value={discountAmount} onChange={(e) => setDiscountAmount(Number(e.target.value))} className="qtn-fi flex-1 tabular-nums" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-28 shrink-0">Tax</label>
-                        <input type="text" readOnly tabIndex={-1} value={money2(taxAmount)} className="qtn-fi flex-1 tabular-nums" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-28 shrink-0">Round Off</label>
-                        <input type="number" value={roundOff} onChange={(e) => setRoundOff(e.target.value)} className="qtn-fi flex-1 tabular-nums" />
-                      </div>
-                      <div className="qtn-net flex items-center gap-2">
-                        <label className="qtn-fl w-28 shrink-0" style={{ color: primary }}>Net Amount</label>
-                        <input type="text" readOnly tabIndex={-1} value={money2(netAmount)} className="qtn-fi flex-1 tabular-nums" style={{ fontWeight: 800, background: '#fff' }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Product Info</span>
-                    <div className="space-y-1.5 text-[10px] leading-tight text-stone-700">
-                      {[
-                        ['Last Purchase Cost', productInfo.lastCost || '-'],
-                        ['Origin', productInfo.origin || '-'],
-                        ['Product Code', productCode || '-'],
-                        ['Min. Unit Price', productInfo.minPrice || '-'],
-                        ['Stock On Hand', productInfo.stock || '-'],
-                        ['Location', productInfo.loc || '-'],
-                      ].map(([label, value]) => (
-                        <div key={label} className="flex justify-between gap-3">
-                          <span className="text-stone-500">{label}</span>
-                          <span className="min-w-0 shrink text-right font-semibold">{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            )}
+            {rightTab === 'terms' && (
+              <div className="flex flex-col gap-3">
+                <span className="pur-lbl">Terms & Conditions</span>
+                <textarea
+                  value={quotationTerms}
+                  onChange={(e) => setQuotationTerms(e.target.value)}
+                  rows={8}
+                  placeholder="Validity, delivery, payment terms..."
+                  className="w-full resize-y rounded border border-neutral-200 bg-white px-2 py-2 text-[10px] outline-none focus:border-gray-400"
+                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <Switch id="quotation-attachments" size="xs" checked={attachments} onChange={setAttachments} description="Attachments" />
+                  <Switch id="qtn-print-locn" size="xs" checked={printLocn} onChange={setPrintLocn} description="Print Location" />
+                  <Switch id="qtn-print-own-ref" size="xs" checked={printOwnRefNo} onChange={setPrintOwnRefNo} description="Print Own Ref" />
+                  <Switch id="qtn-print-other-format" size="xs" checked={printOtherFormat} onChange={setPrintOtherFormat} description="Other Format" />
                 </div>
-              )}
-
-              {rightTab === 'quote' && (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Quote Information</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Quotation No</label>
-                        <input type="text" value={quotationNo} onChange={() => {}} className="qtn-fi flex-1" placeholder="Auto on save" readOnly />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Quote Date</label>
-                        <input type="date" value={quotationDate} onChange={(e) => setQuotationDate(e.target.value)} className="qtn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Cust Ref No</label>
-                        <input type="text" value={custRefNo} onChange={(e) => setCustRefNo(e.target.value)} className="qtn-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Cust Ref Date</label>
-                        <input type="date" value={custRefDate} onChange={(e) => setCustRefDate(e.target.value)} className="qtn-fi flex-1" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Customer</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Customer</label>
-                        <select value={customerId === '' ? '' : String(customerId)} onChange={(e) => {
-                          const v = e.target.value;
-                          setCustomerId(v);
-                          const row = customersRows.find((c) => String(c.customerId) === v);
-                          setCustomerAddress(row?.address || '');
-                          setContactPerson(row?.contactPerson || '');
-                        }} className="qtn-fi flex-1">
-                          <option value="">Select Customer</option>
-                          {customersRows.map((c) => <option key={c.customerId} value={String(c.customerId)}>{c.customerName}</option>)}
-                        </select>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <label className="qtn-fl mt-1.5 w-24 shrink-0">Address</label>
-                        <textarea value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} rows={3} className="qtn-ta flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="qtn-fl w-24 shrink-0">Contact</label>
-                        <input type="text" value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="qtn-fi flex-1" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Options</span>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Switch id="quotation-attachments" size="xs" checked={attachments} onChange={setAttachments} description="Attachments" />
-                      <Switch id="qtn-print-locn" size="xs" checked={printLocn} onChange={setPrintLocn} description="Print Location" />
-                      <Switch id="qtn-print-own-ref" size="xs" checked={printOwnRefNo} onChange={setPrintOwnRefNo} description="Print Own Ref" />
-                      <Switch id="qtn-print-other-format" size="xs" checked={printOtherFormat} onChange={setPrintOtherFormat} description="Other Format" />
-                    </div>
-                  </div>
+                <span className="pur-lbl">Document Actions</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <AppActionButton title="Edit" ariaLabel="Edit" icon={<img src={EditIcon} alt="" className="h-3 w-3" />} className="h-7 px-2 text-[9px]">Edit</AppActionButton>
+                  <AppActionButton title="Duplicate" ariaLabel="Duplicate" icon={<img src={DuplicateIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />} className="h-7 px-2 text-[9px]">Duplicate</AppActionButton>
+                  <AppActionButton title="Proforma" ariaLabel="Proforma" icon={<img src={ProformaIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />} className="h-7 px-2 text-[9px]">Proforma</AppActionButton>
+                  <AppActionButton onClick={() => setSaveTerms(true)} title="Save Terms" ariaLabel="Save Terms" variant="primary" className="h-7 px-2 text-[9px]">Save Terms</AppActionButton>
                 </div>
-              )}
-
-              {rightTab === 'terms' && (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Terms & Conditions</span>
-                    <textarea value={quotationTerms} onChange={(e) => setQuotationTerms(e.target.value)} className="qtn-ta w-full" rows={8} placeholder="Validity, delivery, payment terms..." />
-                  </div>
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="qtn-lbl mb-2 block">Document Actions</span>
-                    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5">
-                      <AppActionButton title="Edit" ariaLabel="Edit" icon={<img src={EditIcon} alt="" className="h-3 w-3" />} className="h-7 px-2 text-[9px]">Edit</AppActionButton>
-                      <AppActionButton title="Duplicate" ariaLabel="Duplicate" icon={<img src={DuplicateIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />} className="h-7 px-2 text-[9px]">Duplicate</AppActionButton>
-                      <AppActionButton title="Proforma" ariaLabel="Proforma" icon={<img src={ProformaIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />} className="h-7 px-2 text-[9px]">Proforma</AppActionButton>
-                      <AppActionButton onClick={() => setSaveTerms(true)} title="Save Terms" ariaLabel="Save Terms" variant="primary" className="h-7 px-2 text-[9px]">Save Terms</AppActionButton>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t px-3 py-1.5 sm:px-4" style={{ borderColor: '#e2dfd9', background: 'linear-gradient(180deg,#f8f7f6 0%,#f0efed 100%)' }}>
-          <span className="text-[10px] font-semibold text-stone-500 sm:text-[11px]">
-            {items.length} item{items.length !== 1 ? 's' : ''} | Net: {money2(netAmount)}
-          </span>
-          <div className="flex items-center gap-2">
-            <AppActionButton title="New" ariaLabel="New" icon={<PlusIcon />} onClick={handleAddQuotation} className="h-7 px-2 text-[10px]">New</AppActionButton>
-            <AppActionButton title="Print" ariaLabel="Print" icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />} className="h-7 px-2 text-[10px]">Print</AppActionButton>
-            <AppActionButton title="Cancel" ariaLabel="Cancel" icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />} className="h-7 px-2 text-[10px]">Cancel</AppActionButton>
-            <AppActionButton onClick={handleSaveQuotation} disabled={saving || loadingRefs || loadingEdit || items.length === 0} title={saving ? 'Saving...' : 'Save Quotation'} ariaLabel={saving ? 'Saving...' : 'Save Quotation'} icon={<SaveIcon />} variant="primary" className="h-7 px-3 text-[10px]">
-              {saving ? 'Saving...' : 'Save Quotation'}
-            </AppActionButton>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -881,28 +842,34 @@ export default function Quotation() {
           aria-labelledby="qtn-line-detail-title"
         >
           <div
-            className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg border border-stone-200 bg-white p-4 shadow-xl"
+            className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg border border-stone-200 bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setLineItemDetail(null)}
-              className="absolute right-2 top-2 rounded p-1 text-stone-500 hover:bg-stone-100 hover:text-stone-700"
-              aria-label="Close"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <h2 id="qtn-line-detail-title" className="mb-4 text-center text-base font-bold" style={{ color: primary }}>
-              Line item details
-            </h2>
-            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2">
+            <div className="flex items-center gap-2 border-b border-neutral-200 px-4 py-3">
+              <img src={ViewActionIcon} alt="" className="h-4 w-4 opacity-60" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: primary }}>Line Detail</span>
+              <button
+                type="button"
+                onClick={() => setLineItemDetail(null)}
+                className="ml-auto rounded p-1 text-stone-500 hover:bg-stone-100"
+                aria-label="Close"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {lineItemDetail.shortDescription && (
+              <div className="border-b border-neutral-100 bg-neutral-50 px-4 py-2.5">
+                <p className="text-[11px] font-semibold text-neutral-800">{lineItemDetail.shortDescription}</p>
+                {lineItemDetail.productCode && <p className="text-[10px] text-neutral-500">{lineItemDetail.productCode}</p>}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-0 p-3">
               {[
                 ['Sl', lineItemDetail.slNo],
                 ['Own ref', lineItemDetail.ownRefNo],
                 ['Product code', lineItemDetail.productCode],
-                ['Description', lineItemDetail.shortDescription],
                 ['Location', lineItemDetail.location],
                 ['Unit', lineItemDetail.unit],
                 ['Qty', lineItemDetail.qty],
@@ -911,597 +878,20 @@ export default function Quotation() {
                 ['Disc amt', lineItemDetail.discAmt != null ? Number(lineItemDetail.discAmt).toFixed(2) : ''],
                 ['Tax %', lineItemDetail.taxPct],
                 ['Tax amt', lineItemDetail.taxAmount != null ? Number(lineItemDetail.taxAmount).toFixed(2) : ''],
-                ['Line total', lineItemDetail.lineTotal != null ? Number(lineItemDetail.lineTotal).toFixed(2) : ''],
                 ['Origin', lineItemDetail.origin],
                 ['Stock', lineItemDetail.stockStatus],
               ].map(([label, val]) => (
-                <div key={label} className="flex items-center gap-2">
-                  <label className="w-[130px] shrink-0 text-left text-[10px] font-semibold text-stone-700">{label}</label>
-                  <span className="min-h-[28px] flex-1 rounded border border-stone-200 bg-stone-50 px-2 py-1 text-[10px] text-stone-800">
-                    {orDash(val)}
-                  </span>
+                <div key={label} className="flex flex-col gap-0.5 rounded p-2">
+                  <span className="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">{label}</span>
+                  <span className="text-[11px] font-semibold text-neutral-800">{orDash(val)}</span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:mb-[15px] sm:mt-0 sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
-      <style>{`
-        .qtn-outline:hover { border-color: ${primary} !important; background: ${primaryHover} !important; color: ${primary} !important; }
-        .qtn-primary:hover { filter: brightness(1.05); }
-        .qtn-scroll-table td:has(button) { white-space: nowrap; }
-      `}</style>
-
-      <div className="flex w-full flex-col gap-2 rounded-lg border border-gray-200 bg-white px-2.5 pb-2.5 pt-1.5 shadow-sm sm:gap-3 sm:px-3 sm:pb-3 sm:pt-2">
-        {/* Header — same outer rhythm as Sale / ModuleTabs content */}
-        <header className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-          <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
-            Quotation
-          </h1>
-          <div className="flex items-center gap-2">
-            <AppActionButton
-              title="Print"
-              ariaLabel="Print"
-              icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />}
-              className="h-7 px-2 text-[10px]"
-            >
-              Print
-            </AppActionButton>
-            <AppActionButton
-              onClick={handleSaveQuotation}
-              disabled={saving || loadingRefs}
-              title={saving ? 'Saving...' : 'Save'}
-              ariaLabel={saving ? 'Saving...' : 'Save'}
-              icon={<SaveIcon />}
-              className="h-7 px-2 text-[10px]"
-            >
-              {saving ? 'Saving…' : 'Save'}
-            </AppActionButton>
-            <AppActionButton
-              onClick={handleAddQuotation}
-              title="Add Quotation"
-              ariaLabel="Add Quotation"
-              icon={<PlusIcon />}
-              variant="primary"
-              className="h-7 px-2 text-[10px]"
-            >
-              Add Quotation
-            </AppActionButton>
-            {/* <button type="button" onClick={() => navigate(-1)} className="qtn-outline flex h-9 items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium transition-colors">Close</button> */}
-          </div>
-        </header>
-        {(saveError || successMsg) && (
-          <div className="px-0.5 text-[10px] sm:text-[11px]">
-            {saveError && <p className="text-red-600">{saveError}</p>}
-            {successMsg && <p className="text-green-700">{successMsg}</p>}
-          </div>
-        )}
-
-        {/* Main */}
-        <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-start lg:gap-3">
-          {/* Left */}
-          <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
-            {/* Quote & Customer */}
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
-                <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
-                  Quote Details
-                </h2>
-                <div className="flex w-full min-w-0 flex-col gap-2">
-                  <DropdownInput
-                    label="Branch"
-                    placeholder={loadingRefs ? 'Loading…' : 'Select branch'}
-                    options={branchOptions}
-                    value={branchId}
-                    onChange={(v) => setBranchId(v)}
-                    fullWidth
-                    heightPx={28}
-                    disabled={loadingRefs || !branchOptions.length}
-                  />
-                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
-                    <SubInputField
-                      fullWidth
-                      label="Quotation No"
-                      heightPx={28}
-                      value={quotationNo}
-                      onChange={() => {}}
-                      placeholder="Auto on save"
-                      readOnly
-                    />
-                    <InputField
-                      fullWidth
-                      label="Quotation Date"
-                      type="date"
-                      heightPx={28}
-                      value={quotationDate}
-                      onChange={(e) => setQuotationDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-[6px]">
-                    <SubInputField
-                      fullWidth
-                      label="Cust. Ref No"
-                      heightPx={28}
-                      value={custRefNo}
-                      onChange={(e) => setCustRefNo(e.target.value)}
-                    />
-                    <InputField
-                      fullWidth
-                      label="Cust. Ref Date"
-                      type="date"
-                      heightPx={28}
-                      value={custRefDate}
-                      onChange={(e) => setCustRefDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
-                <h2 className="mb-2 text-sm font-semibold" style={{ color: primary }}>
-                  Customer
-                </h2>
-                <div className="flex flex-col gap-1 sm:gap-[8px]">
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Customer Name</label>
-                    <select
-                      value={customerId === '' ? '' : String(customerId)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setCustomerId(v);
-                        const row = customersRows.find((c) => String(c.customerId) === v);
-                        if (row) {
-                          setCustomerAddress(row.address || '');
-                          setContactPerson(row.contactPerson || '');
-                        } else {
-                          setCustomerAddress('');
-                          setContactPerson('');
-                        }
-                      }}
-                      className={`${detailRowInput} cursor-pointer`}
-                      style={{ accentColor: primary }}
-                    >
-                      <option value="">— Select Customer —</option>
-                      {customersRows.map((c) => (
-                        <option key={c.customerId} value={String(c.customerId)}>
-                          {c.customerName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex w-full items-start justify-start gap-2 sm:gap-[10px]">
-                    <label className={`${quoteDetailRowLabel} pt-1`}>Address</label>
-                    <textarea
-                      value={customerAddress}
-                      onChange={(e) => setCustomerAddress(e.target.value)}
-                      rows={2}
-                      className={`${detailRowInput} min-h-[48px] resize-y`}
-                    />
-                  </div>
-                  <div className="flex w-full items-center justify-start gap-2 sm:gap-[10px]">
-                    <label className={quoteDetailRowLabel}>Contact Person</label>
-                    <input
-                      type="text"
-                      value={contactPerson}
-                      onChange={(e) => setContactPerson(e.target.value)}
-                      className={detailRowInput}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Add Item — heading row with search on right */}
-            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-sm sm:p-2.5">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold" style={{ color: primary }}>
-                  Add Item
-                </h2>
-                <div className="relative w-full max-w-[300px] min-w-[220px]">
-                  <input
-                    type="text"
-                    placeholder={branchId ? 'Search product…' : 'Select branch first'}
-                    disabled={!branchId}
-                    value={productSearch}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setProductSearch(val);
-                      setProductResults(getFilteredProducts(val));
-                      setShowSearchDropdown(true);
-                    }}
-                    onFocus={() => {
-                      setProductResults(getFilteredProducts(productSearch));
-                      setShowSearchDropdown(true);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleProductSearch();
-                      }
-                    }}
-                    className="h-[24px] w-full rounded border border-gray-300 bg-white pl-2 pr-[60px] text-[9px] outline-none focus:border-[#790728] sm:h-[28px] sm:text-[10px]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleProductSearch}
-                    className="absolute right-1 top-1/2 flex h-[18px] w-[18px] -translate-y-1/2 items-center justify-center rounded bg-transparent sm:h-[20px] sm:w-[20px]"
-                    aria-label="Search"
-                  >
-                    <img src={SearchIcon} alt="" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  </button>
-
-                  {showSearchDropdown && productResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-[180px] overflow-auto rounded border border-gray-200 bg-white shadow-md">
-                      {productResults.length > 0 && (
-                        <div className="border-b border-gray-100 px-2 py-1 text-[8px] font-semibold text-gray-500 sm:text-[9px]">
-                          Products
-                        </div>
-                      )}
-                      {productResults.map((p) => (
-                        <button
-                          key={p.productId}
-                          type="button"
-                          onClick={() => selectProduct(p)}
-                          className="block w-full px-2 py-1 text-left text-[8px] text-gray-700 hover:bg-gray-100 sm:text-[9px]"
-                        >
-                          {p.shortDescription} - {p.unitPrice} / {p.unit}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-wrap items-end gap-2">
-                <SubInputField label="Own Ref" value={ownRefNo} onChange={(e) => setOwnRefNo(e.target.value)} />
-                <InputField label="Product Code" value={productCode} onChange={(e) => setProductCode(e.target.value)} />
-                <InputField
-                  label="Short Desc"
-                  value={shortDescription}
-                  onChange={(e) => setShortDescription(e.target.value)}
-                />
-                <InputField label="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
-                <SubInputField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} />
-                <SubInputField
-                  label="Qty"
-                  type="number"
-                  value={qty}
-                  onChange={(e) => setQty(Number(e.target.value))}
-                />
-                <SubInputField
-                  label="Unit Price"
-                  type="number"
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(Number(e.target.value))}
-                />
-                <SubInputField
-                  label="Disc.%"
-                  type="number"
-                  value={discPct}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setDiscPct(v);
-                    setDiscAmt(qty * unitPrice * (v / 100));
-                  }}
-                />
-                <SubInputField label="Disc" type="number" value={discAmt} onChange={(e) => setDiscAmt(Number(e.target.value))} />
-                <SubInputField label="Tax%" type="number" value={0} readOnly title="Tax not configured" />
-                <div className="ml-auto flex shrink-0 items-end">
-                  <AppActionButton
-                    onClick={addItem}
-                    title="Add"
-                    ariaLabel="Add"
-                    icon={<PlusIcon className="h-3 w-3" />}
-                    variant="primary"
-                    className="h-7 px-3 text-[9px]"
-                  >
-                    Add
-                  </AppActionButton>
-                </div>
-              </div>
-            </div>
-
-            {/* Table — vertical scroll after 7 item rows; width fits container (no horizontal scroll) */}
-            <div
-              className={`qtn-scroll-table w-full overflow-x-hidden ${
-                items.length > 5? 'max-h-[min(15rem,48vh)] overflow-y-auto sm:max-h-[min(17rem,52vh)]' : ''
-              }`}
-            >
-              <CommonTable
-                fitParentWidth
-                stickyHeader={items.length > 7}
-                headers={[
-                  'Sl',
-                  'Own Ref',
-                  'Product Code',
-                  'Description',
-                  'Loc',
-                  'Unit',
-                  'Qty',
-                  'Price',
-                  'Disc%',
-                  'Disc',
-                  'Tax%',
-                  'Tax',
-                  'Total',
-                  'Origin',
-                  'Stock',
-                  'Action',
-                ]}
-                rows={[
-                  ...items.map((r, i) => [
-                    r.slNo,
-                    r.ownRefNo,
-                    r.productCode,
-                    r.shortDescription,
-                    r.location,
-                    r.unit,
-                    r.qty,
-                    r.unitPrice?.toFixed(2),
-                    r.discPct,
-                    r.discAmt?.toFixed(2),
-                    r.taxPct,
-                    r.taxAmount?.toFixed(2),
-                    r.lineTotal?.toFixed(2),
-                    r.origin,
-                    r.stockStatus,
-                    <div key={`act-${i}`} className="flex items-center justify-center gap-0.5 sm:gap-1">
-                      <button type="button" className="p-0.5" onClick={() => setLineItemDetail(r)} aria-label="View line">
-                        <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      </button>
-                      <button type="button" className="p-0.5" onClick={() => setPendingRemoveIndex(i)} aria-label="Delete line">
-                        <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      </button>
-                    </div>,
-                  ]),
-                  [
-                    { content: 'Total', colSpan: 7, className: 'text-left font-bold' },
-                    totalPrice.toFixed(2),
-                    '',
-                    '',
-                    '',
-                    tableTaxTotal.toFixed(2),
-                    tableLineTotal.toFixed(2),
-                    '',
-                    '',
-                    '',
-                  ],
-                ]}
-              />
-            </div>
-
-          </div>
-
-          {/* Right: Product Info + Totals */}
-          <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-[250px]">
-            <div className="rounded-lg border border-gray-200 bg-[#F2E6EA]/30 p-2.5 shadow-sm sm:p-3">
-              <h2 className="mb-2 text-[10px] font-semibold sm:text-[11px]" style={{ color: primary }}>
-                Product Info
-              </h2>
-              <div className="space-y-1.5 text-[9px] leading-tight text-gray-800 sm:text-[10px]">
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Last Purchase Cost</span>
-                  <span className="min-w-0 shrink text-right font-medium">{productInfo.lastCost || '—'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Origin</span>
-                  <span className="min-w-0 shrink text-right">{productInfo.origin || '—'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Product Code</span>
-                  <span className="min-w-0 shrink text-right">{productCode || '—'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Min. Unit Price</span>
-                  <span className="min-w-0 shrink text-right">{productInfo.minPrice || '—'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Stock On Hand</span>
-                  <span className="min-w-0 shrink text-right">{productInfo.stock || '—'}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Location</span>
-                  <span className="min-w-0 shrink text-right">{productInfo.loc || '—'}</span>
-                </div>
-                <div className="flex items-center gap-1.5 pt-1">
-                  <Switch
-                    id="quotation-attachments"
-                    size="sm"
-                    checked={attachments}
-                    onChange={setAttachments}
-                  />
-                  <span className="text-[8px] leading-tight text-gray-600 sm:text-[9px]">
-                    Attachments
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-lg border-2 border-[#790728]/50 bg-[#F2E6EA]/40 p-2.5 shadow-md sm:p-3">
-              <h2 className="mb-2 text-[10px] font-bold sm:text-[11px]" style={{ color: primary }}>
-                Totals
-              </h2>
-              <div className="space-y-1.5 text-[9px] leading-tight text-gray-800 sm:text-[10px]">
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Sub Total</span>
-                  <span className="shrink-0 font-semibold tabular-nums">{subTotal.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-gray-600">Discount Amount</span>
-                  <input
-                    type="number"
-                    value={discountAmount}
-                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
-                    className="h-[22px] w-[4.5rem] shrink-0 rounded border border-gray-300 bg-white px-1.5 py-0 text-right text-[9px] tabular-nums outline-none sm:h-[24px] sm:text-[10px]"
-                  />
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Total Amount</span>
-                  <span className="shrink-0 font-semibold tabular-nums">{totalAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between gap-2">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="shrink-0 tabular-nums">{taxAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-gray-600">Round Off</span>
-                  <input
-                    type="number"
-                    value={roundOff}
-                    onChange={(e) => setRoundOff(e.target.value)}
-                    className="h-[22px] w-[4.5rem] shrink-0 rounded border border-gray-300 bg-white px-1.5 py-0 text-right text-[9px] tabular-nums outline-none sm:h-[24px] sm:text-[10px]"
-                  />
-                </div>
-                <div className="flex justify-between gap-2 border-t border-gray-300 pt-2">
-                  <span className="text-[10px] font-bold text-gray-800 sm:text-[11px]">Net Amount</span>
-                  <span className="text-[11px] font-bold tabular-nums sm:text-[12px]" style={{ color: primary }}>
-                    {netAmount.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Terms (right sidebar - below Totals) */}
-            <div className="rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm sm:p-3">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <h2 className="text-right text-[10px] font-semibold text-gray-700 sm:text-[11px]">Quotation Terms</h2>
-              </div>
-
-              <textarea
-                value={quotationTerms}
-                onChange={(e) => setQuotationTerms(e.target.value)}
-                rows={3}
-                placeholder="Enter terms..."
-                className="mb-2 w-full resize-none rounded border border-gray-300 bg-white px-2 py-1 text-[9px] outline-none sm:text-[10px]"
-              />
-
-              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[7px] text-gray-600 sm:text-[8px]">
-                <div className="flex items-center gap-1">
-                  <Switch id="qtn-print-locn" size="xs" checked={printLocn} onChange={setPrintLocn} />
-                  <span className="leading-tight">Print Loctn.</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Switch id="qtn-print-own-ref" size="xs" checked={printOwnRefNo} onChange={setPrintOwnRefNo} />
-                  <span className="leading-tight">Print Own Ref No.</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Switch id="qtn-print-other-format" size="xs" checked={printOtherFormat} onChange={setPrintOtherFormat} />
-                  <span className="leading-tight">Other Format</span>
-                </div>
-              </div>
-
-              <div className="flex w-full min-w-0 flex-nowrap items-center justify-between gap-0.5 overflow-hidden">
-                <AppActionButton
-                  title="Edit"
-                  ariaLabel="Edit"
-                  icon={<img src={EditIcon} alt="" className="h-3 w-3" />}
-                  className="h-6 w-6 px-0"
-                >
-                </AppActionButton>
-                <AppActionButton
-                  title="Duplicate"
-                  ariaLabel="Duplicate"
-                  icon={<img src={DuplicateIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />}
-                  className="h-6 min-w-0 flex-1 px-1 text-[8px]"
-                >
-                  <span className="min-w-0 truncate">Duplicate</span>
-                </AppActionButton>
-                <AppActionButton
-                  title="Proforma"
-                  ariaLabel="Proforma"
-                  icon={<img src={ProformaIcon} alt="" className="h-3 w-3" style={{ filter: iconFilterPrimary }} />}
-                  className="h-6 min-w-0 flex-1 px-1 text-[8px]"
-                >
-                  <span className="min-w-0 truncate">Proforma</span>
-                </AppActionButton>
-                <AppActionButton
-                  onClick={() => setSaveTerms(true)}
-                  title="Save Terms"
-                  ariaLabel="Save Terms"
-                  variant="primary"
-                  className="h-6 px-2 text-[8px]"
-                >
-                  Save
-                </AppActionButton>
-              </div>
-            </div>
-          </aside>
-        </div>
-
-      </div>
-
-      {/* Line item detail (view) */}
-      <ConfirmDialog
-        open={pendingRemoveIndex !== null}
-        title="Delete line item?"
-        message="This will remove the line from the quotation. This action cannot be undone."
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        danger
-        onClose={() => setPendingRemoveIndex(null)}
-        onConfirm={() => {
-          if (pendingRemoveIndex !== null) removeItem(pendingRemoveIndex);
-        }}
-      />
-
-      {lineItemDetail && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-          onClick={() => setLineItemDetail(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="qtn-line-detail-title"
-        >
-          <div
-            className="relative mx-4 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-4 shadow-xl sm:p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setLineItemDetail(null)}
-              className="absolute right-2 top-2 rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-              aria-label="Close"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <h2
-              id="qtn-line-detail-title"
-              className="mb-4 text-center text-base font-bold sm:text-lg"
-              style={{ color: primary }}
-            >
-              Line item details
-            </h2>
-            <div className="mx-auto flex w-full max-w-[360px] flex-col gap-2 sm:gap-[10px]">
-              {[
-                ['Sl', lineItemDetail.slNo],
-                ['Own ref', lineItemDetail.ownRefNo],
-                ['Product code', lineItemDetail.productCode],
-                ['Description', lineItemDetail.shortDescription],
-                ['Location', lineItemDetail.location],
-                ['Unit', lineItemDetail.unit],
-                ['Qty', lineItemDetail.qty],
-                ['Unit price', lineItemDetail.unitPrice != null ? Number(lineItemDetail.unitPrice).toFixed(2) : ''],
-                ['Disc %', lineItemDetail.discPct],
-                ['Disc amt', lineItemDetail.discAmt != null ? Number(lineItemDetail.discAmt).toFixed(2) : ''],
-                ['Tax %', lineItemDetail.taxPct],
-                ['Tax amt', lineItemDetail.taxAmount != null ? Number(lineItemDetail.taxAmount).toFixed(2) : ''],
-                ['Line total', lineItemDetail.lineTotal != null ? Number(lineItemDetail.lineTotal).toFixed(2) : ''],
-                ['Origin', lineItemDetail.origin],
-                ['Stock', lineItemDetail.stockStatus],
-              ].map(([label, val]) => (
-                <div key={label} className="flex items-center gap-2 sm:gap-[10px]">
-                  <label className="w-[130px] shrink-0 text-left text-[9px] font-semibold text-gray-700 sm:text-[10px]">
-                    {label}
-                  </label>
-                  <span className="min-h-[24px] flex-1 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-[9px] text-gray-800 sm:min-h-[28px] sm:text-[10px]">
-                    {orDash(val)}
-                  </span>
-                </div>
-              ))}
+            <div className="flex items-center justify-between border-t border-neutral-200 px-4 py-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">Line Total</span>
+              <span className="text-[14px] font-bold tabular-nums" style={{ color: primary }}>
+                {lineItemDetail.lineTotal != null ? Number(lineItemDetail.lineTotal).toFixed(2) : '—'}
+              </span>
             </div>
           </div>
         </div>

@@ -26,21 +26,24 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
-/** Checkbox + Sl no, Bill no, Counter, Bill date, Time, Payment mode, Local bill no, Customer LP, Customer, TRN, Salesman, Subtotal, Disc, Tax, Round off, Amount, Post status, Counter close, Remarks, STN */
+/** Checkbox, Sl no, Bill no, Bill date, Bill time, Customer name, Cust LP no, TRN no, Salesman, Payment mode, Counter, Local bill no, Subtotal, Disc, Tax, Round off, Amount, Post status, Counter close, Remarks, STN */
 const SALES_LIST_COL_PCT = [
-  2, 2.5, 5, 3, 5, 4, 5, 5, 4, 12.5, 5, 5, 5, 4, 4, 3, 5, 4, 4, 9, 4,
+  2, 2.5, 5, 5, 4, 12, 5, 5, 5, 5, 3, 5, 5, 4, 4, 3, 5, 4, 4, 9, 4,
 ];
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 
-const figmaToolbarBtn =
-  `inline-flex h-7 min-h-7 shrink-0 items-center gap-1 px-1.5 py-[3px] text-[10px] font-semibold leading-5 text-black ${figmaOutline} hover:bg-neutral-50`;
-
 const figmaSearchBox =
-  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px] sm:max-w-[520px] sm:pr-3 md:min-w-[280px] md:max-w-[320px]`;
+  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+
+const purchaseToolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
+
+const purchaseToolbarSelect =
+  'relative inline-flex h-7 min-h-7 items-center gap-1 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50';
 
 const primaryToolbarBtn =
-  'inline-flex h-7 min-h-7 shrink-0 items-center gap-1 rounded-[3px] border px-2 py-[3px] text-[10px] font-semibold leading-5 text-white shadow-sm transition-opacity hover:opacity-95';
+  'inline-flex h-7 min-h-7 shrink-0 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white shadow-sm transition-opacity hover:opacity-95';
 
 function parseMoneyValue(s) {
   const n = Number(String(s ?? '').replace(/,/g, ''));
@@ -379,15 +382,15 @@ export default function SalesList() {
         </div>,
         slNo,
         r.billNo,
-        r.counter,
         r.billDate,
         r.billTime,
-        r.paymentMode,
-        r.localBillNo,
-        r.customerLpNo,
         r.customerName,
+        r.customerLpNo,
         r.trnNo,
         r.salesMan,
+        r.paymentMode,
+        r.counter,
+        r.localBillNo,
         r.subTotal,
         r.discount,
         r.taxAmount,
@@ -442,21 +445,24 @@ export default function SalesList() {
         <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
           SALES LIST
         </h1>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button type="button" className={`${figmaToolbarBtn} px-2`} aria-label="Print">
-            <img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <button type="button" className={purchaseToolbarBtn} title="Print" aria-label="Print">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" />
+            Print
           </button>
-          <button type="button" className={figmaToolbarBtn}>
-            <img src={CancelIcon} alt="" className="h-3.5 w-3.5" />
+          <button type="button" className={purchaseToolbarBtn} title="Cancel" aria-label="Cancel">
+            <img src={CancelIcon} alt="" className="h-3 w-3" />
             Cancel
           </button>
-          <button type="button" className={figmaToolbarBtn}>
-            <img src={EditIcon} alt="" className="h-3.5 w-3.5" />
+          <button type="button" className={purchaseToolbarBtn} title="Edit" aria-label="Edit">
+            <img src={EditIcon} alt="" className="h-3 w-3" />
             Edit
           </button>
           <button
             type="button"
-            className={figmaToolbarBtn}
+            className={purchaseToolbarBtn}
+            title="Refresh"
+            aria-label="Refresh sales"
             onClick={() => setRefreshKey((key) => key + 1)}
             disabled={loadingBranches || loadingSales}
           >
@@ -479,11 +485,11 @@ export default function SalesList() {
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
           {branchOptions.length > 1 ? (
-            <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+            <div className={purchaseToolbarSelect}>
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
-                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none"
                 aria-label="Branch"
                 disabled={loadingBranches || loadingSales}
               >
@@ -507,19 +513,21 @@ export default function SalesList() {
               onClick={handleDeleteSelected}
               aria-label={`Delete ${selectedRowCount} selected sale${selectedRowCount === 1 ? '' : 's'}`}
             >
-              <img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />
+              <img src={DeleteIcon} alt="" className="h-3 w-3 shrink-0 brightness-0 invert" />
               Delete
             </button>
           ) : null}
 
           <button
             type="button"
-            className={figmaToolbarBtn}
+            className={purchaseToolbarBtn}
             onClick={() => setDateModalOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={dateModalOpen}
+            title="Select Date"
+            aria-label="Select Date"
           >
-            <img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
+            <img src={CalendarIcon} alt="" className="h-3 w-3 shrink-0" />
             <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
               {appliedDateRange
                 ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
@@ -536,11 +544,11 @@ export default function SalesList() {
             onApply={(range) => setAppliedDateRange(range)}
           />
 
-          <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+          <div className={purchaseToolbarSelect}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none sm:min-w-[7.5rem]"
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
@@ -554,12 +562,12 @@ export default function SalesList() {
 
           <button
             type="button"
-            className={figmaToolbarBtn}
+            className={purchaseToolbarBtn}
             aria-expanded={filterDrawerOpen}
             aria-haspopup="dialog"
             onClick={() => setFilterDrawerOpen(true)}
           >
-            <img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />
+            <img src={FilterIcon} alt="" className="h-3 w-3 shrink-0" />
             <span className="max-w-[6rem] truncate sm:max-w-[7rem]">
               {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
             </span>
@@ -594,41 +602,39 @@ export default function SalesList() {
         <CommonTable
           className="sales-list-table flex min-h-0 min-w-0 flex-1 flex-col"
           fitParentWidth
-          allowHorizontalScroll={false}
-          truncateHeader
-          truncateBody
+          allowHorizontalScroll
           columnWidthPercents={SALES_LIST_COL_PCT}
-          tableClassName="min-w-0 w-full"
+          tableClassName="min-w-[1800px]"
           hideVerticalCellBorders
           cellAlign="center"
-          headerFontSize="clamp(7px, 0.85vw, 10px)"
+          headerFontSize="clamp(7px, 0.9vw, 9px)"
           headerTextColor="#6b7280"
-          bodyFontSize="clamp(8px, 1vw, 10px)"
-          cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5"
+          bodyFontSize="clamp(9px, 1.25vw, 12px)"
+          cellPaddingClass="px-1.5 py-1.5 sm:px-2 sm:py-2"
           bodyRowHeightRem={2.35}
           maxVisibleRows={Math.min(pageSize + 1, 24)}
           headers={[
             '',
-            'Sl no',
-            'Bill no',
-            'Counter',
-            'Bill date',
-            'Bill time',
-            'Payment mode',
-            'Local bill no',
-            'Customer LP no',
-            'Customer name',
-            'TRN no',
-            'Sales man',
-            'Sub total',
-            'Discount',
-            'Tax amount',
-            'Round off adj',
-            'Amount',
-            'Post status',
-            'Counter close',
-            'Remarks',
-            'STN',
+            'Sl.',
+            'Bil.',
+            'Dat.',
+            'Tim.',
+            'Cus.',
+            'CLP.',
+            'TRN.',
+            'Sal.',
+            'Pay.',
+            'Ctr.',
+            'Loc.',
+            'Sub.',
+            'Dis.',
+            'Tax.',
+            'Rnd.',
+            'Amt.',
+            'Pos.',
+            'C.Cl.',
+            'Rem.',
+            'STN.',
           ]}
           rows={tableRows}
         />

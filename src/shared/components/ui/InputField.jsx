@@ -14,15 +14,15 @@ export default function InputField({ label, widthPx, heightPx, type, className, 
     >
       {label && (
         <label
-          className={`text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px] ${labelClassName ?? ''}`.trim()}
-          style={{ color: inputField.label.color }}
+          className={`pos-label text-[13px] leading-tight text-black ${labelClassName ?? ''}`.trim()}
+          style={{ color: inputField.label.color, fontSize: inputField.label.fontSize, lineHeight: inputField.label.lineHeight }}
         >
           {label}
         </label>
       )}
       <input
         type={type ?? 'text'}
-        className={`box-border w-full max-w-full border border-gray-200 bg-white px-2 py-0 text-sm leading-normal text-gray-900 outline-none sm:px-2.5 ${className ?? ''}`.trim()}
+        className={`box-border w-full max-w-full border border-gray-200 bg-white px-2.5 py-0 text-base leading-normal text-gray-900 outline-none ${className ?? ''}`.trim()}
         style={{
           background: colors.input?.background ?? '#fff',
           borderColor: '#e2e8f0',

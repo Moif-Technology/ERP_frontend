@@ -95,32 +95,32 @@ export const borderRadius = {
 export const inputField = {
   /** Label/description above the input box */
   label: {
-    fontSize: "11px",
+    fontSize: "13px",
     color: "#000000",
-    lineHeight: "15px",
+    lineHeight: "16px",
   },
   /** The input box itself — DateInputField uses dateBox for width; parent gap controls spacing */
   box: {
     width: "180px",
-    height: "26px",
+    height: "38px",
     borderRadius: "4px",
   },
   /** Dropdown — same footprint as box */
   dropdown: {
     width: "180px",
-    height: "26px",
+    height: "38px",
     borderRadius: "4px",
   },
   /** Sub input field — half-width of box, same height */
   subBox: {
     width: "90px",
-    height: "26px",
+    height: "34px",
     borderRadius: "4px",
   },
   /** Date field — same height as box, narrower width for DD/MM/YYYY */
   dateBox: {
     width: "120px",
-    height: "26px",
+    height: "38px",
     borderRadius: "4px",
   },
 };
@@ -128,6 +128,16 @@ export const inputField = {
 /** Quick font-size tokens used by newer garage screens. */
 export const uiFontSizes = {
   label: inputField.label.fontSize,
+  body: "16px",
+  table: "14px",
+  button: "14px",
+  buttonPrimary: "16px",
+  input: "16px",
+  pageTitle: "22px",
+  sectionTitle: "18px",
+  tableHeading: "11px",
+  nav: "12px",
+  totalAmount: "24px",
 };
 
 /** Common table UI style tokens */
@@ -135,13 +145,13 @@ export const tableUi = {
   border: '1px solid #e2e8f0',
   header: {
     backgroundColor: '#F2E6EA',
-    fontSize: '7.98px',
+    fontSize: '11px',
     fontWeight: 700,
-    color: '#000000',
+    color: '#6b7280',
     borderRadius: '6.98px',
   },
   body: {
-    fontSize: '7.98px',
+    fontSize: '14px',
     fontWeight: 400,
     color: '#000000',
   },
@@ -159,9 +169,9 @@ export const itemDetailsTablePreset = {
   cellAlign: 'center',
   headerBackgroundColor: tableUi.header.backgroundColor,
   headerTextColor: tableUi.header.color,
-  headerFontSize: 'clamp(7px, 0.75vw, 9px)',
-  bodyFontSize: 'clamp(8px, 0.85vw, 10px)',
-  cellPaddingClass: 'px-1 py-1 sm:px-1.5 sm:py-1.5',
+  headerFontSize: '11px',
+  bodyFontSize: '14px',
+  cellPaddingClass: 'px-2 py-2 sm:px-2.5 sm:py-2',
 };
 
 export const typography = {
@@ -178,6 +188,14 @@ export const typography = {
     xl: "1.25rem",
     "2xl": "1.5rem",
     "3xl": "1.875rem",
+    body: "1rem",
+    pageTitle: "1.375rem",
+    sectionTitle: "1.125rem",
+    table: "0.875rem",
+    input: "1rem",
+    button: "0.875rem",
+    buttonPrimary: "1rem",
+    totalAmount: "1.5rem",
   },
   fontWeight: {
     normal: 400,

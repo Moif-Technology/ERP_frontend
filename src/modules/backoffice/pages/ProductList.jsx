@@ -23,62 +23,13 @@ function ToolbarChevron({ className = 'h-2 w-2 shrink-0 text-black' }) {
   );
 }
 
-function RefreshIcon({ className = 'h-3.5 w-3.5' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" aria-hidden>
-      <path d="M20 6v5h-5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M4 18v-5h5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M18.7 9A7 7 0 0 0 6.3 6.4L4 8.8" strokeLinecap="round" />
-      <path d="M5.3 15A7 7 0 0 0 17.7 17.6L20 15.2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PlusIcon({ className = 'h-3.5 w-3.5' }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" aria-hidden>
-      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function InventoryMetric({ label, value, accent = 'slate' }) {
-  const accentClasses = {
-    maroon: 'border-[#790728]/25 bg-[#790728]/[0.04] text-[#790728]',
-    blue: 'border-sky-200 bg-sky-50/80 text-sky-800',
-    amber: 'border-amber-200 bg-amber-50/80 text-amber-800',
-    slate: 'border-slate-200 bg-slate-50/80 text-slate-800',
-  };
-  return (
-    <div className={`min-w-[8rem] border px-3 py-2 ${accentClasses[accent] || accentClasses.slate}`}>
-      <p className="text-[8px] font-black uppercase tracking-[0.18em] opacity-70">{label}</p>
-      <p className="mt-1 truncate font-['Bahnschrift','Open_Sans',sans-serif] text-lg font-bold leading-none tracking-normal">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function IconToolbarButton({ icon, label, onClick, disabled = false, variant = 'light', children }) {
-  const variantClass =
-    variant === 'primary'
-      ? 'border-[#790728] bg-[#790728] text-white shadow-[0_8px_20px_rgba(121,7,40,0.20)] hover:bg-[#650520]'
-      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50';
-
-  return (
-    <button
-      type="button"
-      className={`inline-flex h-8 shrink-0 items-center gap-1.5 border px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-55 ${variantClass}`}
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-    >
-      {icon}
-      {children ?? label}
-    </button>
-  );
-}
+const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
+const figmaSearchBox =
+  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+const toolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
+const toolbarSelect =
+  'relative inline-flex h-7 min-h-7 items-center gap-1 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50';
 
 const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 
@@ -464,114 +415,81 @@ export default function ProductList() {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }, [page, totalPages]);
 
-  const activeBranchLabel = useMemo(() => {
-    const selectedBranch = branches.find((branch) => String(branch.branchId) === String(branchId));
-    return selectedBranch ? branchLabel(selectedBranch) : 'All branches';
-  }, [branchId, branches]);
-
-  const inventoryValue = useMemo(
-    () =>
-      filteredRows.reduce((sum, row) => {
-        const cost = parseMoneyValue(row.unitCost);
-        const qty = Number(row.qtyOnHand);
-        return sum + cost * (Number.isFinite(qty) ? qty : 0);
-      }, 0),
-    [filteredRows],
-  );
-
   const emptyMessage = loadingBranches || loadingProducts
     ? 'Loading inventory records...'
     : loadError || 'No products match the current view.';
 
   return (
-    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col overflow-hidden border border-slate-200 bg-[#f5f7f6] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-      <div className="relative shrink-0 overflow-hidden border-b border-slate-200 bg-white">
-        <div className="absolute inset-y-0 left-0 w-1.5 bg-[#790728]" aria-hidden />
-        <div className="flex flex-col gap-3 px-4 py-4 pl-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="border border-[#790728]/20 bg-[#790728]/5 px-2 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-[#790728]">
-                Products
-              </span>
-              <span className="max-w-[18rem] truncate border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                {activeBranchLabel}
-              </span>
-              {selectedRowCount >= 1 ? (
-                <span className="border border-sky-200 bg-sky-50 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-sky-800">
-                  {selectedRowCount} selected
-                </span>
-              ) : null}
-            </div>
-            <h1 className="mt-2 font-['Bahnschrift','Open_Sans',sans-serif] text-2xl font-bold uppercase leading-none tracking-normal text-slate-950 sm:text-3xl">
-              Product Listing
-            </h1>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/data-entry/product-entry"
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 border border-[#790728] bg-[#790728] px-3 text-[10px] font-bold uppercase tracking-[0.08em] text-white no-underline shadow-[0_8px_20px_rgba(121,7,40,0.20)] transition hover:bg-[#650520]"
-              title="New product"
-            >
-              <PlusIcon />
-              New product
-            </Link>
-            <IconToolbarButton
-              label="Refresh"
-              icon={<RefreshIcon />}
-              onClick={() => setRefreshKey((key) => key + 1)}
-              disabled={loadingBranches || loadingProducts}
-            />
-            <IconToolbarButton label="Print" icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />}>
-              Print
-            </IconToolbarButton>
-            <IconToolbarButton label="Cancel" icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />}>
-              Cancel
-            </IconToolbarButton>
-            <IconToolbarButton
-  label="Edit"
-  icon={<img src={EditIcon} alt="" className="h-3.5 w-3.5" />}
-  disabled={selectedRowCount !== 1}
-  onClick={() => {
-    const selectedId = [...selectedIds].find(id => filteredIdSet.has(id));
-    const selectedRow = filteredRows.find((row) => row.id === selectedId);
-    if (selectedRow?.productId) {
-      navigate(`/data-entry/product-entry?productId=${selectedRow.productId}&branchId=${branchId}`);
-    }
-  }}
->
-  Edit
-</IconToolbarButton>
-          </div>
-        </div>
-
-        <div className="grid gap-2 border-t border-slate-100 bg-slate-50/60 px-4 py-3 pl-6 md:grid-cols-2 xl:grid-cols-4">
-          <InventoryMetric label="Catalog" value={products.length.toLocaleString()} accent="maroon" />
-          <InventoryMetric label="Visible" value={totalFiltered.toLocaleString()} accent="blue" />
-          <InventoryMetric label="Locations" value={rackLocations.length.toLocaleString()} accent="slate" />
-          <InventoryMetric label="Stock value" value={fmtMoney(inventoryValue)} accent="amber" />
+    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
+          PRODUCT LISTING
+        </h1>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <Link
+            to="/data-entry/product-entry"
+            className={`${toolbarBtn} no-underline`}
+            title="New product"
+          >
+            + New product
+          </Link>
+          <button type="button" className={toolbarBtn} title="Print" aria-label="Print">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" />
+            Print
+          </button>
+          <button type="button" className={toolbarBtn} title="Cancel" aria-label="Cancel">
+            <img src={CancelIcon} alt="" className="h-3 w-3" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={toolbarBtn}
+            disabled={selectedRowCount !== 1}
+            title="Edit"
+            aria-label="Edit selected product"
+            onClick={() => {
+              const selectedId = [...selectedIds].find((id) => filteredIdSet.has(id));
+              const selectedRow = filteredRows.find((row) => row.id === selectedId);
+              if (selectedRow?.productId) {
+                navigate(`/data-entry/product-entry?productId=${selectedRow.productId}&branchId=${branchId}`);
+              }
+            }}
+          >
+            <img src={EditIcon} alt="" className="h-3 w-3" />
+            Edit
+          </button>
+          <button
+            type="button"
+            className={toolbarBtn}
+            title="Refresh"
+            aria-label="Refresh products"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loadingBranches || loadingProducts}
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
-      <div className="shrink-0 border-b border-slate-200 bg-[#eef1f0] px-4 py-3">
-        <div className="grid min-w-0 grid-cols-1 gap-2 xl:grid-cols-[minmax(280px,1fr)_auto_auto_auto] xl:items-center">
-          <div className="flex h-10 min-w-0 items-center border border-slate-300 bg-white px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] focus-within:border-[#790728]">
-            <img src={SearchIcon} alt="" className="h-4 w-4 shrink-0 opacity-70" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={SEARCH_PLACEHOLDER}
-              className="min-w-0 flex-1 border-0 bg-transparent px-2 font-['Open_Sans',sans-serif] text-[12px] font-semibold text-slate-900 outline-none placeholder:text-slate-400"
-            />
-          </div>
+      <div className="flex w-full min-w-0 flex-col gap-2 sm:h-7 sm:flex-row sm:items-center sm:justify-between sm:gap-2.5">
+        <div className={figmaSearchBox}>
+          <img src={SearchIcon} alt="" className="h-3.5 w-3.5 shrink-0 opacity-90" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={SEARCH_PLACEHOLDER}
+            className="min-w-0 flex-1 border-0 bg-transparent font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none placeholder:text-neutral-400 placeholder:font-semibold"
+          />
+        </div>
 
+        <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
           {branchOptions.length > 1 ? (
-            <div className="relative flex h-10 min-w-0 items-center border border-slate-300 bg-white px-3">
+            <div className={toolbarSelect}>
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
-                className="h-full w-full min-w-[12rem] cursor-pointer appearance-none border-0 bg-transparent pr-6 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-800 outline-none"
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none"
                 aria-label="Branch"
                 disabled={loadingBranches || loadingProducts}
               >
@@ -581,17 +499,17 @@ export default function ProductList() {
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+              <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
                 <ToolbarChevron />
               </span>
             </div>
           ) : null}
 
-          <div className="relative flex h-10 min-w-0 items-center border border-slate-300 bg-white px-3">
+          <div className={toolbarSelect}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-full w-full min-w-[11rem] cursor-pointer appearance-none border-0 bg-transparent pr-6 text-[11px] font-bold uppercase tracking-[0.06em] text-slate-800 outline-none"
+              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none sm:min-w-[7.5rem]"
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
@@ -600,27 +518,27 @@ export default function ProductList() {
               <option value="sellHigh">Sort: Sell price high</option>
               <option value="marginHigh">Sort: Margin high</option>
             </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
               <ToolbarChevron />
             </span>
           </div>
 
           <button
             type="button"
-            className="inline-flex h-10 items-center justify-center gap-2 border border-slate-300 bg-white px-3 text-[11px] font-black uppercase tracking-[0.08em] text-slate-800 transition hover:border-[#790728]/40 hover:bg-[#790728]/5"
+            className={toolbarBtn}
             aria-expanded={filterDrawerOpen}
             aria-haspopup="dialog"
             onClick={() => setFilterDrawerOpen(true)}
           >
-            <img src={FilterIcon} alt="" className="h-4 w-4 shrink-0" />
-            {activeFilterCount > 0 ? `Filters ${activeFilterCount}` : 'Filters'}
+            <img src={FilterIcon} alt="" className="h-3 w-3 shrink-0" />
+            {activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}
           </button>
         </div>
       </div>
 
       {loadingBranches || loadingProducts || loadError ? (
         <div
-          className={`mx-4 mt-3 border px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] ${
+          className={`shrink-0 rounded border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.08em] ${
             loadError ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800'
           }`}
           role="status"
@@ -646,141 +564,131 @@ export default function ProductList() {
         onClose={() => setViewProduct(null)}
       />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col px-4 pb-4 pt-3">
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2">
-            <CommonTable
-              className="product-list-table flex min-h-0 min-w-0 flex-1 flex-col"
-              fitParentWidth
-              allowHorizontalScroll
-              truncateHeader
-              truncateBody
-              onBodyRowClick={(rowIdx) => setViewProduct(paginatedRows[rowIdx] ?? null)}
-              selectedBodyRowIndex={selectedRowIndex}
-              columnWidthPercents={PL_COL_PCT}
-              tableClassName="min-w-[1280px] w-full"
-              hideVerticalCellBorders
-              cellAlign="center"
-              headerBackgroundColor="#e9edf0"
-              headerFontSize="clamp(8px, 0.82vw, 10px)"
-              headerTextColor="#334155"
-              bodyFontSize="clamp(9px, 0.86vw, 11px)"
-              cellPaddingClass="px-1 py-1.5 sm:px-1.5 sm:py-2"
-              bodyRowHeightRem={2.55}
-              maxVisibleRows={Math.min(pageSize, 24)}
-              headers={[
-                '',
-                'Own ref',
-                'Supp.ref',
-                'Barcode',
-                'Short desc.',
-                'Supplier',
-                'Brand',
-                'Pkt qty',
-                'Unit cost',
-                'Last purch.',
-                'Unit price',
-                'Sell price',
-                'Type',
-                'Loc.',
-                'Margin %',
-              ]}
-              rows={tableRows}
-            />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <CommonTable
+          className="product-list-table flex min-h-0 min-w-0 flex-1 flex-col"
+          fitParentWidth
+          allowHorizontalScroll
+          truncateHeader
+          truncateBody
+          onBodyRowClick={(rowIdx) => setViewProduct(paginatedRows[rowIdx] ?? null)}
+          selectedBodyRowIndex={selectedRowIndex}
+          columnWidthPercents={PL_COL_PCT}
+          tableClassName="min-w-[1280px] w-full"
+          hideVerticalCellBorders
+          cellAlign="center"
+          headerFontSize="clamp(7px, 0.9vw, 9px)"
+          headerTextColor="#6b7280"
+          bodyFontSize="clamp(9px, 1.25vw, 12px)"
+          cellPaddingClass="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-2.5 md:py-2.5"
+          bodyRowHeightRem={2.35}
+          maxVisibleRows={Math.min(pageSize, 24)}
+          headers={[
+            '',
+            'Own ref',
+            'Supp.ref',
+            'Barcode',
+            'Short desc.',
+            'Supplier',
+            'Brand',
+            'Pkt qty',
+            'Unit cost',
+            'Last purch.',
+            'Unit price',
+            'Sell price',
+            'Type',
+            'Loc.',
+            'Margin %',
+          ]}
+          rows={tableRows}
+        />
 
-            {tableRows.length === 0 ? (
-              <div className="pointer-events-none absolute inset-x-4 top-28 flex justify-center">
-                <div className="border border-slate-200 bg-white/95 px-5 py-4 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-                  <p className="font-['Bahnschrift','Open_Sans',sans-serif] text-sm font-bold uppercase tracking-normal text-slate-900">
-                    {emptyMessage}
-                  </p>
-                  <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                    {search || activeFilterCount > 0 ? 'Clear search or filters to widen the list.' : activeBranchLabel}
-                  </p>
-                </div>
-              </div>
-            ) : null}
+        <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-x-2 sm:gap-y-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 justify-self-start sm:gap-3">
+            <p className="font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
+              Showing <span className="text-black">{rangeStart}</span>–<span className="text-black">{rangeEnd}</span> of{' '}
+              <span className="text-black">{totalFiltered}</span>
+            </p>
+            <label className="flex items-center gap-1 font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
+              Rows
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300"
+                aria-label="Rows per page"
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          <div className="grid w-full min-w-0 shrink-0 grid-cols-1 items-center gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2 sm:grid-cols-[1fr_auto_1fr]">
-            <div className="flex min-w-0 flex-wrap items-center gap-3 justify-self-start">
-              <p className="font-['Open_Sans',sans-serif] text-[10px] font-bold uppercase tracking-[0.08em] text-slate-600">
-                <span className="text-slate-950">{rangeStart}</span>
-                {'-'}
-                <span className="text-slate-950">{rangeEnd}</span> of{' '}
-                <span className="text-slate-950">{totalFiltered}</span>
-              </p>
-              <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-600">
-                Rows
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className="h-7 w-12 cursor-pointer border border-slate-300 bg-white text-center text-[10px] font-bold text-slate-950 outline-none hover:border-slate-400"
-                  aria-label="Rows per page"
-                >
-                  {PAGE_SIZE_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <span className="hidden justify-self-center text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:block">
-              {activeBranchLabel}
-            </span>
-
-            <div
-              className="inline-flex h-8 shrink-0 items-stretch justify-self-start overflow-hidden border border-slate-300 bg-white sm:justify-self-end"
-              role="navigation"
-              aria-label="Pagination"
+          {selectedRowCount >= 1 ? (
+            <p
+              className="justify-self-center text-center font-['Open_Sans',sans-serif] text-[10px] font-semibold sm:text-[11px]"
+              style={{ color: primary }}
+              role="status"
+              aria-live="polite"
             >
-              <button
-                type="button"
-                className="inline-flex w-8 items-center justify-center text-slate-600 transition hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-35"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                aria-label="Previous page"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                  <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <div className="flex items-stretch border-l border-slate-300">
-                {pageNumbers.map((n) => {
-                  const active = n === page;
-                  return (
-                    <button
-                      key={n}
-                      type="button"
-                      className={`min-w-[2rem] border-r border-slate-300 px-2 text-center text-[10px] font-black leading-8 transition-colors ${
-                        active ? 'bg-[#790728] text-white' : 'text-slate-700 hover:bg-slate-100'
-                      }`}
-                      onClick={() => setPage(n)}
-                      aria-label={`Page ${n}`}
-                      aria-current={active ? 'page' : undefined}
-                    >
-                      {n}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                className="inline-flex w-8 items-center justify-center text-slate-600 transition hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-35"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                aria-label="Next page"
-              >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
-                  <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+              {selectedRowCount} {selectedRowCount === 1 ? 'row' : 'rows'} selected
+            </p>
+          ) : (
+            <span className="hidden sm:block" aria-hidden />
+          )}
+
+          <div
+            className="inline-flex h-7 shrink-0 items-stretch justify-self-start overflow-hidden rounded-[3px] border border-gray-200 bg-white sm:justify-self-end"
+            role="navigation"
+            aria-label="Pagination"
+          >
+            <button
+              type="button"
+              className="inline-flex w-8 items-center justify-center text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              aria-label="Previous page"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
+                <path d="m15 18-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div className="flex items-stretch border-l border-gray-200">
+              {pageNumbers.map((n) => {
+                const active = n === page;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${
+                      active ? 'text-white' : 'text-gray-700 hover:bg-gray-50'
+                    } ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`}
+                    style={active ? { backgroundColor: primary } : undefined}
+                    onClick={() => setPage(n)}
+                    aria-label={`Page ${n}`}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
             </div>
+            <button
+              type="button"
+              className="inline-flex w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-35"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              aria-label="Next page"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
+                <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

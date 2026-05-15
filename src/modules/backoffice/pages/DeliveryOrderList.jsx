@@ -7,7 +7,6 @@ import DeleteIcon from '../../../shared/assets/icons/delete2.svg';
 import FilterIcon from '../../../shared/assets/icons/filter.svg';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
-import { AppActionButton } from '../../../shared/components/ui';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
 import { colors, listTableCheckboxClass } from '../../../shared/constants/theme';
@@ -18,6 +17,10 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 const figmaSearchBox =
   `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+const purchaseToolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
+const purchaseToolbarSelect =
+  'relative inline-flex h-7 min-h-7 items-center gap-1 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50';
 
 /** Checkbox, DO no, DO date, Time, Quotation, Customer, Invoice, Post, Disc, Amount */
 const DELIVERY_ORDER_LIST_COL_PCT = [2, 12, 10, 6, 12, 24, 10, 8, 7, 9];
@@ -363,24 +366,33 @@ export default function DeliveryOrderList() {
     ? 'Loading delivery orders...'
     : loadError || 'No delivery orders match the current view.';
 
+  const loading = loadingBranches || loadingDeliveryOrders;
+
   return (
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
           DELIVERY ORDER LIST
         </h1>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <AppActionButton title="Print" ariaLabel="Print" icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />} className="h-7 px-2 text-[10px]" />
-          <AppActionButton title="Cancel" ariaLabel="Cancel" icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />} className="h-7 px-2 text-[10px]">Cancel</AppActionButton>
-          <AppActionButton
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <button type="button" className={purchaseToolbarBtn} title="Print" aria-label="Print">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" />
+            Print
+          </button>
+          <button type="button" className={purchaseToolbarBtn} title="Cancel" aria-label="Cancel">
+            <img src={CancelIcon} alt="" className="h-3 w-3" />
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={purchaseToolbarBtn}
             title="Refresh"
-            ariaLabel="Refresh delivery orders"
+            aria-label="Refresh delivery orders"
             onClick={() => setRefreshKey((key) => key + 1)}
-            disabled={loadingBranches || loadingDeliveryOrders}
-            className="h-7 px-2 text-[10px]"
+            disabled={loading}
           >
             Refresh
-          </AppActionButton>
+          </button>
         </div>
       </div>
 
@@ -398,50 +410,55 @@ export default function DeliveryOrderList() {
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
           {branchOptions.length > 1 ? (
-            <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+            <div className={purchaseToolbarSelect}>
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
-                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none"
                 aria-label="Branch"
-                disabled={loadingBranches || loadingDeliveryOrders}
+                disabled={loading}
               >
                 {branchOptions.map((branch) => (
-                  <option key={branch.value} value={branch.value}>{branch.label}</option>
+                  <option key={branch.value} value={branch.value}>
+                    {branch.label}
+                  </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2"><ToolbarChevron /></span>
+              <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+                <ToolbarChevron />
+              </span>
             </div>
           ) : null}
 
           {selectedRowCount >= 1 ? (
-            <AppActionButton
-              variant="primary"
+            <button
+              type="button"
+              className={purchaseToolbarBtn}
               onClick={handleDeleteSelected}
-              ariaLabel={`Delete ${selectedRowCount} selected delivery order${selectedRowCount === 1 ? '' : 's'}`}
-              icon={<img src={DeleteIcon} alt="" className="h-3.5 w-3.5 shrink-0 brightness-0 invert" />}
-              className="h-7 px-2 text-[10px]"
+              aria-label={`Delete ${selectedRowCount} selected delivery order${selectedRowCount === 1 ? '' : 's'}`}
             >
+              <img src={DeleteIcon} alt="" className="h-3 w-3" />
               Delete
-            </AppActionButton>
+            </button>
           ) : null}
 
-          <AppActionButton
+          <button
+            type="button"
             onClick={() => setDateModalOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={dateModalOpen}
             title="Select Date"
-            ariaLabel="Select Date"
-            icon={<img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
-            className="h-7 px-2 text-[10px]"
+            aria-label="Select Date"
+            className={purchaseToolbarBtn}
           >
+            <img src={CalendarIcon} alt="" className="h-3 w-3 shrink-0" />
             <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
               {appliedDateRange
-                ? `${formatDDMMYYYY(appliedDateRange.from)} - ${formatDDMMYYYY(appliedDateRange.to)}`
+                ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
                 : 'Select Date'}
             </span>
             <ToolbarChevron />
-          </AppActionButton>
+          </button>
 
           <QuotationDateRangeModal
             open={dateModalOpen}
@@ -451,42 +468,49 @@ export default function DeliveryOrderList() {
             onApply={(range) => setAppliedDateRange(range)}
           />
 
-          <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+          <div className={purchaseToolbarSelect}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none sm:min-w-[7.5rem]"
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
               <option value="dateDesc">Sort: Date (newest)</option>
               <option value="amountDesc">Sort: Amount (high)</option>
             </select>
-            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2"><ToolbarChevron /></span>
+            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2">
+              <ToolbarChevron />
+            </span>
           </div>
 
           <div className="relative shrink-0" ref={filterWrapRef}>
-            <AppActionButton
+            <button
+              type="button"
               aria-expanded={filterOpen}
               aria-haspopup="listbox"
               onClick={() => setFilterOpen((o) => !o)}
               title="Filters"
-              ariaLabel="Filters"
-              icon={<img src={FilterIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
-              className="h-7 px-2 text-[10px]"
+              aria-label="Filters"
+              className={purchaseToolbarBtn}
             >
+              <img src={FilterIcon} alt="" className="h-3 w-3 shrink-0" />
               <span className="max-w-[5rem] truncate sm:max-w-[6rem]">
                 {stationFilter ? `Station: ${stationFilter}` : 'Filters'}
               </span>
               <ToolbarChevron />
-            </AppActionButton>
+            </button>
             {filterOpen ? (
-              <div className="absolute right-0 top-full z-50 mt-0.5 min-w-[9.5rem] rounded-md border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5" role="listbox" aria-label="Stations">
+              <div
+                className="absolute right-0 top-full z-50 mt-0.5 min-w-[9.5rem] rounded-md border border-neutral-200 bg-white py-1 shadow-md"
+                role="listbox"
+                aria-label="Stations"
+              >
                 <button
                   type="button"
                   role="option"
                   aria-selected={stationFilter === null}
-                  className="w-full px-2.5 py-1.5 text-left text-[10px] font-semibold text-gray-700 hover:bg-rose-50 sm:px-3 sm:text-[11px]"
+                  className="w-full px-2.5 py-1.5 text-left text-xs font-medium text-neutral-700 hover:bg-neutral-50 sm:px-3"
                   onClick={() => {
                     setStationFilter(null);
                     setFilterOpen(false);
@@ -494,15 +518,15 @@ export default function DeliveryOrderList() {
                 >
                   All stations
                 </button>
-                <div className="my-0.5 border-t border-gray-100" />
+                <div className="my-0.5 border-t border-neutral-100" />
                 {stationOptions.map((s) => (
                   <button
                     key={s}
                     type="button"
                     role="option"
                     aria-selected={stationFilter === s}
-                    className={`w-full px-2.5 py-1.5 text-left text-[10px] font-semibold hover:bg-rose-50 sm:px-3 sm:text-[11px] ${
-                      stationFilter === s ? 'text-[#790728] bg-rose-50/80' : 'text-gray-800'
+                    className={`w-full px-2.5 py-1.5 text-left text-xs font-medium hover:bg-neutral-50 sm:px-3 ${
+                      stationFilter === s ? 'bg-neutral-50 text-neutral-900' : 'text-neutral-700'
                     }`}
                     onClick={() => {
                       setStationFilter(s);
@@ -518,7 +542,7 @@ export default function DeliveryOrderList() {
         </div>
       </div>
 
-      {loadingBranches || loadingDeliveryOrders || loadError ? (
+      {loading || loadError ? (
         <div
           className={`shrink-0 rounded border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.08em] ${
             loadError ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-800'
@@ -536,7 +560,7 @@ export default function DeliveryOrderList() {
           fitParentWidth
           allowHorizontalScroll
           columnWidthPercents={DELIVERY_ORDER_LIST_COL_PCT}
-          tableClassName="min-w-[min(100%,720px)] sm:min-w-[820px] lg:min-w-0"
+          tableClassName="min-w-[min(100%,780px)] sm:min-w-[980px] lg:min-w-0"
           hideVerticalCellBorders
           cellAlign="center"
           headerFontSize="clamp(7px, 0.9vw, 9px)"
@@ -563,8 +587,8 @@ export default function DeliveryOrderList() {
         <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-x-2 sm:gap-y-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2 justify-self-start sm:gap-3">
             <p className="font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
-              Showing <span className="text-black">{rangeStart}</span>{' - '}
-              <span className="text-black">{rangeEnd}</span> of <span className="text-black">{totalFiltered}</span>
+              Showing <span className="text-black">{rangeStart}</span>–<span className="text-black">{rangeEnd}</span> of{' '}
+              <span className="text-black">{totalFiltered}</span>
             </p>
             <label className="flex items-center gap-1 font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
               Rows
@@ -574,7 +598,7 @@ export default function DeliveryOrderList() {
                   setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
-                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300"
+                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[8px] font-semibold text-black outline-none hover:border-gray-300"
                 aria-label="Rows per page"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}

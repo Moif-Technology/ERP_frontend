@@ -107,11 +107,11 @@ export default function LeaveManagement() {
   const leaveTypeOptions = useMemo(() => types.map((t) => ({ label: t.name, value: String(t.id) })), [types]);
 
   return (
-    <div className="mx-3 flex flex-col gap-4">
-      <section className="rounded-[28px] border border-rose-200 bg-[linear-gradient(135deg,#fff_0%,#fff6f8_55%,#f9e6ec_100%)] p-5 shadow-sm">
+    <div className="box-border flex w-[calc(100%+26px)] max-w-none -mx-[13px] flex-col gap-4 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+      <section className="bg-[linear-gradient(135deg,#fff_0%,#fff6f8_55%,#f9e6ec_100%)] p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Leave Management</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: primary }}>Leave Management</p>
             <h1 className="mt-1 text-2xl font-black text-slate-900">Control requests, balances, and approvals</h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-500">
               A practical HR leave screen should show pending approvals, policy setup, and employee leave exposure in one place.

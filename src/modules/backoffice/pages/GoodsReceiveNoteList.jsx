@@ -242,30 +242,21 @@ export default function GoodsReceiveNoteList() {
         <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
           GRN LIST
         </h1>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <AppActionButton
-            title="Print"
-            ariaLabel="Print"
-            icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />}
-            className="h-7 px-2 text-[10px]"
-          />
-          <AppActionButton
-            title="Cancel"
-            ariaLabel="Cancel"
-            icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />}
-            className="h-7 px-2 text-[10px]"
-          >
-            Cancel
-          </AppActionButton>
-          <AppActionButton
-            title="Refresh"
-            ariaLabel="Refresh GRN list"
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+          </button>
+          <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+            <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+          </button>
+          <button
+            type="button"
             onClick={() => setRefreshKey((k) => k + 1)}
             disabled={loading}
-            className="h-7 px-2 text-[10px]"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Refresh
-          </AppActionButton>
+          </button>
         </div>
       </div>
 
@@ -277,7 +268,7 @@ export default function GoodsReceiveNoteList() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search"
-            className="min-w-0 flex-1 border-0 bg-transparent font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none placeholder:text-neutral-400 placeholder:font-semibold"
+            className="min-w-0 flex-1 border-0 bg-transparent font-['Open_Sans',sans-serif] text-[9px] font-semibold leading-5 text-black outline-none placeholder:text-neutral-400 placeholder:font-semibold"
           />
         </div>
 
@@ -287,7 +278,7 @@ export default function GoodsReceiveNoteList() {
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
-                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[9px] font-semibold leading-5 text-black outline-none"
                 aria-label="Branch"
                 disabled={loading}
               >
@@ -303,22 +294,23 @@ export default function GoodsReceiveNoteList() {
             </div>
           ) : null}
 
-          <AppActionButton
+          <button
+            type="button"
             onClick={() => setDateModalOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={dateModalOpen}
-            title="Select Date"
-            ariaLabel="Select Date"
-            icon={<img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
-            className="h-7 px-2 text-[10px]"
+            aria-label="Select Date"
+            className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}
+            style={{ fontSize: '9px', fontWeight: 600 }}
           >
+            <img src={CalendarIcon} alt="" className="h-3 w-3 shrink-0" />
             <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
               {appliedDateRange
                 ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
                 : 'Select Date'}
             </span>
             <ToolbarChevron />
-          </AppActionButton>
+          </button>
 
           <QuotationDateRangeModal
             open={dateModalOpen}
@@ -332,7 +324,8 @@ export default function GoodsReceiveNoteList() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              style={{ fontSize: '9px' }}
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
@@ -366,9 +359,9 @@ export default function GoodsReceiveNoteList() {
           tableClassName="min-w-[min(100%,720px)] sm:min-w-[940px] lg:min-w-0"
           hideVerticalCellBorders
           cellAlign="center"
-          headerFontSize="clamp(7px, 0.9vw, 9px)"
+          headerFontSize="clamp(6px, 0.75vw, 8px)"
           headerTextColor="#6b7280"
-          bodyFontSize="clamp(9px, 1.25vw, 12px)"
+          bodyFontSize="clamp(8px, 1.1vw, 10px)"
           cellPaddingClass="px-1.5 py-1.5 sm:px-2 sm:py-2 md:px-2.5 md:py-2.5"
           bodyRowHeightRem={2.35}
           maxVisibleRows={Math.min(pageSize + 1, 24)}
@@ -378,7 +371,7 @@ export default function GoodsReceiveNoteList() {
 
         <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center gap-y-2 sm:grid-cols-[1fr_1fr] sm:gap-x-2 sm:gap-y-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2 justify-self-start sm:gap-3">
-            <p className="font-['Open_Sans',sans-serif] text-[10px] font-semibold text-gray-700">
+            <p className="font-['Open_Sans',sans-serif] text-[9px] font-semibold text-gray-700">
               Showing <span className="text-black">{rangeStart}</span>–<span className="text-black">{rangeEnd}</span> of{' '}
               <span className="text-black">{totalFiltered}</span>
             </p>
@@ -390,7 +383,7 @@ export default function GoodsReceiveNoteList() {
                   setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
-                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[10px] font-semibold text-black outline-none hover:border-gray-300"
+                className="h-6 w-10 min-w-0 cursor-pointer rounded border border-gray-200 bg-white px-0.5 py-0 text-center text-[9px] font-semibold text-black outline-none hover:border-gray-300"
                 aria-label="Rows per page"
               >
                 {PAGE_SIZE_OPTIONS.map((n) => (
@@ -425,7 +418,7 @@ export default function GoodsReceiveNoteList() {
                   <button
                     key={n}
                     type="button"
-                    className={`min-w-[1.75rem] px-2 text-center text-[10px] font-semibold leading-7 transition-colors ${
+                    className={`min-w-[1.75rem] px-2 text-center text-[9px] font-semibold leading-7 transition-colors ${
                       active ? 'text-white' : 'text-gray-700 hover:bg-gray-50'
                     } ${n !== pageNumbers[0] ? 'border-l border-gray-200' : ''}`}
                     style={active ? { backgroundColor: primary } : undefined}

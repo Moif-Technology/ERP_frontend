@@ -30,7 +30,7 @@ export default function AppActionButton({
       title={title}
       aria-label={ariaLabel || title}
       {...buttonProps}
-      className={`inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] transition disabled:cursor-not-allowed disabled:opacity-55 ${
+      className={`inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 border px-3 text-sm font-bold uppercase tracking-[0.04em] transition disabled:cursor-not-allowed disabled:opacity-55 ${
         fullWidth ? 'w-full' : ''
       } ${variantClass} ${className}`}
     >

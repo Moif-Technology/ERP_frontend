@@ -33,7 +33,7 @@ const cellBase = { border: 'none', borderRadius: 7, padding: '5px 2px', fontWeig
 
 export default function TimePickerInput({
   value, onChange, placeholder = 'HH : MM',
-  disabled, heightPx = 26, borderRadius = 4, fullWidth, widthPx,
+  disabled, heightPx = 38, borderRadius = 4, fullWidth, widthPx,
 }) {
   const [open,  setOpen]  = useState(false);
   const [h12,   setH12]   = useState(12);
@@ -105,7 +105,7 @@ export default function TimePickerInput({
           <circle cx="8" cy="8" r="6.5" />
           <path d="M8 4.5V8l2.5 1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: value ? '#111' : '#9ca3af', userSelect: 'none', letterSpacing: '0.02em' }}>
+        <span style={{ fontSize: 16, fontWeight: 600, flex: 1, color: value ? '#111' : '#9ca3af', userSelect: 'none', letterSpacing: 0 }}>
           {value ? toDisplay(value) : placeholder}
         </span>
         <svg viewBox="0 0 24 24" style={{ width: 10, height: 10, flexShrink: 0, color: '#9ca3af', transition: 'transform .15s', transform: open ? 'rotate(180deg)' : 'none' }}

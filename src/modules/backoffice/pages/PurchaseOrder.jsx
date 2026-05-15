@@ -10,21 +10,27 @@ import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit.svg';
+import PostIcon from '../../../shared/assets/icons/post.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
 import {
-  InputField,
   SubInputField,
   DropdownInput,
+  DatePickerInput,
   Switch,
   CommonTable,
   ConfirmDialog,
+  TableTotalsBar,
+  TabsBar,
 } from '../../../shared/components/ui';
 
 const UOM_OPTIONS = ['PCS', 'BOX', 'CTN', 'KG', 'LTR'];
 const VAT_OPTIONS = ['0', '5', '10', '15'];
 const DISCOUNT_HEADER_OPTIONS = ['None', 'ITEM', 'Flat', 'Percentage'];
+const LPO_LINE_ENTRY_H = 26;
+const LPO_LINE_ENTRY_LBL = 'text-[9px] font-semibold text-gray-500 sm:text-[10px]';
+const LPO_LINE_ENTRY_INP = 'text-[10px] tabular-nums';
 
 const ITEM_INITIAL = {
   productId: '',
@@ -180,8 +186,10 @@ const LPO_LINE_HEADERS = [
   'Sub total',
   'VAT %',
   'VAT amt',
-  'Line total',
-  ' ',
+  <span key="hdr-line-total" className="tabular-nums" title="Line total">
+    Lin.
+  </span>,
+  'Action',
 ];
 
 /** Matches CommonTable `fitParentWidth` default: first col narrow, last col wider, middle shared — keeps footer totals under the amount columns */
@@ -196,13 +204,16 @@ const LPO_COLUMN_WIDTH_PERCENTS = (() => {
 })();
 
 function dimCell(content, dim) {
-  return <span className={dim ? 'opacity-45' : ''}>{content}</span>;
+  const text = String(content ?? '');
+  return (
+    <span className={`block min-w-0 truncate ${dim ? 'opacity-45' : ''}`} title={text}>
+      {text}
+    </span>
+  );
 }
 
 export default function PurchaseOrder() {
   const primary = colors.primary?.main || '#790728';
-  const primaryHover = colors.primary?.[50] || '#F2E6EA';
-  const primaryActive = colors.primary?.[100] || '#E4CDD3';
 
   const [rightTab, setRightTab] = useState('summary');
   const [branchId, setBranchId] = useState('');
@@ -231,14 +242,23 @@ export default function PurchaseOrder() {
   const [saveSuccess, setSaveSuccess] = useState('');
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [productPickerSearch, setProductPickerSearch] = useState('');
+  const [productComboOpen, setProductComboOpen] = useState(false);
+  const [productComboQuery, setProductComboQuery] = useState('');
+  const [barcodeComboOpen, setBarcodeComboOpen] = useState(false);
+  const [barcodeComboQuery, setBarcodeComboQuery] = useState('');
+  const [descComboOpen, setDescComboOpen] = useState(false);
+  const [descComboQuery, setDescComboQuery] = useState('');
   const productPickerSearchRef = useRef(null);
+  const productComboRef = useRef(null);
+  const barcodeComboRef = useRef(null);
+  const descComboRef = useRef(null);
   const productDropdownRef = useRef(null);
   const qtyInputRef = useRef(null);
   const unitCostInputRef = useRef(null);
   const lineTotalInputRef = useRef(null);
 
   const focusProductDropdown = useCallback(() => {
-    window.setTimeout(() => productDropdownRef.current?.focus(), 0);
+    window.setTimeout(() => productComboRef.current?.querySelector('input')?.focus(), 0);
   }, []);
 
   const focusQtyField = useCallback(() => {
@@ -316,6 +336,54 @@ export default function PurchaseOrder() {
       return bc.includes(q) || sd.includes(q);
     });
   }, [pickerProducts, productPickerSearch]);
+
+  const filterProductsByQuery = useCallback((list, qRaw) => {
+    const q = String(qRaw ?? '').trim().toLowerCase();
+    if (!q) return list.slice(0, 25);
+    return list
+      .filter(
+        (p) =>
+          String(p.barCode || '').toLowerCase().includes(q) ||
+          String(p.shortDescription || '').toLowerCase().includes(q),
+      )
+      .slice(0, 25);
+  }, []);
+
+  const barcodeComboFiltered = useMemo(
+    () => filterProductsByQuery(pickerProducts, barcodeComboQuery),
+    [pickerProducts, barcodeComboQuery, filterProductsByQuery],
+  );
+
+  const descComboFiltered = useMemo(
+    () => filterProductsByQuery(pickerProducts, descComboQuery),
+    [pickerProducts, descComboQuery, filterProductsByQuery],
+  );
+
+  const productComboFiltered = useMemo(
+    () => filterProductsByQuery(pickerProducts, productComboQuery).slice(0, 15),
+    [pickerProducts, productComboQuery, filterProductsByQuery],
+  );
+
+  const selectedProductDisplay = useMemo(() => {
+    if (!liveItem.productId) return '';
+    const p = productById.get(Number(liveItem.productId));
+    if (p) return `${p.productCode || ''} — ${(p.shortName || p.productName || '').trim()}`.replace(/^ — /, '');
+    return liveItem.barCode || String(liveItem.productId);
+  }, [liveItem.productId, liveItem.barCode, productById]);
+
+  useEffect(() => {
+    const onMouseDown = (e) => {
+      const t = e.target;
+      if (productComboRef.current?.contains(t)) return;
+      if (barcodeComboRef.current?.contains(t)) return;
+      if (descComboRef.current?.contains(t)) return;
+      setProductComboOpen(false);
+      setBarcodeComboOpen(false);
+      setDescComboOpen(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, []);
 
   const branchOptions = useMemo(
     () =>
@@ -644,6 +712,15 @@ export default function PurchaseOrder() {
     setLineEntryError('');
   }, []);
 
+  const closeLineEntryCombos = useCallback(() => {
+    setProductComboOpen(false);
+    setBarcodeComboOpen(false);
+    setDescComboOpen(false);
+    setProductComboQuery('');
+    setBarcodeComboQuery('');
+    setDescComboQuery('');
+  }, []);
+
   const handleQtyChange = useCallback(
     (e) => {
       mergeItemForm({ qty: sanitizeQtyInput(e.target.value) });
@@ -657,6 +734,7 @@ export default function PurchaseOrder() {
       if (!id) {
         setItemForm(ITEM_INITIAL);
         setLineEntryError('');
+        closeLineEntryCombos();
         return;
       }
       const p = productById.get(Number(id));
@@ -681,13 +759,15 @@ export default function PurchaseOrder() {
         return normalizeItemForm(next);
       });
       setLineEntryError('');
+      closeLineEntryCombos();
       focusQtyField();
     },
-    [productById, focusQtyField],
+    [productById, focusQtyField, closeLineEntryCombos],
   );
 
   const openProductPicker = useCallback(
     (prefill) => {
+      closeLineEntryCombos();
       if (!branchId) {
         setProductsLoadError('Select a branch first');
         setProductPickerSearch(prefill != null ? String(prefill) : '');
@@ -698,7 +778,7 @@ export default function PurchaseOrder() {
       setProductPickerSearch(prefill != null ? String(prefill) : '');
       setProductPickerOpen(true);
     },
-    [branchId],
+    [branchId, closeLineEntryCombos],
   );
 
   const applyPickedProductFromPicker = useCallback(
@@ -732,9 +812,10 @@ export default function PurchaseOrder() {
       setLineRows((prev) => [...prev, row]);
     }
     setItemForm(ITEM_INITIAL);
+    closeLineEntryCombos();
     setSelectedRows(new Set());
     focusProductDropdown();
-  }, [itemForm, editingRowIndex, focusProductDropdown]);
+  }, [itemForm, editingRowIndex, focusProductDropdown, closeLineEntryCombos]);
 
   const startEditRow = useCallback(
     (idx) => {
@@ -759,17 +840,19 @@ export default function PurchaseOrder() {
         lineTotal: r.lineTotal ?? '0.00',
       });
       setLineEntryError('');
+      closeLineEntryCombos();
       focusQtyField();
     },
-    [lineRows, focusQtyField],
+    [lineRows, focusQtyField, closeLineEntryCombos],
   );
 
   const cancelLineForm = useCallback(() => {
     setEditingRowIndex(null);
     setItemForm(ITEM_INITIAL);
     setLineEntryError('');
+    closeLineEntryCombos();
     focusProductDropdown();
-  }, [focusProductDropdown]);
+  }, [focusProductDropdown, closeLineEntryCombos]);
 
   const deleteRow = useCallback(
     (index) => {
@@ -785,11 +868,12 @@ export default function PurchaseOrder() {
       if (editingRowIndex === index) {
         setEditingRowIndex(null);
         setItemForm(ITEM_INITIAL);
+        closeLineEntryCombos();
       } else if (editingRowIndex !== null && editingRowIndex > index) {
         setEditingRowIndex((i) => i - 1);
       }
     },
-    [editingRowIndex],
+    [editingRowIndex, closeLineEntryCombos],
   );
 
   const toggleRowSelection = useCallback((idx) => {
@@ -808,8 +892,9 @@ export default function PurchaseOrder() {
     if (editingRowIndex !== null && toDelete.has(editingRowIndex)) {
       setEditingRowIndex(null);
       setItemForm(ITEM_INITIAL);
+      closeLineEntryCombos();
     }
-  }, [selectedRows, editingRowIndex]);
+  }, [selectedRows, editingRowIndex, closeLineEntryCombos]);
 
   const resetLpo = useCallback(() => {
     setItemForm({ ...ITEM_INITIAL });
@@ -822,11 +907,12 @@ export default function PurchaseOrder() {
     setSelectedLine(null);
     setProductPickerOpen(false);
     setProductPickerSearch('');
+    closeLineEntryCombos();
     setSavedLpoMasterId('');
     setSaveError('');
     setSaveSuccess('');
     focusProductDropdown();
-  }, [focusProductDropdown]);
+  }, [focusProductDropdown, closeLineEntryCombos]);
 
   const tableBodyRows = lineRows.map((line, index) => {
     const dim = editingRowIndex === index;
@@ -896,194 +982,420 @@ export default function PurchaseOrder() {
       dimCell(money2(num(line.lineTotal)), dim),
       <div key={`act-${index}`} className={`flex items-center justify-center gap-0.5 ${dim ? 'pointer-events-none opacity-45' : ''}`}>
         <button type="button" className="lpo-act" onClick={() => setSelectedLine(line)} aria-label="View line">
-          <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={ViewActionIcon} alt="" className="h-7 w-7" />
         </button>
         <button type="button" className="lpo-act" onClick={() => startEditRow(index)} aria-label="Edit line">
-          <img src={EditActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={EditActionIcon} alt="" className="h-7 w-7" />
         </button>
         <button type="button" className="lpo-act" onClick={() => setPendingDelete({ mode: 'single', idx: index })} aria-label="Delete line">
-          <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={DeleteActionIcon} alt="" className="h-7 w-7" />
         </button>
       </div>,
     ];
   });
 
   return (
-    <div className="lpo-page flex h-full flex-1 min-h-0 flex-col overflow-hidden">
+    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-        .lpo-page {
-          --pr: ${primary}; --pr50: ${primaryHover}; --pr100: ${primaryActive};
-          --bd: #e2dfd9; --txt: #1c1917; --muted: #78716c;
-          font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        .lpo-root {
+          --pr: ${primary};
+          --bd: #e5e5e5;
+          --txt: #171717;
+          --muted: #737373;
+          --soft: #fafafa;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
-        .lpo-lbl { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--pr); font-family:'Outfit',sans-serif; }
-        .lpo-act { padding:3px; border-radius:4px; border:none; background:transparent; cursor:pointer; transition:all .15s; opacity:.55; display:inline-flex; align-items:center; justify-content:center; }
-        .lpo-act:hover { background:var(--pr50); opacity:1; }
-        .lpo-grid-input { box-sizing:border-box; width:100%; min-width:0; height:20px; border-radius:4px; border:1px solid #d6d3d1; background:#fff;
-          padding:0 4px; font-size:8.5px; line-height:20px; outline:none; font-family:'Outfit',sans-serif; color:var(--txt); }
-        .lpo-grid-input:focus { border-color:var(--pr); box-shadow:0 0 0 1px rgba(121,7,40,.08); }
-        .lpo-grid-select { padding-right:1px; }
-        .lpo-grid-value { display:block; width:100%; min-width:0; text-align:right; font-size:8.5px; line-height:20px; font-variant-numeric:tabular-nums; color:var(--txt); }
-        .lpo-grid-btn { height:20px; border-radius:4px; border:1px solid var(--bd); padding:0 4px; font-size:8px; font-weight:700; cursor:pointer;
-          font-family:'Outfit',sans-serif; white-space:nowrap; transition:all .15s; }
-        .lpo-grid-btn-save { border-color:transparent; background:var(--pr); color:#fff; }
-        .lpo-grid-btn-save:hover { background:#85203E; }
-        .lpo-grid-btn-cancel { border-color:#fca5a5; background:#fff; color:#b91c1c; }
-        .lpo-grid-btn-cancel:hover { background:#fef2f2; border-color:#b91c1c; }
-        .lpo-add { display:inline-flex; align-items:center; justify-content:center; height:26px; padding:0 14px; border-radius:5px; border:none;
-          background:linear-gradient(135deg,${primary} 0%,#85203E 100%); color:#fff; font-size:10px; font-weight:600; cursor:pointer;
-          transition:all .2s; box-shadow:0 1px 3px rgba(121,7,40,.25); font-family:'Outfit',sans-serif; letter-spacing:.3px; }
-        .lpo-add:hover { background:linear-gradient(135deg,#85203E 0%,#923A53 100%); box-shadow:0 2px 6px rgba(121,7,40,.3); }
-        .lpo-del { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:5px; border:1.5px solid var(--pr);
-          background:transparent; color:var(--pr); font-size:10px; font-weight:600; cursor:pointer; transition:all .15s; font-family:'Outfit',sans-serif; }
-        .lpo-del:hover { background:var(--pr50); }
-        .lpo-hr { height:1px; background:var(--bd); border:none; margin:0; flex-shrink:0; }
-        .lpo-tab { padding:6px 12px; font-size:10px; font-weight:500; cursor:pointer; border:none; background:transparent;
-          color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; font-family:'Outfit',sans-serif; white-space:nowrap; }
-        .lpo-tab:hover { color:var(--txt); }
-        .lpo-tab-on { color:var(--pr); border-bottom-color:var(--pr); font-weight:700; }
-        .lpo-bar { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 14px; border-top:2px solid var(--bd);
-          background:linear-gradient(180deg,#f8f7f6 0%,#f0efed 100%); flex-shrink:0; flex-wrap:wrap; min-height:38px; }
-        .lpo-bb { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:5px; border:1px solid var(--bd); background:#fff;
-          font-size:10.5px; font-weight:500; color:var(--txt); cursor:pointer; transition:all .15s; font-family:'Outfit',sans-serif; white-space:nowrap; }
-        .lpo-bb:hover { border-color:var(--pr); background:var(--pr50); color:var(--pr); }
-        .lpo-bb:active { background:var(--pr100); }
-        .lpo-bb-save { border:none; background:linear-gradient(135deg,${primary} 0%,#85203E 100%); color:#fff; font-weight:600;
-          box-shadow:0 1px 3px rgba(121,7,40,.25); padding:5px 14px; }
-        .lpo-bb-save:hover { background:linear-gradient(135deg,#85203E 0%,#923A53 100%); color:#fff; border-color:transparent; }
-        .lpo-bb-cancel { color:#b91c1c; border-color:#fca5a5; }
-        .lpo-bb-cancel:hover { background:#fef2f2; border-color:#b91c1c; color:#b91c1c; }
-        .lpo-fl { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
-        @media(min-width:640px){.lpo-fl{font-size:10px}}
-        .lpo-fi { height:26px; width:100%; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5; padding:0 8px;
-          font-size:9px; outline:none; transition:border-color .15s; font-family:'Outfit',sans-serif; }
-        @media(min-width:640px){.lpo-fi{font-size:10px}}
-        .lpo-fi:focus { border-color:var(--pr); }
-        .lpo-ta { min-height:38px; width:100%; resize:vertical; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5;
-          padding:5px 8px; font-size:9px; outline:none; transition:border-color .15s; font-family:'Outfit',sans-serif; }
-        @media(min-width:640px){.lpo-ta{font-size:10px}}
-        .lpo-ta:focus { border-color:var(--pr); }
-        .lpo-net { background:linear-gradient(135deg,rgba(121,7,40,.07) 0%,rgba(121,7,40,.03) 100%); border-radius:6px; padding:3px; }
-        .lpo-rp::-webkit-scrollbar { width:3px; }
-        .lpo-rp::-webkit-scrollbar-track { background:transparent; }
-        .lpo-rp::-webkit-scrollbar-thumb { background:#d6d3d1; border-radius:3px; }
-        .lpo-tbl, .lpo-tbl > div { overflow:visible !important; }
-        .lpo-tbl thead th { position:sticky; top:0; z-index:2; }
-        .lpo-total-bar { padding:6px 8px; background:linear-gradient(180deg,#fafaf9 0%,#f5f5f4 100%); }
-        .lpo-total-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
-        @media(min-width:768px){.lpo-total-grid{grid-template-columns:repeat(8,minmax(0,1fr));}}
-        .lpo-total-chip { min-width:0; border:1px solid #e7e5e4; border-radius:6px; background:#fff; padding:4px 6px; box-shadow:0 1px 2px rgba(28,25,23,.04); }
-        .lpo-total-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; line-height:1.15; font-weight:800;
-          letter-spacing:.4px; text-transform:uppercase; color:var(--muted); }
-        .lpo-total-value { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:2px; text-align:right; font-size:10px;
-          line-height:1.1; font-weight:800; font-variant-numeric:tabular-nums; color:var(--txt); }
-        .lpo-total-chip-strong { border-color:rgba(121,7,40,.25); background:linear-gradient(135deg,rgba(121,7,40,.06) 0%,#fff 72%); }
-        .lpo-total-chip-strong .lpo-total-name, .lpo-total-chip-strong .lpo-total-value { color:var(--pr); }
-        @keyframes lpo-modal-in { from{opacity:0;transform:scale(.96) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        .lpo-modal { animation:lpo-modal-in .2s ease-out; }
-        .lpo-field-lbl { padding:0; margin:0; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif;
-          font-size:9px; font-weight:600; letter-spacing:.3px; color:var(--muted); line-height:1.2; display:inline-flex; align-items:center; gap:3px; }
-        @media(min-width:640px){.lpo-field-lbl{font-size:10px}}
-        .lpo-field-lbl:hover { color:var(--pr); }
+        .lpo-btn:hover { border-color: #d4d4d4; background: var(--soft); color: var(--txt); }
+        .lpo-lbl {
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+        .lpo-summary-card {
+          border-radius: 10px;
+          border: 1px solid #e7e5e4;
+          background: linear-gradient(165deg, #fafaf9 0%, #ffffff 48%, #fafaf9 100%);
+          box-shadow: 0 1px 2px rgba(28, 25, 23, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+          overflow: hidden;
+        }
+        .lpo-summary-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 7px 12px;
+          min-width: 0;
+        }
+        .lpo-summary-row + .lpo-summary-row { border-top: 1px solid #f5f5f4; }
+        .lpo-summary-label {
+          font-size: 11px;
+          font-weight: 600;
+          color: #57534e;
+          letter-spacing: 0.01em;
+          line-height: 1.25;
+        }
+        .lpo-summary-value {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1c1917;
+          font-variant-numeric: tabular-nums;
+          text-align: right;
+          letter-spacing: -0.02em;
+        }
+        .lpo-summary-net {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          min-width: 0;
+          padding: 11px 12px 12px;
+          border-top: 1px solid rgba(121, 7, 40, 0.18);
+          background: linear-gradient(180deg, rgba(121, 7, 40, 0.07) 0%, rgba(121, 7, 40, 0.025) 100%);
+        }
+        .lpo-summary-net .lpo-summary-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--pr);
+        }
+        .lpo-summary-net .lpo-summary-value {
+          font-size: 15px;
+          font-weight: 800;
+          color: var(--pr);
+        }
+        .lpo-compact-card {
+          border: 1px solid var(--bd);
+          border-radius: 8px;
+          background: #fff;
+          padding: 8px;
+        }
+        .lpo-act {
+          width: 30px;
+          height: 30px;
+          padding: 6px;
+          border-radius: 6px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          opacity: 0.5;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.15s ease, background 0.15s ease;
+        }
+        .lpo-act:hover { background: var(--soft); opacity: 1; }
+        .lpo-del {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: 6px;
+          border: 1px solid var(--bd);
+          background: #fff;
+          color: var(--txt);
+          font-size: 11px;
+          font-weight: 500;
+          cursor: pointer;
+        }
+        .lpo-del:hover { border-color: #fca5a5; color: #b91c1c; background: #fef2f2; }
+        .lpo-grid-input {
+          box-sizing: border-box;
+          width: 100%;
+          min-width: 0;
+          height: 26px;
+          border-radius: 3px;
+          border: 1px solid #d4d4d4;
+          background: #fff;
+          padding: 0 6px;
+          font-size: 10px;
+          line-height: 26px;
+          outline: none;
+          color: var(--txt);
+        }
+        .lpo-grid-input:focus { border-color: #a3a3a3; }
+        .lpo-grid-select { padding-right: 2px; }
+        .lpo-grid-value {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          text-align: right;
+          font-size: 10px;
+          line-height: 26px;
+          font-variant-numeric: tabular-nums;
+          color: var(--txt);
+        }
+        .lpo-grid-btn {
+          height: 26px;
+          border-radius: 6px;
+          border: 1px solid var(--bd);
+          padding: 0 8px;
+          font-size: 10px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+        }
+        .lpo-grid-btn-save { border-color: transparent; background: var(--pr); color: #fff; }
+        .lpo-grid-btn-save:hover { filter: brightness(0.95); }
+        .lpo-grid-btn-cancel { border-color: #fca5a5; background: #fff; color: #b91c1c; }
+        .lpo-grid-btn-cancel:hover { background: #fef2f2; }
+        .lpo-tbl, .lpo-tbl > div { overflow: visible !important; }
+        .lpo-tbl thead th { position: sticky; top: 0; z-index: 2; }
+        .lpo-tbl tbody tr:hover td { background-color: var(--soft) !important; }
+        @keyframes lpo-modal-in { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .lpo-modal { animation: lpo-modal-in 0.2s ease-out; }
       `}</style>
 
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white sm:mx-[-10px]"
-        style={{ border: '1px solid #e2dfd9' }}>
-
-        <div className="shrink-0" style={{ height: 3, background: 'linear-gradient(90deg,#790728 0%,#85203E 35%,#923A53 65%,#C44972 100%)', borderRadius: '8px 8px 0 0' }} />
-
-        <div className="flex shrink-0 flex-col gap-1 px-3 py-1.5 sm:px-4 sm:py-2">
-          <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-            <div className="flex shrink-0 items-start gap-2 pt-0.5">
-              <div className="mt-0.5 shrink-0" style={{ width: 3, height: 18, borderRadius: 2, background: `linear-gradient(180deg,${primary} 0%,#C44972 100%)` }} />
-              <h1 className="text-[13px] font-bold leading-tight tracking-tight sm:text-sm" style={{ color: primary }}>LOCAL PURCHASE ORDER</h1>
-            </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-x-2 gap-y-1.5">
-              <DropdownInput
-                label="Branch"
-                options={branchDropdownOptions}
-                value={branchId}
-                onChange={(v) => setBranchId(v)}
-                widthPx={150}
-                disabled={refsLoading}
-              />
-              <DropdownInput
-                label="Supplier"
-                options={supplierDropdownOptions}
-                value={supplierId}
-                onChange={setSupplierId}
-                widthPx={200}
-                disabled={suppliersLoading}
-              />
-              <DropdownInput
-                label="Open LPO"
-                options={openLpoDropdownOptions}
-                value={savedLpoMasterId}
-                onChange={(v) => {
-                  void handleOpenLpoIdChange(v);
-                }}
-                widthPx={190}
-                disabled={!branchId || lposListLoading}
-              />
-              <div className="flex shrink-0 items-end gap-1.5">
-                <button type="button" className="lpo-bb">
-                  <img src={PrinterIcon} alt="" className="h-3 w-3" />
-                  <span className="hidden sm:inline">Print</span>
-                </button>
-                <button type="button" className="lpo-bb lpo-bb-cancel">
-                  <img src={CancelIcon} alt="" className="h-3 w-3" />
-                  <span className="hidden sm:inline">Cancel</span>
-                </button>
-                <button type="button" className="lpo-bb">
-                  <img src={EditIcon} alt="" className="h-3 w-3" />
-                  <span className="hidden sm:inline">Edit</span>
-                </button>
-                {selectedRows.size > 0 && (
-                  <button type="button" className="lpo-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
-                    <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
-                  </button>
-                )}
-              </div>
-            </div>
+      <div className="lpo-root flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>LOCAL PURCHASE ORDER</h1>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <button type="button" className="lpo-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={EditIcon} alt="" className="h-3 w-3" /> Edit
+            </button>
+            <button type="button" className="lpo-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition" onClick={resetLpo}>
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg> New
+            </button>
+            <button type="button" className="lpo-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+            </button>
+            <button type="button" className="lpo-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+            </button>
+            <button
+              type="button"
+              className="lpo-btn inline-flex h-7 cursor-not-allowed items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 opacity-50 transition"
+              disabled
+              title="Posting is disabled — save only for now."
+            >
+              <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: primary, borderColor: primary }}
+              disabled={saveLoading || !branchId || !supplierId || lineRows.length === 0}
+              onClick={() => {
+                void handleSaveLpo();
+              }}
+            >
+              {saveLoading ? 'Saving…' : savedLpoMasterId ? 'Update LPO' : 'Save LPO'}
+            </button>
+            {selectedRows.size > 0 && (
+              <button type="button" className="lpo-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
+                <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
+              </button>
+            )}
           </div>
-          {refsError ? <p className="text-[10px] text-red-600 sm:text-[11px]">{refsError}</p> : null}
-          {saveError ? <p className="text-[10px] text-red-600 sm:text-[11px]">{saveError}</p> : null}
-          {saveSuccess ? <p className="text-[10px] text-emerald-800 sm:text-[11px]">{saveSuccess}</p> : null}
-          {lineEntryError ? <p className="text-[10px] text-red-600 sm:text-[11px]">{lineEntryError}</p> : null}
-          {productsLoadError && branchId ? <p className="text-[10px] text-amber-800 sm:text-[11px]">{productsLoadError}</p> : null}
-          {!suppliersLoading && suppliers.length === 0 ? (
-            <p className="text-[10px] text-amber-800 sm:text-[11px]">
-              No suppliers — <Link to="/data-entry/supplier-entry" className="font-semibold underline underline-offset-2">add supplier</Link>
-            </p>
-          ) : null}
         </div>
 
-        <hr className="lpo-hr" />
-
-        <div className="flex shrink-0 items-end gap-x-1.5 gap-y-1 px-3 py-1.5 sm:px-4 sm:py-2 xl:flex-nowrap">
-          <SubInputField label="Own Ref.#" widthPx={66} value={liveItem.ownRefNo} onChange={(e) => mergeItemForm({ ownRefNo: e.target.value })} />
-          <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 88 }}>
-            <button type="button" className="lpo-field-lbl" title="Search products" onClick={() => openProductPicker(liveItem.barCode || liveItem.shortDescription)}>
-              Barcode <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-            </button>
-            <SubInputField label="" widthPx={88} value={liveItem.barCode} onChange={(e) => mergeItemForm({ barCode: e.target.value, productId: '' })} />
-          </div>
-          <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 130 }}>
-            <button type="button" className="lpo-field-lbl" title="Search products" onClick={() => openProductPicker(liveItem.barCode || liveItem.shortDescription)}>
-              Short Description <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-            </button>
-            <InputField label="" widthPx={130} value={liveItem.shortDescription} onChange={(e) => mergeItemForm({ shortDescription: e.target.value })} />
-          </div>
+        <div className="flex shrink-0 flex-wrap items-end gap-2">
           <DropdownInput
-            ref={productDropdownRef}
-            label="Product"
-            widthPx={140}
-            placeholder="—"
-            value={liveItem.productId}
-            options={productSelectOptionsWithLine}
-            onChange={(v) => applyProductSelection(v)}
+            label="Branch"
+            options={branchDropdownOptions}
+            value={branchId}
+            onChange={(v) => setBranchId(v)}
+            widthPx={150}
+            heightPx={LPO_LINE_ENTRY_H}
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
+            disabled={refsLoading}
           />
+          <DropdownInput
+            label="Supplier"
+            options={supplierDropdownOptions}
+            value={supplierId}
+            onChange={setSupplierId}
+            widthPx={200}
+            heightPx={LPO_LINE_ENTRY_H}
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
+            disabled={suppliersLoading}
+          />
+          <DropdownInput
+            label="Open LPO"
+            options={openLpoDropdownOptions}
+            value={savedLpoMasterId}
+            onChange={(v) => {
+              void handleOpenLpoIdChange(v);
+            }}
+            widthPx={190}
+            heightPx={LPO_LINE_ENTRY_H}
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
+            disabled={!branchId || lposListLoading}
+          />
+        </div>
+
+        {refsError ? <p className="shrink-0 text-[11px] text-red-600">{refsError}</p> : null}
+        {saveError ? <p className="shrink-0 text-[11px] text-red-600">{saveError}</p> : null}
+        {saveSuccess ? <p className="shrink-0 text-[11px] text-emerald-700">{saveSuccess}</p> : null}
+        {lineEntryError ? <p className="shrink-0 text-[11px] text-red-600">{lineEntryError}</p> : null}
+        {productsLoadError && branchId ? <p className="shrink-0 text-[11px] text-amber-800">{productsLoadError}</p> : null}
+        {!suppliersLoading && suppliers.length === 0 ? (
+          <p className="shrink-0 text-[11px] text-amber-800">
+            No suppliers —{' '}
+            <Link to="/data-entry/supplier-entry" className="font-semibold underline underline-offset-2">
+              add supplier
+            </Link>
+          </p>
+        ) : null}
+
+        <div className="flex min-w-0 shrink-0 flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
+          <div className="shrink-0" ref={productComboRef}>
+            <label className={`mb-0.5 block ${LPO_LINE_ENTRY_LBL}`}>Product</label>
+            <div className="relative">
+              <img
+                src={SearchIcon}
+                alt=""
+                className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+              />
+              <input
+                type="text"
+                className="w-[190px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: LPO_LINE_ENTRY_H, minHeight: LPO_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Search product…"
+                value={productComboOpen ? productComboQuery : selectedProductDisplay}
+                onFocus={() => {
+                  setProductComboOpen(true);
+                  setBarcodeComboOpen(false);
+                  setDescComboOpen(false);
+                  setProductComboQuery('');
+                }}
+                onChange={(e) => setProductComboQuery(e.target.value)}
+              />
+              {productComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : productComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    productComboFiltered.map((p) => (
+                      <button
+                        key={p.productId}
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          applyProductSelection(String(p.productId));
+                        }}
+                      >
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                        <span className="shrink-0 tabular-nums text-[10px] text-gray-400">{Number(p.lastPurchaseCost || 0).toFixed(2)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="shrink-0" ref={barcodeComboRef}>
+            <label className={`mb-0.5 block ${LPO_LINE_ENTRY_LBL}`}>Product code</label>
+            <div className="relative">
+              <img
+                src={SearchIcon}
+                alt=""
+                className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+              />
+              <input
+                type="text"
+                className="w-[112px] rounded border border-gray-200 bg-white pl-6 pr-2 font-mono text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: LPO_LINE_ENTRY_H, minHeight: LPO_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Code…"
+                value={barcodeComboOpen ? barcodeComboQuery : liveItem.barCode}
+                onFocus={() => {
+                  setBarcodeComboOpen(true);
+                  setDescComboOpen(false);
+                  setBarcodeComboQuery('');
+                }}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setBarcodeComboQuery(v);
+                  mergeItemForm({ barCode: v, productId: '' });
+                }}
+              />
+              {barcodeComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : barcodeComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    barcodeComboFiltered.map((p) => (
+                      <button
+                        key={p.productId}
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          applyProductSelection(String(p.productId));
+                        }}
+                      >
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="shrink-0" ref={descComboRef}>
+            <label className={`mb-0.5 block ${LPO_LINE_ENTRY_LBL}`}>Description</label>
+            <div className="relative">
+              <img
+                src={SearchIcon}
+                alt=""
+                className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+              />
+              <input
+                type="text"
+                className="w-[150px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                style={{ height: LPO_LINE_ENTRY_H, minHeight: LPO_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                placeholder="Search description…"
+                value={descComboOpen ? descComboQuery : liveItem.shortDescription}
+                onFocus={() => {
+                  setDescComboOpen(true);
+                  setBarcodeComboOpen(false);
+                  setDescComboQuery('');
+                }}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setDescComboQuery(v);
+                  mergeItemForm({ shortDescription: v, productId: '' });
+                }}
+              />
+              {descComboOpen && (
+                <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {!branchId ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                  ) : descComboFiltered.length === 0 ? (
+                    <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                  ) : (
+                    descComboFiltered.map((p) => (
+                      <button
+                        key={p.productId}
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          applyProductSelection(String(p.productId));
+                        }}
+                      >
+                        <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <SubInputField label="Own Ref.#" widthPx={86} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.ownRefNo} onChange={(e) => mergeItemForm({ ownRefNo: e.target.value })} />
           <SubInputField
             ref={qtyInputRef}
             label="Qty"
@@ -1091,6 +1403,9 @@ export default function PurchaseOrder() {
             inputMode="decimal"
             autoComplete="off"
             widthPx={50}
+            heightPx={LPO_LINE_ENTRY_H}
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
             value={liveItem.qty}
             onChange={handleQtyChange}
             onKeyDown={(e) => {
@@ -1099,16 +1414,19 @@ export default function PurchaseOrder() {
               unitCostInputRef.current?.focus();
             }}
           />
-          <DropdownInput label="UOM" widthPx={60} value={liveItem.uom} onChange={(v) => mergeItemForm({ uom: v })} options={UOM_OPTIONS} />
-          <SubInputField label="Pack Qty" type="number" widthPx={60} value={liveItem.packQty} onChange={(e) => mergeItemForm({ packQty: e.target.value })} />
-          <SubInputField label="FOC" type="number" widthPx={50} value={liveItem.foc} onChange={(e) => mergeItemForm({ foc: e.target.value })} />
-          <SubInputField label="Base Cost" type="number" widthPx={70} value={liveItem.baseCost} onChange={(e) => mergeItemForm({ baseCost: e.target.value })} />
-          <SubInputField label="Disc %" type="number" widthPx={50} value={liveItem.discPercent} onChange={(e) => mergeItemForm({ discPercent: e.target.value })} />
+          <DropdownInput label="UOM" widthPx={60} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.uom} onChange={(v) => mergeItemForm({ uom: v })} options={UOM_OPTIONS} />
+          <SubInputField label="Pack Qty" type="number" widthPx={68} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.packQty} onChange={(e) => mergeItemForm({ packQty: e.target.value })} />
+          <SubInputField label="FOC" type="number" widthPx={58} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.foc} onChange={(e) => mergeItemForm({ foc: e.target.value })} />
+          <SubInputField label="Base Cost" type="number" widthPx={76} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.baseCost} onChange={(e) => mergeItemForm({ baseCost: e.target.value })} />
+          <SubInputField label="Disc %" type="number" widthPx={66} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.discPercent} onChange={(e) => mergeItemForm({ discPercent: e.target.value })} />
           <SubInputField
             ref={unitCostInputRef}
             label="Unit Cost"
             type="number"
-            widthPx={70}
+            widthPx={76}
+            heightPx={LPO_LINE_ENTRY_H}
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
             value={liveItem.unitCost}
             onChange={(e) => mergeItemForm({ unitCost: e.target.value })}
             onKeyDown={(e) => {
@@ -1117,19 +1435,21 @@ export default function PurchaseOrder() {
               lineTotalInputRef.current?.focus();
             }}
           />
-          <SubInputField label="Sub.Total" type="number" widthPx={70} value={liveItem.subTotal} readOnly tabIndex={-1} />
-          <DropdownInput label="VAT %" widthPx={60} value={liveItem.vatPercent} onChange={(v) => mergeItemForm({ vatPercent: v })} options={VAT_OPTIONS} />
-          <SubInputField label="VAT Amt" type="number" widthPx={70} value={liveItem.vatAmount} readOnly tabIndex={-1} />
+          <SubInputField label="Sub.Total" type="number" widthPx={86} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.subTotal} readOnly tabIndex={-1} />
+          <DropdownInput label="VAT %" widthPx={68} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.vatPercent} onChange={(v) => mergeItemForm({ vatPercent: v })} options={VAT_OPTIONS} />
+          <SubInputField label="VAT Amt" type="number" widthPx={82} heightPx={LPO_LINE_ENTRY_H} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={liveItem.vatAmount} readOnly tabIndex={-1} />
           <SubInputField
             ref={lineTotalInputRef}
             label="Line Total"
             type="text"
             inputMode="decimal"
-            widthPx={80}
+            widthPx={90}
+            heightPx={LPO_LINE_ENTRY_H}
             value={liveItem.lineTotal}
             readOnly
             tabIndex={0}
-            className="tabular-nums"
+            labelClassName={LPO_LINE_ENTRY_LBL}
+            className={LPO_LINE_ENTRY_INP}
             title="Press Enter to add line to the table"
             onKeyDown={(e) => {
               if (e.key !== 'Enter') return;
@@ -1137,92 +1457,113 @@ export default function PurchaseOrder() {
               handleAddOrUpdateLine();
             }}
           />
-          <div className="flex shrink-0 items-end gap-1.5">
-            <button type="button" className="lpo-add" onClick={handleAddOrUpdateLine}>
-              {editingRowIndex !== null ? 'Update' : 'Add'}
+          <div className="flex items-end gap-1">
+            <button
+              type="button"
+              onClick={handleAddOrUpdateLine}
+              className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-3 text-[10px] font-semibold leading-none text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}
+            >
+              {editingRowIndex !== null ? 'Save' : 'Add Line'}
             </button>
             {editingRowIndex !== null && (
-              <button type="button" className="lpo-bb lpo-bb-cancel" onClick={cancelLineForm}>
+              <button
+                type="button"
+                onClick={cancelLineForm}
+                className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border border-gray-200 bg-white px-2.5 text-[10px] font-semibold leading-none text-gray-600 hover:bg-gray-50"
+              >
                 Cancel
               </button>
             )}
           </div>
         </div>
 
-        <hr className="lpo-hr" />
-
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden xl:flex-row">
-          <div className="relative min-h-0 flex-1">
-            <div className="absolute inset-x-2 inset-y-1 flex flex-col overflow-hidden rounded-md sm:inset-x-3 sm:inset-y-1.5" style={{ border: '1px solid #e2dfd9' }}>
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-                <CommonTable
-                  className="lpo-tbl"
-                  fitParentWidth
-                  stickyHeader
-                  hideOuterBorder
-                  columnWidthPercents={LPO_COLUMN_WIDTH_PERCENTS}
-                  headers={LPO_LINE_HEADERS}
-                  rows={tableBodyRows}
-                />
-              </div>
-              <div className="lpo-total-bar shrink-0 border-t" style={{ borderColor: '#e2dfd9' }}>
-                <div className="lpo-total-grid">
-                  {[
-                    ['Qty Total', money2(gridTotals.qtySum)],
-                    ['FOC Total', money2(gridTotals.focSum)],
-                    ['Gross Total', money2(gridTotals.grossSum)],
-                    ['Discount Total', money2(gridTotals.discountSum)],
-                    ['Sub Total', money2(gridTotals.subSum)],
-                    ['VAT Total', money2(gridTotals.taxSum)],
-                    ['Header Disc', money2(footerTotals.headerDiscount)],
-                    ['Net Total', money2(footerTotals.netAfterHeader), true],
-                  ].map(([label, value, strong]) => (
-                    <div key={label} className={`lpo-total-chip ${strong ? 'lpo-total-chip-strong' : ''}`}>
-                      <span className="lpo-total-name">{label}</span>
-                      <span className="lpo-total-value">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+              <CommonTable
+                className="lpo-tbl"
+                fitParentWidth
+                stickyHeader
+                hideOuterBorder
+                truncateHeader
+                headerOverflowAbbrevChars={3}
+                truncateBody
+                columnWidthPercents={LPO_COLUMN_WIDTH_PERCENTS}
+                headerFontSize="11px"
+                bodyFontSize="13px"
+                cellPaddingClass="px-1 py-1 sm:px-1.5 sm:py-1.5"
+                headers={LPO_LINE_HEADERS}
+                rows={tableBodyRows}
+              />
             </div>
+            <TableTotalsBar
+              borderColor="#e5e5e5"
+              items={[
+                ['Qty Total', money2(gridTotals.qtySum)],
+                ['FOC Total', money2(gridTotals.focSum)],
+                ['Gross Total', money2(gridTotals.grossSum)],
+                ['Discount Total', money2(gridTotals.discountSum)],
+                ['Sub Total', money2(gridTotals.subSum)],
+                ['VAT Total', money2(gridTotals.taxSum)],
+                ['Header Disc', money2(footerTotals.headerDiscount)],
+                ['Net Total', money2(footerTotals.netAfterHeader), true],
+              ]}
+            />
           </div>
 
-          <div className="lpo-rp flex min-h-0 flex-col overflow-y-auto border-t bg-white xl:min-h-0 xl:w-80 xl:border-t-0 xl:border-l" style={{ borderColor: '#e2dfd9' }}>
-            <div className="flex shrink-0 border-b px-3 py-1" style={{ borderColor: '#e2dfd9' }}>
-              {[
-                { key: 'summary', label: 'Summary' },
-                { key: 'order', label: 'Order' },
-                { key: 'terms', label: 'Terms' },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`lpo-tab ${rightTab === tab.key ? 'lpo-tab-on' : ''}`}
-                  onClick={() => setRightTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200 xl:min-w-0">
+            <div className="flex shrink-0 flex-col gap-2.5 border-b border-neutral-200 bg-neutral-50 px-3 py-3">
+              <span className="lpo-lbl">LPO reference</span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <SubInputField label="LPO No" fullWidth heightPx={34} labelClassName={LPO_LINE_ENTRY_LBL} className={LPO_LINE_ENTRY_INP} value={lpoInfo.lpoNo} onChange={(e) => setLpoInfo((p) => ({ ...p, lpoNo: e.target.value }))} />
+                <DatePickerInput
+                  fullWidth
+                  heightPx={34}
+                  borderRadius={4}
+                  placeholder="DD/MM/YYYY"
+                  displayFontSize={10}
+                  background="#fff"
+                  dropdownInViewport
+                  value={lpoInfo.lpoDate}
+                  onChange={(e) => setLpoInfo((p) => ({ ...p, lpoDate: e.target.value }))}
+                />
+              </div>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-3">
+            <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-2">
+              <TabsBar
+                fullWidth
+                tabs={[
+                  { id: 'summary', label: 'Summary' },
+                  { id: 'order', label: 'Order' },
+                  { id: 'terms', label: 'Terms' },
+                ]}
+                activeTab={rightTab}
+                onChange={setRightTab}
+              />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
               {rightTab === 'summary' && (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="lpo-lbl block mb-2">Summary</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-24 shrink-0">Total</label>
-                        <input type="text" readOnly tabIndex={-1} value={summaryInfo.total} className="lpo-fi flex-1 tabular-nums" title="Sum of line sub totals" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-24 shrink-0">Discount</label>
-                        <input type="text" value={summaryInfo.discountAmount} onChange={(e) => setSummaryInfo((p) => ({ ...p, discountAmount: e.target.value }))} className="lpo-fi flex-1 tabular-nums" />
-                      </div>
-                      <div className="lpo-net flex items-center gap-2">
-                        <label className="lpo-fl w-24 shrink-0" style={{ color: primary }}>Net Amount</label>
-                        <input type="text" readOnly tabIndex={-1} value={summaryInfo.netAmount} className="lpo-fi flex-1 tabular-nums" style={{ fontWeight: 700, background: '#fff' }} title="Line totals minus discount" />
-                      </div>
+                <div className="flex flex-col gap-2">
+                  <span className="lpo-lbl">Summary</span>
+                  <div className="lpo-summary-card" role="region" aria-label="LPO amount summary">
+                    <div className="lpo-summary-row">
+                      <span className="lpo-summary-label">Total</span>
+                      <span className="lpo-summary-value tabular-nums">{summaryInfo.total}</span>
+                    </div>
+                    <div className="lpo-summary-row">
+                      <span className="lpo-summary-label">Discount</span>
+                      <input
+                        type="text"
+                        value={summaryInfo.discountAmount}
+                        onChange={(e) => setSummaryInfo((p) => ({ ...p, discountAmount: e.target.value }))}
+                        className="lpo-summary-value min-w-0 max-w-[55%] border-0 bg-transparent p-0 text-right outline-none focus:ring-0 tabular-nums"
+                        title="Header discount"
+                      />
+                    </div>
+                    <div className="lpo-summary-net">
+                      <span className="lpo-summary-label">Net amount</span>
+                      <span className="lpo-summary-value tabular-nums">{summaryInfo.netAmount}</span>
                     </div>
                   </div>
                 </div>
@@ -1230,93 +1571,78 @@ export default function PurchaseOrder() {
 
               {rightTab === 'order' && (
                 <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="lpo-lbl block mb-2">Order Information</span>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">LPO No</label>
-                        <input type="text" value={lpoInfo.lpoNo} onChange={(e) => setLpoInfo((p) => ({ ...p, lpoNo: e.target.value }))} className="lpo-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">Order Form</label>
-                        <input type="text" value={lpoInfo.orderFrom} onChange={(e) => setLpoInfo((p) => ({ ...p, orderFrom: e.target.value }))} className="lpo-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">Supplier</label>
-                        <input type="text" value={lpoInfo.lpoSupplierName} onChange={(e) => setLpoInfo((p) => ({ ...p, lpoSupplierName: e.target.value }))} className="lpo-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">Supplier Quot No</label>
-                        <input type="text" value={lpoInfo.supplierQuotationNo} onChange={(e) => setLpoInfo((p) => ({ ...p, supplierQuotationNo: e.target.value }))} className="lpo-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">LPO Date</label>
-                        <input type="date" value={lpoInfo.lpoDate} onChange={(e) => setLpoInfo((p) => ({ ...p, lpoDate: e.target.value }))} className="lpo-fi flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="lpo-fl w-20 shrink-0">Discount</label>
-                        <select value={lpoInfo.discount} onChange={(e) => setLpoInfo((p) => ({ ...p, discount: e.target.value }))} className="lpo-fi flex-1">
-                          {DISCOUNT_HEADER_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      </div>
+                  <span className="lpo-lbl">Order information</span>
+                  <div className="lpo-compact-card grid grid-cols-1 gap-y-2.5 sm:grid-cols-[minmax(0,1fr)_112px] sm:gap-x-2 sm:gap-y-2.5">
+                    <div className="min-w-0 sm:col-start-1 sm:row-start-1">
+                      <SubInputField
+                        label="Order from"
+                        fullWidth
+                        heightPx={LPO_LINE_ENTRY_H}
+                        labelClassName={LPO_LINE_ENTRY_LBL}
+                        className={LPO_LINE_ENTRY_INP}
+                        value={lpoInfo.orderFrom}
+                        onChange={(e) => setLpoInfo((p) => ({ ...p, orderFrom: e.target.value }))}
+                      />
+                    </div>
+                    <div className="shrink-0 sm:col-start-2 sm:row-start-1">
+                      <DropdownInput
+                        label="Discount"
+                        widthPx={112}
+                        heightPx={LPO_LINE_ENTRY_H}
+                        value={lpoInfo.discount}
+                        onChange={(v) => setLpoInfo((p) => ({ ...p, discount: v }))}
+                        options={DISCOUNT_HEADER_OPTIONS}
+                        labelClassName={LPO_LINE_ENTRY_LBL}
+                        className={LPO_LINE_ENTRY_INP}
+                      />
+                    </div>
+                    <div className="min-w-0 sm:col-span-2">
+                      <SubInputField
+                        label="Supplier name"
+                        fullWidth
+                        heightPx={LPO_LINE_ENTRY_H}
+                        labelClassName={LPO_LINE_ENTRY_LBL}
+                        className={LPO_LINE_ENTRY_INP}
+                        value={lpoInfo.lpoSupplierName}
+                        onChange={(e) => setLpoInfo((p) => ({ ...p, lpoSupplierName: e.target.value }))}
+                      />
+                    </div>
+                    <div className="min-w-0 sm:col-span-2">
+                      <SubInputField
+                        label="Supplier quotation no."
+                        fullWidth
+                        heightPx={LPO_LINE_ENTRY_H}
+                        labelClassName={LPO_LINE_ENTRY_LBL}
+                        className={LPO_LINE_ENTRY_INP}
+                        value={lpoInfo.supplierQuotationNo}
+                        onChange={(e) => setLpoInfo((p) => ({ ...p, supplierQuotationNo: e.target.value }))}
+                      />
                     </div>
                   </div>
-
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="lpo-lbl block mb-2">Options</span>
+                  <span className="lpo-lbl">Options</span>
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2">
                     <div className="flex flex-wrap items-center gap-3">
-                      <Switch checked={lpoInfo.bySupplier} onChange={(v) => setLpoInfo((p) => ({ ...p, bySupplier: v }))} description="By Supplier" size="xs" />
-                      <Switch checked={lpoInfo.listItem} onChange={(v) => setLpoInfo((p) => ({ ...p, listItem: v }))} description="List Items" size="xs" />
-                      <Switch checked={lpoInfo.useDiscPct} onChange={(v) => setLpoInfo((p) => ({ ...p, useDiscPct: v }))} description="Use Disc%" size="xs" />
+                      <Switch checked={lpoInfo.bySupplier} onChange={(v) => setLpoInfo((p) => ({ ...p, bySupplier: v }))} description="By supplier" size="xs" />
+                      <Switch checked={lpoInfo.listItem} onChange={(v) => setLpoInfo((p) => ({ ...p, listItem: v }))} description="List items" size="xs" />
+                      <Switch checked={lpoInfo.useDiscPct} onChange={(v) => setLpoInfo((p) => ({ ...p, useDiscPct: v }))} description="Use disc %" size="xs" />
                     </div>
                   </div>
                 </div>
               )}
 
               {rightTab === 'terms' && (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-md border p-2.5" style={{ borderColor: '#e2dfd9', background: '#fafaf9' }}>
-                    <span className="lpo-lbl block mb-2">Terms & Conditions</span>
-                    <textarea
-                      value={summaryInfo.lpoTerms}
-                      onChange={(e) => setSummaryInfo((p) => ({ ...p, lpoTerms: e.target.value }))}
-                      className="lpo-ta w-full"
-                      rows={8}
-                      placeholder="Payment terms, delivery, validity..."
-                    />
-                  </div>
+                <div className="flex flex-col gap-2">
+                  <span className="lpo-lbl">Terms & conditions</span>
+                  <textarea
+                    value={summaryInfo.lpoTerms}
+                    onChange={(e) => setSummaryInfo((p) => ({ ...p, lpoTerms: e.target.value }))}
+                    className="box-border min-h-[10rem] w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[11px] outline-none focus:border-neutral-400"
+                    rows={8}
+                    placeholder="Payment terms, delivery, validity…"
+                  />
                 </div>
               )}
             </div>
-          </div>
-        </div>
-
-        <div className="lpo-bar shrink-0">
-          <div className="flex items-center gap-2">
-            <button type="button" className="lpo-bb" onClick={resetLpo}>
-              <img src={EditIcon} alt="" className="h-3 w-3" />
-              <span className="hidden sm:inline">New</span>
-            </button>
-            <button type="button" className="lpo-bb">
-              <img src={PrinterIcon} alt="" className="h-3 w-3" />
-              Print
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <button type="button" className="lpo-bb lpo-bb-cancel">
-              <img src={CancelIcon} alt="" className="h-3 w-3" />
-              Close
-            </button>
-            <button
-              type="button"
-              className="lpo-bb lpo-bb-save"
-              disabled={saveLoading || !branchId || !supplierId || lineRows.length === 0}
-              onClick={() => {
-                void handleSaveLpo();
-              }}
-            >
-              {saveLoading ? 'Saving…' : savedLpoMasterId ? 'Update LPO' : 'Save LPO'}
-            </button>
           </div>
         </div>
       </div>

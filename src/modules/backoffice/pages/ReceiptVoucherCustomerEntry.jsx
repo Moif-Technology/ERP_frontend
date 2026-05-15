@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import { DropdownInput, InputField, SubInputField, DateInputField } from '../../../shared/components/ui';
+import { DropdownInput, InputField, SubInputField, DateInputField, TableTotalsBar } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
@@ -128,7 +128,15 @@ export default function ReceiptVoucherCustomerEntry() {
     return [slNo, accountCell, drCell, crCell, <div key={`act-${r.id}`} className="flex items-center justify-center gap-0.5 sm:gap-1"><button type="button" className={actionIconBtn} onClick={() => handleViewLine(r.id)}><img src={ViewIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button><button type="button" className={actionIconBtn} onClick={() => handleEditLine(r.id)}><img src={EditIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button><button type="button" className={actionIconBtn} onClick={() => handleDeleteLine(r.id)}><img src={DeleteIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" /></button></div>];
   }), [paginatedRows, page, pageSize, editingRowId, accountOptions, updateLine, handleViewLine, handleEditLine, handleDeleteLine]);
 
-  const tableFooterRow = useMemo(() => [{ content: <div key="tot" className="text-left font-bold">Total</div>, colSpan: 2, className: 'align-middle font-bold' }, <span key="dr" className="font-bold">Dr {fmt(totalDebit)}</span>, <span key="cr" className="font-bold">Cr {fmt(totalCredit)}</span>, ''], [totalDebit, totalCredit]);
+  const tableTotalItems = useMemo(
+    () => [
+      ['Lines', String(tableData.length)],
+      ['Debit Total', fmt(totalDebit)],
+      ['Credit Total', fmt(totalCredit)],
+      ['Balance', fmt(totalDebit - totalCredit), true],
+    ],
+    [tableData.length, totalDebit, totalCredit],
+  );
 
   const listRows = useMemo(() => recentVouchers.map((v, idx) => [
     idx + 1,
@@ -197,7 +205,8 @@ export default function ReceiptVoucherCustomerEntry() {
               headerFontSize="clamp(7px,0.85vw,10px)" headerTextColor="#6b7280" bodyFontSize="clamp(8px,1vw,10px)"
               cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5" bodyRowHeightRem={2.35} maxVisibleRows={pageSize}
               headers={['Sl no', 'Account name', 'Debit', 'Credit', 'Actions']}
-              rows={tableBodyRows} footerRow={tableFooterRow} />
+              rows={tableBodyRows} />
+            <TableTotalsBar borderColor="#e5e7eb" columns={4} items={tableTotalItems} />
             <div className="mt-2 grid w-full shrink-0 grid-cols-1 items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-x-2 sm:gap-y-0">
               <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
                 <p className="text-[10px] font-semibold text-gray-700">Showing <span className="text-black">{rangeStart}–{rangeEnd}</span> of <span className="text-black">{tableData.length}</span></p>

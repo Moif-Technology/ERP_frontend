@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import { DropdownInput, InputField, SubInputField, DateInputField } from '../../../shared/components/ui';
+import { DropdownInput, InputField, SubInputField, DateInputField, TableTotalsBar } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
@@ -249,12 +249,15 @@ export default function JournalVoucherEntry() {
     });
   }, [paginatedRows, page, pageSize, editingRowId, accountOptions, updateLine, handleViewLine, handleEditLine, handleDeleteLine]);
 
-  const tableFooterRow = useMemo(() => [
-    { content: <div key="t" className="text-left font-bold">Total</div>, colSpan: 2, className: 'align-middle font-bold' },
-    <span key="dr" className="font-bold">Dr {formatMoney(totalDebit)}</span>,
-    <span key="cr" className="font-bold">Cr {formatMoney(totalCredit)}</span>,
-    '',
-  ], [totalDebit, totalCredit]);
+  const tableTotalItems = useMemo(
+    () => [
+      ['Lines', String(filteredRows.length)],
+      ['Debit Total', formatMoney(totalDebit)],
+      ['Credit Total', formatMoney(totalCredit)],
+      ['Balance', formatMoney(totalDebit - totalCredit), true],
+    ],
+    [filteredRows.length, totalDebit, totalCredit],
+  );
 
   const pageNumbers = useMemo(() => {
     const maxBtns = 3;
@@ -341,8 +344,8 @@ export default function JournalVoucherEntry() {
           bodyRowHeightRem={2.35} maxVisibleRows={pageSize}
           headers={['Sl', 'Account', 'Debit', 'Credit', 'Action']}
           rows={tableBodyRows}
-          footerRow={tableFooterRow}
         />
+        <TableTotalsBar borderColor="#e5e7eb" columns={4} items={tableTotalItems} />
 
         <div className="mt-2 grid w-full min-w-0 shrink-0 grid-cols-1 items-center justify-items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:justify-items-stretch sm:gap-x-2 sm:gap-y-0">
           <div className="flex min-w-0 flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">

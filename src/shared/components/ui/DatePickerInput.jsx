@@ -54,12 +54,14 @@ const S = {
 /* ── component ── */
 export default function DatePickerInput({
   value, onChange, placeholder = 'DD / MM / YYYY',
-  disabled, heightPx = 26, borderRadius = 4, fullWidth, widthPx,
+  disabled, heightPx = 38, borderRadius = 4, fullWidth, widthPx, displayFontSize = 16, background = '#F5F5F5',
+  dropdownInViewport = false,
 }) {
   const [open,      setOpen]      = useState(false);
   const [viewYear,  setViewYear]  = useState(() => { const d = fromISO(value); return d ? d.getFullYear() : new Date().getFullYear(); });
   const [viewMonth, setViewMonth] = useState(() => { const d = fromISO(value); return d ? d.getMonth()    : new Date().getMonth();    });
   const [showYear,  setShowYear]  = useState(false);
+  const [dropdownPos, setDropdownPos] = useState(null);
   const wrapRef = useRef(null);
 
   const selected = fromISO(value);
@@ -87,6 +89,28 @@ export default function DatePickerInput({
     return () => window.removeEventListener('keydown', h);
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !dropdownInViewport) return undefined;
+    const position = () => {
+      const rect = wrapRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = 270;
+      const estimatedHeight = showYear ? 190 : 330;
+      const margin = 8;
+      const fitsBelow = rect.bottom + 5 + estimatedHeight <= window.innerHeight - margin;
+      const top = fitsBelow ? rect.bottom + 5 : Math.max(margin, rect.top - estimatedHeight - 5);
+      const left = Math.min(Math.max(margin, rect.left), window.innerWidth - width - margin);
+      setDropdownPos({ top, left });
+    };
+    position();
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    return () => {
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+    };
+  }, [open, dropdownInViewport, showYear]);
+
   const days = useMemo(() => grid(viewYear, viewMonth), [viewYear, viewMonth]);
 
   const goMonth = (d) => {
@@ -108,10 +132,11 @@ export default function DatePickerInput({
     display: 'flex', alignItems: 'center', gap: 6,
     height: heightPx, minHeight: heightPx,
     borderRadius, border: '1px solid #e2e8f0',
-    background: '#F5F5F5', padding: '0 8px',
+    background, padding: '0 8px',
     boxSizing: 'border-box', cursor: disabled ? 'default' : 'pointer',
     width: fullWidth ? '100%' : widthPx ? `${widthPx}px` : '100%',
     opacity: disabled ? 0.55 : 1,
+    overflow: 'hidden',
   };
 
   return (
@@ -124,7 +149,7 @@ export default function DatePickerInput({
           <rect x="1" y="2" width="14" height="13" rx="1.5" />
           <path d="M1 6h14M5 1v2M11 1v2" strokeLinecap="round" />
         </svg>
-        <span style={{ fontSize: 12, fontWeight: 600, flex: 1, color: value ? '#111' : '#9ca3af', letterSpacing: '0.01em', userSelect: 'none' }}>
+        <span style={{ fontSize: displayFontSize, lineHeight: 1, fontWeight: 600, flex: 1, color: value ? '#111' : '#9ca3af', letterSpacing: 0, userSelect: 'none' }}>
           {value ? display(value) : placeholder}
         </span>
         <svg viewBox="0 0 24 24" style={{ width: 10, height: 10, flexShrink: 0, color: '#9ca3af', transition: 'transform .15s', transform: open ? 'rotate(180deg)' : 'none' }}
@@ -136,7 +161,11 @@ export default function DatePickerInput({
       {/* ── dropdown ── */}
       {open && (
         <div style={{
-          position: 'absolute', top: '100%', left: 0, marginTop: 5, zIndex: 1200,
+          position: dropdownInViewport ? 'fixed' : 'absolute',
+          top: dropdownInViewport ? (dropdownPos?.top ?? 0) : '100%',
+          left: dropdownInViewport ? (dropdownPos?.left ?? 0) : 0,
+          marginTop: dropdownInViewport ? 0 : 5,
+          zIndex: 1200,
           width: 270, background: '#fff', borderRadius: 14,
           border: '1px solid #e5e7eb',
           boxShadow: '0 12px 32px -4px rgba(121,7,40,0.18), 0 4px 12px -2px rgba(0,0,0,0.08)',

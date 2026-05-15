@@ -46,6 +46,7 @@ import EmployeeDirectoryIcon from '../../shared/assets/icons/employee-directory.
 import ShiftMasterIcon from '../../shared/assets/icons/shift-master.svg';
 import LeaveTypeMasterIcon from '../../shared/assets/icons/leave-type-master.svg';
 import DocumentTypeIcon from '../../shared/assets/icons/document-type.svg';
+import AttendanceIcon from '../../shared/assets/icons/calendar.svg';
 import CrmModuleIcon from '../../shared/assets/icons/crm-module.svg';
 import CrmOverviewIcon from '../../shared/assets/icons/trial_balance.svg';
 import CrmLeadsIcon from '../../shared/assets/icons/filter.svg';
@@ -80,6 +81,7 @@ import SearchIcon from '../../shared/assets/iconsax-search.svg';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
+const SIDEBAR_COLLAPSED_WIDTH = 48;
 
 const menuItems = [
   { label: 'Dashboard', icon: DashboardIcon, to: '/dashboard', exact: true, feature: 'backoffice.dashboard' },
@@ -336,7 +338,7 @@ const menuItems = [
     subItems: [
       { label: 'HR dashboard', to: '/hr/dashboard', icon: ReportsIcon, feature: 'hr.dashboard' },
       { label: 'Employee directory', to: '/hr/employees', icon: EmployeeDirectoryIcon, feature: 'hr.employee_master' },
-      { label: 'Attendance overview', to: '/hr/attendance', icon: CrmFollowupsIcon, feature: 'hr.attendance' },
+      { label: 'Attendance overview', to: '/hr/attendance', icon: AttendanceIcon, feature: 'hr.attendance' },
       { label: 'Leave management', to: '/hr/leave-management', icon: LeaveTypeMasterIcon, feature: 'hr.leave' },
       { label: 'Shift master', to: '/hr/shift-master', icon: ShiftMasterIcon, feature: 'hr.shifts' },
       { label: 'Leave type master', to: '/hr/leave-type-master', icon: LeaveTypeMasterIcon, feature: 'hr.leave' },
@@ -475,7 +477,7 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed = false, onCollapsedChange }) {
   const navigate = useNavigate();
   const visibleMenuItems = filterByAccess(menuItems);
 
@@ -625,28 +627,47 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed flex min-h-0 flex-col overflow-x-hidden overflow-y-hidden pt-4 font-sans"
+      className="fixed flex min-h-0 flex-col overflow-x-hidden overflow-y-hidden pt-3 font-sans"
       style={{
         top: HEADER_HEIGHT,
         left: 0,
-        width: SIDEBAR_WIDTH,
+        width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         height: `calc(100vh - ${HEADER_HEIGHT}px)`,
         background: colors.primary?.gradient ?? '#790728',
         color: 'white',
+        transition: 'width 0.22s ease',
       }}
     >
-      <div className="shrink-0 px-4 pb-4">
-        <div className="flex items-center w-40 h-8 border border-white bg-transparent rounded-[10px] px-2">
-          <img
-            src={SearchIcon}
-            alt="Search"
-            className="w-4 h-4 mr-2 filter brightness-0 invert"
-          />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="bg-transparent outline-none text-white text-xs w-full"
-          />
+      <div className="shrink-0 px-2 pb-3">
+        <div className="flex items-center gap-2">
+          {/* Toggle button — styled like search bar */}
+          <button
+            type="button"
+            onClick={() => onCollapsedChange?.(!collapsed)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-white/40 bg-white/10 text-white/80 transition hover:bg-white/20"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            )}
+          </button>
+          {/* Search bar — hidden when collapsed */}
+          {!collapsed && (
+            <div className="flex flex-1 items-center h-8 border border-white/40 bg-white/10 rounded-[8px] px-2">
+              <img src={SearchIcon} alt="Search" className="w-3.5 h-3.5 mr-1.5 filter brightness-0 invert opacity-70 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="bg-transparent outline-none text-white text-[11px] w-full placeholder:text-white/50"
+              />
+            </div>
+          )}
         </div>
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto sidebar-scroll">
@@ -658,43 +679,35 @@ export default function Sidebar() {
             <div key={item.label}>
               {hasSub ? (
                 <div
-                  onClick={() => toggleMenu(item.label)}
-                  className="mx-1 flex items-center justify-between p-2 rounded-[10px] cursor-pointer text-sm font-light transition backdrop-blur-md hover:backdrop-blur-lg hover:bg-white/8"
+                  onClick={() => !collapsed && toggleMenu(item.label)}
+                  title={collapsed ? item.label : undefined}
+                  className={`mx-1 flex items-center rounded-[10px] p-2 text-[12px] font-light leading-tight transition cursor-pointer hover:bg-white/15 ${collapsed ? 'justify-center' : 'justify-between'}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <img src={item.icon} alt="" className="w-4 h-4 filter brightness-0 invert" />
-                    <span>{item.label}</span>
+                  <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+                    <img src={item.icon} alt="" className="w-4 h-4 filter brightness-0 invert shrink-0" />
+                    {!collapsed && <span>{item.label}</span>}
                   </div>
-                  <img
-                    src={ChevronDown}
-                    alt="toggle"
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
-                  />
+                  {!collapsed && (
+                    <img src={ChevronDown} alt="toggle" className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  )}
                 </div>
               ) : (
                 <NavLink
                   to={item.to}
                   end={item.exact}
+                  title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `mx-1 flex items-center gap-3 p-2 rounded-[10px] text-white text-sm no-underline transition backdrop-blur-md hover:backdrop-blur-lg ${
-                      isActive
-                        ? 'bg-white/15 font-medium border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)]'
-                        : 'font-light hover:bg-white/8'
+                    `mx-1 flex items-center rounded-[10px] p-2 text-[12px] leading-tight text-white no-underline transition hover:bg-white/15 ${collapsed ? 'justify-center' : 'gap-3'} ${
+                      isActive ? 'bg-white/15 font-medium border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)]' : 'font-light'
                     }`
                   }
                 >
-                  <img
-                    src={item.icon}
-                    alt=""
-                    className={`w-4 h-4 ${item.label === 'Home' || item.label === 'Garage' ? 'filter brightness-0 invert' : ''}`.trim()}
-                  />
-                  <span>{item.label}</span>
+                  <img src={item.icon} alt="" className={`w-4 h-4 shrink-0 ${item.label === 'Home' || item.label === 'Garage' ? 'filter brightness-0 invert' : ''}`.trim()} />
+                  {!collapsed && <span>{item.label}</span>}
                 </NavLink>
               )}
 
-              {hasSub && isOpen && (
+              {hasSub && isOpen && !collapsed && (
                 <div className="bg-black/15">
                   {item.subItems.map((sub) => {
                     const hasSubSub = !!sub.subItems;
@@ -702,6 +715,7 @@ export default function Sidebar() {
                     const iconClass = `w-4 h-4 ${
                       sub.label === 'Supplier entry' ||
                       sub.label === 'Product entry' ||
+                      sub.label === 'Attendance overview' ||
                       item.label === 'List' ||
                       item.label === 'Stock Hub' ||
                       item.label === 'Deals & Offers' ||
@@ -723,7 +737,7 @@ export default function Sidebar() {
                         <div key={`${item.label}-${sub.label}`}>
                           <div
                             onClick={() => toggleMenu(sub.label)}
-                            className="mx-2 flex items-center justify-between gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] font-light cursor-pointer hover:bg-white/8"
+                            className="mx-2 flex items-center justify-between gap-2.5 rounded-[10px] p-2 text-[11px] font-light leading-tight text-white cursor-pointer hover:bg-white/8"
                           >
                             <div className="flex items-center gap-2.5">
                               <img src={sub.icon} alt="" className={iconClass} />
@@ -742,7 +756,7 @@ export default function Sidebar() {
                                   key={`${sub.label}-${leaf.label}`}
                                   to={leaf.to}
                                   className={({ isActive }) =>
-                                    `mx-3 flex items-center gap-2 p-1.5 rounded-lg text-white text-[0.775rem] no-underline transition ${
+                                    `mx-3 flex items-center gap-2 rounded-lg p-1.5 text-[10.5px] leading-tight text-white no-underline transition ${
                                       isActive
                                         ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                                         : 'hover:bg-white/8 font-light'
@@ -764,7 +778,7 @@ export default function Sidebar() {
                         key={`${item.label}-${sub.label}`}
                         to={sub.to}
                         className={({ isActive }) =>
-                          `mx-2 flex items-center gap-2.5 p-2 rounded-[10px] text-white text-[0.825rem] no-underline transition ${
+                          `mx-2 flex items-center gap-2.5 rounded-[10px] p-2 text-[11px] leading-tight text-white no-underline transition ${
                             isActive
                               ? 'bg-white/15 border border-white/25 shadow-[0_4px_8px_0_rgba(0,0,0,0.25)] font-medium'
                               : 'hover:bg-white/8 font-light'
@@ -787,7 +801,7 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={() => signOut(navigate)}
-          className="mx-1 w-[calc(100%-8px)] rounded-[10px] p-2 text-left text-sm font-light text-white/90 transition hover:bg-white/10"
+          className="mx-1 w-[calc(100%-8px)] rounded-[10px] p-2 text-left text-[12px] font-light leading-tight text-white/90 transition hover:bg-white/10"
         >
           Log out
         </button>

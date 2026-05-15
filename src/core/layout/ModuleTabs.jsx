@@ -438,13 +438,16 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
 
   return (
     <div
+      onClick={() => {
+        if (!expanded) onExpandedChange(true);
+      }}
       className={`sticky top-0 left-0 z-40 min-w-0 overflow-hidden rounded-lg bg-[#fde8e8] shadow-sm ring-1 ring-rose-200/60 box-border mx-[15px] mb-0 mt-2 sm:mt-[15px] ${
-        expanded ? 'min-h-[90px] sm:min-h-[105px]' : ''
+        expanded ? 'min-h-[80px] sm:min-h-[90px]' : ''
       }`}
     >
       <div className="relative border-b border-rose-200/60">
         {expanded ? (
-          <div className="flex items-end justify-start gap-4 sm:gap-8 px-2 sm:px-4 pt-2 pb-0 pr-11 sm:pr-12 overflow-x-auto no-scrollbar">
+          <div className="flex items-end justify-start gap-2 sm:gap-3.5 px-2 sm:px-3 pt-1 pb-0 pr-11 sm:pr-12 overflow-x-auto no-scrollbar scroll-smooth">
             {availableTabs.map((tab) => {
               const isActive = safeActiveTab === tab.key;
               return (
@@ -452,7 +455,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                   <button
                     type="button"
                     onClick={() => setActiveTab(tab.key)}
-                    className="border-none bg-transparent p-0 text-left text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors"
+                    className="border-none bg-transparent p-0 text-left text-[7px] font-bold tracking-normal text-slate-800 cursor-pointer whitespace-nowrap hover:text-slate-950 transition-colors leading-tight"
                   >
                     {tab.label}
                   </button>
@@ -466,19 +469,19 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
           </div>
         ) : (
           <div className="flex min-w-0 items-center gap-1.5 px-2 sm:px-4 py-2 pr-11 sm:pr-12">
-            <span className="truncate text-[10px] font-semibold text-slate-800 sm:text-[11px]">
+            <span className="truncate text-[9px] font-semibold text-slate-800 sm:text-[10px]">
               {activeTabLabel}
             </span>
             {(selectedAction?.module || selectedAction?.action) && <BreadcrumbChevron />}
             {selectedAction?.module && (
-              <span className="max-w-[min(100%,14rem)] truncate whitespace-nowrap text-[10px] font-semibold text-slate-800 sm:text-[11px]">
+              <span className="max-w-[min(100%,14rem)] truncate whitespace-nowrap text-[9px] font-semibold text-slate-800 sm:text-[10px]">
                 {selectedAction.module}
               </span>
             )}
             {selectedAction?.action && (
               <>
                 <BreadcrumbChevron />
-                <span className="truncate text-[10px] font-medium text-slate-700 sm:text-[11px]">
+                <span className="truncate text-[9px] font-semibold text-slate-700 sm:text-[10px]">
                   {selectedAction.action}
                 </span>
               </>
@@ -508,27 +511,24 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
               className={`flex-none rounded-md bg-white/60 p-1 shadow-sm ring-1 ring-rose-100/70 backdrop-blur-sm ${
                 isAccountsTab
                   ? module.actions?.length === 4
-                    ? 'h-[64px] w-[252px] sm:h-[64px] sm:w-[272px]'
+                    ? 'h-[68px] w-[252px] sm:h-[68px] sm:w-[272px]'
                     : module.actions?.length === 3
-                      ? 'h-[64px] w-[198px] sm:w-[210px]'
-                      : 'h-[64px] w-[162px] sm:w-[172px]'
-                  : module.name === 'Product'
-                    ? 'h-[64px] w-[156px] sm:w-[172px]'
-                    : 'h-[64px] w-[120px]'
+                      ? 'h-[68px] w-[198px] sm:w-[210px]'
+                      : 'h-[68px] w-[162px] sm:w-[172px]'
+                  : module.name === 'Product' || module.name === 'Purchase'
+                    ? 'h-[68px] w-[156px] sm:w-[172px]'
+                    : 'h-[68px] w-[120px]'
               }`}
             >
-              <div
-                className={`mb-2 font-bold leading-tight text-[#5A6578] text-center whitespace-nowrap px-0.5 ${
-                  isAccountsTab ? 'text-[8px] sm:text-[9px]' : 'text-[9px] sm:text-[10px]'
-                }`}
-              >
+              <div className="mb-1 px-0.5 text-center text-[10px] font-bold leading-tight whitespace-nowrap text-[#5A6578]">
                 {module.name}
               </div>
               <div
                 className={`flex gap-0 p-1 ${
                   module.actions?.length === 3 ||
                   module.actions?.length === 4 ||
-                  module.name === 'Product'
+                  module.name === 'Product' ||
+                  module.name === 'Purchase'
                     ? 'flex-nowrap'
                     : 'flex-wrap'
                 }`}
@@ -543,21 +543,22 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                   const oneRow =
                     module.actions?.length === 3 ||
                     module.actions?.length === 4 ||
-                    module.name === 'Product';
+                    module.name === 'Product' ||
+                    module.name === 'Purchase';
 
                   return (
                     <button
                       key={action.label}
                       type="button"
                       onClick={() => handleActionClick(module.name, action.label)}
-                      className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0 p-0 ${
+                      className={`group flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-0 p-0 ${
                         oneRow ? 'basis-0 shrink' : 'basis-[calc(50%-1px)]'
                       }`}
                     >
                       <img
                         src={action.icon}
                         alt=""
-                        className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
+                        className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 transition-[filter] group-hover:[filter:invert(13%)_sepia(88%)_saturate(3223%)_hue-rotate(350deg)_brightness(92%)_contrast(105%)] ${
                           isSelected ? '' : makeBlack ? 'filter brightness-0' : ''
                         }`}
                         style={
@@ -570,7 +571,7 @@ export default function ModuleTabs({ expanded, onExpandedChange }) {
                         }
                       />
                       <span
-                        className={`w-full truncate text-center text-[7px] sm:text-[9px] font-semibold ${
+                        className={`w-full truncate text-center text-[10px] font-semibold leading-tight transition-colors group-hover:text-[#790728] ${
                           isSelected ? 'text-[#800000]' : 'text-[#5A6578]'
                         }`}
                       >

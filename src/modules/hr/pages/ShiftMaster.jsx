@@ -74,8 +74,7 @@ export default function ShiftMaster() {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 mx-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Human Resources</p>
+    <div className="box-border w-[calc(100%+26px)] max-w-none -mx-[13px] rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <h1 className="text-base font-bold sm:text-lg" style={{ color: primary }}>
         SHIFT MASTER
       </h1>

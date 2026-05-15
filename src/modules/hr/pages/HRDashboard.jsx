@@ -98,11 +98,11 @@ export default function HRDashboard() {
   }, []);
 
   return (
-    <div className="mx-3 flex flex-col gap-4">
-      <section className="overflow-hidden rounded-[28px] border border-rose-200/70 bg-[linear-gradient(135deg,#fff7f9_0%,#fff_45%,#f7e7ec_100%)] shadow-sm">
+    <div className="box-border flex w-[calc(100%+26px)] max-w-none -mx-[13px] flex-col gap-4 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
+      <section className="overflow-hidden bg-[linear-gradient(135deg,#fff7f9_0%,#fff_45%,#f7e7ec_100%)]">
         <div className="grid gap-6 px-5 py-5 sm:px-7 sm:py-6 lg:grid-cols-[1.4fr_0.9fr]">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-rose-500">Human Resources</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em]" style={{ color: primary }}>Human Resources</p>
             <h1 className="mt-2 max-w-2xl text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
               HR operations now have a proper command center, not just employee masters.
             </h1>
