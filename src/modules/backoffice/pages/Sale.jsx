@@ -14,7 +14,7 @@ import LedgerIcon from '../../../shared/assets/icons/ledger.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
-import { InputField, SubInputField, DropdownInput, DateInputField, CommonTable, ConfirmDialog } from '../../../shared/components/ui';
+import { InputField, SubInputField, DropdownInput, DateInputField, DatePickerInput, CommonTable, ConfirmDialog, TableTotalsBar, TabsBar } from '../../../shared/components/ui';
 
 function getProductDetails(row) {
   const orDash = (v) => (v != null && v !== '' ? String(v) : '-');
@@ -735,6 +735,8 @@ export default function Sale({ pageTitle = 'Sales Entry', useReturnHeaderForm = 
   };
 
   const gridTotals = useMemo(() => ({
+    qtySum: saleRows.reduce((sum, r) => sum + Number(r[5] ?? 0), 0),
+    unitPriceSum: saleRows.reduce((sum, r) => sum + Number(r[8] ?? 0), 0),
     lineDiscSum: saleRows.reduce((sum, r) => sum + Number(r[9] ?? 0), 0),
     subSum: saleRows.reduce((sum, r) => sum + Number(r[10] ?? 0), 0),
     taxPctSum: saleRows.reduce((sum, r) => sum + Number(r[11] ?? 0), 0),
@@ -759,6 +761,17 @@ export default function Sale({ pageTitle = 'Sales Entry', useReturnHeaderForm = 
       netAmount: fmtMoney2(net),
     };
   }, [gridTotals, summaryPanel.discAmt, summaryPanel.discPct, summaryPanel.roundOff]);
+
+  const saleTableTotals = useMemo(() => [
+    ['Items', String(saleRows.length)],
+    ['Qty Total', fmtMoney2(gridTotals.qtySum)],
+    ['Unit Price Sum', fmtMoney2(gridTotals.unitPriceSum)],
+    ['Line Discount', fmtMoney2(gridTotals.lineDiscSum)],
+    ['Sub Total', fmtMoney2(gridTotals.subSum)],
+    ['Tax Total', fmtMoney2(gridTotals.taxSum)],
+    ['Header Disc', fmtMoney2(parseLineNum(summaryPanel.discAmt) + gridTotals.lineTotalSum * (parseLineNum(summaryPanel.discPct) / 100))],
+    ['Net Amount', summaryFromGrid.netAmount, true],
+  ], [saleRows.length, gridTotals, summaryPanel.discAmt, summaryPanel.discPct, summaryFromGrid.netAmount]);
 
   const buildSalePayload = useCallback((override = false) => {
     const net = parseLineNum(summaryFromGrid.netAmount);
@@ -879,420 +892,356 @@ export default function Sale({ pageTitle = 'Sales Entry', useReturnHeaderForm = 
     </div>,
   ]);
 
-  const tabs = [{ key: 'summary', label: 'Summary' }, { key: 'payment', label: 'Payment' }];
+  const SALE_ENTRY_H = 26;
+  const SALE_ENTRY_LBL = 'text-[9px] font-semibold text-gray-500 sm:text-[10px]';
+  const SALE_ENTRY_INP = 'text-[10px] tabular-nums';
 
   return (
-    <div className="sale-page flex h-full flex-1 min-h-0 flex-col overflow-hidden">
+    <div className="pur-root box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-        .sale-page {
-          --pr: ${primary}; --pr50: ${primaryHover}; --pr100: ${primaryActive};
-          --bd: #e2dfd9; --txt: #1c1917; --muted: #78716c;
-          font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        .pur-root {
+          --pr: ${primary}; --bd: #e5e5e5; --txt: #171717; --muted: #737373; --soft: #fafafa;
+          font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
-        .s-lbl { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--pr); font-family:'Outfit',sans-serif; }
-        .s-act { padding:3px; border-radius:4px; border:none; background:transparent; cursor:pointer; transition:all .15s; opacity:.55; display:inline-flex; align-items:center; justify-content:center; }
-        .s-act:hover { background:var(--pr50); opacity:1; }
-        .s-add { display:inline-flex; align-items:center; justify-content:center; height:24px; padding:0 14px; border-radius:5px; border:none;
-          background:linear-gradient(135deg,${primary} 0%,#85203E 100%); color:#fff; font-size:10px; font-weight:600; cursor:pointer;
-          transition:all .2s; box-shadow:0 1px 3px rgba(121,7,40,.25); font-family:'Outfit',sans-serif; letter-spacing:.3px; }
-        .s-add:hover { background:linear-gradient(135deg,#85203E 0%,#923A53 100%); box-shadow:0 2px 6px rgba(121,7,40,.3); }
-        .s-del { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:5px; border:1.5px solid var(--pr);
-          background:transparent; color:var(--pr); font-size:10px; font-weight:600; cursor:pointer; transition:all .15s; font-family:'Outfit',sans-serif; }
-        .s-del:hover { background:var(--pr50); }
-        .s-hr { height:1px; background:var(--bd); border:none; margin:0; flex-shrink:0; }
-        /* Tabs */
-        .s-tab { padding:6px 12px; font-size:10px; font-weight:500; cursor:pointer; border:none; background:transparent;
-          color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .15s; font-family:'Outfit',sans-serif; white-space:nowrap; }
-        .s-tab:hover { color:var(--txt); }
-        .s-tab-on { color:var(--pr); border-bottom-color:var(--pr); font-weight:700; }
-        /* Bottom bar — always visible, pinned at bottom */
-        .s-bar { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:6px 14px; border-top:2px solid var(--bd);
-          background:linear-gradient(180deg,#f8f7f6 0%,#f0efed 100%); flex-shrink:0; flex-wrap:wrap; min-height:38px; }
-        .s-bb { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:5px; border:1px solid var(--bd); background:#fff;
-          font-size:10.5px; font-weight:500; color:var(--txt); cursor:pointer; transition:all .15s; font-family:'Outfit',sans-serif; white-space:nowrap; }
-        .s-bb:hover { border-color:var(--pr); background:var(--pr50); color:var(--pr); }
-        .s-bb:active { background:var(--pr100); }
-        .s-bb-save { border:none; background:linear-gradient(135deg,${primary} 0%,#85203E 100%); color:#fff; font-weight:600;
-          box-shadow:0 1px 3px rgba(121,7,40,.25); padding:5px 14px; }
-        .s-bb-save:hover { background:linear-gradient(135deg,#85203E 0%,#923A53 100%); color:#fff; border-color:transparent; }
-        .s-bb-cancel { color:#b91c1c; border-color:#fca5a5; }
-        .s-bb-cancel:hover { background:#fef2f2; border-color:#b91c1c; color:#b91c1c; }
-        /* Fields */
-        .s-fl { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.7px; color:var(--muted); }
-        @media(min-width:640px){.s-fl{font-size:10px}}
-        .s-fi { height:26px; width:100%; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5; padding:0 8px;
-          font-size:9px; outline:none; transition:border-color .15s; font-family:'Outfit',sans-serif; }
-        @media(min-width:640px){.s-fi{font-size:10px}}
-        .s-fi:focus { border-color:var(--pr); }
-        .s-ta { min-height:38px; width:100%; resize:vertical; border-radius:5px; border:1px solid var(--bd); background:#f5f5f5;
-          padding:5px 8px; font-size:9px; outline:none; transition:border-color .15s; font-family:'Outfit',sans-serif; }
-        @media(min-width:640px){.s-ta{font-size:10px}}
-        .s-ta:focus { border-color:var(--pr); }
-        .s-net { background:linear-gradient(135deg,rgba(121,7,40,.07) 0%,rgba(121,7,40,.03) 100%); border-radius:6px; padding:3px; }
-        /* Right panel scroll */
-        .s-rp::-webkit-scrollbar { width:3px; }
-        .s-rp::-webkit-scrollbar-track { background:transparent; }
-        .s-rp::-webkit-scrollbar-thumb { background:#d6d3d1; border-radius:3px; }
-        /* Fix CommonTable overflow so sticky header works */
+        .pur-btn:hover { border-color: #d4d4d4; background: var(--soft); color: var(--txt); }
+        .pur-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .pur-summary-card { border-radius: 10px; border: 1px solid #e7e5e4; background: linear-gradient(165deg,#fafaf9 0%,#fff 48%,#fafaf9 100%); box-shadow: 0 1px 2px rgba(28,25,23,.05),0 0 0 1px rgba(255,255,255,.8) inset; overflow: hidden; }
+        .pur-summary-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:7px 12px; min-width:0; }
+        .pur-summary-row + .pur-summary-row { border-top:1px solid #f5f5f4; }
+        .pur-summary-row-dense { padding-top:5px; padding-bottom:5px; }
+        .pur-summary-label { font-size:11px; font-weight:600; color:#57534e; letter-spacing:.01em; line-height:1.25; }
+        .pur-summary-value { font-size:13px; font-weight:700; color:#1c1917; font-variant-numeric:tabular-nums; text-align:right; letter-spacing:-0.02em; }
+        .pur-summary-value-sm { font-size:12px; font-weight:600; }
+        .pur-summary-pair-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; border-top:1px solid #f5f5f4; }
+        .pur-summary-pair-grid .pur-summary-row { border-top:none; }
+        .pur-summary-pair-grid .pur-summary-row:first-child { border-right:1px solid #f5f5f4; }
+        .pur-summary-net { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0; padding:11px 12px 12px; border-top:1px solid rgba(121,7,40,.18); background:linear-gradient(180deg,rgba(121,7,40,.07) 0%,rgba(121,7,40,.025) 100%); }
+        .pur-summary-net .pur-summary-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--pr); }
+        .pur-summary-net .pur-summary-value { font-size:15px; font-weight:800; color:var(--pr); }
+        .pur-act { width:30px; height:30px; padding:6px; border-radius:6px; border:none; background:transparent; cursor:pointer; opacity:.5; display:inline-flex; align-items:center; justify-content:center; transition:opacity .15s,background .15s; }
+        .pur-act:hover { background:var(--soft); opacity:1; }
+        .pur-del { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:6px; border:1px solid var(--bd); background:#fff; color:var(--txt); font-size:11px; font-weight:500; cursor:pointer; }
+        .pur-del:hover { border-color:#fca5a5; color:#b91c1c; background:#fef2f2; }
+        .pur-entry-bar-input { box-sizing:border-box; height:26px; min-height:26px; border-radius:3px; border:1px solid #d4d4d4; background:#fff; padding:0 6px; font-size:10px; outline:none; width:100%; }
+        .pur-entry-bar-input:focus { border-color:#a3a3a3; }
+        .pur-entry-bar-input[readonly] { background:#f5f5f5; color:#737373; }
+        .pur-fi { height:26px; width:100%; border-radius:3px; border:1px solid #d4d4d4; background:#f5f5f5; padding:0 8px; font-size:10px; outline:none; }
+        .pur-fi:focus { border-color:#a3a3a3; }
+        .pur-ta { min-height:38px; width:100%; resize:vertical; border-radius:4px; border:1px solid #d4d4d4; background:#f5f5f5; padding:5px 8px; font-size:10px; outline:none; }
+        .pur-ta:focus { border-color:#a3a3a3; }
         .sale-tbl, .sale-tbl > div { overflow:visible !important; }
         .sale-tbl thead th { position:sticky; top:0; z-index:2; }
-        /* Total bar pinned at bottom of table container */
-        .sale-total-bar { min-height:26px; padding-top:4px; padding-bottom:4px; }
-        .sale-total-cell { min-width:62px; text-align:right; padding:0 6px; }
-        /* Modal */
-        @keyframes s-modal-in { from{opacity:0;transform:scale(.96) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        .s-modal { animation:s-modal-in .2s ease-out; }
-        .sale-field-lbl { padding:0; margin:0; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif;
-          font-size:9px; font-weight:600; letter-spacing:.3px; color:var(--muted); line-height:1.2; display:inline-flex; align-items:center; gap:3px; }
+        .sale-field-lbl { padding:0; margin:0; border:none; background:transparent; cursor:pointer; font-size:9px; font-weight:600; letter-spacing:.3px; color:var(--muted); line-height:1.2; display:inline-flex; align-items:center; gap:3px; }
         @media(min-width:640px){.sale-field-lbl{font-size:10px}}
         .sale-field-lbl:hover { color:var(--pr); }
+        @keyframes s-modal-in { from{opacity:0;transform:scale(.96) translateY(6px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .s-modal { animation:s-modal-in .2s ease-out; }
+        .s-act { padding:3px; border-radius:4px; border:none; background:transparent; cursor:pointer; transition:all .15s; opacity:.55; display:inline-flex; align-items:center; justify-content:center; }
+        .s-act:hover { background:var(--soft); opacity:1; }
       `}</style>
 
-      {/* ═══ MAIN SHELL — one card, fills entire available height, zero vertical margin ═══ */}
-      <div className="flex flex-1 min-h-0 flex-col overflow-hidden bg-white sm:mx-[-10px]"
-        style={{ border:'1px solid #e2dfd9' }}>
-
-        {/* Gradient accent */}
-        <div className="shrink-0" style={{ height:3, background:'linear-gradient(90deg,#790728 0%,#85203E 35%,#923A53 65%,#C44972 100%)', borderRadius:'8px 8px 0 0' }} />
-
-        {/* ── HEADER ROW — title left, refs + actions right ── */}
-        <div className="flex shrink-0 flex-col gap-1 px-3 py-1.5 sm:px-4 sm:py-2">
-          <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-            <div className="flex shrink-0 items-start gap-2 pt-0.5">
-              <div className="mt-0.5 shrink-0" style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg,${primary} 0%,#C44972 100%)` }} />
-              <h1 className="text-[13px] font-bold leading-tight tracking-tight sm:text-sm" style={{ color:primary }}>{pageTitle}</h1>
-            </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-start justify-end gap-x-2 gap-y-1.5">
-              <DropdownInput
-                label="Branch"
-                options={branchDropdownOptions}
-                value={branchId}
-                onChange={(v) => {
-                  setBranchId(v);
-                  setSelectedQuotationId('');
-                  setSelectedDeliveryOrderId('');
-                }}
-                widthPx={150}
-                disabled={refsLoading}
-              />
-              <DropdownInput
-                label="Customer"
-                options={customerOptions}
-                value={selectedCustomerId}
-                onChange={setSelectedCustomerId}
-                widthPx={200}
-                disabled={refsLoading}
-              />
-              <DropdownInput
-                label="Qutn. no"
-                options={quotationDropdownOptions}
-                value={selectedQuotationId}
-                onChange={handleQuotationChange}
-                widthPx={200}
-                disabled={!branchId || quotationsLoading || documentLoading}
-              />
-              <DropdownInput
-                label="DO. no"
-                options={deliveryOrderDropdownOptions}
-                value={selectedDeliveryOrderId}
-                onChange={handleDeliveryOrderChange}
-                widthPx={200}
-                disabled={!branchId || deliveryOrdersLoading || documentLoading}
-              />
-              <div className="flex shrink-0 self-end pb-0.5">
-                {selectedRows.size > 0 && (
-                  <button type="button" className="s-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
-                    <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          {(refsError || documentError || saveError || accountsLoadError) ? (
-            <p className={`text-[10px] sm:text-[11px] ${accountsLoadError && !saveError && !documentError && !refsError ? 'text-amber-800' : 'text-red-600'}`}>
-              {saveError || documentError || refsError || accountsLoadError}
-            </p>
-          ) : null}
-          {documentLoading ? (
-            <p className="text-[10px] text-stone-500 sm:text-[11px]">Loading document…</p>
-          ) : null}
-        </div>
-
-        <hr className="s-hr" />
-
-        {/* ── FORM STRIP ── */}
-        <div className="shrink-0 px-3 py-1.5 sm:px-4 sm:py-2">
-          {useReturnHeaderForm ? (
-            <div>
-              <span className="s-lbl">Return Entry</span>
-              <div className="mt-1 flex flex-wrap items-end gap-2 xl:flex-nowrap">
-                <DropdownInput label="Return type" options={['Full','Partial','Credit note','Exchange']} value={returnForm.returnType} onChange={(v) => setReturnForm((f) => ({ ...f, returnType: v }))} widthPx={110} />
-                <SubInputField label="Bill no" widthPx={80} value={returnForm.billNo} onChange={(e) => setReturnForm((f) => ({ ...f, billNo: e.target.value }))} />
-                <SubInputField label="Counter no" widthPx={80} value={returnForm.counterNo} onChange={(e) => setReturnForm((f) => ({ ...f, counterNo: e.target.value }))} />
-                <DateInputField label="Bill date" widthPx={110} value={returnForm.billDate} onChange={(v) => setReturnForm((f) => ({ ...f, billDate: v }))} />
-                <DropdownInput label="Payment mode" options={['Cash','Card','Bank Transfer','Credit','Cheque']} value={returnForm.paymentMode} onChange={(v) => setReturnForm((f) => ({ ...f, paymentMode: v }))} widthPx={120} />
-                <DropdownInput label="Station" options={['Main','Branch 1','Branch 2','Warehouse']} value={returnForm.station} onChange={(v) => setReturnForm((f) => ({ ...f, station: v }))} widthPx={110} />
-                <div className="flex shrink-0 items-end"><button type="button" className="s-add" onClick={handleReturnAdd}>{editingRowIndex !== null ? 'Update' : 'Add'}</button></div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-wrap items-end gap-x-1.5 gap-y-1 xl:flex-nowrap">
-              <SubInputField label="Own Ref.#" widthPx={66} value={form.ownRef} onChange={(e) => setForm((f) => ({ ...f, ownRef: e.target.value }))} />
-              <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 82 }}>
-                <button type="button" className="sale-field-lbl" title="Search products by barcode or description" onClick={() => openProductPicker(form.productCode || form.shortDescription)}>
-                  Product Code
-                  <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-                </button>
-                <SubInputField
-                  label=""
-                  widthPx={82}
-                  value={form.productCode}
-                  onChange={(e) => setForm((f) => ({ ...f, productCode: e.target.value }))}
-                  onDoubleClick={() => openProductPicker(form.productCode || form.shortDescription)}
-                />
-              </div>
-              <div className="flex shrink-0 flex-col gap-0.5" style={{ width: 120 }}>
-                <button type="button" className="sale-field-lbl" title="Search products by barcode or description" onClick={() => openProductPicker(form.productCode || form.shortDescription)}>
-                  Short Description
-                  <img src={SearchIcon} alt="" className="h-2.5 w-2.5 opacity-60" />
-                </button>
-                <InputField
-                  label=""
-                  widthPx={120}
-                  value={form.shortDescription}
-                  onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))}
-                  onDoubleClick={() => openProductPicker(form.productCode || form.shortDescription)}
-                />
-              </div>
-              <SubInputField label="HS Code/W" widthPx={70} value={form.hsCode} onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))} />
-              <SubInputField
-                id={SALE_FIELD_IDS.qty}
-                label="Qty"
-                type="number"
-                widthPx={46}
-                value={form.qty}
-                onChange={(e) => mergeFormAndCalc({ qty: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  focusSaleLineField(SALE_FIELD_IDS.unitPrice);
-                }}
-              />
-              <SubInputField label="FOC Qty" type="number" widthPx={50} value={form.focQty} onChange={(e) => setForm((f) => ({ ...f, focQty: e.target.value }))} />
-              <SubInputField label="Unit Cost" type="number" widthPx={64} value={form.unitCost} onChange={(e) => setForm((f) => ({ ...f, unitCost: e.target.value }))} />
-              <SubInputField
-                id={SALE_FIELD_IDS.unitPrice}
-                label="Unit Price"
-                type="number"
-                widthPx={64}
-                value={form.unitPrice}
-                onChange={(e) => mergeFormAndCalc({ unitPrice: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  focusSaleLineField(SALE_FIELD_IDS.discAmt);
-                }}
-              />
-              <SubInputField label="Disc. %" type="number" widthPx={50} value={form.discPercent} onChange={(e) => mergeFormAndCalc({ discPercent: e.target.value })} />
-              <SubInputField
-                id={SALE_FIELD_IDS.discAmt}
-                label="Disc. Amt"
-                type="number"
-                widthPx={64}
-                value={form.discAmt}
-                onChange={(e) => mergeFormAndCalc({ discAmt: e.target.value })}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  focusSaleLineField(SALE_FIELD_IDS.total);
-                }}
-              />
-              <SubInputField label="Sub. Total" type="number" widthPx={68} value={form.subTotal} readOnly tabIndex={-1} />
-              <SubInputField label="Tax%" type="number" widthPx={46} value={form.taxPercent} onChange={(e) => mergeFormAndCalc({ taxPercent: e.target.value })} />
-              <SubInputField label="T.Amt" type="number" widthPx={60} value={form.taxAmt} readOnly tabIndex={-1} />
-              <SubInputField
-                id={SALE_FIELD_IDS.total}
-                label="Total"
-                type="number"
-                widthPx={68}
-                value={form.total}
-                readOnly
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  handleSaveOrUpdate();
-                }}
-              />
-              <div className="flex shrink-0 items-end"><button type="button" className="s-add" onClick={handleSaveOrUpdate}>{editingRowIndex !== null ? 'Update' : 'Add'}</button></div>
-            </div>
+      {/* Row 1: Title + action buttons */}
+      <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>{pageTitle.toUpperCase()}</h1>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={EditActionIcon} alt="" className="h-3 w-3" /> Edit
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg> New
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+            <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+          </button>
+          <button type="button" className="pur-btn inline-flex h-7 cursor-not-allowed items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 opacity-50 transition" disabled>
+            <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+            style={{ backgroundColor: primary, borderColor: primary }}
+            disabled={saveLoading || documentLoading || !branchId}
+            onClick={() => handleSaveSale()}
+          >
+            {saveLoading ? 'Saving...' : <><svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Save</>}
+          </button>
+          {selectedRows.size > 0 && (
+            <button type="button" className="pur-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
+              <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
+            </button>
           )}
         </div>
+      </div>
 
-        <hr className="s-hr" />
+      {/* Row 2: Branch + Customer + Quotation + DO */}
+      <div className="flex shrink-0 flex-wrap items-end gap-x-3 gap-y-2">
+        <DropdownInput
+          label="Branch"
+          options={branchDropdownOptions}
+          value={branchId}
+          onChange={(v) => { setBranchId(v); setSelectedQuotationId(''); setSelectedDeliveryOrderId(''); }}
+          widthPx={150}
+          heightPx={SALE_ENTRY_H}
+          labelClassName={SALE_ENTRY_LBL}
+          className={SALE_ENTRY_INP}
+          disabled={refsLoading}
+        />
+        <DropdownInput
+          label="Customer"
+          options={customerOptions}
+          value={selectedCustomerId}
+          onChange={setSelectedCustomerId}
+          widthPx={200}
+          heightPx={SALE_ENTRY_H}
+          labelClassName={SALE_ENTRY_LBL}
+          className={SALE_ENTRY_INP}
+          disabled={refsLoading}
+        />
+        <DropdownInput
+          label="Quotation"
+          options={quotationDropdownOptions}
+          value={selectedQuotationId}
+          onChange={handleQuotationChange}
+          widthPx={200}
+          heightPx={SALE_ENTRY_H}
+          labelClassName={SALE_ENTRY_LBL}
+          className={SALE_ENTRY_INP}
+          disabled={!branchId || quotationsLoading || documentLoading}
+        />
+        <DropdownInput
+          label="Delivery Order"
+          options={deliveryOrderDropdownOptions}
+          value={selectedDeliveryOrderId}
+          onChange={handleDeliveryOrderChange}
+          widthPx={200}
+          heightPx={SALE_ENTRY_H}
+          labelClassName={SALE_ENTRY_LBL}
+          className={SALE_ENTRY_INP}
+          disabled={!branchId || deliveryOrdersLoading || documentLoading}
+        />
+        {(refsError || documentError || saveError || accountsLoadError) && (
+          <p className={`text-[10px] ${accountsLoadError && !saveError && !documentError && !refsError ? 'text-amber-800' : 'text-red-600'}`}>
+            {saveError || documentError || refsError || accountsLoadError}
+          </p>
+        )}
+        {documentLoading && <p className="text-[10px] text-neutral-500">Loading document…</p>}
+      </div>
 
-        {/* ═══ MIDDLE — table + right tabs, fills ALL remaining space ═══ */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden xl:flex-row">
-
-          {/* TABLE — absolute inside flex-1 so it NEVER pushes bottom bar off screen */}
-          <div className="relative min-h-0 flex-1">
-            <div className="absolute inset-x-2 inset-y-1 flex flex-col overflow-hidden rounded-md sm:inset-x-3 sm:inset-y-1.5" style={{ border:'1px solid var(--bd)' }}>
-              {/* Scrollable table body */}
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-                <CommonTable
-                  className="sale-tbl"
-                  fitParentWidth
-                  stickyHeader
-                  hideOuterBorder
-                  headers={['','Own Ref.#','Product Code','Short Description','HS Code/W','Qty','FOC Qty','Unit Cost','Unit Price','Disc. %','Disc. Amt','Sub. Total','Tax%','T.Amt','Total','Action']}
-                  rows={tableBodyRows}
-                />
-              </div>
-              {/* Total row — always pinned at bottom of table area */}
-              <div className="sale-total-bar shrink-0 flex items-center px-1 sm:px-1.5" style={{ borderTop:'1px solid var(--bd)', background:'#f3f4f6' }}>
-                <span className="font-bold" style={{ fontSize:'clamp(6px, 1.1vw, 8px)', color:'#1c1917', minWidth:'60%' }}>Total</span>
-                <div className="flex items-center gap-0" style={{ fontSize:'clamp(6px, 1.1vw, 8px)', color:'#1c1917', fontWeight:600 }}>
-                  <span className="sale-total-cell">{gridTotals.subSum.toFixed(2)}</span>
-                  <span className="sale-total-cell">{saleRows.length ? (gridTotals.taxPctSum / saleRows.length).toFixed(2) : '0.00'}</span>
-                  <span className="sale-total-cell">{gridTotals.taxSum.toFixed(2)}</span>
-                  <span className="sale-total-cell">{gridTotals.lineTotalSum.toFixed(2)}</span>
-                </div>
-              </div>
+      {/* Entry bar */}
+      <div className="flex min-w-0 shrink-0 flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
+        {useReturnHeaderForm ? (
+          <>
+            <DropdownInput label="Return type" options={['Full','Partial','Credit note','Exchange']} value={returnForm.returnType} onChange={(v) => setReturnForm((f) => ({ ...f, returnType: v }))} widthPx={110} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} />
+            <SubInputField label="Bill no" widthPx={80} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={returnForm.billNo} onChange={(e) => setReturnForm((f) => ({ ...f, billNo: e.target.value }))} />
+            <SubInputField label="Counter no" widthPx={80} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={returnForm.counterNo} onChange={(e) => setReturnForm((f) => ({ ...f, counterNo: e.target.value }))} />
+            <DateInputField label="Bill date" widthPx={110} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} value={returnForm.billDate} onChange={(v) => setReturnForm((f) => ({ ...f, billDate: v }))} />
+            <DropdownInput label="Payment mode" options={['Cash','Card','Bank Transfer','Credit','Cheque']} value={returnForm.paymentMode} onChange={(v) => setReturnForm((f) => ({ ...f, paymentMode: v }))} widthPx={120} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} />
+            <DropdownInput label="Station" options={['Main','Branch 1','Branch 2','Warehouse']} value={returnForm.station} onChange={(v) => setReturnForm((f) => ({ ...f, station: v }))} widthPx={110} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} />
+            <div className="flex items-end">
+              <button type="button" onClick={handleReturnAdd} className="inline-flex shrink-0 items-center justify-center rounded border px-3 text-[10px] font-semibold leading-none text-white" style={{ backgroundColor: primary, borderColor: primary, height: SALE_ENTRY_H, minHeight: SALE_ENTRY_H }}>
+                {editingRowIndex !== null ? 'Update' : 'Add'}
+              </button>
             </div>
-          </div>
-
-          {/* RIGHT TABS — fixed width on desktop, stacked on mobile */}
-          <div className="flex shrink-0 flex-col border-t xl:border-t-0 xl:border-l" style={{ borderColor:'var(--bd)' }}>
-            <div className="s-rp flex w-full min-h-0 flex-col overflow-hidden xl:flex-1 xl:w-[270px] 2xl:w-[300px]">
-              <div className="flex shrink-0 border-b" style={{ borderColor:'var(--bd)' }}>
-                {tabs.map((t) => (
-                  <button key={t.key} type="button" className={`s-tab ${rightTab === t.key ? 's-tab-on' : ''}`} onClick={() => setRightTab(t.key)}>{t.label}</button>
-                ))}
-              </div>
-              <div className="flex-1 overflow-y-auto p-2.5 sm:p-3" style={{ minHeight:0 }}>
-
-                {rightTab === 'summary' && (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="s-lbl">Summary</span>
-                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
-                      <div className="min-w-0"><InputField label="Sub Total" fullWidth readOnly tabIndex={-1} className="bg-stone-50 text-stone-800" value={summaryFromGrid.subTotal} /></div>
-                      <div className="min-w-0 shrink-0"><SubInputField label="Disc Amt" widthPx={80} value={summaryPanel.discAmt} onChange={(e) => setSummaryPanel((s) => ({ ...s, discAmt: e.target.value }))} /></div>
-                      <div className="min-w-0 shrink-0"><SubInputField label="" suffix="%" widthPx={60} value={summaryPanel.discPct} onChange={(e) => setSummaryPanel((s) => ({ ...s, discPct: e.target.value }))} title="Extra invoice discount % on sum of line totals" /></div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
-                      <div className="min-w-0"><InputField label="Total Amount" fullWidth readOnly tabIndex={-1} className="bg-stone-50 text-stone-800" value={summaryFromGrid.totalAmount} title="Sum of line totals (before invoice discount)" /></div>
-                      <div className="min-w-0 shrink-0"><SubInputField label="Tax" widthPx={80} readOnly tabIndex={-1} className="bg-stone-50" value={summaryFromGrid.taxAmt} /></div>
-                      <div className="min-w-0 shrink-0"><SubInputField label="" suffix="%" widthPx={60} readOnly tabIndex={-1} className="bg-stone-50" value={summaryFromGrid.taxPctDisplay} title="Effective tax % from lines" /></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <InputField label="Round Off" fullWidth value={summaryPanel.roundOff} onChange={(e) => setSummaryPanel((s) => ({ ...s, roundOff: e.target.value }))} title="Adjustment added to amount after discount (e.g. −0.05)" />
-                      <div className="s-net min-w-0"><InputField label="Net Amount" fullWidth readOnly tabIndex={-1} className="bg-stone-50 text-stone-800 font-semibold" value={summaryFromGrid.netAmount} /></div>
-                    </div>
-
-                    <span className="s-lbl">Receipt account</span>
-                    <div className="flex flex-wrap items-end gap-1">
-                      <div className="min-w-0 flex-1" style={{ minWidth: '140px' }}>
-                        <DropdownInput
-                          label="Account head"
-                          fullWidth
-                          placeholder="— Select ledger —"
-                          value={receiptLedgerId}
-                          onChange={(v) => setReceiptLedgerId(v)}
-                          options={accountHeadOptions}
-                          disabled={!branchId}
-                          title="Cash/card ledger (chart of accounts) for this sale"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        className="s-bb mb-0.5 shrink-0 px-2 py-1 text-[9px] sm:text-[10px]"
-                        disabled={!branchId}
-                        onClick={() => setReceiptLedgerId('')}
-                        title="Clear selection (defaults apply again when card field changes)"
-                      >
-                        Clear
-                      </button>
-                    </div>
-
-                    <hr className="s-hr my-2 shrink-0" />
-                    <span className="s-lbl">Billing</span>
-                    <div className="flex flex-col gap-1.5">
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
-                        <div className="min-w-0"><InputField label="Bill no" fullWidth value={billPanel.returnBillNo} onChange={(e) => setBillPanel((p) => ({ ...p, returnBillNo: e.target.value }))} /></div>
-                        <div className="min-w-0"><SubInputField label="Cust.Lpo #" fullWidth value={billPanel.custLpo} onChange={(e) => setBillPanel((p) => ({ ...p, custLpo: e.target.value }))} /></div>
-                        <div className="min-w-0"><SubInputField label="Local Bill No" fullWidth value={billPanel.localBillNo} onChange={(e) => setBillPanel((p) => ({ ...p, localBillNo: e.target.value }))} /></div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        <div className="min-w-0"><DateInputField label="Bill date" fullWidth value={billPanel.returnBillDate} onChange={(v) => setBillPanel((p) => ({ ...p, returnBillDate: v }))} /></div>
-                        <div className="min-w-0"><DateInputField label="Payment date" fullWidth value={billPanel.paymentDate} onChange={(v) => setBillPanel((p) => ({ ...p, paymentDate: v }))} /></div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        <div className="min-w-0"><InputField label="Credit card no" fullWidth value={billPanel.creditCardNo} onChange={(e) => setBillPanel((p) => ({ ...p, creditCardNo: e.target.value }))} /></div>
-                        <div className="min-w-0"><InputField label="Credit card" fullWidth value={billPanel.creditCard} onChange={(e) => setBillPanel((p) => ({ ...p, creditCard: e.target.value }))} /></div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                        <div className="min-w-0"><DropdownInput label="Cashier" options={['Cashier 1','Cashier 2']} placeholder="Select" fullWidth value={billPanel.cashierName} onChange={(v) => setBillPanel((p) => ({ ...p, cashierName: v }))} /></div>
-                        <div className="min-w-0"><InputField label="Invoice amt" type="number" fullWidth value={billPanel.invoiceAmt} onChange={(e) => setBillPanel((p) => ({ ...p, invoiceAmt: e.target.value }))} /></div>
-                      </div>
-                      <DropdownInput label="Station" options={['Main','Branch 1','Branch 2','Warehouse']} fullWidth value={billPanel.station} onChange={(v) => setBillPanel((p) => ({ ...p, station: v }))} />
-                    </div>
-                  </div>
-                )}
-
-                {rightTab === 'payment' && (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-1">
-                      <label className="s-fl">Sales terms</label>
-                      <textarea value={billPanel.salesTerms} onChange={(e) => setBillPanel((p) => ({ ...p, salesTerms: e.target.value }))} rows={2} className="s-ta" placeholder="Enter sales terms..." />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="s-fl">Counter #</label>
-                      <input type="text" value={billPanel.counterNo} onChange={(e) => setBillPanel((p) => ({ ...p, counterNo: e.target.value }))} className="s-fi" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div className="flex flex-col gap-1">
-                        <label className="s-fl">Paid amount</label>
-                        <input type="number" value={billPanel.paidAmount} onChange={(e) => setBillPanel((p) => ({ ...p, paidAmount: e.target.value }))} className="s-fi" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="s-fl">Balance amount</label>
-                        <input type="number" value={billPanel.balanceAmount} onChange={(e) => setBillPanel((p) => ({ ...p, balanceAmount: e.target.value }))} className="s-fi" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+          </>
+        ) : (
+          <>
+            <div className="shrink-0">
+              <SubInputField label="Own Ref.#" widthPx={66} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.ownRef} onChange={(e) => setForm((f) => ({ ...f, ownRef: e.target.value }))} />
             </div>
+            <div className="shrink-0" style={{ width: 82 }}>
+              <button type="button" className={`mb-0.5 block ${SALE_ENTRY_LBL} hover:text-[var(--pr)]`} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }} onClick={() => openProductPicker(form.productCode || form.shortDescription)}>
+                Product Code <img src={SearchIcon} alt="" className="inline h-2.5 w-2.5 opacity-60" />
+              </button>
+              <SubInputField label="" widthPx={82} heightPx={SALE_ENTRY_H} className={SALE_ENTRY_INP} value={form.productCode} onChange={(e) => setForm((f) => ({ ...f, productCode: e.target.value }))} onDoubleClick={() => openProductPicker(form.productCode || form.shortDescription)} />
+            </div>
+            <div className="shrink-0" style={{ width: 130 }}>
+              <button type="button" className={`mb-0.5 block ${SALE_ENTRY_LBL} hover:text-[var(--pr)]`} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }} onClick={() => openProductPicker(form.productCode || form.shortDescription)}>
+                Short Desc <img src={SearchIcon} alt="" className="inline h-2.5 w-2.5 opacity-60" />
+              </button>
+              <InputField label="" widthPx={130} heightPx={SALE_ENTRY_H} className={SALE_ENTRY_INP} value={form.shortDescription} onChange={(e) => setForm((f) => ({ ...f, shortDescription: e.target.value }))} onDoubleClick={() => openProductPicker(form.productCode || form.shortDescription)} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="HS Code" widthPx={70} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.hsCode} onChange={(e) => setForm((f) => ({ ...f, hsCode: e.target.value }))} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField id={SALE_FIELD_IDS.qty} label="Qty" type="number" widthPx={46} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.qty} onChange={(e) => mergeFormAndCalc({ qty: e.target.value })} onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); focusSaleLineField(SALE_FIELD_IDS.unitPrice); }} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="FOC Qty" type="number" widthPx={50} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.focQty} onChange={(e) => setForm((f) => ({ ...f, focQty: e.target.value }))} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="Unit Cost" type="number" widthPx={64} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.unitCost} onChange={(e) => setForm((f) => ({ ...f, unitCost: e.target.value }))} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField id={SALE_FIELD_IDS.unitPrice} label="Unit Price" type="number" widthPx={64} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.unitPrice} onChange={(e) => mergeFormAndCalc({ unitPrice: e.target.value })} onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); focusSaleLineField(SALE_FIELD_IDS.discAmt); }} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="Disc. %" type="number" widthPx={50} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.discPercent} onChange={(e) => mergeFormAndCalc({ discPercent: e.target.value })} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField id={SALE_FIELD_IDS.discAmt} label="Disc. Amt" type="number" widthPx={64} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.discAmt} onChange={(e) => mergeFormAndCalc({ discAmt: e.target.value })} onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); focusSaleLineField(SALE_FIELD_IDS.total); }} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="Sub Total" type="number" widthPx={72} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.subTotal} readOnly tabIndex={-1} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="Tax %" type="number" widthPx={46} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.taxPercent} onChange={(e) => mergeFormAndCalc({ taxPercent: e.target.value })} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField label="Tax Amt" type="number" widthPx={60} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.taxAmt} readOnly tabIndex={-1} />
+            </div>
+            <div className="shrink-0">
+              <SubInputField id={SALE_FIELD_IDS.total} label="Total" type="number" widthPx={72} heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={form.total} readOnly tabIndex={0} onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); handleSaveOrUpdate(); }} />
+            </div>
+            <div className="flex items-end">
+              <button type="button" onClick={handleSaveOrUpdate} className="inline-flex shrink-0 items-center justify-center rounded border px-3 text-[10px] font-semibold leading-none text-white" style={{ backgroundColor: primary, borderColor: primary, height: SALE_ENTRY_H, minHeight: SALE_ENTRY_H }}>
+                {editingRowIndex !== null ? 'Update' : 'Add Line'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Main content grid */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+
+        {/* Left: line-item table */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200">
+          <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+            <CommonTable
+              className="sale-tbl"
+              fitParentWidth
+              stickyHeader
+              hideOuterBorder
+              headers={['','Own Ref.#','Product Code','Short Description','HS Code','Qty','FOC Qty','Unit Cost','Unit Price','Disc. %','Disc. Amt','Sub. Total','Tax%','T.Amt','Total','Action']}
+              rows={tableBodyRows}
+            />
           </div>
+          <TableTotalsBar borderColor="#e5e5e5" items={saleTableTotals} />
         </div>
 
-        {/* ── BOTTOM ACTION BAR ── */}
-        <div className="s-bar">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button type="button" className="s-bb"><img src={EditActionIcon} alt="" className="h-3 w-3" /> Edit</button>
-            <button type="button" className="s-bb"><svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg> New</button>
-            <button type="button" className="s-bb"><img src={PrinterIcon} alt="" className="h-3 w-3" /> Profit Print</button>
-            <button type="button" className="s-bb"><img src={PrinterIcon} alt="" className="h-3 w-3" /> Print</button>
+        {/* Right panel: Sales Details + TabsBar */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200 xl:min-w-0">
+
+          {/* Always-visible: Sales Details */}
+          <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-3 flex flex-col gap-2.5">
+            <span className="pur-lbl">Sales Details</span>
+            <div className="grid grid-cols-2 gap-2">
+              <SubInputField label="Bill No" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.returnBillNo} onChange={(e) => setBillPanel((p) => ({ ...p, returnBillNo: e.target.value }))} />
+              <SubInputField label="Local Bill No" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.localBillNo} onChange={(e) => setBillPanel((p) => ({ ...p, localBillNo: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <SubInputField label="Cust. LPO #" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.custLpo} onChange={(e) => setBillPanel((p) => ({ ...p, custLpo: e.target.value }))} />
+              <SubInputField label="Counter #" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.counterNo} onChange={(e) => setBillPanel((p) => ({ ...p, counterNo: e.target.value }))} />
+            </div>
+            <div>
+              <label className={`mb-0.5 block ${SALE_ENTRY_LBL}`}>Bill Date</label>
+              <DatePickerInput fullWidth heightPx={34} borderRadius={4} placeholder="DD/MM/YYYY" displayFontSize={10} background="#fff" dropdownInViewport value={billPanel.returnBillDate} onChange={(e) => setBillPanel((p) => ({ ...p, returnBillDate: e.target.value }))} />
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button type="button" className="s-bb s-bb-cancel"><img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel</button>
-            <button type="button" className="s-bb">UnPost</button>
-            <button type="button" className="s-bb"><img src={LedgerIcon} alt="" className="h-3 w-3" /> Acc Post Temp</button>
-            <button type="button" className="s-bb"><img src={PostIcon} alt="" className="h-3 w-3" /> Post</button>
-            <button
-              type="button"
-              className="s-bb s-bb-save"
-              disabled={saveLoading || documentLoading || !branchId}
-              onClick={() => handleSaveSale()}
-            >
-              {saveLoading ? (
-                <span className="text-[10px]">Saving…</span>
-              ) : (
-                <><svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Save</>
-              )}
-            </button>
-            <button type="button" className="s-bb">Close</button>
+
+          {/* TabsBar */}
+          <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-2">
+            <TabsBar
+              fullWidth
+              tabs={[{ id: 'summary', label: 'Summary' }, { id: 'payment', label: 'Payment' }]}
+              activeTab={rightTab}
+              onChange={setRightTab}
+            />
+          </div>
+
+          {/* Tab content */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+            {rightTab === 'summary' && (
+              <div className="flex flex-col gap-3">
+                <span className="pur-lbl">Summary</span>
+                <div className="pur-summary-card" role="region" aria-label="Amount summary">
+                  <div className="pur-summary-row">
+                    <span className="pur-summary-label">Sub Total</span>
+                    <span className="pur-summary-value">{summaryFromGrid.subTotal}</span>
+                  </div>
+                  <div className="pur-summary-pair-grid">
+                    <div className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label">Disc Amt</span>
+                      <input type="number" value={summaryPanel.discAmt} onChange={(e) => setSummaryPanel((s) => ({ ...s, discAmt: e.target.value }))} className="w-16 rounded border border-gray-200 bg-white px-1.5 text-right text-[11px] tabular-nums outline-none" style={{ height: 22 }} />
+                    </div>
+                    <div className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label">Disc %</span>
+                      <input type="number" value={summaryPanel.discPct} onChange={(e) => setSummaryPanel((s) => ({ ...s, discPct: e.target.value }))} title="Extra invoice discount % on sum of line totals" className="w-14 rounded border border-gray-200 bg-white px-1.5 text-right text-[11px] tabular-nums outline-none" style={{ height: 22 }} />
+                    </div>
+                  </div>
+                  <div className="pur-summary-row">
+                    <span className="pur-summary-label">Total Amount</span>
+                    <span className="pur-summary-value">{summaryFromGrid.totalAmount}</span>
+                  </div>
+                  <div className="pur-summary-pair-grid">
+                    <div className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label">Tax</span>
+                      <span className="pur-summary-value pur-summary-value-sm">{summaryFromGrid.taxAmt}</span>
+                    </div>
+                    <div className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label">Tax %</span>
+                      <span className="pur-summary-value pur-summary-value-sm">{summaryFromGrid.taxPctDisplay || '0'}%</span>
+                    </div>
+                  </div>
+                  <div className="pur-summary-row pur-summary-row-dense">
+                    <span className="pur-summary-label">Round Off</span>
+                    <input type="number" value={summaryPanel.roundOff} onChange={(e) => setSummaryPanel((s) => ({ ...s, roundOff: e.target.value }))} title="Adjustment added to amount after discount" className="w-20 rounded border border-gray-200 bg-white px-2 text-right text-[11px] tabular-nums outline-none" style={{ height: 24 }} />
+                  </div>
+                  <div className="pur-summary-net">
+                    <span className="pur-summary-label">Net Amount</span>
+                    <span className="pur-summary-value">{summaryFromGrid.netAmount}</span>
+                  </div>
+                </div>
+
+                <span className="pur-lbl">Receipt Account</span>
+                <div className="flex flex-wrap items-end gap-1.5">
+                  <div className="min-w-0 flex-1">
+                    <DropdownInput label="Account head" fullWidth placeholder="— Select ledger —" value={receiptLedgerId} onChange={(v) => setReceiptLedgerId(v)} options={accountHeadOptions} disabled={!branchId} title="Cash/card ledger for this sale" heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} />
+                  </div>
+                  <button type="button" className="pur-btn mb-0.5 shrink-0 inline-flex h-7 items-center rounded-md border border-neutral-200 bg-white px-2 text-[9px] font-medium text-neutral-700" disabled={!branchId} onClick={() => setReceiptLedgerId('')}>Clear</button>
+                </div>
+
+                <span className="pur-lbl">Billing</span>
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><DateInputField label="Payment Date" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} value={billPanel.paymentDate} onChange={(v) => setBillPanel((p) => ({ ...p, paymentDate: v }))} /></div>
+                    <div><InputField label="Invoice Amt" type="number" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.invoiceAmt} onChange={(e) => setBillPanel((p) => ({ ...p, invoiceAmt: e.target.value }))} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><InputField label="Credit Card No" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.creditCardNo} onChange={(e) => setBillPanel((p) => ({ ...p, creditCardNo: e.target.value }))} /></div>
+                    <div><InputField label="Credit Card" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.creditCard} onChange={(e) => setBillPanel((p) => ({ ...p, creditCard: e.target.value }))} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><DropdownInput label="Cashier" options={['Cashier 1','Cashier 2']} placeholder="Select" fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.cashierName} onChange={(v) => setBillPanel((p) => ({ ...p, cashierName: v }))} /></div>
+                    <div><DropdownInput label="Station" options={['Main','Branch 1','Branch 2','Warehouse']} fullWidth heightPx={SALE_ENTRY_H} labelClassName={SALE_ENTRY_LBL} className={SALE_ENTRY_INP} value={billPanel.station} onChange={(v) => setBillPanel((p) => ({ ...p, station: v }))} /></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {rightTab === 'payment' && (
+              <div className="flex flex-col gap-3">
+                <span className="pur-lbl">Payment</span>
+                <div className="flex flex-col gap-1">
+                  <label className={SALE_ENTRY_LBL}>Sales Terms</label>
+                  <textarea value={billPanel.salesTerms} onChange={(e) => setBillPanel((p) => ({ ...p, salesTerms: e.target.value }))} rows={3} className="pur-ta" placeholder="Enter sales terms..." />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className={SALE_ENTRY_LBL}>Paid Amount</label>
+                    <input type="number" value={billPanel.paidAmount} onChange={(e) => setBillPanel((p) => ({ ...p, paidAmount: e.target.value }))} className="pur-fi" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className={SALE_ENTRY_LBL}>Balance Amount</label>
+                    <input type="number" value={billPanel.balanceAmount} onChange={(e) => setBillPanel((p) => ({ ...p, balanceAmount: e.target.value }))} className="pur-fi" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

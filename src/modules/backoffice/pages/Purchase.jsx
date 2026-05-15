@@ -11,6 +11,7 @@ import SearchIcon from '../../../shared/assets/icons/search2.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import EditIcon from '../../../shared/assets/icons/edit.svg';
 import PostIcon from '../../../shared/assets/icons/post.svg';
+import NewPurchaseIcon from '../../../shared/assets/icons/purchase.svg';
 import ViewActionIcon from '../../../shared/assets/icons/view.svg';
 import EditActionIcon from '../../../shared/assets/icons/edit4.svg';
 import DeleteActionIcon from '../../../shared/assets/icons/delete2.svg';
@@ -19,9 +20,12 @@ import {
   SubInputField,
   DropdownInput,
   DateInputField,
+  DatePickerInput,
   Switch,
   CommonTable,
   ConfirmDialog,
+  TableTotalsBar,
+  TabsBar,
 } from '../../../shared/components/ui';
 
 const DOC_INITIAL = {
@@ -65,6 +69,10 @@ const LINE_INITIAL = {
 
 const PURCHASE_LINE_QTY_ID = 'purchase-line-qty';
 const PURCHASE_LINE_TOTAL_ID = 'purchase-line-total';
+/** Purchase compact row: Branch/LPO/GRN + line entry — shared control height + label style */
+const PURCHASE_LINE_ENTRY_H = 26;
+const PURCHASE_LINE_ENTRY_LBL = 'text-[9px] font-semibold text-gray-500 sm:text-[10px]';
+const PURCHASE_LINE_ENTRY_INP = 'text-[10px] tabular-nums';
 
 function focusPurchaseLineQty() {
   requestAnimationFrame(() => {
@@ -271,18 +279,41 @@ const PURCHASE_LINE_HEADERS = [
   'VAT %',
   'VAT',
   'Total',
-  ' ',
+  'Action',
+];
+
+const PURCHASE_LINE_COL_PCT = [
+  3,
+  3,
+  5,
+  5,
+  5,
+  14,
+  5,
+  6,
+  4,
+  4,
+  4,
+  6,
+  5,
+  4,
+  5,
+  5,
+  4,
+  5,
+  6,
+  12,
 ];
 
 function dimCell(content, dim) {
-  if (!dim) return content;
-  return <span className="opacity-45">{content}</span>;
+  const text = String(content ?? '');
+  return (
+    <span className={`block min-w-0 truncate ${dim ? 'opacity-45' : ''}`} title={text}>
+      {text}
+    </span>
+  );
 }
 
-/** One table cell wrapper so inputs respect column width in fixed layout */
-function entryCell(node) {
-  return <div className="pur-entry-cell min-w-0 max-w-full">{node}</div>;
-}
 
 export default function Purchase() {
   const location = useLocation();
@@ -321,6 +352,18 @@ export default function Purchase() {
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [productPickerSearch, setProductPickerSearch] = useState('');
   const productPickerSearchRef = useRef(null);
+  const [productComboQuery, setProductComboQuery] = useState('');
+  const [productComboOpen, setProductComboOpen] = useState(false);
+  const productComboRef = useRef(null);
+  const [productCodeComboQuery, setProductCodeComboQuery] = useState('');
+  const [productCodeComboOpen, setProductCodeComboOpen] = useState(false);
+  const productCodeComboRef = useRef(null);
+  const [productDescComboQuery, setProductDescComboQuery] = useState('');
+  const [productDescComboOpen, setProductDescComboOpen] = useState(false);
+  const productDescComboRef = useRef(null);
+  const [supplierComboQuery, setSupplierComboQuery] = useState('');
+  const [supplierComboOpen, setSupplierComboOpen] = useState(false);
+  const supplierComboRef = useRef(null);
 
   const primary = colors.primary?.main || '#790728';
 
@@ -362,12 +405,28 @@ export default function Purchase() {
 
   const gridTotals = useMemo(
     () => ({
+      qtySum: lineRows.reduce((s, r) => s + num(r.qty), 0),
+      unitPriceSum: lineRows.reduce((s, r) => s + (num(r.actualCost) > 0 ? num(r.actualCost) : num(r.sellingPrice)), 0),
+      discountSum: lineRows.reduce((s, r) => s + num(r.discAmt), 0),
       subSum: lineRows.reduce((s, r) => s + num(r.subTotal), 0),
       taxSum: lineRows.reduce((s, r) => s + num(r.vatAmt), 0),
       lineTotalSum: lineRows.reduce((s, r) => s + num(r.total), 0),
-      vatPctSum: lineRows.reduce((s, r) => s + num(r.vatPct), 0),
     }),
     [lineRows],
+  );
+
+  const purchaseTableTotals = useMemo(
+    () => [
+      ['Items', String(lineRows.length)],
+      ['Qty Total', money(gridTotals.qtySum)],
+      ['Unit Price Sum', money(gridTotals.unitPriceSum)],
+      ['Line Discount', money(gridTotals.discountSum)],
+      ['Sub Total', money(gridTotals.subSum)],
+      ['Tax Total', money(gridTotals.taxSum)],
+      ['Header Disc', '0.00'],
+      ['Net Amount', money(gridTotals.lineTotalSum), true],
+    ],
+    [lineRows.length, gridTotals],
   );
 
   const productById = useMemo(() => {
@@ -432,6 +491,25 @@ export default function Purchase() {
     [suppliers, suppliersLoading],
   );
 
+  const selectedSupplierDisplay = useMemo(() => {
+    if (!supplierId) return '';
+    const supplier = suppliers.find((s) => String(s.supplierId) === String(supplierId));
+    if (!supplier) return String(supplierId);
+    return `${supplier.supplierCode || supplier.supplierId} — ${supplier.supplierName || ''}`.replace(/ — $/, '');
+  }, [supplierId, suppliers]);
+
+  const filteredSuppliers = useMemo(() => {
+    const q = supplierComboQuery.trim().toLowerCase();
+    const rows = q
+      ? suppliers.filter((s) =>
+          String(s.supplierCode || '').toLowerCase().includes(q) ||
+          String(s.supplierName || '').toLowerCase().includes(q) ||
+          String(s.supplierId || '').toLowerCase().includes(q)
+        )
+      : suppliers;
+    return rows.slice(0, 20);
+  }, [suppliers, supplierComboQuery]);
+
   const productSelectOptions = useMemo(() => {
     const base = [{ value: '', label: !branchId ? '— Branch —' : '— Product —' }];
     for (const p of productsCatalog) {
@@ -476,6 +554,46 @@ export default function Purchase() {
       return bc.includes(q) || sd.includes(q);
     });
   }, [pickerProducts, productPickerSearch]);
+
+  const selectedProductDisplay = useMemo(() => {
+    if (!liveEntry.productId) return '';
+    const p = productById.get(Number(liveEntry.productId));
+    if (p) return `${p.productCode || ''} — ${(p.shortName || p.productName || '').trim()}`.replace(/^ — /, '');
+    return liveEntry.productCode || String(liveEntry.productId);
+  }, [liveEntry.productId, liveEntry.productCode, productById]);
+
+  const comboFilteredProducts = useMemo(() => {
+    const q = productComboQuery.trim().toLowerCase();
+    if (!q) return pickerProducts.slice(0, 15);
+    return pickerProducts.filter((p) =>
+      String(p.barCode || '').toLowerCase().includes(q) ||
+      String(p.shortDescription || '').toLowerCase().includes(q)
+    ).slice(0, 15);
+  }, [pickerProducts, productComboQuery]);
+
+  const selectedProductCodeDisplay = useMemo(() => {
+    if (!liveEntry.productId) return '';
+    const p = productById.get(Number(liveEntry.productId));
+    return p?.productCode || liveEntry.productCode || String(liveEntry.productId);
+  }, [liveEntry.productId, liveEntry.productCode, productById]);
+
+  const comboFilteredProductCodes = useMemo(() => {
+    const q = productCodeComboQuery.trim().toLowerCase();
+    if (!q) return pickerProducts.slice(0, 15);
+    return pickerProducts.filter((p) =>
+      String(p.barCode || '').toLowerCase().includes(q) ||
+      String(p.shortDescription || '').toLowerCase().includes(q)
+    ).slice(0, 15);
+  }, [pickerProducts, productCodeComboQuery]);
+
+  const comboFilteredProductDescriptions = useMemo(() => {
+    const q = productDescComboQuery.trim().toLowerCase();
+    if (!q) return pickerProducts.slice(0, 15);
+    return pickerProducts.filter((p) =>
+      String(p.shortDescription || '').toLowerCase().includes(q) ||
+      String(p.barCode || '').toLowerCase().includes(q)
+    ).slice(0, 15);
+  }, [pickerProducts, productDescComboQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -750,6 +868,26 @@ export default function Purchase() {
     return () => window.clearTimeout(t);
   }, [productPickerOpen]);
 
+  useEffect(() => {
+    if (!productComboOpen && !productCodeComboOpen && !productDescComboOpen && !supplierComboOpen) return;
+    const handleClick = (e) => {
+      if (productComboRef.current && !productComboRef.current.contains(e.target)) {
+        setProductComboOpen(false);
+      }
+      if (productCodeComboRef.current && !productCodeComboRef.current.contains(e.target)) {
+        setProductCodeComboOpen(false);
+      }
+      if (productDescComboRef.current && !productDescComboRef.current.contains(e.target)) {
+        setProductDescComboOpen(false);
+      }
+      if (supplierComboRef.current && !supplierComboRef.current.contains(e.target)) {
+        setSupplierComboOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [productComboOpen, productCodeComboOpen, productDescComboOpen, supplierComboOpen]);
+
   const updateDoc = (key, value) => setDoc((prev) => ({ ...prev, [key]: value }));
 
   const mergeEntryLineAndCalc = useCallback((patch) => {
@@ -947,171 +1085,33 @@ export default function Purchase() {
       dimCell(String(line.vatPct || '0'), dim),
       dimCell(money(line.vatAmt), dim),
       dimCell(money(line.total), dim),
-      <div key={`act-${index}`} className={`flex items-center justify-center gap-0.5 sm:gap-1 ${dim ? 'pointer-events-none opacity-45' : ''}`}>
+      <div key={`act-${index}`} className={`flex items-center justify-center gap-1.5 ${dim ? 'pointer-events-none opacity-45' : ''}`}>
         <button type="button" className="pur-act" onClick={() => setSelectedLine(line)} aria-label="View line">
-          <img src={ViewActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={ViewActionIcon} alt="" className="h-7 w-7" />
         </button>
         <button type="button" className="pur-act" onClick={() => startEditingRow(index)} aria-label="Edit line">
-          <img src={EditActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={EditActionIcon} alt="" className="h-7 w-7" />
         </button>
         <button type="button" className="pur-act" onClick={() => setPendingDelete({ mode: 'single', idx: index })} aria-label="Delete line">
-          <img src={DeleteActionIcon} alt="" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <img src={DeleteActionIcon} alt="" className="h-7 w-7" />
         </button>
       </div>,
     ];
   });
 
-  const entryRow = useMemo(
-    () => [
-      entryCell(<span className="block text-center text-[10px] text-neutral-400" title="Select saved rows below"> </span>),
-      entryCell(
-        <span
-          className="inline-flex h-[26px] w-full min-w-[1.25rem] items-center justify-center rounded border border-neutral-200 bg-white text-[10px] font-semibold text-neutral-600"
-          title={editingRowIndex !== null ? 'Editing this line' : 'New line'}
-        >
-          {editingRowIndex !== null ? `#${editingRowIndex + 1}` : '+'}
-        </span>,
-      ),
-      entryCell(<SubInputField widthPx={40} value={liveEntry.ownRef} onChange={(e) => mergeEntryLineAndCalc({ ownRef: e.target.value })} />),
-      entryCell(<SubInputField widthPx={40} value={liveEntry.supRef} onChange={(e) => mergeEntryLineAndCalc({ supRef: e.target.value })} />),
-      entryCell(
-        <div className="flex min-w-0 items-center gap-0.5">
-          <button
-            type="button"
-            className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
-            title="Search products"
-            onClick={openProductPicker}
-          >
-            <img src={SearchIcon} alt="" className="h-3 w-3 opacity-70" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <DropdownInput
-              label=""
-              widthPx={52}
-              placeholder="—"
-              value={liveEntry.productId}
-              options={productSelectOptionsWithLine}
-              onChange={(v) => applyProductSelection(v)}
-            />
-          </div>
-        </div>,
-      ),
-      entryCell(
-        <InputField widthPx={100} value={liveEntry.shortDescription} onChange={(e) => mergeEntryLineAndCalc({ shortDescription: e.target.value })} />,
-      ),
-      entryCell(
-        <DropdownInput
-          widthPx={52}
-          value={liveEntry.packetDetails}
-          onChange={(value) => mergeEntryLineAndCalc({ packetDetails: value })}
-          options={['Pcs', 'Box', 'Tray']}
-        />,
-      ),
-      entryCell(
-        <SubInputField widthPx={48} type="number" value={liveEntry.lastPurchCost} onChange={(e) => mergeEntryLineAndCalc({ lastPurchCost: e.target.value })} />,
-      ),
-      entryCell(<SubInputField widthPx={40} type="number" value={liveEntry.lpoQty} onChange={(e) => mergeEntryLineAndCalc({ lpoQty: e.target.value })} />),
-      entryCell(
-        <SubInputField
-          id={PURCHASE_LINE_QTY_ID}
-          widthPx={36}
-          type="number"
-          value={liveEntry.qty}
-          onChange={(e) => mergeEntryLineAndCalc({ qty: e.target.value })}
-          onKeyDown={(e) => {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            focusPurchaseLineTotal();
-          }}
-        />,
-      ),
-      entryCell(<SubInputField widthPx={36} type="number" value={liveEntry.focQty} onChange={(e) => mergeEntryLineAndCalc({ focQty: e.target.value })} />),
-      entryCell(
-        <SubInputField widthPx={48} type="number" value={liveEntry.actualCost} onChange={(e) => mergeEntryLineAndCalc({ actualCost: e.target.value })} />,
-      ),
-      entryCell(
-        <SubInputField widthPx={48} type="number" value={liveEntry.sellingPrice} onChange={(e) => mergeEntryLineAndCalc({ sellingPrice: e.target.value })} />,
-      ),
-      entryCell(<SubInputField widthPx={34} type="number" value={liveEntry.discPct} onChange={(e) => mergeEntryLineAndCalc({ discPct: e.target.value })} />),
-      entryCell(<SubInputField widthPx={42} type="number" value={liveEntry.discAmt} onChange={(e) => mergeEntryLineAndCalc({ discAmt: e.target.value })} />),
-      entryCell(<SubInputField widthPx={48} value={liveEntry.subTotal} readOnly tabIndex={-1} />),
-      entryCell(
-        <DropdownInput widthPx={44} value={liveEntry.vatPct} onChange={(value) => mergeEntryLineAndCalc({ vatPct: value })} options={['0', '5', '10', '15']} />,
-      ),
-      entryCell(<SubInputField widthPx={44} value={liveEntry.vatAmt} readOnly tabIndex={-1} />),
-      entryCell(
-        <SubInputField
-          id={PURCHASE_LINE_TOTAL_ID}
-          widthPx={48}
-          value={liveEntry.total}
-          readOnly
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            handleSaveOrUpdate();
-          }}
-        />,
-      ),
-      entryCell(
-        <div className="flex flex-col items-stretch justify-center gap-0.5">
-          <button type="button" className="pur-entry-add" onClick={handleSaveOrUpdate}>
-            {editingRowIndex !== null ? 'Save' : 'Add'}
-          </button>
-          {editingRowIndex !== null && (
-            <button type="button" className="pur-entry-cancel" onClick={cancelLineForm}>
-              Cancel
-            </button>
-          )}
-        </div>,
-      ),
-    ],
-    [
-      liveEntry,
-      editingRowIndex,
-      mergeEntryLineAndCalc,
-      applyProductSelection,
-      openProductPicker,
-      handleSaveOrUpdate,
-      cancelLineForm,
-      productSelectOptionsWithLine,
-    ],
-  );
-
-  const allTableRows = [entryRow, ...tableBodyRows];
 
   return (
-    <div className="mb-2 mt-0 flex w-full min-w-0 flex-col px-1 sm:-mt-[14px] sm:mb-[8px] sm:-mx-[13px] sm:w-[calc(100%+26px)] sm:max-w-none sm:px-0">
+    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <style>{`
-        .pur-page {
+        .pur-root {
           --pr: ${primary};
           --bd: #e5e5e5;
           --txt: #171717;
           --muted: #737373;
           --soft: #fafafa;
-          min-height: calc(100vh - 156px);
-          min-height: calc(100dvh - 156px);
           font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
-        .pur-card {
-          background: #fff;
-          border: 1px solid var(--bd);
-          border-radius: 12px;
-          min-height: 100%;
-        }
         .pur-btn:hover { border-color: #d4d4d4; background: var(--soft); color: var(--txt); }
-        .pur-tab {
-          padding: 8px 12px;
-          font-size: 11px;
-          font-weight: 500;
-          cursor: pointer;
-          border: none;
-          border-bottom: 2px solid transparent;
-          background: transparent;
-          color: var(--muted);
-        }
-        .pur-tab:hover { color: var(--txt); }
-        .pur-tab-on { color: var(--pr); border-bottom-color: var(--pr); font-weight: 600; }
         .pur-lbl {
           font-size: 10px;
           font-weight: 600;
@@ -1119,11 +1119,80 @@ export default function Purchase() {
           text-transform: uppercase;
           color: var(--muted);
         }
-        .pur-summary-block {
-          border: 1px solid var(--bd);
-          border-radius: 8px;
-          background: var(--soft);
-          padding: 10px;
+        .pur-summary-card {
+          border-radius: 10px;
+          border: 1px solid #e7e5e4;
+          background: linear-gradient(165deg, #fafaf9 0%, #ffffff 48%, #fafaf9 100%);
+          box-shadow: 0 1px 2px rgba(28, 25, 23, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+          overflow: hidden;
+        }
+        .pur-summary-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 7px 12px;
+          min-width: 0;
+        }
+        .pur-summary-row + .pur-summary-row {
+          border-top: 1px solid #f5f5f4;
+        }
+        .pur-summary-row-dense {
+          padding-top: 5px;
+          padding-bottom: 5px;
+        }
+        .pur-summary-label {
+          font-size: 11px;
+          font-weight: 600;
+          color: #57534e;
+          letter-spacing: 0.01em;
+          line-height: 1.25;
+        }
+        .pur-summary-value {
+          font-size: 13px;
+          font-weight: 700;
+          color: #1c1917;
+          font-variant-numeric: tabular-nums;
+          text-align: right;
+          letter-spacing: -0.02em;
+        }
+        .pur-summary-value-sm {
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .pur-summary-pair-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
+          border-top: 1px solid #f5f5f4;
+        }
+        .pur-summary-pair-grid .pur-summary-row {
+          border-top: none;
+        }
+        .pur-summary-pair-grid .pur-summary-row:first-child {
+          border-right: 1px solid #f5f5f4;
+        }
+        .pur-summary-net {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          min-width: 0;
+          padding: 11px 12px 12px;
+          border-top: 1px solid rgba(121, 7, 40, 0.18);
+          background: linear-gradient(180deg, rgba(121, 7, 40, 0.07) 0%, rgba(121, 7, 40, 0.025) 100%);
+        }
+        .pur-summary-net .pur-summary-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--pr);
+        }
+        .pur-summary-net .pur-summary-value {
+          font-size: 15px;
+          font-weight: 800;
+          color: var(--pr);
         }
         .pur-compact-card {
           border: 1px solid var(--bd);
@@ -1131,8 +1200,22 @@ export default function Purchase() {
           background: #fff;
           padding: 10px;
         }
+        .pur-posting-card {
+          padding: 8px;
+        }
+        .pur-payment-toggle {
+          min-height: 32px;
+          display: flex;
+          align-items: center;
+          border: 1px solid var(--bd);
+          border-radius: 6px;
+          background: var(--soft);
+          padding: 4px 8px;
+        }
         .pur-act {
-          padding: 4px;
+          width: 30px;
+          height: 30px;
+          padding: 6px;
           border-radius: 6px;
           border: none;
           background: transparent;
@@ -1144,6 +1227,20 @@ export default function Purchase() {
           transition: opacity 0.15s ease, background 0.15s ease;
         }
         .pur-act:hover { background: var(--soft); opacity: 1; }
+        .pur-entry-bar-input {
+          box-sizing: border-box;
+          height: 26px;
+          min-height: 26px;
+          border-radius: 3px;
+          border: 1px solid #d4d4d4;
+          background: #fff;
+          padding: 0 6px;
+          font-size: 10px;
+          outline: none;
+          width: 100%;
+        }
+        .pur-entry-bar-input:focus { border-color: #a3a3a3; }
+        .pur-entry-bar-input[readonly] { background: #f5f5f5; color: #737373; }
         .pur-del {
           display: inline-flex;
           align-items: center;
@@ -1160,365 +1257,717 @@ export default function Purchase() {
         .pur-del:hover { border-color: #fca5a5; color: #b91c1c; background: #fef2f2; }
         .pur-tbl, .pur-tbl > div { overflow: visible !important; }
         .pur-tbl thead th { position: sticky; top: 0; z-index: 2; }
-        .pur-tbl tbody tr:first-child td {
-          background: #f5f5f5 !important;
-          border-bottom: 1px solid var(--bd) !important;
-          vertical-align: middle;
-        }
-        .pur-entry-cell .flex.flex-col {
-          width: 100%;
-        }
-        .pur-entry-cell .relative input,
-        .pur-entry-cell input,
-        .pur-entry-cell select {
-          height: 26px !important;
-          min-height: 26px !important;
-          font-size: 10px !important;
-        }
-        .pur-entry-add {
-          width: 100%;
-          border: none;
-          border-radius: 6px;
-          padding: 4px 6px;
-          font-size: 10px;
-          font-weight: 600;
-          background: var(--pr);
-          color: #fff;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-        .pur-entry-add:hover {
-          opacity: 0.92;
-        }
-        .pur-entry-cancel {
-          width: 100%;
-          border: 1px solid var(--bd);
-          border-radius: 6px;
-          padding: 3px 4px;
-          font-size: 9px;
-          font-weight: 500;
-          background: #fff;
-          color: var(--muted);
-          cursor: pointer;
-        }
-        .pur-entry-cancel:hover {
-          background: var(--soft);
-          color: var(--txt);
-        }
-        .pur-tbl tbody tr:not(:first-of-type):hover td {
-          background-color: var(--soft) !important;
-        }
-        .pur-total-bar {
-          min-height: 36px;
-          padding: 8px 10px;
-          border-top: 1px solid var(--bd);
-          background: #fafafa;
-        }
-        .pur-total-cell {
-          min-width: 56px;
-          text-align: right;
-          padding: 0 4px;
-          font-weight: 600;
-          font-size: clamp(9px, 1.05vw, 11px);
-          color: var(--txt);
-          font-variant-numeric: tabular-nums;
-        }
-        .pur-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-          padding: 10px 12px;
-          border-top: 1px solid var(--bd);
-          background: #fff;
-          margin-top: auto;
-          border-bottom-left-radius: 12px;
-          border-bottom-right-radius: 12px;
-        }
-        .pur-bb {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          height: 32px;
-          padding: 0 12px;
-          border-radius: 8px;
-          border: 1px solid var(--bd);
-          background: #fff;
-          color: var(--txt);
-          font-size: 11px;
-          font-weight: 500;
-        }
-        .pur-bb:hover { border-color: #d4d4d4; background: var(--soft); }
-        .pur-bb-primary { background: var(--pr); color: #fff; border-color: var(--pr); }
-        .pur-bb-primary:hover { opacity: 0.92; color: #fff; }
-        @media (max-width: 1024px) {
-          .pur-page { min-height: auto; }
-        }
+        .pur-tbl tbody tr:hover td { background-color: var(--soft) !important; }
       `}</style>
 
-      <div className="pur-page flex min-h-0 flex-col">
-        <div className="pur-card flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex shrink-0 flex-col gap-2 border-b border-neutral-200 px-3 py-3 sm:px-4 sm:py-3.5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">Purchase</h1>
-                <p className="mt-0.5 text-xs text-neutral-500">Invoice amount above the tabs; Summary and Payment below.</p>
-                <div className="mt-2 flex flex-wrap items-end gap-2">
-                  <DropdownInput
-                    label="Branch"
-                    options={branchDropdownOptions}
-                    value={branchId}
-                    onChange={(v) => {
-                      setBranchId(v);
-                      setSelectedLpoMasterId('');
-                      setSelectedGrnId('');
-                    }}
-                    widthPx={150}
-                    disabled={refsLoading}
-                  />
-                  <DropdownInput
-                    label="LPO"
-                    options={lpoDropdownOptions}
-                    value={selectedLpoMasterId}
-                    onChange={handleLpoChange}
-                    widthPx={200}
-                    disabled={!branchId || lposLoading || documentLoading}
-                  />
-                  <DropdownInput
-                    label="GRN"
-                    options={grnDropdownOptions}
-                    value={selectedGrnId}
-                    onChange={handleGrnChange}
-                    widthPx={220}
-                    disabled={!branchId || grnsLoading || documentLoading}
-                  />
-                </div>
-                {(refsError || documentError || saveError) ? (
-                  <p className="mt-1 text-[11px] text-red-600">{saveError || documentError || refsError}</p>
-                ) : null}
-                {saveOk ? <p className="mt-1 text-[11px] text-emerald-700">{saveOk}</p> : null}
-                {lineEntryError ? <p className="mt-1 text-[11px] text-red-600">{lineEntryError}</p> : null}
-                {branchId && !documentLoading ? (
-                  <p className="mt-1 max-w-xl text-[11px] text-neutral-500">
-                    Manual lines: pick a product (search icon or dropdown), qty defaults to 1, cost from last purchase when
-                    available — subtotal, VAT, and total update as you type. Leave LPO and GRN blank to save without them.
-                  </p>
-                ) : null}
-                {documentLoading ? <p className="mt-1 text-[11px] text-neutral-500">Loading document…</p> : null}
-                {productsLoadError && branchId ? (
-                  <p className="mt-1 text-[11px] text-amber-800">{productsLoadError}</p>
-                ) : null}
-                {!suppliersLoading && suppliers.length === 0 ? (
-                  <p className="mt-1 text-[11px] text-amber-800">
-                    No suppliers yet —{' '}
-                    <Link to="/data-entry/supplier-entry" className="font-semibold text-amber-900 underline underline-offset-2">
-                      add a supplier
-                    </Link>{' '}
-                    before saving purchases.
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {[{ icon: PrinterIcon, label: 'Print' }, { icon: CancelIcon, label: 'Cancel' }, { icon: EditIcon, label: 'Edit' }].map((btn) => (
-                  <button
-                    key={btn.label}
-                    type="button"
-                    className="pur-btn inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium text-neutral-700 transition"
-                  >
-                    <img src={btn.icon} alt="" className="h-3 w-3" />
-                    {btn.label}
-                  </button>
-                ))}
-                {selectedRows.size > 0 && (
-                  <button type="button" className="pur-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
-                    <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
-                  </button>
-                )}
-              </div>
-            </div>
+      <div className="pur-root flex min-h-0 flex-1 flex-col gap-3">
+
+        {/* Row 1: Heading + action buttons */}
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>PURCHASE</h1>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={EditIcon} alt="" className="h-3 w-3" /> Edit
+            </button>
+            <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition" onClick={resetPurchase}>
+              <img src={NewPurchaseIcon} alt="" className="h-3 w-3" /> New
+            </button>
+            <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+            </button>
+            <button type="button" className="pur-btn inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition">
+              <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+            </button>
+            <button
+              type="button"
+              className="pur-btn inline-flex h-7 cursor-not-allowed items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 opacity-50 transition"
+              disabled
+              title="Posting is disabled — save only for now."
+            >
+              <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ backgroundColor: primary, borderColor: primary }}
+              disabled={saveLoading || documentLoading || !branchId}
+              onClick={handleSavePurchase}
+            >
+              {saveLoading ? (
+                'Saving...'
+              ) : (
+                <>
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save
+                </>
+              )}
+            </button>
+            {selectedRows.size > 0 && (
+              <button type="button" className="pur-del" onClick={() => setPendingDelete({ mode: 'bulk' })}>
+                <img src={DeleteActionIcon} alt="" className="h-3 w-3" /> Delete ({selectedRows.size})
+              </button>
+            )}
           </div>
+        </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-1 gap-0 xl:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="flex min-h-0 flex-col border-b border-neutral-200 xl:border-b-0 xl:border-r">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-2 sm:px-4 sm:py-3">
-                <div className="relative min-h-0 flex-1">
-                  <div className="absolute inset-0 flex min-h-[180px] flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white">
-                    <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-                      <CommonTable
-                        className="pur-tbl"
-                        fitParentWidth
-                        stickyHeader
-                        hideOuterBorder
-                        headers={PURCHASE_LINE_HEADERS}
-                        rows={allTableRows}
-                      />
+        {/* Row 2: Branch / LPO / GRN — same control height as line entry */}
+        <div className="flex shrink-0 flex-wrap items-end gap-x-3 gap-y-2">
+          <DropdownInput
+            label="Branch"
+            options={branchDropdownOptions}
+            value={branchId}
+            onChange={(v) => {
+              setBranchId(v);
+              setSelectedLpoMasterId('');
+              setSelectedGrnId('');
+            }}
+            widthPx={150}
+            heightPx={PURCHASE_LINE_ENTRY_H}
+            labelClassName={PURCHASE_LINE_ENTRY_LBL}
+            className={PURCHASE_LINE_ENTRY_INP}
+            disabled={refsLoading}
+          />
+          <DropdownInput
+            label="LPO"
+            options={lpoDropdownOptions}
+            value={selectedLpoMasterId}
+            onChange={handleLpoChange}
+            widthPx={200}
+            heightPx={PURCHASE_LINE_ENTRY_H}
+            labelClassName={PURCHASE_LINE_ENTRY_LBL}
+            className={PURCHASE_LINE_ENTRY_INP}
+            disabled={!branchId || lposLoading || documentLoading}
+          />
+          <DropdownInput
+            label="GRN"
+            options={grnDropdownOptions}
+            value={selectedGrnId}
+            onChange={handleGrnChange}
+            widthPx={220}
+            heightPx={PURCHASE_LINE_ENTRY_H}
+            labelClassName={PURCHASE_LINE_ENTRY_LBL}
+            className={PURCHASE_LINE_ENTRY_INP}
+            disabled={!branchId || grnsLoading || documentLoading}
+          />
+        </div>
+
+        {/* Status messages */}
+        {(refsError || documentError || saveError) ? (
+          <p className="shrink-0 text-[11px] text-red-600">{saveError || documentError || refsError}</p>
+        ) : null}
+        {saveOk ? <p className="shrink-0 text-[11px] text-emerald-700">{saveOk}</p> : null}
+        {lineEntryError ? <p className="shrink-0 text-[11px] text-red-600">{lineEntryError}</p> : null}
+        {documentLoading ? <p className="shrink-0 text-[11px] text-neutral-500">Loading document…</p> : null}
+        {productsLoadError && branchId ? (
+          <p className="shrink-0 text-[11px] text-amber-800">{productsLoadError}</p>
+        ) : null}
+        {!suppliersLoading && suppliers.length === 0 ? (
+          <p className="shrink-0 text-[11px] text-amber-800">
+            No suppliers yet —{' '}
+            <Link to="/data-entry/supplier-entry" className="font-semibold text-amber-900 underline underline-offset-2">
+              add a supplier
+            </Link>{' '}
+            before saving purchases.
+          </p>
+        ) : null}
+
+        {/* Entry form bar — full width, wraps to viewport; all controls use height 26px */}
+        <div className="flex min-w-0 shrink-0 flex-wrap items-end gap-x-3 gap-y-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2 sm:p-3">
+              {/* Product — inline combobox with search icon inside */}
+              <div className="shrink-0" ref={productComboRef}>
+                <label className={`mb-0.5 block ${PURCHASE_LINE_ENTRY_LBL}`}>Product</label>
+                <div className="relative">
+                  <img
+                    src={SearchIcon}
+                    alt=""
+                    className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+                  />
+                  <input
+                    type="text"
+                    className="w-[190px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                    style={{ height: PURCHASE_LINE_ENTRY_H, minHeight: PURCHASE_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                    placeholder="Search product…"
+                    value={productComboOpen ? productComboQuery : selectedProductDisplay}
+                    onFocus={() => { setProductComboOpen(true); setProductComboQuery(''); }}
+                    onChange={(e) => setProductComboQuery(e.target.value)}
+                  />
+                  {productComboOpen && (
+                    <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                      {!branchId ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                      ) : comboFilteredProducts.length === 0 ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                      ) : (
+                        comboFilteredProducts.map((p) => (
+                          <button
+                            key={p.productId}
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              applyProductSelection(String(p.productId));
+                              setProductComboOpen(false);
+                              setProductComboQuery('');
+                            }}
+                          >
+                            <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                            <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                            <span className="shrink-0 tabular-nums text-[10px] text-gray-400">{Number(p.lastPurchaseCost || 0).toFixed(2)}</span>
+                          </button>
+                        ))
+                      )}
                     </div>
-                    <div className="pur-total-bar flex shrink-0 flex-wrap items-center justify-end gap-0 sm:gap-1">
-                      <span className="mr-auto pl-1 text-[10px] font-medium uppercase tracking-wide text-neutral-500">Totals</span>
-                      <span className="pur-total-cell">{gridTotals.subSum.toFixed(2)}</span>
-                      <span className="pur-total-cell text-neutral-500" title="Average VAT % across lines">
-                        {lineRows.length ? (gridTotals.vatPctSum / lineRows.length).toFixed(2) : '0.00'}%
-                      </span>
-                      <span className="pur-total-cell">{gridTotals.taxSum.toFixed(2)}</span>
-                      <span className="pur-total-cell font-semibold text-neutral-900">{gridTotals.lineTotalSum.toFixed(2)}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
-            </div>
-
-            <div className="flex min-h-0 flex-col xl:min-w-0">
-              <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-2.5 sm:px-4 sm:py-3">
+              {/* Product code — searchable picker synced with Product */}
+              <div className="shrink-0" ref={productCodeComboRef}>
+                <label className={`mb-0.5 block ${PURCHASE_LINE_ENTRY_LBL}`}>Product code</label>
+                <div className="relative">
+                  <img
+                    src={SearchIcon}
+                    alt=""
+                    className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+                  />
+                  <input
+                    type="text"
+                    className="w-[112px] rounded border border-gray-200 bg-white pl-6 pr-2 font-mono text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                    style={{ height: PURCHASE_LINE_ENTRY_H, minHeight: PURCHASE_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                    placeholder="Code…"
+                    value={productCodeComboOpen ? productCodeComboQuery : selectedProductCodeDisplay}
+                    onFocus={() => { setProductCodeComboOpen(true); setProductCodeComboQuery(''); }}
+                    onChange={(e) => setProductCodeComboQuery(e.target.value)}
+                  />
+                  {productCodeComboOpen && (
+                    <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-72 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                      {!branchId ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                      ) : comboFilteredProductCodes.length === 0 ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                      ) : (
+                        comboFilteredProductCodes.map((p) => (
+                          <button
+                            key={p.productId}
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              applyProductSelection(String(p.productId));
+                              setProductCodeComboOpen(false);
+                              setProductCodeComboQuery('');
+                            }}
+                          >
+                            <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                            <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                            <span className="shrink-0 tabular-nums text-[10px] text-gray-400">{Number(p.lastPurchaseCost || 0).toFixed(2)}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Description — searchable picker synced with Product */}
+              <div className="shrink-0" ref={productDescComboRef}>
+                <label className={`mb-0.5 block ${PURCHASE_LINE_ENTRY_LBL}`}>Description</label>
+                <div className="relative">
+                  <img
+                    src={SearchIcon}
+                    alt=""
+                    className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+                  />
+                  <input
+                    type="text"
+                    className="w-[150px] rounded border border-gray-200 bg-white pl-6 pr-2 text-[8px] outline-none placeholder:text-[11px] focus:border-gray-400"
+                    style={{ height: PURCHASE_LINE_ENTRY_H, minHeight: PURCHASE_LINE_ENTRY_H, boxSizing: 'border-box' }}
+                    placeholder="Search description…"
+                    value={productDescComboOpen ? productDescComboQuery : liveEntry.shortDescription}
+                    onFocus={() => { setProductDescComboOpen(true); setProductDescComboQuery(''); }}
+                    onChange={(e) => setProductDescComboQuery(e.target.value)}
+                  />
+                  {productDescComboOpen && (
+                    <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-80 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                      {!branchId ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">Select a branch first</p>
+                      ) : comboFilteredProductDescriptions.length === 0 ? (
+                        <p className="px-3 py-2 text-[10px] text-gray-400">No products found</p>
+                      ) : (
+                        comboFilteredProductDescriptions.map((p) => (
+                          <button
+                            key={p.productId}
+                            type="button"
+                            className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              applyProductSelection(String(p.productId));
+                              setProductDescComboOpen(false);
+                              setProductDescComboQuery('');
+                            }}
+                          >
+                            <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{p.barCode || '—'}</span>
+                            <span className="min-w-0 flex-1 truncate text-[10px] text-gray-600">{p.shortDescription}</span>
+                            <span className="shrink-0 tabular-nums text-[10px] text-gray-400">{Number(p.lastPurchaseCost || 0).toFixed(2)}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Own Ref */}
+              <div className="shrink-0">
                 <SubInputField
-                  label="Invoice amount"
-                  fullWidth
-                  type="number"
-                  value={doc.invoiceAmount}
-                  onChange={(e) => updateDoc('invoiceAmount', e.target.value)}
-                  title="Supplier invoice total for this purchase"
+                  label="Own Ref #"
+                  widthPx={86}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.ownRef}
+                  onChange={(e) => mergeEntryLineAndCalc({ ownRef: e.target.value })}
                 />
               </div>
-              <div className="flex shrink-0 flex-wrap gap-x-0.5 border-b border-neutral-200 px-2 sm:px-3">
-                {[
-                  { key: 'summary', label: 'Summary' },
-                  { key: 'payment', label: 'Payment' },
-                ].map((tab) => (
-                  <button key={tab.key} type="button" className={`pur-tab ${rightTab === tab.key ? 'pur-tab-on' : ''}`} onClick={() => setRightTab(tab.key)}>
-                    {tab.label}
-                  </button>
-                ))}
+              {/* Sup Ref */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="Sup Ref"
+                  widthPx={86}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.supRef}
+                  onChange={(e) => mergeEntryLineAndCalc({ supRef: e.target.value })}
+                />
               </div>
+              {/* Packet */}
+              <div className="shrink-0">
+                <DropdownInput
+                  label="Packet"
+                  widthPx={82}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.packetDetails}
+                  onChange={(value) => mergeEntryLineAndCalc({ packetDetails: value })}
+                  options={['Pcs', 'Box', 'Tray']}
+                />
+              </div>
+              {/* Last cost */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="Last cost"
+                  widthPx={82}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.lastPurchCost}
+                  onChange={(e) => mergeEntryLineAndCalc({ lastPurchCost: e.target.value })}
+                />
+              </div>
+              {/* LPO Qty */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="LPO"
+                  widthPx={70}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.lpoQty}
+                  onChange={(e) => mergeEntryLineAndCalc({ lpoQty: e.target.value })}
+                />
+              </div>
+              {/* Qty */}
+              <div className="shrink-0">
+                <SubInputField
+                  id={PURCHASE_LINE_QTY_ID}
+                  label="Qty"
+                  widthPx={70}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.qty}
+                  onChange={(e) => mergeEntryLineAndCalc({ qty: e.target.value })}
+                  onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); focusPurchaseLineTotal(); }}
+                />
+              </div>
+              {/* FOC */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="FOC"
+                  widthPx={70}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.focQty}
+                  onChange={(e) => mergeEntryLineAndCalc({ focQty: e.target.value })}
+                />
+              </div>
+              {/* Act. cost */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="Act. cost"
+                  widthPx={86}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.actualCost}
+                  onChange={(e) => mergeEntryLineAndCalc({ actualCost: e.target.value })}
+                />
+              </div>
+              {/* Sell */}
+              <div className="shrink-0">
+                <SubInputField
+                  label="Sell"
+                  widthPx={82}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.sellingPrice}
+                  onChange={(e) => mergeEntryLineAndCalc({ sellingPrice: e.target.value })}
+                />
+              </div>
+              <div className="flex shrink-0 flex-wrap items-end gap-2 px-0 py-0">
+                {/* Disc % */}
+                <SubInputField
+                  label="Disc %"
+                  widthPx={66}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.discPct}
+                  onChange={(e) => mergeEntryLineAndCalc({ discPct: e.target.value })}
+                />
+                {/* Disc */}
+                <SubInputField
+                  label="Disc"
+                  widthPx={78}
+                  type="number"
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.discAmt}
+                  onChange={(e) => mergeEntryLineAndCalc({ discAmt: e.target.value })}
+                />
+                {/* Sub (readonly) */}
+                <SubInputField
+                  label="Sub"
+                  widthPx={86}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.subTotal}
+                  readOnly
+                  tabIndex={-1}
+                />
+                {/* VAT % */}
+                <DropdownInput
+                  label="VAT %"
+                  widthPx={68}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.vatPct}
+                  onChange={(value) => mergeEntryLineAndCalc({ vatPct: value })}
+                  options={['0', '5', '10', '15']}
+                />
+                {/* VAT (readonly) */}
+                <SubInputField
+                  label="VAT"
+                  widthPx={82}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.vatAmt}
+                  readOnly
+                  tabIndex={-1}
+                />
+                {/* Total (readonly) */}
+                <SubInputField
+                  id={PURCHASE_LINE_TOTAL_ID}
+                  label="Total"
+                  widthPx={90}
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={liveEntry.total}
+                  readOnly
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key !== 'Enter') return; e.preventDefault(); handleSaveOrUpdate(); }}
+                />
+              </div>
+              {/* Add / Save + Cancel */}
+              <div className="flex items-end gap-1">
+                <button
+                  type="button"
+                  onClick={handleSaveOrUpdate}
+                  className="inline-flex shrink-0 items-center justify-center rounded border px-3 text-[10px] font-semibold leading-none text-white"
+                  style={{ backgroundColor: primary, borderColor: primary, height: PURCHASE_LINE_ENTRY_H, minHeight: PURCHASE_LINE_ENTRY_H }}
+                >
+                  {editingRowIndex !== null ? 'Save' : 'Add Line'}
+                </button>
+                {editingRowIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={cancelLineForm}
+                    className="inline-flex shrink-0 items-center justify-center rounded border border-gray-200 bg-white px-2.5 text-[10px] font-semibold leading-none text-gray-600 hover:bg-gray-50"
+                    style={{ height: PURCHASE_LINE_ENTRY_H, minHeight: PURCHASE_LINE_ENTRY_H }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+        </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2 sm:px-4 sm:py-3">
-                {rightTab === 'summary' && (
-                  <div className="flex flex-col gap-2.5">
-                    <span className="pur-lbl">Summary</span>
-                    <div className="pur-summary-block flex flex-col gap-2">
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_80px_60px] sm:items-end">
-                        <div className="min-w-0">
-                          <InputField label="Sub Total" fullWidth readOnly value={totals.subTotal} className="bg-stone-50" />
-                        </div>
-                        <div className="min-w-0">
-                          <SubInputField label="Disc Amt" widthPx={80} value={totals.discAmt} readOnly />
-                        </div>
-                        <div className="min-w-0">
-                          <SubInputField label="" suffix="%" widthPx={60} value={totals.discPct} readOnly />
-                        </div>
+        {/* Row 3: Main content grid */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+
+          {/* Left: line-item table */}
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200">
+            <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+              <CommonTable
+                className="pur-tbl"
+                fitParentWidth
+                stickyHeader
+                hideOuterBorder
+                truncateHeader
+                headerOverflowAbbrevChars={3}
+                truncateBody
+                columnWidthPercents={PURCHASE_LINE_COL_PCT}
+                headerFontSize="11px"
+                bodyFontSize="13px"
+                cellPaddingClass="px-1 py-1 sm:px-1.5 sm:py-1.5"
+                headers={PURCHASE_LINE_HEADERS}
+                rows={tableBodyRows}
+              />
+            </div>
+            <TableTotalsBar borderColor="#e5e5e5" items={purchaseTableTotals} />
+          </div>
+
+          {/* Right: invoice + summary/payment panel */}
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200 xl:min-w-0">
+            {/* Document section — always visible at top */}
+            <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-3 flex flex-col gap-2.5">
+              <span className="pur-lbl">Purchase Details</span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <SubInputField
+                  label="Purchase #"
+                  fullWidth
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={doc.purchaseNo}
+                  onChange={(e) => updateDoc('purchaseNo', e.target.value)}
+                />
+                <SubInputField
+                  label="Sup Inv#"
+                  fullWidth
+                  heightPx={PURCHASE_LINE_ENTRY_H}
+                  labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                  className={PURCHASE_LINE_ENTRY_INP}
+                  value={doc.supplierInvNo}
+                  onChange={(e) => updateDoc('supplierInvNo', e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="min-w-0 w-full max-w-full" ref={supplierComboRef}>
+                  <label className={`mb-0.5 block ${PURCHASE_LINE_ENTRY_LBL}`}>Supplier</label>
+                  <div className="relative">
+                    <img
+                      src={SearchIcon}
+                      alt=""
+                      className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-45"
+                    />
+                    <input
+                      type="text"
+                      className="box-border h-[26px] w-full rounded-md border border-slate-200 bg-white pl-7 pr-2 text-[10px] leading-normal text-gray-900 outline-none focus:border-gray-400 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                      placeholder={suppliersLoading ? 'Loading suppliers…' : 'Search supplier…'}
+                      value={supplierComboOpen ? supplierComboQuery : selectedSupplierDisplay}
+                      onFocus={() => {
+                        if (suppliersLoading) return;
+                        setSupplierComboOpen(true);
+                        setSupplierComboQuery('');
+                      }}
+                      onChange={(e) => {
+                        setSupplierComboQuery(e.target.value);
+                        setSupplierComboOpen(true);
+                      }}
+                      disabled={suppliersLoading}
+                    />
+                    {supplierComboOpen && !suppliersLoading && (
+                      <div className="absolute left-0 top-full z-50 mt-0.5 max-h-52 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                        {filteredSuppliers.length === 0 ? (
+                          <p className="px-3 py-2 text-[11px] text-gray-400">No suppliers found</p>
+                        ) : (
+                          filteredSuppliers.map((s) => (
+                            <button
+                              key={s.supplierId}
+                              type="button"
+                              className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSupplierId(String(s.supplierId));
+                                setSupplierComboOpen(false);
+                                setSupplierComboQuery('');
+                              }}
+                            >
+                              <span className="w-20 shrink-0 font-mono text-[10px] text-gray-900">{s.supplierCode || s.supplierId}</span>
+                              <span className="min-w-0 flex-1 truncate text-[11px] text-gray-600">{s.supplierName || '—'}</span>
+                            </button>
+                          ))
+                        )}
                       </div>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_80px_60px] sm:items-end">
-                        <div className="min-w-0">
-                          <InputField label="Total Amount" fullWidth readOnly value={totals.totalAmount} className="bg-stone-50" />
-                        </div>
-                        <div className="min-w-0">
-                          <SubInputField label="Tax" widthPx={80} value={totals.tax} readOnly />
-                        </div>
-                        <div className="min-w-0">
-                          <SubInputField label="" suffix="%" widthPx={60} value={totals.vatPct} readOnly />
-                        </div>
+                    )}
+                  </div>
+                </div>
+                <Link
+                  to="/data-entry/supplier-entry"
+                  className="mt-0.5 self-start text-[11px] font-medium leading-tight text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline"
+                >
+                  + New supplier
+                </Link>
+              </div>
+              <div className="min-w-0 w-full max-w-full">
+                <DatePickerInput
+                  fullWidth
+                  heightPx={34}
+                  borderRadius={4}
+                  placeholder="DD/MM/YYYY"
+                  displayFontSize={10}
+                  background="#fff"
+                  dropdownInViewport
+                  value={doc.purchaseDate}
+                  onChange={(e) => updateDoc('purchaseDate', e.target.value)}
+                />
+              </div>
+            </div>
+            {/* Invoice amount */}
+            <div className="shrink-0 border-b border-neutral-200 px-3 py-3 flex flex-col gap-2">
+              <span className="pur-lbl">Invoice Summary</span>
+              <SubInputField
+                label="Invoice amount"
+                fullWidth
+                type="number"
+                heightPx={PURCHASE_LINE_ENTRY_H}
+                labelClassName={PURCHASE_LINE_ENTRY_LBL}
+                className={PURCHASE_LINE_ENTRY_INP}
+                value={doc.invoiceAmount}
+                onChange={(e) => updateDoc('invoiceAmount', e.target.value)}
+                title="Supplier invoice total for this purchase"
+              />
+            </div>
+            <div className="shrink-0 border-b border-neutral-200 bg-neutral-50 px-3 py-2">
+              <TabsBar
+                fullWidth
+                tabs={[
+                  { id: 'summary', label: 'Summary' },
+                  { id: 'payment', label: 'Payment' },
+                ]}
+                activeTab={rightTab}
+                onChange={setRightTab}
+              />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+              {rightTab === 'summary' && (
+                <div className="flex flex-col gap-2">
+                  <span className="pur-lbl">Summary</span>
+                  <div className="pur-summary-card" role="region" aria-label="Amount summary">
+                    <div className="pur-summary-row">
+                      <span className="pur-summary-label">Sub Total</span>
+                      <span className="pur-summary-value">{totals.subTotal}</span>
+                    </div>
+                    <div className="pur-summary-pair-grid">
+                      <div className="pur-summary-row pur-summary-row-dense">
+                        <span className="pur-summary-label">Disc</span>
+                        <span className="pur-summary-value pur-summary-value-sm">{totals.discAmt}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <InputField label="Round Off" fullWidth value={totals.roundOff} readOnly />
-                        <InputField label="Net Amount" fullWidth readOnly value={totals.netAmount} className="bg-stone-50" />
+                      <div className="pur-summary-row pur-summary-row-dense">
+                        <span className="pur-summary-label">Disc %</span>
+                        <span className="pur-summary-value pur-summary-value-sm">{totals.discPct}%</span>
                       </div>
                     </div>
-
-                    <hr className="my-0.5 border-neutral-200" />
-
-                    <span className="pur-lbl">Document</span>
-                    <div className="pur-compact-card flex flex-col gap-2">
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <SubInputField label="Purchase #" fullWidth value={doc.purchaseNo} onChange={(e) => updateDoc('purchaseNo', e.target.value)} />
-                        <SubInputField label="Sup Inv#" fullWidth value={doc.supplierInvNo} onChange={(e) => updateDoc('supplierInvNo', e.target.value)} />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <DropdownInput
-                          label="Supplier"
-                          fullWidth
-                          value={supplierId}
-                          onChange={setSupplierId}
-                          options={supplierDropdownOptions}
-                          disabled={suppliersLoading}
-                        />
-                        <Link
-                          to="/data-entry/supplier-entry"
-                          className="text-[11px] font-medium text-neutral-600 underline-offset-2 hover:text-neutral-900 hover:underline"
-                        >
-                          + New supplier
-                        </Link>
-                      </div>
-                      <DateInputField label="Purchase date" fullWidth value={doc.purchaseDate} onChange={(value) => updateDoc('purchaseDate', value)} />
+                    <div className="pur-summary-row">
+                      <span className="pur-summary-label">Total Amount</span>
+                      <span className="pur-summary-value">{totals.totalAmount}</span>
                     </div>
-                    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5">
-                      <Switch checked={doc.bySupplier} onChange={(value) => updateDoc('bySupplier', value)} description="Group by supplier account" size="xs" />
+                    <div className="pur-summary-pair-grid">
+                      <div className="pur-summary-row pur-summary-row-dense">
+                        <span className="pur-summary-label">Tax</span>
+                        <span className="pur-summary-value pur-summary-value-sm">{totals.tax}</span>
+                      </div>
+                      <div className="pur-summary-row pur-summary-row-dense">
+                        <span className="pur-summary-label">VAT %</span>
+                        <span className="pur-summary-value pur-summary-value-sm">{totals.vatPct}%</span>
+                      </div>
+                    </div>
+                    <div className="pur-summary-row pur-summary-row-dense">
+                      <span className="pur-summary-label">Round Off</span>
+                      <span className="pur-summary-value pur-summary-value-sm">{totals.roundOff}</span>
+                    </div>
+                    <div className="pur-summary-net">
+                      <span className="pur-summary-label">Net Amount</span>
+                      <span className="pur-summary-value">{totals.netAmount}</span>
                     </div>
                   </div>
-                )}
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2">
+                    <Switch checked={doc.bySupplier} onChange={(value) => updateDoc('bySupplier', value)} description="Group by supplier account" size="xs" />
+                  </div>
+                </div>
+              )}
 
-                {rightTab === 'payment' && (
-                  <div className="flex flex-col gap-2.5">
-                    <span className="pur-lbl">Posting</span>
-                    <div className="pur-compact-card grid grid-cols-1 gap-2">
-                      <DropdownInput label="Entered by" fullWidth value={doc.enteredBy} onChange={(value) => updateDoc('enteredBy', value)} options={['Admin', 'User 1', 'User 2']} />
-                      <DropdownInput label="Payment mode" fullWidth value={doc.paymentMode} onChange={(value) => updateDoc('paymentMode', value)} options={['Cash', 'Card', 'Bank Transfer', 'Credit']} />
-                      <DropdownInput label="Account head" fullWidth value={doc.accountHead} onChange={(value) => updateDoc('accountHead', value)} options={['General', 'Purchase A/C', 'Expenses A/C']} />
-                      <DateInputField label="Entered date" fullWidth value={doc.enteredDate} onChange={(value) => updateDoc('enteredDate', value)} />
-                    </div>
-
-                    <span className="pur-lbl">Payment</span>
-                    <div className="flex flex-col gap-1">
-                      <label className="pur-lbl normal-case tracking-normal">Remark</label>
-                      <textarea
-                        value={paymentInfo.remark}
-                        onChange={(e) => setPaymentInfo((prev) => ({ ...prev, remark: e.target.value }))}
-                        rows={3}
-                        className="box-border w-full rounded-lg border border-neutral-200 bg-white px-2 py-2 text-[11px] outline-none focus:border-neutral-400"
+              {rightTab === 'payment' && (
+                <div className="flex flex-col gap-3">
+                  <span className="pur-lbl">Posting</span>
+                  <div className="pur-compact-card pur-posting-card grid grid-cols-2 gap-x-2 gap-y-2.5">
+                    <DropdownInput label="Entered by" fullWidth heightPx={PURCHASE_LINE_ENTRY_H} labelClassName={PURCHASE_LINE_ENTRY_LBL} className={PURCHASE_LINE_ENTRY_INP} value={doc.enteredBy} onChange={(value) => updateDoc('enteredBy', value)} options={['Admin', 'User 1', 'User 2']} />
+                    <DropdownInput label="Payment mode" fullWidth heightPx={PURCHASE_LINE_ENTRY_H} labelClassName={PURCHASE_LINE_ENTRY_LBL} className={PURCHASE_LINE_ENTRY_INP} value={doc.paymentMode} onChange={(value) => updateDoc('paymentMode', value)} options={['Cash', 'Card', 'Bank Transfer', 'Credit']} />
+                    <DropdownInput label="Account head" fullWidth heightPx={PURCHASE_LINE_ENTRY_H} labelClassName={PURCHASE_LINE_ENTRY_LBL} className={PURCHASE_LINE_ENTRY_INP} value={doc.accountHead} onChange={(value) => updateDoc('accountHead', value)} options={['General', 'Purchase A/C', 'Expenses A/C']} />
+                    <div className="min-w-0 w-full max-w-full">
+                      <label className={`mb-0.5 block ${PURCHASE_LINE_ENTRY_LBL}`}>Entered date</label>
+                      <DatePickerInput
+                        fullWidth
+                        heightPx={PURCHASE_LINE_ENTRY_H}
+                        borderRadius={4}
+                        placeholder="DD/MM/YYYY"
+                        displayFontSize={10}
+                        background="#fff"
+                        dropdownInViewport
+                        value={doc.enteredDate}
+                        onChange={(e) => updateDoc('enteredDate', e.target.value)}
                       />
                     </div>
-                    <SubInputField label="Payment no" fullWidth value={paymentInfo.paymentNo} onChange={(e) => setPaymentInfo((prev) => ({ ...prev, paymentNo: e.target.value }))} />
-                    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+                  </div>
+
+                  <span className="pur-lbl">Payment</span>
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+                    <SubInputField label="Payment no" fullWidth heightPx={PURCHASE_LINE_ENTRY_H} labelClassName={PURCHASE_LINE_ENTRY_LBL} className={PURCHASE_LINE_ENTRY_INP} value={paymentInfo.paymentNo} onChange={(e) => setPaymentInfo((prev) => ({ ...prev, paymentNo: e.target.value }))} />
+                    <div className="pur-payment-toggle">
                       <Switch checked={paymentInfo.paymentNow} onChange={(value) => setPaymentInfo((prev) => ({ ...prev, paymentNow: value }))} description="Payment now" size="xs" />
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="pur-bar">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button type="button" className="pur-bb">
-                <img src={EditIcon} alt="" className="h-3 w-3" /> Edit
-              </button>
-              <button type="button" className="pur-bb" onClick={resetPurchase}>
-                <img src={EditIcon} alt="" className="h-3 w-3" /> New
-              </button>
-              <button type="button" className="pur-bb">
-                <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
-              </button>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button type="button" className="pur-bb">
-                <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
-              </button>
-              <button
-                type="button"
-                className="pur-bb cursor-not-allowed opacity-50"
-                disabled
-                title="Posting is disabled — save only for now."
-              >
-                <img src={PostIcon} alt="" className="h-3 w-3" /> Post
-              </button>
-              <button
-                type="button"
-                className="pur-bb pur-bb-primary"
-                disabled={saveLoading || documentLoading || !branchId}
-                onClick={handleSavePurchase}
-              >
-                {saveLoading ? 'Saving…' : 'Save'}
-              </button>
+                  <div className="flex flex-col gap-1.5">
+                    <label className={PURCHASE_LINE_ENTRY_LBL}>Remark</label>
+                    <textarea
+                      value={paymentInfo.remark}
+                      onChange={(e) => setPaymentInfo((prev) => ({ ...prev, remark: e.target.value }))}
+                      rows={2}
+                      className="box-border w-full rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-[11px] outline-none focus:border-neutral-400"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+      </div>
 
         {productPickerOpen && (
           <div
@@ -1681,7 +2130,6 @@ export default function Purchase() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

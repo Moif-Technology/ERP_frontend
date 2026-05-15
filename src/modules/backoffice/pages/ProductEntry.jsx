@@ -16,7 +16,9 @@ import PrinterIcon from "../../../shared/assets/icons/printer.svg";
 import UnpostIcon from "../../../shared/assets/icons/unpost.svg";
 import {
   CommonTable,
-  ConfirmDialog
+  ConfirmDialog,
+  TabsBar,
+  TableTotalsBar,
 } from "../../../shared/components/ui";
 import { colors } from "../../../shared/constants/theme";
 
@@ -273,62 +275,36 @@ function ImageUpload({ previews, onPreviewsChange }) {
 
 function LineEntryBar({ lineForm, setLineForm, onAdd, isEditing }) {
   const FIELDS = [
-    { label: "Barcode",     key: "barcode",          span: 3 },
-    { label: "Description", key: "shortDescription", span: 5 },
-    { label: "Unit",        key: "unit",             span: 2 },
-    { label: "Pack Qty",    key: "packQty",          span: 2 },
-    { label: "Pkt Details", key: "packetDetails",    span: 4 },
-    { label: "Disc %",      key: "discPct",          span: 2 },
-    { label: "Unit Cost",   key: "unitCost",         span: 2 },
-    { label: "Avg Cost",    key: "avgCost",          span: 2 },
-    { label: "Last Cost",   key: "lastCost",         span: 2 },
-    { label: "Margin %",    key: "marginPct",        span: 3 },
-    { label: "Unit Price",  key: "unitPrice",        span: 3 },
+    { label: "Barcode",     key: "barcode",          w: 90 },
+    { label: "Description", key: "shortDescription", w: 140 },
+    { label: "Unit",        key: "unit",             w: 58 },
+    { label: "Pack Qty",    key: "packQty",          w: 64 },
+    { label: "Pkt Details", key: "packetDetails",    w: 100 },
+    { label: "Disc %",      key: "discPct",          w: 54 },
+    { label: "Unit Cost",   key: "unitCost",         w: 70 },
+    { label: "Avg Cost",    key: "avgCost",          w: 70 },
+    { label: "Last Cost",   key: "lastCost",         w: 70 },
+    { label: "Margin %",    key: "marginPct",        w: 68 },
+    { label: "Unit Price",  key: "unitPrice",        w: 72 },
   ];
 
   return (
-    <div className="pe2-line-shell">
-      <div className="pe2-line-groups">
-        <div className="pe2-line-group">
-          <div className="pe2-line-group-title">Item Details</div>
-          <div className="pe2-line-grid">
-            {FIELDS.slice(0, 5).map((f) => (
-              <div key={f.key} className="pe2-line-field" style={{ gridColumn: `span ${f.span}` }}>
-                <span className="pe2-line-label">{f.label}</span>
-                <input
-                  type="text"
-                  value={lineForm[f.key]}
-                  onChange={(e) => setLineForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && onAdd()}
-                  className="pe2-line-input"
-                />
-              </div>
-            ))}
-          </div>
+    <div className="flex min-w-0 flex-wrap items-end gap-2 rounded-lg border border-gray-200 bg-slate-50/70 p-2">
+      {FIELDS.map((f) => (
+        <div key={f.key} className="flex shrink-0 flex-col gap-0.5" style={{ width: f.w }}>
+          <span className="pe2-label">{f.label}</span>
+          <input
+            type="text"
+            value={lineForm[f.key]}
+            onChange={(e) => setLineForm((p) => ({ ...p, [f.key]: e.target.value }))}
+            onKeyDown={(e) => e.key === "Enter" && onAdd()}
+            className="pe2-entry-input"
+          />
         </div>
-
-        <div className="pe2-line-group">
-          <div className="pe2-line-group-title">Pricing Details</div>
-          <div className="pe2-line-grid pe2-line-grid--pricing">
-            {FIELDS.slice(5).map((f) => (
-              <div key={f.key} className="pe2-line-field" style={{ gridColumn: `span ${f.span}` }}>
-                <span className="pe2-line-label">{f.label}</span>
-                <input
-                  type="text"
-                  value={lineForm[f.key]}
-                  onChange={(e) => setLineForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                  onKeyDown={(e) => e.key === "Enter" && onAdd()}
-                  className="pe2-line-input"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="pe2-line-actions">
-        <button type="button" onClick={onAdd} className="pe2-line-add-btn">
-          {isEditing ? "Update Line" : "Add Line"}
+      ))}
+      <div className="flex shrink-0 items-end">
+        <button type="button" onClick={onAdd} className="pe2-entry-add-btn">
+          {isEditing ? "Update" : "Add Line"}
         </button>
       </div>
     </div>
@@ -766,15 +742,17 @@ export default function ProductEntry() {
 
   const handleSubDel = (idx) => setSubstituteRows((p) => p.filter((_, i) => i !== idx));
 
-  const totDisc = lineRows.reduce((s, r) => s + Number(r[5] ?? 0), 0);
-  const totSub = lineRows.reduce((s, r) => s + Number(r[6] ?? 0), 0);
-  const totTaxP = lineRows.reduce((s, r) => s + Number(r[7] ?? 0), 0);
-  const totTaxA = lineRows.reduce((s, r) => s + Number(r[8] ?? 0), 0);
-  const totLine = lineRows.reduce((s, r) => s + Number(r[9] ?? 0), 0);
+  const totQty   = lineRows.reduce((s, r) => s + Number(r[2] ?? 0), 0);
+  const totPrice = lineRows.reduce((s, r) => s + Number(r[3] ?? 0), 0);
+  const totDisc  = lineRows.reduce((s, r) => s + Number(r[5] ?? 0), 0);
+  const totSub   = lineRows.reduce((s, r) => s + Number(r[6] ?? 0), 0);
+  const totTaxP  = lineRows.reduce((s, r) => s + Number(r[7] ?? 0), 0);
+  const totTaxA  = lineRows.reduce((s, r) => s + Number(r[8] ?? 0), 0);
+  const totLine  = lineRows.reduce((s, r) => s + Number(r[9] ?? 0), 0);
   const saveLabel = saving ? (isEditMode ? "Updating…" : "Saving…") : (isEditMode ? "Update Product" : "Save Product");
 
   return (
-    <div className="pe2">
+    <div className="pe2 box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col rounded-lg border-2 border-gray-200 bg-white shadow-sm">
       <style>{`
         .pe2 {
           --red: ${primary};
@@ -801,24 +779,18 @@ export default function ProductEntry() {
           --radius-lg: 8px;
 
           font-family: "Open Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          background: var(--bg);
           display: flex;
           flex-direction: column;
           min-height: 0;
           flex: 1;
           overflow: hidden;
           color: var(--ink);
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          box-shadow: 0 1px 3px 0 rgba(15,23,42,0.08);
         }
 
         .pe2-header {
-          position: relative;
           flex-shrink: 0;
-          padding: 10px 20px;
-          border-bottom: 1px solid #f3f4f6;
-          background: #f8fafc;
+          padding: 8px 16px;
+          border-bottom: 1px solid #f1f5f9;
         }
 
         .pe2-header-top {
@@ -1198,11 +1170,11 @@ export default function ProductEntry() {
         }
 
         .pe2-subtitle {
-          font-size: 10px;
-          font-weight: 700;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: .12em;
+          font-size: 13px;
+          font-weight: 600;
+          color: #000000;
+          text-transform: none;
+          letter-spacing: 0;
         }
 
         .pe2-section-grid {
@@ -1270,9 +1242,9 @@ export default function ProductEntry() {
         .pe2-card-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-start;
           gap: 8px;
-          padding: 12px 16px 10px;
+          padding: 10px 16px 8px;
           border-bottom: 1px solid #f1f5f9;
           background: #fff;
         }
@@ -1292,11 +1264,11 @@ export default function ProductEntry() {
         }
 
         .pe2-card-title {
-          font-size: 10px;
+          font-size: 13px;
           font-weight: 700;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: .18em;
+          color: var(--red);
+          text-transform: none;
+          letter-spacing: 0;
         }
 
         .pe2-card-sub {
@@ -1359,12 +1331,10 @@ export default function ProductEntry() {
 
         .pe2-label {
           min-height: 16px;
-          font-size: 11px;
+          font-size: 13px;
           line-height: 16px;
-          font-weight: 700;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: .12em;
+          font-weight: 500;
+          color: #000000;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1382,8 +1352,8 @@ export default function ProductEntry() {
           border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 400;
           padding: 0 10px;
           transition: border-color .15s, box-shadow .15s, background .15s;
           width: 100%;
@@ -1423,8 +1393,8 @@ export default function ProductEntry() {
           border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 400;
           padding: 0 30px 0 10px;
           cursor: pointer;
           outline: none;
@@ -1448,8 +1418,8 @@ export default function ProductEntry() {
           border-radius: var(--radius);
           background: #fff;
           color: var(--ink);
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 400;
           padding: 8px 10px;
           resize: vertical;
           min-height: 96px;
@@ -1677,134 +1647,48 @@ export default function ProductEntry() {
           justify-content: flex-end;
         }
 
-        .pe2-line-shell {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .pe2-line-groups {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .pe2-line-group {
-          border: 1px solid var(--border2);
-          border-radius: 8px;
-          background: #fff;
-          padding: 12px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .pe2-line-group-title {
-          font-size: 10px;
-          font-weight: 700;
-          color: var(--muted);
-          text-transform: uppercase;
-          letter-spacing: .16em;
-        }
-
-        .pe2-line-grid {
-          display: grid;
-          grid-template-columns: repeat(12, minmax(0, 1fr));
-          gap: 10px;
-        }
-
-        .pe2-line-field {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-
-        .pe2-line-field--action {
-          justify-content: flex-end;
-        }
-
-        .pe2-line-label {
-          min-height: 16px;
-          font-size: 11px;
-          line-height: 16px;
-          color: #64748b;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: .12em;
-        }
-
-        .pe2-line-input {
+        .pe2-entry-input {
+          box-sizing: border-box;
           height: 34px;
-          border: 1px solid var(--border);
+          min-height: 34px;
           border-radius: var(--radius);
+          border: 1px solid var(--border);
           background: #fff;
           color: var(--ink);
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 400;
+          font-family: inherit;
           padding: 0 10px;
           outline: none;
           width: 100%;
           transition: border-color .15s, box-shadow .15s;
         }
 
-        .pe2-line-add-btn {
+        .pe2-entry-input:focus {
+          border-color: #d1d5db;
+          box-shadow: 0 0 0 2px rgba(121, 7, 40, 0.13);
+        }
+
+        .pe2-entry-add-btn {
           height: 34px;
-          min-width: 156px;
           border: none;
           border-radius: var(--radius);
           background: var(--red);
           color: #fff;
-          font-size: 11px;
+          font-size: 13px;
           font-weight: 600;
+          font-family: inherit;
           cursor: pointer;
-          padding: 0 14px;
-          transition: background .15s, box-shadow .15s;
-          box-shadow: 0 1px 2px rgba(15,23,42,0.06);
+          padding: 0 16px;
+          white-space: nowrap;
+          transition: opacity .15s;
         }
 
-        .pe2-line-add-btn:hover {
-          opacity: .9;
-        }
-
-        .pe2-line-actions {
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 12px;
-          flex-wrap: wrap;
-        }
-
-        @media (max-width: 1100px) {
-          .pe2-line-groups {
-            grid-template-columns: 1fr;
-          }
-
-          .pe2-line-grid {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-          }
-
-          .pe2-line-field {
-            grid-column: span 3 !important;
-          }
-
-          .pe2-line-field--action {
-            grid-column: span 6 !important;
-          }
-        }
+        .pe2-entry-add-btn:hover { opacity: .88; }
 
         @media (max-width: 680px) {
-          .pe2-line-grid {
-            grid-template-columns: 1fr;
-          }
-
           .pe2-substitute-form {
             grid-template-columns: 1fr;
-          }
-
-          .pe2-line-field,
-          .pe2-line-field--action {
-            grid-column: span 1 !important;
           }
 
           .pe2-substitute-form > .pe2-field,
@@ -1836,33 +1720,54 @@ export default function ProductEntry() {
       `}</style>
 
       <header className="pe2-header">
-        <div className="pe2-header-top">
-          <div className="pe2-title-copy">
-            <p className="pe2-breadcrumb">Data Entry <span>/</span> Products <span>/</span> {isEditMode ? "Edit" : "New"}</p>
-            <h1 className="pe2-title">{isEditMode ? <><em>Edit</em> Product</> : <>Product <em>Entry</em></>}</h1>
-          </div>
-          <div className="pe2-header-right">
-            <div className="pe2-branch-wrap">
-              <select className="pe2-branch-select" value={branchId} onChange={(e)=>{setBranchId(e.target.value);setSaveError("");setSuccessMsg("");}} disabled={loadingBranches||isEditMode}>
-                {branchOptions.length===0&&<option value="">Loading…</option>}
-                {branchOptions.map((o)=><option key={o.value} value={o.value}>{o.label}</option>)}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
+            {isEditMode ? 'EDIT PRODUCT' : 'PRODUCT ENTRY'}
+          </h1>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="relative inline-flex items-center">
+              <select
+                value={branchId}
+                onChange={(e) => { setBranchId(e.target.value); setSaveError(""); setSuccessMsg(""); }}
+                disabled={loadingBranches || isEditMode}
+                className="h-7 appearance-none rounded-md border border-neutral-200 bg-white pl-2.5 pr-7 text-xs font-medium text-neutral-700 outline-none transition hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ minWidth: '11rem' }}
+              >
+                {branchOptions.length === 0 && <option value="">Loading…</option>}
+                {branchOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
-              <span className="pe2-branch-arrow"><ChevronIcon size={10}/></span>
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400">
+                <ChevronIcon size={10} />
+              </span>
             </div>
-            <ActionBtn icon={<img src={PrinterIcon} alt="" width={12}/>} variant="ghost">Print</ActionBtn>
-            <ActionBtn icon={<img src={CancelIcon} alt="" width={12}/>} variant="danger">Cancel</ActionBtn>
-            <ActionBtn icon={<img src={PostIcon} alt="" width={12}/>} variant="ghost">Post</ActionBtn>
-            <ActionBtn icon={<img src={UnpostIcon} alt="" width={12}/>} variant="ghost">Unpost</ActionBtn>
-            <ActionBtn icon={<SaveIcon size={13}/>} variant="primary" onClick={handleSave} disabled={saving||loadingEdit}>{saveLabel}</ActionBtn>
+            <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+              <img src={PrinterIcon} alt="" className="h-3 w-3" /> Print
+            </button>
+            <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+              <img src={CancelIcon} alt="" className="h-3 w-3" /> Cancel
+            </button>
+            <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+              <img src={PostIcon} alt="" className="h-3 w-3" /> Post
+            </button>
+            <button type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-gray-300 hover:bg-gray-50">
+              <img src={UnpostIcon} alt="" className="h-3 w-3" /> Unpost
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || loadingEdit}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+              style={{ background: primary, borderColor: primary }}
+            >
+              <SaveIcon size={12} /> {saveLabel}
+            </button>
           </div>
         </div>
-
         {isEditMode && (
-          <div style={{marginTop:8}}>
-            <div className="pe2-edit-badge">
-              <EditPenIcon size={10}/>
-              Editing · ID {editProductId}{loadingEdit&&" · Loading…"}
-            </div>
+          <div className="mt-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+              <EditPenIcon size={10} /> Editing · ID {editProductId}{loadingEdit && ' · Loading…'}
+            </span>
           </div>
         )}
       </header>
@@ -1881,23 +1786,11 @@ export default function ProductEntry() {
       <div className="pe2-body">
         <div className="pe2-canvas">
           <div className="pe2-workspace">
-            <div className="pe2-tabbar">
-              <div className="pe2-tab-panel">
-                <div className="pe2-tab-list">
-                  {ENTRY_TABS.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      className="pe2-tab-btn"
-                      data-active={entryTab === tab.id ? "true" : "false"}
-                      onClick={() => setEntryTab(tab.id)}
-                    >
-                      <span className="pe2-tab-title">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <TabsBar
+              tabs={ENTRY_TABS.map((t) => ({ id: t.id, label: t.label }))}
+              activeTab={entryTab}
+              onChange={setEntryTab}
+            />
 
             {entryTab === "general" && (
               <div className="pe2-layout--single">
@@ -1906,13 +1799,74 @@ export default function ProductEntry() {
                     <SectionCard title="Product Identity">
                       <div className="pe2-grid">
                         <div className="pe2-field" style={{ gridColumn: "span 6" }}>
-                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-                            <span className="pe2-label">Barcode</span>
-                            <button type="button" className={`pe2-barcode-toggle pe2-barcode-toggle--${main.newBarcode?"on":"off"}`} onClick={()=>setMain(m=>({...m,newBarcode:!m.newBarcode}))}>
+                          <span className="pe2-label">Barcode</span>
+                          <div style={{ display: "flex", alignItems: "stretch" }}>
+                            <input
+                              type="text"
+                              value={main.barcode}
+                              onChange={(e) => setMain(m => ({ ...m, barcode: e.target.value }))}
+                              placeholder={main.newBarcode ? "Auto-generated on save" : ""}
+                              disabled={main.newBarcode}
+                              className="pe2-mono"
+                              style={{
+                                flex: 1,
+                                minWidth: 0,
+                                height: 34,
+                                border: "1px solid var(--border)",
+                                borderRight: "none",
+                                borderRadius: "var(--radius) 0 0 var(--radius)",
+                                background: main.newBarcode ? "#f1f5f9" : "#fff",
+                                color: main.newBarcode ? "var(--faint)" : "var(--ink)",
+                                fontSize: 13,
+                                padding: "0 10px",
+                                outline: "none",
+                                cursor: main.newBarcode ? "not-allowed" : "text",
+                                fontFamily: "inherit",
+                                transition: "border-color .15s, box-shadow .15s, background .15s",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setMain(m => ({ ...m, newBarcode: !m.newBarcode }))}
+                              title={main.newBarcode ? "Switch to manual barcode entry" : "Switch to auto-generated barcode"}
+                              style={{
+                                flexShrink: 0,
+                                height: 34,
+                                padding: "0 10px",
+                                border: "1px solid",
+                                borderRadius: "0 var(--radius) var(--radius) 0",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                fontFamily: "inherit",
+                                letterSpacing: ".07em",
+                                textTransform: "uppercase",
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                                transition: "all .15s",
+                                ...(main.newBarcode
+                                  ? {
+                                      borderColor: "var(--red-brd)",
+                                      background: "var(--red-bg)",
+                                      color: "var(--red)",
+                                    }
+                                  : {
+                                      borderColor: "var(--border)",
+                                      background: "#f8fafc",
+                                      color: "var(--muted)",
+                                    }),
+                              }}
+                            >
+                              <span style={{
+                                width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+                                background: main.newBarcode ? "var(--red)" : "var(--faint)",
+                                transition: "background .15s",
+                              }} />
                               {main.newBarcode ? "Auto" : "Manual"}
                             </button>
                           </div>
-                          <TextInput mono value={main.barcode} onChange={(e)=>setMain(m=>({...m,barcode:e.target.value}))} placeholder={main.newBarcode ? "Auto-generated on save" : ""} disabled={main.newBarcode}/>
                         </div>
                         <Field label="Own Ref No." span={6}>
                           <TextInput mono value={main.productOwnRefNo} onChange={(e)=>setMain(m=>({...m,productOwnRefNo:e.target.value}))}/>
@@ -2051,9 +2005,7 @@ export default function ProductEntry() {
               <div className="pe2-layout--single">
                 <div className="pe2-trading-layout">
                   <div className="pe2-main-col">
-                    <SectionCard title="Add or Edit Line">
-                      <LineEntryBar lineForm={lineForm} setLineForm={setLineForm} onAdd={handleLineAdd} isEditing={editingIdx!==null}/>
-                    </SectionCard>
+                    <LineEntryBar lineForm={lineForm} setLineForm={setLineForm} onAdd={handleLineAdd} isEditing={editingIdx!==null}/>
 
                     <SectionCard title={`Trading Lines${lineRows.length>0 ? ` · ${lineRows.length} rows` : ""}`}>
                       <div className="pe2-table-wrap" style={{overflowX:"auto"}}>
@@ -2061,26 +2013,37 @@ export default function ProductEntry() {
                           fitParentWidth
                           maxVisibleRows={12}
                           headers={["","Description","Barcode","Qty","Price","Disc%","Disc Amt","Sub Total","Tax%","Tax Amt","Total","·"]}
-                          rows={[
-                            ...lineRows.map((r,idx)=>[
-                              <input key={`c${idx}`} type="checkbox" checked={selectedRows.has(idx)} onChange={()=>toggleRowSel(idx)} style={{accentColor:"var(--red)",width:12,height:12}}/>,
-                              r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],
-                              <div key={`a${idx}`} style={{display:"flex",gap:3,justifyContent:"center"}}>
-                                <button type="button" style={{border:"none",background:"none",cursor:"pointer",padding:2}} onClick={()=>handleLineEdit(r,idx)}><img src={EditActionIcon} width={12} alt=""/></button>
-                                <button type="button" style={{border:"none",background:"none",cursor:"pointer",padding:2}} onClick={()=>setPendingDelete({type:"line",idx})}><img src={DeleteActionIcon} width={12} alt=""/></button>
-                              </div>,
-                            ]),
-                            [{content:<b>Total</b>,colSpan:6,className:"font-bold"},totDisc.toFixed(2),totSub.toFixed(2),lineRows.length?(totTaxP/lineRows.length).toFixed(2):"0.00",totTaxA.toFixed(2),totLine.toFixed(2),""],
-                          ]}
+                          rows={lineRows.map((r,idx)=>[
+                            <input key={`c${idx}`} type="checkbox" checked={selectedRows.has(idx)} onChange={()=>toggleRowSel(idx)} style={{accentColor:"var(--red)",width:12,height:12}}/>,
+                            r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],
+                            <div key={`a${idx}`} style={{display:"flex",gap:3,justifyContent:"center"}}>
+                              <button type="button" style={{border:"none",background:"none",cursor:"pointer",padding:2}} onClick={()=>handleLineEdit(r,idx)}><img src={EditActionIcon} width={12} alt=""/></button>
+                              <button type="button" style={{border:"none",background:"none",cursor:"pointer",padding:2}} onClick={()=>setPendingDelete({type:"line",idx})}><img src={DeleteActionIcon} width={12} alt=""/></button>
+                            </div>,
+                          ])}
                         />
                       </div>
+                      <TableTotalsBar
+                        columns={8}
+                        className="!py-1 !px-1.5 sm:!py-1 sm:!px-1.5 [&_.table-total-grid>div]:py-0.5 [&_.table-total-grid>div]:px-1.5 [&_[data-total-label]]:text-[7px] [&_[data-total-value]]:text-[8px]"
+                        items={[
+                          { label: 'Items',          value: lineRows.length },
+                          { label: 'Qty Total',      value: totQty.toFixed(2) },
+                          { label: 'Unit Price Sum',  value: totPrice.toFixed(2) },
+                          { label: 'Line Discount',  value: totDisc.toFixed(2) },
+                          { label: 'Sub Total',      value: totSub.toFixed(2) },
+                          { label: 'Tax Total',      value: totTaxA.toFixed(2) },
+                          { label: 'Header Disc',    value: '0.00' },
+                          { label: 'Net Amount',     value: totLine.toFixed(2), strong: true },
+                        ]}
+                      />
                     </SectionCard>
                   </div>
 
                   <div className="pe2-side-stack">
-                    <SectionCard title="Substitutes">
+                    <div className="pe2-card">
+                      <div className="pe2-card-body">
                       <div className="pe2-subsection">
-                        <div className="pe2-subtitle">Add Substitute</div>
                         <div className="pe2-substitute-form">
                           <Field label="Product Name" span={6}><TextInput value={searchName} onChange={(e)=>setSearchName(e.target.value)}/></Field>
                           <Field label="Product Code" span={4}><TextInput mono value={searchCode} onChange={(e)=>setSearchCode(e.target.value)}/></Field>
@@ -2092,7 +2055,6 @@ export default function ProductEntry() {
                       </div>
 
                       <div className="pe2-subsection">
-                        <div className="pe2-subtitle">Current List</div>
                         <div className="pe2-table-wrap pe2-table-wrap--sub">
                           <CommonTable
                             fitParentWidth
@@ -2110,7 +2072,8 @@ export default function ProductEntry() {
                           />
                         </div>
                       </div>
-                    </SectionCard>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

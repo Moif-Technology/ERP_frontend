@@ -4,6 +4,8 @@ import { colors, listTableCheckboxClass } from '../../../shared/constants/theme'
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import StatusBadge from '../../../shared/components/ui/StatusBadge';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
+import DashboardIcon from '../../../shared/assets/icons/dashboard.svg';
+import EmployeeDirectoryIcon from '../../../shared/assets/icons/employee-directory.svg';
 import { employees as employeeRecords } from '../data/hrData';
 import * as hrApi from '../../../services/hr.api.js';
 
@@ -12,8 +14,12 @@ const primary = colors.primary?.main || '#790728';
 const CL_COL_PCT = [4, 6, 12, 20, 15, 15, 15, 13];
 
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
-const figmaSearchBox = `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[240px]`;
-const primaryLinkBtn = 'inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-white no-underline shadow-sm transition-opacity hover:opacity-95';
+const figmaSearchBox =
+  `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+const employeeToolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 no-underline transition hover:border-neutral-300 hover:bg-neutral-50';
+const employeePrimaryToolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium text-white no-underline transition hover:opacity-95';
 
 export default function EmployeeList() {
   const navigate = useNavigate();
@@ -98,16 +104,17 @@ export default function EmployeeList() {
     <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Human Resources</p>
           <h1 className="shrink-0 text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
             EMPLOYEE DIRECTORY
           </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Link to="/hr/dashboard" className="inline-flex h-7 min-h-7 shrink-0 items-center justify-center rounded-[3px] border border-rose-200 bg-white px-2.5 py-[3px] text-[10px] font-semibold leading-5 text-slate-700 no-underline shadow-sm">
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <Link to="/hr/dashboard" className={employeeToolbarBtn}>
+            <img src={DashboardIcon} alt="" className="h-3 w-3" />
             HR Dashboard
           </Link>
-          <Link to="/hr/employee-entry" className={primaryLinkBtn} style={{ backgroundColor: primary, borderColor: primary }}>
+          <Link to="/hr/employee-entry" className={employeePrimaryToolbarBtn} style={{ backgroundColor: primary, borderColor: primary }}>
+            <img src={EmployeeDirectoryIcon} alt="" className="h-3 w-3 brightness-0 invert" />
             Add Employee
           </Link>
         </div>

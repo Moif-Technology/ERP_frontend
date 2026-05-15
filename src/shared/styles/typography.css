@@ -1,0 +1,126 @@
+:root {
+  --pos-font-family: "Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pos-font-body: 16px;
+  --pos-font-page-title: 22px;
+  --pos-font-section-title: 18px;
+  --pos-font-table: 14px;
+  --pos-font-table-heading: 11px;
+  --pos-font-table-important: 16px;
+  --pos-font-button: 14px;
+  --pos-font-button-primary: 16px;
+  --pos-font-input: 16px;
+  --pos-font-label: 13px;
+  --pos-font-nav: 12px;
+  --pos-font-total-label: 12px;
+  --pos-font-total-value: 16px;
+  --pos-font-grand-total: 24px;
+  --pos-line-body: 1.45;
+  --pos-control-height: 38px;
+  --pos-compact-control-height: 34px;
+}
+
+html,
+body,
+#root {
+  font-family: var(--pos-font-family);
+  font-size: var(--pos-font-body);
+  line-height: var(--pos-line-body);
+}
+
+body {
+  text-size-adjust: 100%;
+}
+
+h1 {
+  font-size: var(--pos-font-page-title) !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+}
+
+h2,
+h3 {
+  font-size: var(--pos-font-section-title) !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+}
+
+label,
+.pos-label {
+  font-size: var(--pos-font-label) !important;
+  line-height: 1.25 !important;
+}
+
+input,
+select,
+textarea {
+  font-size: var(--pos-font-input) !important;
+  line-height: 1.3 !important;
+}
+
+button,
+[role="button"] {
+  font-size: var(--pos-font-button) !important;
+  line-height: 1.25 !important;
+}
+
+button[type="submit"],
+.pos-primary-action,
+.pos-pay-action,
+.pos-checkout-action {
+  font-size: var(--pos-font-button-primary) !important;
+  font-weight: 800 !important;
+}
+
+nav a,
+aside a,
+.sidebar-scroll a,
+.sidebar-scroll button,
+.sidebar-scroll div {
+  font-size: var(--pos-font-nav) !important;
+  line-height: 1.2 !important;
+}
+
+table td {
+  font-size: var(--pos-font-table) !important;
+  line-height: 1.3 !important;
+}
+
+table th {
+  font-size: var(--pos-font-table-heading) !important;
+  line-height: 1.2 !important;
+  color: #6b7280 !important;
+  font-weight: 700 !important;
+}
+
+table tfoot td,
+.pos-table-important {
+  font-size: var(--pos-font-table-important) !important;
+  font-weight: 700 !important;
+}
+
+.table-total-grid [data-total-label] {
+  font-size: var(--pos-font-total-label) !important;
+  line-height: 1.2 !important;
+}
+
+.table-total-grid [data-total-value] {
+  font-size: var(--pos-font-total-value) !important;
+  line-height: 1.15 !important;
+}
+
+.table-total-grid [data-total-value][data-total-strong="true"],
+.pos-grand-total,
+.pos-net-amount,
+.pos-total-amount {
+  font-size: var(--pos-font-grand-total) !important;
+  font-weight: 900 !important;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --pos-font-button: 16px;
+    --pos-font-button-primary: 18px;
+    --pos-control-height: 42px;
+    --pos-compact-control-height: 38px;
+  }
+}

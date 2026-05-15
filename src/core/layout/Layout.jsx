@@ -7,9 +7,12 @@ import { isLoggedIn, syncAccessIfChanged } from '../auth/auth.service.js';
 
 const HEADER_HEIGHT = 30;
 const SIDEBAR_WIDTH = 200;
+const SIDEBAR_COLLAPSED_WIDTH = 48;
 
 export default function Layout({ children }) {
   const [headerToolsExpanded, setHeaderToolsExpanded] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarW = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH;
   const [accessTick, setAccessTick] = useState(0);
   const mainRef = useRef(null);
   const lastMainScrollTopRef = useRef(0);
@@ -104,7 +107,8 @@ export default function Layout({ children }) {
           top: HEADER_HEIGHT,
           zIndex: 40,
           flexShrink: 0,
-          marginLeft: SIDEBAR_WIDTH,
+          marginLeft: sidebarW,
+          transition: 'margin-left 0.22s ease',
         }}
       >
         <ModuleTabs expanded={headerToolsExpanded} onExpandedChange={setHeaderToolsExpanded} />
@@ -116,14 +120,15 @@ export default function Layout({ children }) {
           minHeight: 0,
         }}
       >
-        <Sidebar key={`sidebar-${accessTick}`} />
+        <Sidebar key={`sidebar-${accessTick}`} collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
         <main
           ref={mainRef}
           style={{
             flex: 1,
             minWidth: 0,
             minHeight: 0,
-            marginLeft: SIDEBAR_WIDTH,
+            marginLeft: sidebarW,
+            transition: 'margin-left 0.22s ease',
             padding: '10px 28px 32px',
             display: 'flex',
             flexDirection: 'column',

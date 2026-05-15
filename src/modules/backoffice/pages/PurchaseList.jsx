@@ -6,7 +6,6 @@ import * as supplierEntryApi from '../../../services/supplierEntry.api.js';
 import * as purchaseEntryApi from '../../../services/purchaseEntry.api.js';
 import CommonTable from '../../../shared/components/ui/CommonTable';
 import QuotationDateRangeModal, { formatDDMMYYYY } from '../../../shared/components/ui/QuotationDateRangeModal';
-import { AppActionButton } from '../../../shared/components/ui';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import CancelIcon from '../../../shared/assets/icons/cancel.svg';
 import SearchIcon from '../../../shared/assets/icons/search2.svg';
@@ -26,6 +25,10 @@ const PAGE_SIZE_OPTIONS = [10, 15, 20, 30];
 const figmaOutline = 'rounded-[3px] bg-white outline outline-[0.5px] outline-offset-[-0.5px] outline-black';
 const figmaSearchBox =
   `flex h-7 min-h-7 w-full min-w-0 flex-1 items-center gap-1 py-[3px] pl-1.5 pr-2 ${figmaOutline} sm:min-w-[280px] sm:max-w-[640px] sm:pr-3 md:min-w-[360px] md:max-w-[320px]`;
+const purchaseToolbarBtn =
+  'inline-flex h-7 items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
+const purchaseToolbarSelect =
+  'relative inline-flex h-7 min-h-7 items-center gap-1 rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50';
 
 const PURCHASE_LIST_COL_PCT = [2, 10, 10, 22, 11, 10, 10, 7, 10, 8];
 
@@ -346,30 +349,25 @@ export default function PurchaseList() {
         <h1 className="text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>
           PURCHASE LIST
         </h1>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <AppActionButton
-            title="Print"
-            ariaLabel="Print"
-            icon={<img src={PrinterIcon} alt="" className="h-3.5 w-3.5" />}
-            className="h-7 px-2 text-[10px]"
-          />
-          <AppActionButton
-            title="Cancel"
-            ariaLabel="Cancel"
-            icon={<img src={CancelIcon} alt="" className="h-3.5 w-3.5" />}
-            className="h-7 px-2 text-[10px]"
-          >
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <button type="button" className={purchaseToolbarBtn} title="Print" aria-label="Print">
+            <img src={PrinterIcon} alt="" className="h-3 w-3" />
+            Print
+          </button>
+          <button type="button" className={purchaseToolbarBtn} title="Cancel" aria-label="Cancel">
+            <img src={CancelIcon} alt="" className="h-3 w-3" />
             Cancel
-          </AppActionButton>
-          <AppActionButton
+          </button>
+          <button
+            type="button"
+            className={purchaseToolbarBtn}
             title="Refresh"
-            ariaLabel="Refresh purchases"
+            aria-label="Refresh purchases"
             onClick={() => setRefreshKey((k) => k + 1)}
             disabled={loading}
-            className="h-7 px-2 text-[10px]"
           >
             Refresh
-          </AppActionButton>
+          </button>
         </div>
       </div>
 
@@ -387,11 +385,11 @@ export default function PurchaseList() {
 
         <div className="flex flex-wrap items-center gap-2.5 sm:h-7 sm:shrink-0 sm:flex-nowrap">
           {branchOptions.length > 1 ? (
-            <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+            <div className={purchaseToolbarSelect}>
               <select
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
-                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none"
+                className="h-7 min-w-[8.5rem] max-w-[13rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none"
                 aria-label="Branch"
                 disabled={loading}
               >
@@ -407,22 +405,23 @@ export default function PurchaseList() {
             </div>
           ) : null}
 
-          <AppActionButton
+          <button
+            type="button"
             onClick={() => setDateModalOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={dateModalOpen}
             title="Select Date"
-            ariaLabel="Select Date"
-            icon={<img src={CalendarIcon} alt="" className="h-3.5 w-3.5 shrink-0" />}
-            className="h-7 px-2 text-[10px]"
+            aria-label="Select Date"
+            className={purchaseToolbarBtn}
           >
+            <img src={CalendarIcon} alt="" className="h-3 w-3 shrink-0" />
             <span className="max-w-[min(100%,9rem)] truncate sm:max-w-[10.5rem]">
               {appliedDateRange
                 ? `${formatDDMMYYYY(appliedDateRange.from)} – ${formatDDMMYYYY(appliedDateRange.to)}`
                 : 'Select Date'}
             </span>
             <ToolbarChevron />
-          </AppActionButton>
+          </button>
 
           <QuotationDateRangeModal
             open={dateModalOpen}
@@ -432,11 +431,11 @@ export default function PurchaseList() {
             onApply={(range) => setAppliedDateRange(range)}
           />
 
-          <div className={`relative inline-flex h-7 min-h-7 items-center gap-1 px-1.5 py-[3px] ${figmaOutline}`}>
+          <div className={purchaseToolbarSelect}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 font-['Open_Sans',sans-serif] text-[10px] font-semibold leading-5 text-black outline-none sm:min-w-[7.5rem]"
+              className="h-7 min-w-[6.5rem] max-w-[11rem] flex-1 cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-5 text-xs font-medium text-neutral-700 outline-none sm:min-w-[7.5rem]"
               aria-label="Sort"
             >
               <option value="default">Sort: Default</option>
@@ -584,4 +583,3 @@ export default function PurchaseList() {
     </div>
   );
 }
-

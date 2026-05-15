@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { colors } from '../../../shared/constants/theme';
 import CommonTable from '../../../shared/components/ui/CommonTable';
-import { DropdownInput, InputField, SubInputField, DateInputField } from '../../../shared/components/ui';
+import { DropdownInput, InputField, SubInputField, TableTotalsBar } from '../../../shared/components/ui';
+import DatePickerInput from '../../../shared/components/ui/DatePickerInput';
 import PrinterIcon from '../../../shared/assets/icons/printer.svg';
 import ViewIcon from '../../../shared/assets/icons/view.svg';
 import EditIcon from '../../../shared/assets/icons/edit4.svg';
@@ -173,17 +174,20 @@ export default function PurchaseVoucherEntry() {
       </div>];
   }), [paginatedRows, page, pageSize, editingRowId, accountOptions, updateLine, handleViewLine, handleEditLine, handleDeleteLine]);
 
-  const tableFooterRow = useMemo(() => [
-    { content: <div key="tot" className="text-left font-bold">Total</div>, colSpan: 2, className: 'align-middle font-bold' },
-    <span key="dr" className="font-bold">Dr {fmt(totalDebit)}</span>,
-    <span key="cr" className="font-bold">Cr {fmt(totalCredit)}</span>,
-    '',
-  ], [totalDebit, totalCredit]);
+  const tableTotalItems = useMemo(
+    () => [
+      ['Lines', String(tableData.length)],
+      ['Debit Total', fmt(totalDebit)],
+      ['Credit Total', fmt(totalCredit)],
+      ['Balance', fmt(totalDebit - totalCredit), true],
+    ],
+    [tableData.length, totalDebit, totalCredit],
+  );
 
   return (
-    <div className="box-border flex h-full min-h-0 w-[calc(100%+26px)] max-w-none min-w-0 flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+    <div className="box-border flex min-h-0 w-[calc(100%+26px)] max-w-none flex-1 -mx-[13px] flex-col gap-3 rounded-lg border-2 border-gray-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <h1 className="shrink-0 whitespace-nowrap text-sm font-bold leading-tight sm:text-base md:text-lg xl:text-xl" style={{ color: primary }}>PURCHASE VOUCHER ENTRY</h1>
+        <h1 className="shrink-0 whitespace-nowrap text-base font-bold sm:text-lg xl:text-xl" style={{ color: primary }}>PURCHASE VOUCHER ENTRY</h1>
         <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <button type="button" className={`${figmaToolbarBtn} px-2`}><img src={PrinterIcon} alt="" className="h-3.5 w-3.5" /></button>
           <button type="button" className={figmaToolbarBtn} onClick={handlePost}><img src={PostIcon} alt="" className="h-3.5 w-3.5" /> Post</button>
@@ -210,7 +214,10 @@ export default function PurchaseVoucherEntry() {
         </div>
         <div className="shrink-0"><SubInputField label="Voucher No" value={voucherNo} readOnly placeholder="Auto" /></div>
         <div className="shrink-0"><SubInputField label="Ref No" value={refNo} onChange={(e) => setRefNo(e.target.value)} placeholder="Reference" /></div>
-        <div className="shrink-0"><DateInputField label="Purchase Date" value={purchaseDate} onChange={setPurchaseDate} /></div>
+        <div className="shrink-0" style={{ minWidth: 130 }}>
+          <span className="mb-0.5 block text-[9px] font-semibold text-gray-500 sm:text-[10px]">Purchase Date</span>
+          <DatePickerInput value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} heightPx={26} />
+        </div>
         <div className="ml-auto flex shrink-0 items-end">
           <button type="button" onClick={handleAddLine} className="inline-flex h-[26px] min-h-[26px] shrink-0 items-center justify-center rounded border px-2.5 py-0 text-[10px] font-semibold leading-none text-white" style={{ backgroundColor: primary, borderColor: primary }}>Add Line</button>
         </div>
@@ -228,7 +235,8 @@ export default function PurchaseVoucherEntry() {
           headerFontSize="clamp(7px,0.85vw,10px)" headerTextColor="#6b7280" bodyFontSize="clamp(8px,1vw,10px)"
           cellPaddingClass="px-0.5 py-1 sm:px-1 sm:py-1.5" bodyRowHeightRem={2.35} maxVisibleRows={pageSize}
           headers={['Sl no', 'Account name', 'Debit', 'Credit', 'Actions']}
-          rows={tableBodyRows} footerRow={tableFooterRow} />
+          rows={tableBodyRows} />
+        <TableTotalsBar borderColor="#e5e7eb" columns={4} items={tableTotalItems} />
 
         <div className="mt-2 grid w-full shrink-0 grid-cols-1 items-center gap-y-3 sm:grid-cols-[1fr_auto_1fr] sm:gap-x-2 sm:gap-y-0">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">

@@ -32,7 +32,7 @@ const DropdownInput = React.forwardRef(function DropdownInput(
       style={{ width: boxWidth }}
     >
       {label && (
-        <label style={labelClassName ? undefined : inputField.label} className={labelClassName}>
+        <label style={labelClassName ? undefined : inputField.label} className={labelClassName || 'pos-label'}>
           {label}
         </label>
       )}
@@ -53,7 +53,7 @@ const DropdownInput = React.forwardRef(function DropdownInput(
           ref={ref}
           value={value ?? ''}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent pl-2 pr-6 py-0 text-sm leading-normal text-gray-900 outline-none sm:pl-2.5 ${className ?? ''}`.trim()}
+          className={`dropdown-select box-border h-full w-full max-w-full cursor-pointer appearance-none border-none bg-transparent py-0 pl-2.5 pr-7 text-base leading-normal text-gray-900 outline-none ${className ?? ''}`.trim()}
           style={{
             height: '100%',
             boxSizing: 'border-box',

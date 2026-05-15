@@ -205,7 +205,7 @@ export default function PlanCatalogPage() {
                           cursor: 'pointer', background: f.is_enabled ? '#f0fdf4' : '#fff',
                         }}
                       >
-                        <span style={{ fontSize: 13, color: '#0f172a', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{f.feature_code}</span>
+                        <span style={{ color: '#0f172a', fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{f.feature_code}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontSize: 12, color: f.is_enabled ? '#15803d' : '#94a3b8', fontWeight: 600 }}>
                             {f.is_enabled ? 'Enabled' : 'Disabled'}

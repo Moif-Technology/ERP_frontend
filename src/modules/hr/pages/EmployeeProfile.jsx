@@ -275,7 +275,7 @@ export default function EmployeeProfile() {
     .join('');
 
   return (
-    <div className="flex flex-col h-full w-[calc(100%+26px)] max-w-none -mx-[13px] rounded-lg border border-gray-200 bg-gray-50 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full w-[calc(100%+26px)] max-w-none -mx-[13px] rounded-lg border-2 border-gray-200 bg-white shadow-sm overflow-hidden">
       <div className="bg-white px-6 py-4 flex items-center gap-4 sm:gap-6">
         <button
           type="button"
@@ -292,7 +292,7 @@ export default function EmployeeProfile() {
           {initials}
         </div>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Employee Workspace</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: primary }}>Employee Workspace</p>
           <h1 className="text-xl font-bold text-gray-800">{employee.name}</h1>
           <p className="text-sm text-gray-500">
             {employee.code} • {employee.designation} • {employee.department}

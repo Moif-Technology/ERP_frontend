@@ -17,8 +17,8 @@ const SubInputField = React.forwardRef(function SubInputField(
     >
       {label && (
         <label
-          className={labelClassName || 'text-[9px] leading-tight text-black sm:text-[11px] sm:leading-[15px]'}
-          style={labelClassName ? undefined : { color: inputField.label.color }}
+          className={labelClassName || 'pos-label text-[13px] leading-tight text-black'}
+          style={labelClassName ? undefined : { color: inputField.label.color, fontSize: inputField.label.fontSize, lineHeight: inputField.label.lineHeight }}
         >
           {label}
         </label>
@@ -28,7 +28,7 @@ const SubInputField = React.forwardRef(function SubInputField(
           ref={ref}
           type={type}
           inputMode={type === 'number' ? 'decimal' : undefined}
-          className={`box-border w-full max-w-full border border-gray-200 bg-white px-1.5 py-0 text-[8px] outline-none sm:px-2 sm:text-[9px] ${className ?? ''}`.trim()}
+          className={`box-border w-full max-w-full border border-gray-200 bg-white px-2 py-0 text-base outline-none ${className ?? ''}`.trim()}
           style={{
             width: '100%',
             height: boxHeight,
@@ -43,7 +43,7 @@ const SubInputField = React.forwardRef(function SubInputField(
           {...props}
         />
         {suffix ? (
-          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-600 sm:text-[9px]">
+          <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[13px] text-gray-600">
             {suffix}
           </span>
         ) : null}

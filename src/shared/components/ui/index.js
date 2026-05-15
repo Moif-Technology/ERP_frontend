@@ -10,6 +10,7 @@ export { default as SelectTimeButton } from './SelectTimeButton';
 export { default as Switch } from './Switch';
 export { default as CommonTable } from './CommonTable';
 export { default as TabsBar } from './TabsBar';
+export { default as TableTotalsBar } from './TableTotalsBar';
 export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as QuotationDateRangeModal, formatDDMMYYYY } from './QuotationDateRangeModal';
 export { default as StatusBadge } from './StatusBadge';
